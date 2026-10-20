@@ -5,7 +5,7 @@ import { getDb } from '@/lib/db';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const COMPANY_NAME = /^[\\p{L}\\p{N} .,'’()&-]{2,160}$/u;
+const COMPANY_NAME = /^[\p{L}\p{N} .,'’()&-]{2,160}$/u;
 const SLUG = /^[a-z0-9][a-z0-9-]{2,62}$/;
 function json(message: string, status: number) {
   return NextResponse.json({ error: message }, { status, headers: { 'Cache-Control': 'no-store' } });
