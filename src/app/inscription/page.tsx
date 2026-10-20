@@ -44,7 +44,7 @@ export default function InscriptionPage() {
     setMessage('');
     const data = new FormData(event.currentTarget);
     const otp = String(data.get('otp') || '').trim();
-    if (!/^\\d{6}$/.test(otp)) {
+    if (!/^[0-9]{6}$/.test(otp)) {
       setMessage('Saisissez le code numérique à 6 chiffres reçu par e-mail.');
       setBusy(false);
       return;
