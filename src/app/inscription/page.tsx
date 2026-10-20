@@ -18,7 +18,12 @@ export default function InscriptionPage() {
       if (name.length < 2 || password.length < 12) throw new Error('Nom requis et mot de passe de 12 caractères minimum.');
       const result = await authClient.signUp.email({ name, email, password });
       if (result.error) throw new Error(result.error.message || 'Inscription impossible');
-      setMessage('Compte créé. Vérifiez votre e-mail si demandé, puis connectez-vous.');
+      const verification = await authClient.sendVerificationEmail({ email, callbackURL: '/connexion' });
+      if (verification.error) {
+        setMessage('Compte créé, mais l’envoi du lien de vérification a échoué. La création d’entreprise restera bloquée tant que l’adresse n’est pas vérifiée.');
+      } else {
+        setMessage('Compte créé. Consultez votre boîte e-mail, vérifiez votre adresse, puis connectez-vous.');
+      }
     } catch (e) { setMessage(e instanceof Error ? e.message : 'Une erreur est survenue.'); }
     finally { setBusy(false); }
   }
