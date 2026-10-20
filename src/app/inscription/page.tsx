@@ -30,7 +30,12 @@ export default function InscriptionPage() {
         return;
       }
       setStep('verify');
-      setMessage('Un code de vérification a été envoyé à votre adresse e-mail. Il expire après 15 minutes.');
+      const delivery = await authClient.emailOtp.sendVerificationOtp({ email: address, type: 'email-verification' });
+      if (delivery.error) {
+        setMessage('Compte créé. L’envoi du code a échoué ; utilisez « Renvoyer un code » pour réessayer.');
+      } else {
+        setMessage('Un code de vérification a été envoyé à votre adresse e-mail. Il expire après 15 minutes.');
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Une erreur est survenue.');
     } finally {
