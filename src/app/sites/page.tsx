@@ -3,13 +3,13 @@
 import { useEffect, useState, type FormEvent } from 'react';
 
 type Site = { id: string; company_id: string; company_name: string; company_slug: string; name: string; status: string; created_at: string };
-
 type CompanyOption = { id: string; legal_name: string; slug: string };
 
 const statusLabels: Record<string, string> = { planned: 'Planifié', active: 'Actif', suspended: 'Suspendu', archived: 'Archivé' };
 
 export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([]);
+  const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [busy, setBusy] = useState(true);
   const [notice, setNotice] = useState('');
   const [companyId, setCompanyId] = useState('');
@@ -20,16 +20,15 @@ export default function SitesPage() {
     try {
       const response = await fetch('/api/sites', { cache: 'no-store' });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Impossible de charger les sites.');
+      if (!response.ok) throw new Error(data.error || 'Impossible de charger les entreprises et sites.');
+      setCompanies(data.companies || []);
       setSites(data.sites || []);
-      if (!companyId && data.sites?.[0]) setCompanyId(data.sites[0].company_id);
+      if (!companyId && data.companies?.[0]) setCompanyId(data.companies[0].id);
     } catch (error) { setNotice(error instanceof Error ? error.message : 'Erreur de chargement.'); }
     finally { setBusy(false); }
   }
 
   useEffect(() => { load(); }, []);
-
-  const companies: CompanyOption[] = Array.from(new Map(sites.map(s => [s.company_id, { id: s.company_id, legal_name: s.company_name, slug: s.company_slug }])).values());
 
   async function createSite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setNotice('');
