@@ -25,6 +25,13 @@ export async function GET() {
     if (!user.emailVerified) return json('Vérifiez votre adresse e-mail avant de continuer.', 403);
 
     const sql = getDb();
+    const companies = await sql`
+      SELECT c.id, c.legal_name, c.slug, m.role
+      FROM public.companies c
+      JOIN public.company_members m ON m.company_id = c.id
+      WHERE m.user_id = ${user.id}::uuid AND m.status = 'active'
+      ORDER BY c.legal_name
+    `;
     const sites = await sql`
       SELECT s.id, s.company_id, c.legal_name AS company_name, c.slug AS company_slug,
              s.name, s.status, s.created_at
@@ -34,10 +41,10 @@ export async function GET() {
       WHERE m.user_id = ${user.id}::uuid AND m.status = 'active'
       ORDER BY c.legal_name, s.name
     `;
-    return NextResponse.json({ sites }, { headers: { 'Cache-Control': 'no-store' } });
+    return NextResponse.json({ companies, sites }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('sites list failed', { code: (error as { code?: string }).code ?? 'unknown' });
-    return json('Impossible de charger les sites.', 500);
+    return json('Impossible de charger les entreprises et sites.', 500);
   }
 }
 
