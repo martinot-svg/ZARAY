@@ -65,15 +65,20 @@ export async function POST(request: NextRequest) {
     const name = typeof input.name === 'string' ? input.name.trim() : '';
     if (!companyId || !SITE_NAME.test(name)) return json('Entreprise ou nom de site invalide.', 400);
 
-    const { data, error } = await supabase.rpc('create_site_for_current_user', { p_company_id: companyId, p_name: name });
+    const { data: site, error } = await supabase
+      .from('sites')
+      .insert({ company_id: companyId, name })
+      .select('id, company_id, name, status, created_at')
+      .single();
+
     if (error) {
       if (error.code === '23505') return json('Ce nom de site existe déjà dans cette entreprise.', 409);
       if (error.code === '42501') return json('Entreprise inaccessible ou permission insuffisante.', 403);
-      if (error.code === '22P02' || error.code === '22023') return json('Entreprise ou nom de site invalide.', 400);
+      if (error.code === '22P02') return json('Identifiant d’entreprise invalide.', 400);
       console.error('site creation failed', { code: error.code });
       return json('Impossible de créer le site.', 500);
     }
-    return NextResponse.json({ site: data }, { status: 201, headers: { 'Cache-Control': 'no-store' } });
+    return NextResponse.json({ site }, { status: 201, headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('site creation failed', { code: (error as { code?: string }).code ?? 'unknown' });
     return json('Impossible de créer le site.', 500);
@@ -92,15 +97,21 @@ export async function PATCH(request: NextRequest) {
     const status = typeof input.status === 'string' ? input.status : '';
     if (!siteId || !SITE_NAME.test(name) || !STATUSES.has(status)) return json('Données de site invalides.', 400);
 
-    const { data, error } = await supabase.rpc('update_site_for_current_user', { p_site_id: siteId, p_name: name, p_status: status });
+    const { data: site, error } = await supabase
+      .from('sites')
+      .update({ name, status })
+      .eq('id', siteId)
+      .select('id, company_id, name, status, created_at')
+      .maybeSingle();
+
     if (error) {
       if (error.code === '23505') return json('Ce nom de site existe déjà dans cette entreprise.', 409);
-      if (error.code === '42501') return json('Site inaccessible ou modification non autorisée.', 403);
-      if (error.code === '22P02' || error.code === '22023') return json('Identifiant ou données de site invalides.', 400);
+      if (error.code === '22P02') return json('Identifiant de site invalide.', 400);
       console.error('site update failed', { code: error.code });
       return json('Impossible de modifier le site.', 500);
     }
-    return NextResponse.json({ site: data }, { headers: { 'Cache-Control': 'no-store' } });
+    if (!site) return json('Site inaccessible ou modification non autorisée.', 403);
+    return NextResponse.json({ site }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('site update failed', { code: (error as { code?: string }).code ?? 'unknown' });
     return json('Impossible de modifier le site.', 500);
