@@ -24,7 +24,7 @@ export default function InscriptionPage() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/connexion`,
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://zaray.vercel.app'}/connexion`,
           data: { full_name: name },
         },
       });
@@ -51,7 +51,7 @@ export default function InscriptionPage() {
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: registeredEmail,
-        options: { emailRedirectTo: `${window.location.origin}/connexion` },
+        options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://zaray.vercel.app'}/connexion` },
       });
       if (error) throw new Error(error.message);
       setMessage('Un nouvel e-mail de confirmation a été demandé. Vérifiez votre boîte de réception.');
