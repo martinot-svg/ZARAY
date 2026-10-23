@@ -16,7 +16,7 @@ export default function NouvelleEntreprise() {
       const response = await fetch('/api/companies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ legalName: String(form.get('legalName')), slug: String(form.get('slug')) }),
+        body: JSON.stringify({ legalName: String(form.get('legalName') || '').trim(), slug: String(form.get('slug') || '').trim().toLowerCase() }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Échec de création');
@@ -31,13 +31,19 @@ export default function NouvelleEntreprise() {
   return <main className="form-shell"><section className="form-card">
     <p className="eyebrow">ZARAY · GESTION DES ENTREPRISES</p>
     <h1>Enregistrer mon entreprise</h1>
-    <p>Cette action enregistre réellement l’entreprise dans Supabase après vérification de votre session et de votre adresse e-mail. Essai prévu : 31 jours.</p>
-    {created ? <div role="status"><h2>Entreprise créée</h2><p>{created.legal_name} · {created.slug} · {created.status}</p><a href="/">Accueil</a></div> : <form onSubmit={submit} className="form-stack">
+    <p>Votre entreprise est enregistrée dans Supabase après vérification de la session et de l’adresse e-mail. La période d’essai est de 31 jours.</p>
+    {created ? <div role="status">
+      <h2>Entreprise créée</h2>
+      <p>{created.legal_name} · {created.slug} · {created.status}</p>
+      <p>Votre compte est maintenant propriétaire de cette entreprise. Vous pouvez ouvrir le tableau de bord ou créer votre premier site.</p>
+      <p><a className="primary-link" href="/tableau-de-bord">Ouvrir le tableau de bord →</a></p>
+      <p><a href="/sites">Créer ou gérer un site</a></p>
+    </div> : <form onSubmit={submit} className="form-stack">
       <label>Nom de l’entreprise<input name="legalName" required minLength={2} maxLength={160} placeholder="Nom de l’entreprise" /></label>
       <label>Identifiant unique<input name="slug" required pattern="[a-z0-9][a-z0-9-]{2,62}" placeholder="identifiant-entreprise" title="Lettres minuscules, chiffres et tirets" /></label>
       <button type="submit" className="primary-link" disabled={busy}>{busy ? 'Enregistrement…' : 'Créer l’entreprise'}</button>
     </form>}
     {notice && <p role="alert">{notice}</p>}
-    <p><a href="/connexion">Se connecter</a></p>
+    <p><a href="/tableau-de-bord">Tableau de bord</a> · <a href="/connexion">Se connecter</a></p>
   </section></main>;
 }
