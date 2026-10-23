@@ -26,9 +26,7 @@ export default function InscriptionPage() {
       const { data: result, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: { full_name: name },
-        },
+        options: { data: { full_name: name } },
       });
       if (error) throw new Error(error.message);
 
@@ -50,8 +48,8 @@ export default function InscriptionPage() {
     event.preventDefault();
     if (!registeredEmail || busy) return;
     const data = new FormData(event.currentTarget);
-    const token = String(data.get('token') || '').replace(/\\s/g, '');
-    if (!/^\\d{6}$/.test(token)) {
+    const token = String(data.get('token') || '').replace(/\s/g, '');
+    if (!/^\d{6}$/.test(token)) {
       setMessage('Saisissez le code à 6 chiffres reçu par e-mail.');
       return;
     }
@@ -81,10 +79,7 @@ export default function InscriptionPage() {
     setMessage('');
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: registeredEmail,
-      });
+      const { error } = await supabase.auth.resend({ type: 'signup', email: registeredEmail });
       if (error) throw new Error(error.message);
       setMessage('Un nouveau code de confirmation a été demandé. Vérifiez votre boîte de réception.');
     } catch (error) {
