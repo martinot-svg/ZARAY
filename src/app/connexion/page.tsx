@@ -19,7 +19,7 @@ export default function ConnexionPage() {
         password: String(data.get('password')),
       });
       if (signInError) throw new Error('E-mail ou mot de passe incorrect, ou adresse non vérifiée.');
-      window.location.assign('/entreprises/nouvelle');
+      window.location.assign('/tableau-de-bord');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur de connexion.');
     } finally {
