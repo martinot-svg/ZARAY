@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
   if (!order) return json({ error: 'Commande introuvable.' }, 404);
   if (order.customer_email !== customerEmail) return json({ error: 'L’adresse e-mail ne correspond pas à cette commande.' }, 403);
   if (order.status !== 'pending_payment' || order.paid_at) return json({ error: 'Cette commande n’accepte plus de paiement.' }, 409);
-  if (order.currency !== 'MGA' || !Number.isSafeInteger(Number(order.amount))) return json({ error: 'Le paiement manuel Orange Money/MVola exige un montant en ariary (MGA).' }, 409);
+  if (order.currency !== 'MGA' || !Number.isSafeInteger(Number(order.amount)) || Number(order.amount) < 1) return json({ error: 'Le paiement manuel Orange Money/MVola exige un montant en ariary (MGA).' }, 409);
 
   const { data: method, error: methodError } = await service.from('manual_payment_methods')
     .select('id').eq('company_id', order.company_id).eq('provider', provider).eq('is_active', true).maybeSingle();
