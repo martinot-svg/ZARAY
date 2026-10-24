@@ -48,7 +48,8 @@ create index if not exists idx_wifi_tickets_status_validity on public.wifi_ticke
 alter table public.subscription_orders enable row level security;
 alter table public.wifi_tickets enable row level security;
 revoke all on public.subscription_orders, public.wifi_tickets from public, anon, authenticated;
-grant select on public.subscription_orders, public.wifi_tickets to authenticated;
+grant select on public.subscription_orders to authenticated;
+grant select (id,company_id,subscription_order_id,code_prefix,status,duration_minutes,max_devices,valid_from,valid_until,redeemed_at,revoked_at,created_by,created_at) on public.wifi_tickets to authenticated;
 
 drop policy if exists "active company members read subscription orders" on public.subscription_orders;
 create policy "active company members read subscription orders" on public.subscription_orders for select to authenticated
