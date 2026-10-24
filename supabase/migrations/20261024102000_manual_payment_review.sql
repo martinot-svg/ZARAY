@@ -21,7 +21,7 @@ create table if not exists public.manual_payment_submissions (
   provider text not null check (provider in ('orange_money','mvola')),
   sender_phone text not null check (sender_phone ~ '^03[0-9]{8}$'),
   transaction_reference text not null check (length(trim(transaction_reference)) between 2 and 120),
-  amount numeric not null check (amount >= 0),
+  amount numeric not null check (amount > 0),
   currency text not null check (currency ~ '^[A-Z]{3}$'),
   proof_path text not null check (length(proof_path) between 1 and 500),
   customer_note text not null default '' check (length(customer_note) <= 1000),
@@ -40,6 +40,8 @@ create index if not exists manual_payment_submissions_order_created_idx
 create unique index if not exists manual_payment_one_open_or_approved_per_order_idx
   on public.manual_payment_submissions(order_id)
   where status in ('submitted','approved');
+create unique index if not exists manual_payment_transaction_reference_unique_idx
+  on public.manual_payment_submissions(provider, lower(trim(transaction_reference)));
 
 alter table public.manual_payment_methods enable row level security;
 alter table public.manual_payment_submissions enable row level security;
@@ -91,7 +93,7 @@ begin
   if v_user_id is null then
     raise exception 'authentication_required' using errcode='42501';
   end if;
-  if p_action not in ('approve','reject') then
+  if coalesce(p_action,'') not in ('approve','reject') then
     raise exception 'invalid_review_action' using errcode='22023';
   end if;
 
