@@ -1,0 +1,34 @@
+name: Supabase migration replay
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/**"
+      - ".github/workflows/supabase-migration-replay.yml"
+  workflow_dispatch:
+
+jobs:
+  replay:
+    name: Replay migrations in disposable local Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Create local Supabase configuration if absent
+        run: supabase init --force
+
+      - name: Start isolated local Supabase stack
+        run: supabase start
+
+      - name: Replay the full migration history locally
+        run: supabase db reset --local
+
+      - name: Confirm local migration status
+        run: supabase migration list --local
