@@ -46,6 +46,6 @@ export default function DashboardPage() {
         <article className="module"><span className="module-number">RÈGLE DE SÉCURITÉ</span><h3>Activation contrôlée</h3><p>Aucune commande ni offre active n’active Internet automatiquement. Les intégrations paiement et réseau restent à finaliser.</p></article>
       </div>
     </>}
-    <p style={{ marginTop: 32 }}><a href="/">← Accueil</a> · <a href="/sites">Sites</a> · <a href="/membres">Membres</a> · <a href="/clients">Clients</a> · <a href="/offres">Offres Internet</a> · <a href="/commandes">Commandes</a> · <a href="/tickets">Tickets Wi-Fi</a></p>
+    <p style={{ marginTop: 32 }}><a href="/">← Accueil</a> · <a href="/sites">Sites</a> · <a href="/membres">Membres</a> · <a href="/clients">Clients</a> · <a href="/offres">Offres Internet</a> · <a href="/commandes">Commandes</a> · <a href="/tickets">Tickets Wi-Fi</a> · <a href="/paiements">Paiements</a></p>
   </section></main>;
 }
