@@ -22,13 +22,6 @@ export default function MembresPage() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
 
-  async function loadCompanies() {
-    const response = await fetch('/api/sites', { cache: 'no-store' });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Impossible de charger les entreprises.');
-    setCompanies(data.companies ?? []);
-    if (!companyId && data.companies?.[0]) setCompanyId(data.companies[0].id);
-  }
   async function loadCompany(id: string) {
     if (!id) return;
     const [memberResponse, auditResponse] = await Promise.all([
