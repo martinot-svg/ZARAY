@@ -51,6 +51,19 @@ export async function POST(request: NextRequest) {
   if (methodError) return json({ error: 'Impossible de vérifier le moyen de paiement.' }, 503);
   if (!method) return json({ error: 'Ce moyen de paiement n’est pas activé pour ce portail.' }, 409);
 
+  // Cap repeated rejected/resubmitted proofs per order before accepting another upload.
+  // This uses existing history and does not change or delete any stored payment data.
+  const retryWindowStart = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+  const { data: recentAttempts, error: attemptsError } = await service.from('manual_payment_submissions')
+    .select('id').eq('order_id', order.id).gte('created_at', retryWindowStart).limit(3);
+  if (attemptsError) return json({ error: 'Impossible de vérifier les tentatives précédentes.' }, 503);
+  if ((recentAttempts ?? []).length >= 3) {
+    return NextResponse.json(
+      { error: 'Trop de tentatives pour cette commande. Réessayez dans 30 minutes.' },
+      { status: 429, headers: { 'Cache-Control': 'no-store', 'Retry-After': '1800', 'X-Content-Type-Options': 'nosniff' } },
+    );
+  }
+
   const { data: existing, error: existingError } = await service.from('manual_payment_submissions')
     .select('id,status').eq('order_id', order.id).in('status', ['submitted','approved']).limit(1).maybeSingle();
   if (existingError) return json({ error: 'Impossible de vérifier les justificatifs précédents.' }, 503);
