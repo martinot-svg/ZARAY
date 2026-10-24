@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 type PaymentStatus = {
   reference: string; offerName: string; amount: number | string; currency: string;
   orderStatus: string; paid: boolean;
-  submission: null | { provider: 'orange_money' | 'mvola'; status: 'submitted' | 'approved' | 'rejected'; createdAt: string; reviewedAt: string | null; reviewNote: string; transactionReference: string };
+  submission: null | { provider: 'orange_money' | 'mvola'; status: 'submitted' | 'approved' | 'rejected'; createdAt: string; reviewedAt: string | null };
 };
 const providerLabel: Record<string,string> = { orange_money: 'Orange Money', mvola: 'MVola' };
 const statusLabel: Record<string,string> = { submitted: 'Justificatif reçu — en attente de vérification', approved: 'Paiement validé', rejected: 'Justificatif rejeté', not_submitted: 'Aucun justificatif transmis' };
@@ -37,10 +37,8 @@ export default function PaymentStatusPage() {
       <p>Statut : {statusLabel[status.submission?.status ?? 'not_submitted']}</p>
       {status.submission && <>
         <p>Moyen de paiement : {providerLabel[status.submission.provider]}</p>
-        <p>Référence de transaction : {status.submission.transactionReference}</p>
         <p>Justificatif transmis le {new Date(status.submission.createdAt).toLocaleString('fr-FR')}</p>
         {status.submission.reviewedAt && <p>Décision le {new Date(status.submission.reviewedAt).toLocaleString('fr-FR')}</p>}
-        {status.submission.reviewNote && <p>Note : {status.submission.reviewNote}</p>}
       </>}
       <button type="button" className="primary-link" onClick={() => { setBusy(true); void refresh(); }}>Actualiser le statut</button>
       <p><strong>Le paiement est confirmé uniquement après vérification du transfert par un responsable autorisé. Aucun accès Internet n’est activé par la simple soumission d’un reçu.</strong></p>
