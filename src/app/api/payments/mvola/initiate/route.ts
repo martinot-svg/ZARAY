@@ -79,13 +79,18 @@ export async function POST(request: NextRequest) {
       console.error('MVola initiation failed', { status: response.status, correlationId });
       return json({ error: 'MVola n’a pas accepté la demande de paiement. Réessayez plus tard.' }, 502);
     }
-    // The locally generated correlation ID is the ledger's stable transaction key.
-    // MVola's serverCorrelationId is retained only in the response to aid reconciliation.
+    const { error: correlationUpdateError } = await supabase.from('payments')
+      .update({ provider_payment_id: result.serverCorrelationId, updated_at: new Date().toISOString() })
+      .eq('provider', 'mvola').eq('provider_payment_id', correlationId).eq('status', 'pending');
+    if (correlationUpdateError) {
+      console.error('MVola correlation persistence failed', { correlationId });
+      return json({ error: 'Paiement initié, mais sa référence doit être rapprochée par le support. Ne relancez pas le paiement.' }, 503);
+    }
+    // Store MVola's own serverCorrelationId so callbacks can be verified against its status API.
     return json({
       accepted: true,
       status: 'pending',
       reference: order.public_reference,
-      correlationId,
       mvolaCorrelationId: result.serverCorrelationId,
       message: 'Demande envoyée à MVola. Validez-la sur votre téléphone. Le forfait ne sera pas activé avant confirmation vérifiée.',
     }, 202);
