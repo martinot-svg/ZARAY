@@ -35,7 +35,7 @@ export default function InscriptionPage() {
         setMessage('Compte créé et adresse déjà vérifiée. Vous pouvez vous connecter.');
       } else {
         setRegisteredEmail(email);
-        setMessage('Un code de confirmation à 6 chiffres a été envoyé à votre adresse e-mail. Saisissez-le ci-dessous.');
+        setMessage('Demande traitée. Si cette adresse nécessite une confirmation, un code pourra être envoyé. Si vous avez déjà un compte confirmé, connectez-vous.');
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Une erreur est survenue.');
@@ -48,8 +48,8 @@ export default function InscriptionPage() {
     event.preventDefault();
     if (!registeredEmail || busy) return;
     const data = new FormData(event.currentTarget);
-    const token = String(data.get('token') || '').replace(/\s/g, '');
-    if (!/^\d{6}$/.test(token)) {
+    const token = String(data.get('token') || '').replace(/\\s/g, '');
+    if (!/^\\d{6}$/.test(token)) {
       setMessage('Saisissez le code à 6 chiffres reçu par e-mail.');
       return;
     }
@@ -81,7 +81,7 @@ export default function InscriptionPage() {
       const supabase = createClient();
       const { error } = await supabase.auth.resend({ type: 'signup', email: registeredEmail });
       if (error) throw new Error(error.message);
-      setMessage('Un nouveau code de confirmation a été demandé. Vérifiez votre boîte de réception.');
+      setMessage('Demande traitée. Si un code de confirmation est nécessaire, vérifiez votre boîte de réception et vos courriers indésirables. Si votre compte est déjà confirmé, connectez-vous.');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Impossible de renvoyer le code.');
     } finally {
@@ -102,16 +102,16 @@ export default function InscriptionPage() {
     </form>}
 
     {registeredEmail && !verified && <form onSubmit={verifyCode} className="form-stack">
-      <p>Code envoyé à <strong>{registeredEmail}</strong>.</p>
+      <p>Adresse concernée : <strong>{registeredEmail}</strong>.</p>
       <label>Code de confirmation à 6 chiffres
         <input name="token" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required placeholder="123456" />
       </label>
       <button disabled={busy} className="primary-link" type="submit">{busy ? 'Vérification…' : 'Confirmer mon adresse e-mail'}</button>
-      <button type="button" disabled={busy} onClick={resend}>Renvoyer le code</button>
+      <button type="button" disabled={busy} onClick={resend}>Demander un nouveau code</button>
     </form>}
 
     {message && <p role="status" aria-live="polite">{message}</p>}
     {verified && <p><a className="primary-link" href="/connexion">Continuer vers la connexion</a></p>}
-    {!registeredEmail && <p><a href="/connexion">Déjà inscrit ? Se connecter</a></p>}
+    {!verified && <p><a href="/connexion">Déjà inscrit ou adresse déjà confirmée ? Se connecter</a></p>}
   </section></main>;
 }
