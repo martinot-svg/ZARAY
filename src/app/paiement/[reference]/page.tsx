@@ -2,8 +2,13 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 
-type PaymentStatus = { reference: string; orderStatus: string; paid: boolean; paymentStatus: string; providerConfigured: boolean };
-const paymentLabels: Record<string,string> = { pending: 'En attente de confirmation MVola', succeeded: 'Paiement confirmé', failed: 'Échec du paiement', cancelled: 'Paiement annulé', review_required: 'Vérification manuelle nécessaire', not_started: 'Paiement non démarré' };
+type PaymentStatus = {
+  reference: string; offerName: string; amount: number | string; currency: string;
+  orderStatus: string; paid: boolean;
+  submission: null | { provider: 'orange_money' | 'mvola'; status: 'submitted' | 'approved' | 'rejected'; createdAt: string; reviewedAt: string | null };
+};
+const providerLabel: Record<string,string> = { orange_money: 'Orange Money', mvola: 'MVola' };
+const statusLabel: Record<string,string> = { submitted: 'Justificatif reçu — en attente de vérification', approved: 'Paiement validé', rejected: 'Justificatif rejeté', not_submitted: 'Aucun justificatif transmis' };
 
 export default function PaymentStatusPage() {
   const params = useParams<{ reference: string }>();
@@ -13,26 +18,30 @@ export default function PaymentStatusPage() {
   const [busy, setBusy] = useState(true);
   async function refresh() {
     try {
-      const response = await fetch('/api/payments/mvola/status?reference=' + encodeURIComponent(reference), { cache: 'no-store' });
+      const response = await fetch('/api/manual-payments/status?reference=' + encodeURIComponent(reference), { cache: 'no-store' });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Statut indisponible.');
-      setStatus(data);
-      setError('');
+      setStatus(data); setError('');
     } catch (e) { setError(e instanceof Error ? e.message : 'Statut indisponible.'); }
     finally { setBusy(false); }
   }
   useEffect(() => { void refresh(); }, [reference]);
   return <main className="form-shell"><section className="form-card" style={{ width: 'min(100%, 680px)' }}>
-    <p className="eyebrow">ZARAY · PAIEMENT MVOLA</p><h1>Suivi du paiement</h1>
+    <p className="eyebrow">ZARAY · PAIEMENT MANUEL</p><h1>Suivi du paiement</h1>
     <p>Référence de commande : <strong>{reference}</strong></p>
-    {busy ? <p role="status">Vérification du statut…</p> : null}
+    {busy && <p role="status">Vérification du statut…</p>}
     {status && <section className="module" style={{ marginTop: 20, minHeight: 0 }}>
-      <span className="module-number">{status.paid ? 'PAYÉ' : 'NON PAYÉ'}</span>
-      <h2>{paymentLabels[status.paymentStatus] ?? status.paymentStatus}</h2>
-      <p>État de la commande : {status.orderStatus}</p>
-      {!status.providerConfigured && <p>Les identifiants MVola ne sont pas encore configurés sur le serveur.</p>}
+      <span className="module-number">{status.paid ? 'PAYÉ' : 'EN ATTENTE'}</span>
+      <h2>{status.offerName}</h2>
+      <p>Montant : <strong>{Number(status.amount).toLocaleString('fr-FR')} {status.currency}</strong></p>
+      <p>Statut : {statusLabel[status.submission?.status ?? 'not_submitted']}</p>
+      {status.submission && <>
+        <p>Moyen de paiement : {providerLabel[status.submission.provider]}</p>
+        <p>Justificatif transmis le {new Date(status.submission.createdAt).toLocaleString('fr-FR')}</p>
+        {status.submission.reviewedAt && <p>Décision le {new Date(status.submission.reviewedAt).toLocaleString('fr-FR')}</p>}
+      </>}
       <button type="button" className="primary-link" onClick={() => { setBusy(true); void refresh(); }}>Actualiser le statut</button>
-      <p><strong>Aucun accès Internet ne sera accordé avant une confirmation vérifiée et une activation réseau distincte.</strong></p>
+      <p><strong>Le paiement est confirmé uniquement après vérification du transfert par un responsable autorisé. Aucun accès Internet n’est activé par la simple soumission d’un reçu.</strong></p>
     </section>}
     {error && <p role="alert">{error}</p>}
     <p style={{ marginTop: 28 }}><a href="/">Retour à ZARAY</a></p>

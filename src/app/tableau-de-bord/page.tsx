@@ -39,13 +39,14 @@ export default function DashboardPage() {
       </article>)}</div> : <p>Aucune entreprise liée à ce compte. Créez votre première entreprise pour commencer.</p>}
       <div className="section-head" style={{ marginTop: 36 }}><div><div className="eyebrow">IMPLANTATIONS</div><h2>Sites</h2></div><a className="primary-link" href="/sites">Gérer les sites →</a></div>
       {sites.length ? <div className="module-grid">{sites.map((site) => <article className="module" key={site.id}><span className="module-number">SITE</span><h3>{site.name}</h3><p>{site.company_name}</p><span className="module-status">{statusLabels[site.status] || site.status}</span></article>)}</div> : <p>Aucun site enregistré pour le moment.</p>}
-      <div className="section-head" style={{ marginTop: 36 }}><div><div className="eyebrow">PARCOURS WI-FI</div><h2>Souscriptions et tickets</h2></div></div>
+      <div className="section-head" style={{ marginTop: 36 }}><div><div className="eyebrow">PARCOURS WI-FI</div><h2>Souscriptions et paiements</h2></div></div>
       <div className="module-grid">
         <article className="module"><span className="module-number">07 · PORTAIL CAPTIF</span><h3>Commandes</h3><p>Suivre les souscriptions et les paiements en attente.</p><p style={{ marginTop: 18 }}><a href="/commandes">Ouvrir les commandes →</a></p></article>
-        <article className="module"><span className="module-number">08 · TICKETS WI-FI</span><h3>Tickets</h3><p>Émission sécurisée après confirmation du paiement et révocation des codes inutilisés.</p><p style={{ marginTop: 18 }}><a href="/tickets">Gérer les tickets →</a></p></article>
-        <article className="module"><span className="module-number">RÈGLE DE SÉCURITÉ</span><h3>Activation contrôlée</h3><p>Aucune commande ni offre active n’active Internet automatiquement. Les intégrations paiement et réseau restent à finaliser.</p></article>
+        <article className="module"><span className="module-number">08 · PAIEMENTS MANUELS</span><h3>Vérifier les reçus</h3><p>Examiner les justificatifs Orange Money et MVola. La validation exige une vérification réelle de la transaction.</p><p style={{ marginTop: 18 }}><a href="/paiements/verification">Ouvrir la vérification →</a></p></article>
+        <article className="module"><span className="module-number">09 · CONFIGURATION</span><h3>Numéros de paiement</h3><p>Configurer les numéros bénéficiaires et les instructions visibles par les clients.</p><p style={{ marginTop: 18 }}><a href="/parametres-paiement">Configurer les moyens de paiement →</a></p></article>
+        <article className="module"><span className="module-number">10 · TICKETS WI-FI</span><h3>Tickets</h3><p>Émission sécurisée après confirmation du paiement. L’activation réseau reste une intégration distincte.</p><p style={{ marginTop: 18 }}><a href="/tickets">Gérer les tickets →</a></p></article>
       </div>
     </>}
-    <p style={{ marginTop: 32 }}><a href="/">← Accueil</a> · <a href="/sites">Sites</a> · <a href="/membres">Membres</a> · <a href="/clients">Clients</a> · <a href="/offres">Offres Internet</a> · <a href="/commandes">Commandes</a> · <a href="/tickets">Tickets Wi-Fi</a> · <a href="/paiements">Paiements</a></p>
+    <p style={{ marginTop: 32 }}><a href="/">← Accueil</a> · <a href="/sites">Sites</a> · <a href="/membres">Membres</a> · <a href="/clients">Clients</a> · <a href="/offres">Offres Internet</a> · <a href="/commandes">Commandes</a> · <a href="/tickets">Tickets Wi-Fi</a> · <a href="/paiements/verification">Vérifier les paiements</a> · <a href="/parametres-paiement">Paramètres de paiement</a></p>
   </section></main>;
 }
