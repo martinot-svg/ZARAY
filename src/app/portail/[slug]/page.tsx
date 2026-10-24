@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useParams } from 'next/navigation';
 type Offer = { id: string; name: string; description: string; durationMinutes: number; validityDays: number; priceAmount: number; currency: string; maxDevices: number };
 type CreatedOrder = { reference: string; status: string; amount: number; currency: string; offer_name: string };
+type PaymentState = { status: string; message: string } | null;
 
 export default function CaptivePortalPage() {
   const params = useParams<{ slug: string }>();
@@ -14,6 +15,7 @@ export default function CaptivePortalPage() {
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [order, setOrder] = useState<CreatedOrder | null>(null);
+  const [paymentState, setPaymentState] = useState<PaymentState>(null);
   const [busy, setBusy] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -33,7 +35,7 @@ export default function CaptivePortalPage() {
   }, [slug]);
 
   async function subscribe(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setError(''); setOrder(null); setSubmitting(true);
+    event.preventDefault(); setError(''); setOrder(null); setPaymentState(null); setSubmitting(true);
     try {
       const response = await fetch('/api/portal/' + encodeURIComponent(slug), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -42,6 +44,13 @@ export default function CaptivePortalPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Souscription impossible.');
       setOrder(data.order);
+      try {
+        const paymentResponse = await fetch('/api/payments/mvola/initiate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reference: data.order.reference }) });
+        const paymentData = await paymentResponse.json();
+        setPaymentState({ status: paymentResponse.ok ? 'pending' : 'unavailable', message: paymentData.message || paymentData.error || 'Le paiement MVola n’est pas disponible pour le moment.' });
+      } catch {
+        setPaymentState({ status: 'unavailable', message: 'La demande de paiement n’a pas pu être envoyée. Votre commande reste en attente.' });
+      }
     } catch (e) { setError(e instanceof Error ? e.message : 'Souscription impossible.'); }
     finally { setSubmitting(false); }
   }
@@ -67,14 +76,16 @@ export default function CaptivePortalPage() {
       <form className="form-stack" onSubmit={subscribe}>
         <label>Nom complet<input value={customerName} onChange={(e) => setCustomerName(e.target.value)} minLength={2} maxLength={160} required /></label>
         <label>Adresse e-mail<input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} maxLength={254} required /></label>
-        <label>Téléphone (facultatif)<input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} maxLength={32} /></label>
+        <label>Téléphone MVola<input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} minLength={10} maxLength={10} pattern="03[0-9]{8}" placeholder="0341234567" required /><small>Entrez le numéro mobile malgache utilisé pour confirmer le paiement MVola.</small></label>
         <button className="primary-link" type="submit" disabled={submitting || !offerId}>{submitting ? 'Création de la commande…' : 'Continuer vers le paiement'}</button>
       </form>
     </> : !error ? <p>Aucune offre active n’est disponible sur ce portail pour le moment.</p> : null}
     {order && <section className="module" style={{ marginTop: 24, minHeight: 0 }} role="status">
       <span className="module-number">COMMANDE CRÉÉE</span><h2>Référence : {order.reference}</h2>
-      <p>Forfait : {order.offer_name}</p><p>Montant : {Number(order.amount).toLocaleString('fr-FR')} {order.currency}</p><p>État : paiement en attente.</p>
-      <p><strong>Aucun accès Internet n’a été activé.</strong> Le paiement en ligne sera disponible après configuration du module de paiement.</p>
+      <p>Forfait : {order.offer_name}</p><p>Montant : {Number(order.amount).toLocaleString('fr-FR')} {order.currency}</p><p>État de la commande : {order.status === 'paid' ? 'payée' : 'paiement en attente'}.</p>
+      {paymentState && <p role={paymentState.status === 'pending' ? 'status' : 'alert'}>{paymentState.message}</p>}
+      <p>Le statut affiché est confirmé uniquement par le serveur après vérification auprès de MVola. <strong>Aucun accès Internet n’est activé par la commande ou par une simple redirection.</strong></p>
+      <p><a href={'/paiement/' + encodeURIComponent(order.reference)}>Consulter le statut du paiement</a></p>
     </section>}
     {error && <p role="alert">{error}</p>}
     <p style={{ marginTop: 28 }}><a href="/">ZARAY</a></p>
