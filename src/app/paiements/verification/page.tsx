@@ -37,8 +37,17 @@ export default function VerificationPaiementsPage() {
         const response = await fetch('/api/sites', { cache: 'no-store' });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Impossible de charger les entreprises.');
+        const candidates = (data.companies ?? []).filter((company: Company) => ['owner','admin'].includes(company.role));
+        const checked = await Promise.all(candidates.map(async (company: Company) => {
+          if (company.role === 'owner') return company;
+          try {
+            const accessResponse = await fetch('/api/manual-payments/access?companyId=' + encodeURIComponent(company.id), { cache: 'no-store' });
+            const access = await accessResponse.json();
+            return accessResponse.ok && access.canReview === true ? company : null;
+          } catch { return null; }
+        }));
+        const authorized = checked.filter((company): company is Company => company !== null);
         if (!active) return;
-        const authorized = (data.companies ?? []).filter((company: Company) => ['owner','admin'].includes(company.role));
         setCompanies(authorized);
         if (authorized[0]) setCompanyId(authorized[0].id);
       } catch (e) { if (active) setError(e instanceof Error ? e.message : 'Erreur de chargement.'); }
@@ -76,7 +85,7 @@ export default function VerificationPaiementsPage() {
     <p className="eyebrow">ZARAY · FINANCES</p><h1>Vérification des paiements</h1>
     <p>Vérifie chaque transaction dans le compte bénéficiaire avant de valider le reçu. Une image seule ne prouve pas que l’argent a été reçu.</p>
     {companies.length > 0 && <label>Entreprise<select value={companyId} onChange={(e) => setCompanyId(e.target.value)}>{companies.map((company) => <option key={company.id} value={company.id}>{company.legal_name}</option>)}</select></label>}
-    {companies.length === 0 && !busy && <p>Aucune entreprise accessible avec le rôle dirigeant ou administrateur.</p>}
+    {companies.length === 0 && !busy && <p>Aucune entreprise accessible : le dirigeant peut valider directement ou autoriser un administrateur depuis les <a href="/autorisations-paiement">autorisations des validateurs</a>.</p>}
     {busy ? <p>Chargement des paiements…</p> : submissions.length ? <div className="module-grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))' }}>
       {submissions.map((item) => <article className="module" key={item.id} style={{ minHeight: 0 }}>
         <span className="module-number">{statusLabel[item.status] ?? item.status}</span>
@@ -100,8 +109,8 @@ export default function VerificationPaiementsPage() {
           </div>
         </>}
       </article>)}
-    </div> : <p>Aucun justificatif pour cette entreprise.</p>}
+    </div> : !busy ? <p>Aucun justificatif pour cette entreprise.</p> : null}
     {notice && <p role="status">{notice}</p>}{error && <p role="alert">{error}</p>}
-    <p style={{ marginTop: 28 }}><a href="/parametres-paiement">Configurer les numéros →</a> · <a href="/commandes">Commandes</a> · <a href="/tableau-de-bord">Tableau de bord</a></p>
+    <p style={{ marginTop: 28 }}><a href="/autorisations-paiement">Gérer les validateurs →</a> · <a href="/parametres-paiement">Configurer les numéros</a> · <a href="/commandes">Commandes</a> · <a href="/tableau-de-bord">Tableau de bord</a></p>
   </section></main>;
 }
