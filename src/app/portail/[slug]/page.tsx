@@ -105,7 +105,8 @@ export default function CaptivePortalPage() {
     try { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: offer.currency }).format(offer.priceAmount); }
     catch { return offer.priceAmount.toLocaleString('fr-FR') + ' ' + offer.currency; }
   };
-  const selectedMethod = paymentMethods.find((method) => method.provider === selectedProvider);
+  const selectedOffer = offers.find((offer) => offer.id === offerId);
+  const offerPayable = selectedOffer?.currency === 'MGA';
 
   return <main className="form-shell"><section className="form-card" style={{ width: 'min(100%, 760px)' }}>
     <p className="eyebrow">ZARAY · PORTAIL CAPTIF</p>
@@ -114,9 +115,9 @@ export default function CaptivePortalPage() {
     {busy ? <p role="status">Chargement des offres…</p> : offers.length ? <>
       <h2>Forfaits disponibles</h2>
       <div className="module-grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', margin: '18px 0 28px' }}>
-        {offers.map((offer) => <button key={offer.id} type="button" className="module" onClick={() => setOfferId(offer.id)} aria-pressed={offerId === offer.id} style={{ textAlign: 'left', cursor: 'pointer', borderColor: offerId === offer.id ? '#087f75' : undefined, color: '#102e3b', background: offerId === offer.id ? '#e4f3f1' : 'white' }}>
+        {offers.map((offer) => <button key={offer.id} type="button" className="module" disabled={offer.currency !== 'MGA'} onClick={() => setOfferId(offer.id)} aria-pressed={offerId === offer.id} style={{ textAlign: 'left', cursor: offer.currency === 'MGA' ? 'pointer' : 'not-allowed', opacity: offer.currency === 'MGA' ? 1 : 0.55, borderColor: offerId === offer.id ? '#087f75' : undefined, color: '#102e3b', background: offerId === offer.id ? '#e4f3f1' : 'white' }}>
           <span className="module-number">{offer.durationMinutes} min de connexion</span><h3>{offer.name}</h3><p>{offer.description || 'Forfait Internet'}</p>
-          <p style={{ marginTop: 12 }}>{offer.validityDays} jour(s) de validité · {offer.maxDevices} appareil(s)</p><strong style={{ display: 'block', marginTop: 18 }}>{money(offer)}</strong>
+          <p style={{ marginTop: 12 }}>{offer.validityDays} jour(s) de validité · {offer.maxDevices} appareil(s)</p><strong style={{ display: 'block', marginTop: 18 }}>{money(offer)}</strong>{offer.currency !== 'MGA' && <p>Indisponible : Orange Money/MVola exige un tarif en ariary (MGA).</p>}
         </button>)}
       </div>
       {!order && <>
@@ -125,7 +126,7 @@ export default function CaptivePortalPage() {
           <label>Nom complet<input value={customerName} onChange={(e) => setCustomerName(e.target.value)} minLength={2} maxLength={160} required /></label>
           <label>Adresse e-mail<input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} maxLength={254} required /></label>
           <label>Téléphone de contact (facultatif)<input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} maxLength={32} placeholder="0341234567" /></label>
-          <button className="primary-link" type="submit" disabled={submitting || !offerId}>{submitting ? 'Création de la commande…' : 'Créer la commande et voir les instructions de paiement'}</button>
+          <button className="primary-link" type="submit" disabled={submitting || !offerId || !offerPayable}>{submitting ? 'Création de la commande…' : 'Créer la commande et voir les instructions de paiement'}</button>
         </form>
       </>}
     </> : !error ? <p>Aucune offre active n’est disponible sur ce portail pour le moment.</p> : null}
