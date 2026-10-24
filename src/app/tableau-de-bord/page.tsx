@@ -51,7 +51,7 @@ export default function DashboardPage() {
         <article className="module"><span className="module-number">03 · COMPTE</span><h3>Actif</h3><p>Session authentifiée requise</p></article>
       </div>
 
-      <div className="section-head"><div><div className="eyebrow">VOTRE ORGANISATION</div><h2>Entreprises</h2></div><a className="primary-link" href="/entreprises/nouvelle">Ajouter une entreprise →</a></div>
+      <div className="section-head"><div><div className="eyebrow">VOTRE ORGANISATION</div><h2>Entreprises</h2></div><div style={{display:"flex",gap:10,flexWrap:"wrap"}}><a className="primary-link" href="/entreprises/nouvelle">Ajouter une entreprise →</a><a className="primary-link" href="/membres">Gérer les membres →</a></div></div>
       {companies.length ? <div className="module-grid">{companies.map(company => <article className="module" key={company.id}>
         <span className="module-number">{company.role || 'Membre'}</span><h3>{company.legal_name}</h3><p>Identifiant : {company.slug}</p><span className="module-status">Accès autorisé</span>
       </article>)}</div> : <p>Aucune entreprise liée à ce compte. Créez votre première entreprise pour commencer.</p>}
