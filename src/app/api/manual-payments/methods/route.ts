@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
-import { authorizeManualPaymentAdmin } from '@/lib/manual-payment-auth';
+import { authorizeManualPaymentReviewer } from '@/lib/manual-payment-auth';
 
 export const dynamic = 'force-dynamic';
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   if (!/^[0-9a-f-]{36}$/i.test(companyId)) return json({ error: 'Entreprise invalide.' }, 400);
   try {
     const session = await createClient();
-    const authorization = await authorizeManualPaymentAdmin(session, companyId);
+    const authorization = await authorizeManualPaymentReviewer(session, companyId);
     if (!authorization.ok) return json({ error: authorization.error }, authorization.status);
     const service = createServiceClient();
     if (!service) return json({ error: 'Service indisponible.' }, 503);
@@ -38,7 +38,7 @@ export async function PUT(request: NextRequest) {
   }
   try {
     const session = await createClient();
-    const authorization = await authorizeManualPaymentAdmin(session, companyId);
+    const authorization = await authorizeManualPaymentReviewer(session, companyId);
     if (!authorization.ok) return json({ error: authorization.error }, authorization.status);
     const service = createServiceClient();
     if (!service) return json({ error: 'Service indisponible.' }, 503);
