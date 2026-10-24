@@ -18,7 +18,20 @@ async function verifyWithMvola(correlationId: string) {
     signal: AbortSignal.timeout(10000),
   });
   if (!response.ok) throw new Error('mvola_status_failed');
-  return await response.json() as Record<string, unknown>;
+  const statusData = await response.json() as Record<string, unknown>;
+  // MVola's status endpoint returns an objectReference, while the details endpoint
+  // contains the transaction amount, currency and final transactionStatus.
+  const transactionId = typeof statusData.objectReference === 'string' ? statusData.objectReference : '';
+  if (!transactionId) return statusData;
+  const detailsResponse = await fetch(config.apiBase + '/mvola/mm/transactions/type/merchantpay/1.0.0/' + encodeURIComponent(transactionId), {
+    method: 'GET',
+    headers: { ...mvolaHeaders(config, token, config.partnerMsisdn), 'X-CorrelationID': randomUUID() },
+    cache: 'no-store',
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!detailsResponse.ok) throw new Error('mvola_details_failed');
+  const details = await detailsResponse.json() as Record<string, unknown>;
+  return { ...statusData, ...details, status: statusData.status ?? details.transactionStatus };
 }
 
 async function handle(request: NextRequest) {
