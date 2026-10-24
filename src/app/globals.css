@@ -126,8 +126,8 @@
 }
 
 @keyframes zaray-reveal {
-  from { opacity: .2; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: .2; translate: 0 12px; }
+  to { opacity: 1; translate: 0 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -151,5 +151,6 @@
   .form-stack button:not(:disabled):active,
   .module button:not(:disabled):active {
     transform: none;
+    translate: none;
   }
 }
