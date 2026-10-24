@@ -10,12 +10,12 @@ export async function GET(request: NextRequest) {
   const { data: order, error } = await service.from('subscription_orders')
     .select('id,public_reference,offer_name,amount,currency,status,paid_at')
     .eq('public_reference', reference).maybeSingle();
-  if (error) return NextResponse.json({ error: 'Service indisponible.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+  if (error) { console.error('manual payment status order lookup failed', { code: error.code }); return NextResponse.json({ error: 'Service indisponible.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } }); }
   if (!order) return NextResponse.json({ error: 'Commande introuvable.' }, { status: 404, headers: { 'Cache-Control': 'no-store' } });
   const { data: submission, error: submissionError } = await service.from('manual_payment_submissions')
     .select('provider,status,created_at,reviewed_at')
     .eq('order_id', order.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
-  if (submissionError) return NextResponse.json({ error: 'Service indisponible.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+  if (submissionError) { console.error('manual payment status submission lookup failed', { code: submissionError.code }); return NextResponse.json({ error: 'Service indisponible.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } }); }
   return NextResponse.json({
     reference: order.public_reference,
     offerName: order.offer_name,
