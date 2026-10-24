@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   if (error) return NextResponse.json({ error: 'Service indisponible.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
   if (!order) return NextResponse.json({ error: 'Commande introuvable.' }, { status: 404, headers: { 'Cache-Control': 'no-store' } });
   const { data: submission, error: submissionError } = await service.from('manual_payment_submissions')
-    .select('provider,status,created_at,reviewed_at,review_note,transaction_reference')
+    .select('provider,status,created_at,reviewed_at')
     .eq('order_id', order.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
   if (submissionError) return NextResponse.json({ error: 'Service indisponible.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
   return NextResponse.json({
@@ -28,8 +28,6 @@ export async function GET(request: NextRequest) {
       status: submission.status,
       createdAt: submission.created_at,
       reviewedAt: submission.reviewed_at,
-      reviewNote: submission.review_note,
-      transactionReference: submission.transaction_reference,
     } : null,
   }, { headers: { 'Cache-Control': 'no-store' } });
 }
