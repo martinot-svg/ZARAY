@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 type Company = { id: string; legal_name: string; role: string };
 type Submission = {
-  id: string; provider: 'orange_money' | 'mvola'; sender_phone: string; transaction_reference: string;
+  id: string; order_id: string; provider: 'orange_money' | 'mvola'; sender_phone: string; transaction_reference: string;
   amount: number | string; currency: string; proofUrl: string | null; customer_note: string;
   status: 'submitted' | 'approved' | 'rejected'; created_at: string; review_note: string;
   order: null | { id: string; public_reference: string; customer_name: string; customer_email: string; offer_name: string; amount: number | string; currency: string; status: string };
