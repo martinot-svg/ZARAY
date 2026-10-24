@@ -62,6 +62,6 @@ export default function DashboardPage() {
       </article>)}</div> : <p>Aucun site enregistré pour le moment.</p>}
     </>}
 
-    <p style={{ marginTop: 32 }}><a href="/">← Accueil</a> · <a href="/sites">Gestion des sites</a> · <a href="/entreprises/nouvelle">Nouvelle entreprise</a></p>
+    <p style={{ marginTop: 32 }}><a href="/">← Accueil</a> · <a href="/sites">Gestion des sites</a> · <a href="/membres">Membres</a> · <a href="/clients">Clients</a> · <a href="/offres">Offres Internet</a> · <a href="/entreprises/nouvelle">Nouvelle entreprise</a></p>
   </section></main>;
 }
