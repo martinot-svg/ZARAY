@@ -1,0 +1,24 @@
+'use client';
+import { useEffect, useState, type FormEvent } from 'react';
+type Company={id:string;legal_name:string;role:string};
+type Site={id:string;company_id:string;name:string};
+type Customer={id:string;company_id:string;site_id:string|null;full_name:string;email:string|null;phone:string|null;notes:string;status:string;created_at:string};
+export default function ClientsPage(){
+ const [companies,setCompanies]=useState<Company[]>([]);const [sites,setSites]=useState<Site[]>([]);const [customers,setCustomers]=useState<Customer[]>([]);const [companyId,setCompanyId]=useState('');const [siteId,setSiteId]=useState('');const [fullName,setFullName]=useState('');const [email,setEmail]=useState('');const [phone,setPhone]=useState('');const [notes,setNotes]=useState('');const [busy,setBusy]=useState(true);const [notice,setNotice]=useState('');const [error,setError]=useState('');
+ useEffect(()=>{let active=true;(async()=>{try{const r=await fetch('/api/sites',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les entreprises.');if(active){setCompanies(d.companies??[]);setSites(d.sites??[]);if(d.companies?.[0])setCompanyId(d.companies[0].id);}}catch(e){if(active)setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{if(active)setBusy(false);}})();return()=>{active=false};},[]);
+ useEffect(()=>{if(!companyId)return;let active=true;setBusy(true);(async()=>{try{const r=await fetch('/api/customers?companyId='+encodeURIComponent(companyId),{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les clients.');if(active)setCustomers(d.customers??[]);}catch(e){if(active)setError(e instanceof Error?e.message:'Erreur.');}finally{if(active)setBusy(false);}})();return()=>{active=false};},[companyId]);
+ async function create(event:FormEvent<HTMLFormElement>){event.preventDefault();setError('');setNotice('');setBusy(true);try{const r=await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,siteId,fullName,email,phone,notes})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Création impossible.');setFullName('');setEmail('');setPhone('');setNotes('');setSiteId('');setCustomers(old=>[d.customer,...old]);setNotice('Client enregistré.');}catch(e){setError(e instanceof Error?e.message:'Création impossible.');}finally{setBusy(false);}}
+ const availableSites=sites.filter(s=>s.company_id===companyId);
+ return <main className="form-shell"><section className="form-card" style={{maxWidth:1000,width:'min(100%,1000px)'}}><p className="eyebrow">ZARAY · MODULE 5 · CRM</p><h1>Gestion des clients</h1><p>Les fiches clients sont isolées par entreprise. Les accès et modifications sont contrôlés par les permissions Supabase.</p>
+ {companies.length>0&&<label>Entreprise<select value={companyId} onChange={e=>{setCompanyId(e.target.value);setSiteId('')}}>{companies.map(c=><option key={c.id} value={c.id}>{c.legal_name}</option>)}</select></label>}
+ {companies.length===0&&!busy&&<p>Aucune entreprise accessible. Créez d’abord une entreprise.</p>}
+ <h2 style={{marginTop:28}}>Nouveau client</h2><form className="form-stack" onSubmit={create}>
+ <label>Nom complet<input value={fullName} onChange={e=>setFullName(e.target.value)} minLength={2} maxLength={160} required/></label>
+ <label>E-mail (facultatif)<input type="email" value={email} onChange={e=>setEmail(e.target.value)} maxLength={254}/></label>
+ <label>Téléphone (facultatif)<input type="tel" value={phone} onChange={e=>setPhone(e.target.value)} maxLength={32}/></label>
+ <label>Site (facultatif)<select value={siteId} onChange={e=>setSiteId(e.target.value)}><option value="">Aucun site spécifique</option>{availableSites.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+ <label>Notes internes<textarea value={notes} onChange={e=>setNotes(e.target.value)} maxLength={2000} rows={3}/></label>
+ <button className="primary-link" type="submit" disabled={busy||!companyId}>Enregistrer le client</button></form>
+ <h2 style={{marginTop:32}}>Clients enregistrés</h2>{busy?<p>Chargement…</p>:customers.length?<div className="module-grid">{customers.map(c=><article className="module" key={c.id}><span className="module-number">{c.status==='active'?'ACTIF':c.status.toUpperCase()}</span><h3>{c.full_name}</h3><p>{c.email||'Sans e-mail'}{c.phone?' · '+c.phone:''}</p><p>{availableSites.find(s=>s.id===c.site_id)?.name||'Aucun site attribué'}</p>{c.notes&&<p>{c.notes}</p>}<span className="module-status">Créé le {new Date(c.created_at).toLocaleDateString('fr-FR')}</span></article>)}</div>:<p>Aucun client pour cette entreprise.</p>}
+ {notice&&<p role="status">{notice}</p>}{error&&<p role="alert">{error}</p>}<p style={{marginTop:28}}><a href="/offres">Gestion des offres →</a> · <a href="/tableau-de-bord">Tableau de bord</a></p></section></main>;
+}
