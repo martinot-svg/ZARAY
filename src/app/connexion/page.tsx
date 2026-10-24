@@ -33,6 +33,7 @@ export default function ConnexionPage() {
     <form className="form-stack" onSubmit={submit}>
       <label>E-mail<input name="email" type="email" autoComplete="email" required /></label>
       <label>Mot de passe<input name="password" type="password" autoComplete="current-password" required /></label>
+      <p><a href="/mot-de-passe-oublie">Mot de passe oublié ?</a></p>
       <button type="submit" disabled={busy} className="primary-link">{busy ? 'Connexion…' : 'Se connecter'}</button>
     </form>
     {error && <p role="alert">{error}</p>}
