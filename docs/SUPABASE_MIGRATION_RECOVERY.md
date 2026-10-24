@@ -29,6 +29,7 @@ Read-only queries against production Supabase and static inventory extraction fr
 
 - Migration history: **19 versions in Supabase; 19 corresponding files on this branch**; all ten recovered filenames match their recorded versions and names.
 - Public tables: **14 expected / 14 present**.
+- Columns: **145 expected / 145 present** across those tables; the static column inventory found **no missing or extra columns**.
 - RLS: **14 of 14 public tables have RLS enabled**.
 - Public function names: **23 expected / 23 present**.
 - Policy names: **18 expected / 18 present**.
