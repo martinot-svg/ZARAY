@@ -14,16 +14,24 @@ export async function authorizeManualPaymentAdmin(
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return { ok: false, status: 401, error: 'Connectez-vous pour continuer.' };
   if (!user.email_confirmed_at) return { ok: false, status: 403, error: 'Vérifiez votre adresse e-mail.' };
-  const { data: member, error } = await supabase
-    .from('company_members')
-    .select('role')
-    .eq('company_id', companyId)
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .maybeSingle();
+  const { data: member, error } = await supabase.from('company_members').select('role')
+    .eq('company_id', companyId).eq('user_id', user.id).eq('status', 'active').maybeSingle();
   if (error) return { ok: false, status: 503, error: 'Impossible de vérifier les autorisations.' };
   if (!member || !['owner', 'admin'].includes(member.role)) {
-    return { ok: false, status: 403, error: 'Action réservée au dirigeant et aux administrateurs autorisés.' };
+    return { ok: false, status: 403, error: 'Action réservée au dirigeant et aux administrateurs.' };
   }
   return { ok: true, user, role: member.role as 'owner' | 'admin' };
+}
+
+export async function authorizeManualPaymentReviewer(
+  supabase: SupabaseClient,
+  companyId: string,
+): Promise<{ ok: true; user: User; role: 'owner' | 'admin' } | { ok: false; status: number; error: string }> {
+  const base = await authorizeManualPaymentAdmin(supabase, companyId);
+  if (!base.ok) return base;
+  if (base.role === 'owner') return base;
+  const { data, error } = await supabase.rpc('can_review_manual_payment_submissions', { p_company_id: companyId });
+  if (error) return { ok: false, status: 503, error: 'Impossible de vérifier les droits de validation.' };
+  if (data !== true) return { ok: false, status: 403, error: 'Le dirigeant doit vous autoriser explicitement à vérifier les paiements.' };
+  return base;
 }
