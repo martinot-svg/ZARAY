@@ -2,13 +2,13 @@ import { ZarayIcon } from '@/components/ui/zaray-icon';
 import BrandLogo from '@/components/brand-logo';
 
 const features = [
-  { tag: 'ORGANISATION', number: '01', title: 'Entreprises et sites', description: 'Retrouvez vos entreprises dans votre compte personnel et consultez les opérations de chacun de leurs sites.' },
-  { tag: 'RELATION CLIENT', number: '02', title: 'Gestion des clients', description: 'Centralisez les dossiers clients, les coordonnées et les rattachements aux sites concernés.' },
-  { tag: 'CATALOGUE', number: '03', title: 'Offres Internet', description: 'Définissez les offres, leurs durées, tarifs, validités et nombre d’appareils autorisés.' },
-  { tag: 'ACTIVITÉ', number: '04', title: 'Commandes', description: 'Suivez les souscriptions, leurs statuts et les informations utiles au traitement des demandes.' },
-  { tag: 'ACCÈS WI-FI', number: '05', title: 'Tickets Wi-Fi', description: 'Générez et suivez les tickets des clients occasionnels. L’accès réseau dépend de la configuration effective des équipements.' },
-  { tag: 'FINANCE', number: '06', title: 'Paiements', description: 'Suivez les règlements, les justificatifs et les validations effectuées par les responsables autorisés.' },
-  { tag: 'PILOTAGE', number: '07', title: 'Tableaux de bord', description: 'Consultez les données réelles de votre entreprise ou d’un site, sans indicateurs de démonstration.' },
+  { tag: 'ORGANISATION', number: '01', icon: 'company', title: 'Entreprises et sites', description: 'Retrouvez vos entreprises dans votre compte personnel et consultez les opérations de chacun de leurs sites.' },
+  { tag: 'RELATION CLIENT', number: '02', icon: 'customers', title: 'Gestion des clients', description: 'Centralisez les dossiers clients, les coordonnées et les rattachements aux sites concernés.' },
+  { tag: 'CATALOGUE', number: '03', icon: 'wifi', title: 'Offres Internet', description: 'Définissez les offres, leurs durées, tarifs, validités et nombre d’appareils autorisés.' },
+  { tag: 'ACTIVITÉ', number: '04', icon: 'orders', title: 'Commandes', description: 'Suivez les souscriptions, leurs statuts et les informations utiles au traitement des demandes.' },
+  { tag: 'ACCÈS WI-FI', number: '05', icon: 'ticket', title: 'Tickets Wi-Fi', description: 'Générez et suivez les tickets des clients occasionnels. L’accès réseau dépend de la configuration effective des équipements.' },
+  { tag: 'FINANCE', number: '06', icon: 'payment', title: 'Paiements', description: 'Suivez les règlements, les justificatifs et les validations effectuées par les responsables autorisés.' },
+  { tag: 'PILOTAGE', number: '07', icon: 'dashboard', title: 'Tableaux de bord', description: 'Consultez les données réelles de votre entreprise ou d’un site, sans indicateurs de démonstration.' },
 ];
 const benefits = [
   { title: 'Chaque information à sa place', description: 'Le compte personnel, l’entreprise et les sites sont clairement séparés. Les données restent dans le bon contexte.' },
@@ -73,7 +73,7 @@ export default function HomePage() {
           </div>
           <div className="landing-feature-grid">{features.map(feature => <article className="landing-feature" key={feature.number}>
             <div className="landing-feature-top"><span>{feature.tag}</span><span>{feature.number}</span></div>
-            <h3>{feature.title}</h3><p>{feature.description}</p>
+            <h3><ZarayIcon name={feature.icon as import("@/components/ui/zaray-icon").ZarayIconName} size={23} /> {feature.title}</h3><p>{feature.description}</p>
           </article>)}</div>
         </div>
       </section>
