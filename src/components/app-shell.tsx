@@ -1,5 +1,5 @@
-import { ZarayIcon } from '@/components/ui/zaray-icon';
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import SignOutButton from '@/components/sign-out-button';
