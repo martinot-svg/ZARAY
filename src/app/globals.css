@@ -552,3 +552,26 @@ body{background:var(--canvas);color:var(--text-primary)}
 :where(input,textarea,select):not([style*="background"]) {
   color-scheme: light;
 }
+
+
+/* AUTH LOGO — white form surface: no artificial dark badge behind the mark. */
+.form-shell.auth-motion .form-card .auth-brand{
+  display:flex;align-items:center;justify-content:flex-start;
+  background:transparent!important;border:0!important;
+  box-shadow:none!important;outline:0!important;filter:none!important;
+  border-radius:0!important;padding:0!important;min-height:0!important;
+  margin:0 0 24px!important;
+}
+.form-shell.auth-motion .form-card .auth-brand a{
+  display:block;width:clamp(145px,36vw,210px);max-width:100%;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  padding:0!important;
+}
+.form-shell.auth-motion .form-card .auth-brand .brand-logo{
+  display:block;width:100%;height:auto;object-fit:contain;object-position:left center;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  outline:0!important;filter:none!important;
+}
+@media(max-width:700px){
+ .form-shell.auth-motion .form-card .auth-brand a{width:clamp(145px,43vw,187px)}
+}
