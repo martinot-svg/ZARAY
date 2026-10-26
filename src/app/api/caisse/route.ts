@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { authorizeTenant } from '@/lib/tenant-context';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,30 +23,24 @@ function errorStatus(message: string, code?: string) {
   return json('Impossible de générer le ticket.', 400);
 }
 
-export async function GET(request: NextRequest) {
-  const companyId = request.nextUrl.searchParams.get('companyId') ?? '';
-  if (!companyId) return json('Identifiant d’entreprise requis.', 400);
-  try {
-    const { supabase, response } = await getVerifiedUser();
-    if (response) return response;
-    const { data, error } = await supabase
-      .from('walkin_sales')
-      .select('id,company_id,site_id,receipt_number,ticket_code_prefix,customer_name,customer_phone,offer_name,amount,currency,duration_minutes,validity_days,max_devices,payment_method,ticket_status,valid_from,valid_until,created_at')
-      .eq('company_id', companyId)
-      .order('created_at', { ascending: false })
-      .limit(100);
-    if (error) return json('Impossible de charger les ventes.', error.code === '42501' ? 403 : 500);
-    const now = Date.now();
-    const sales = (data ?? []).map((sale) => ({
-      ...sale,
-      ticket_status: sale.ticket_status === 'issued' && new Date(sale.valid_until).getTime() <= now ? 'expired' : sale.ticket_status,
-    }));
-    return NextResponse.json({ sales }, { headers: { 'Cache-Control': 'no-store' } });
-  } catch {
-    return json('Service indisponible.', 503);
-  }
-}
+export async function GET(request:NextRequest){
+  const companyId=request.nextUrl.searchParams.get('companyId')??'';
+  const siteId=request.nextUrl.searchParams.get('siteId')||null;
+  if(!companyId)return json('Entreprise requise.',400);
+  try{
+    const supabase=await createClient();
+    const access=await authorizeTenant(supabase,companyId,siteId);
+    if(!access.ok)return json(access.error,access.status);
 
+    let query=supabase.from('walkin_sales').select('id,company_id,site_id,receipt_number,ticket_code_prefix,customer_name,customer_phone,offer_name,amount,currency,duration_minutes,validity_days,max_devices,payment_method,ticket_status,valid_from,valid_until,created_at').eq('company_id',companyId);
+    if(siteId)query=query.eq('site_id',siteId);
+    const {data,error}=await query.order('created_at',{ascending:false}).limit(100);
+    if(error)return json('Impossible de charger les ventes.',503);
+    const now=Date.now();
+    const sales=(data??[]).map(t=>({...t,ticket_status:t.ticket_status==='issued'&&new Date(t.valid_until).getTime()<=now?'expired':t.ticket_status}));
+    return NextResponse.json({sales},{headers:{'Cache-Control':'no-store'}});
+  }catch{return json('Service indisponible.',503);}
+}
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
   if (!body || typeof body.companyId !== 'string' || typeof body.offerId !== 'string' || typeof body.customerName !== 'string' || typeof body.siteId !== 'string' || body.paymentMethod !== 'cash') {

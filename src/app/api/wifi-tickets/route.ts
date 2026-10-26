@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { authorizeTenant } from '@/lib/tenant-context';
 export const dynamic = 'force-dynamic';
 const json = (error: string, status: number) => NextResponse.json({ error }, { status, headers: { 'Cache-Control': 'no-store' } });
 
@@ -19,20 +20,25 @@ function messageStatus(message: string, code?: string) {
   return json('Opération impossible.', 400);
 }
 
-export async function GET(request: NextRequest) {
-  const companyId = request.nextUrl.searchParams.get('companyId') ?? '';
-  if (!companyId) return json('Identifiant d’entreprise requis.', 400);
-  try {
-    const { supabase, response } = await getVerifiedUser();
-    if (response) return response;
-    const { data, error } = await supabase.from('wifi_tickets').select('id,company_id,subscription_order_id,code_prefix,status,duration_minutes,max_devices,valid_from,valid_until,redeemed_at,revoked_at,created_at').eq('company_id', companyId).order('created_at', { ascending: false }).limit(200);
-    if (error) { console.error('Wi-Fi tickets list failed', { code: error.code }); return json('Impossible de charger les tickets.', error.code === '42501' ? 403 : 500); }
-    const now = Date.now();
-    const tickets = (data ?? []).map((ticket) => ({ ...ticket, status: ticket.status === 'issued' && new Date(ticket.valid_until).getTime() <= now ? 'expired' : ticket.status }));
-    return NextResponse.json({ tickets }, { headers: { 'Cache-Control': 'no-store' } });
-  } catch { return json('Service indisponible.', 503); }
-}
+export async function GET(request:NextRequest){
+  const companyId=request.nextUrl.searchParams.get('companyId')??'';
+  const siteId=request.nextUrl.searchParams.get('siteId')||null;
+  if(!companyId)return json('Entreprise requise.',400);
+  try{
+    const supabase=await createClient();
+    const access=await authorizeTenant(supabase,companyId,siteId);
+    if(!access.ok)return json(access.error,access.status);
 
+    const columns='id,company_id,subscription_order_id,code_prefix,status,duration_minutes,max_devices,valid_from,valid_until,redeemed_at,revoked_at,created_at';
+    let query=supabase.from('wifi_tickets').select(columns+(siteId?',subscription_orders!inner(site_id)':'')).eq('company_id',companyId);
+    if(siteId)query=query.eq('subscription_orders.site_id',siteId);
+    const {data,error}=await query.order('created_at',{ascending:false}).limit(200);
+    if(error)return json('Impossible de charger les tickets Wi-Fi.',503);
+    const now=Date.now();
+    const tickets=(data??[]).map(t=>({...t,status:t.status==='issued'&&new Date(t.valid_until).getTime()<=now?'expired':t.status}));
+    return NextResponse.json({tickets},{headers:{'Cache-Control':'no-store'}});
+  }catch{return json('Service indisponible.',503);}
+}
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
   if (!body || typeof body.orderId !== 'string') return json('Commande requise.', 400);
