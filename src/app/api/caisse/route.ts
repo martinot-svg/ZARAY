@@ -15,6 +15,7 @@ async function getVerifiedUser() {
 
 function errorStatus(message: string, code?: string) {
   if (message.includes('role_not_authorized') || code === '42501') return json('Permission insuffisante pour utiliser la caisse.', 403);
+  if (message.includes('site_not_active')) return json('Choisissez un site actif de cette entreprise.', 409);
   if (message.includes('offer_not_found') || message.includes('site_not_found') || code === 'P0002') return json('Offre ou site introuvable.', 404);
   if (message.includes('customer_name_required') || message.includes('invalid_payment_method') || message.includes('invalid_ticket_code') || message.includes('invalid_receipt_number')) return json('Données de vente invalides.', 400);
   if (message.includes('duplicate_walkin_sale') || code === '23505') return json('La vente n’a pas pu être enregistrée. Réessayez avec une nouvelle référence.', 409);
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
-  if (!body || typeof body.companyId !== 'string' || typeof body.offerId !== 'string' || typeof body.customerName !== 'string' || typeof body.paymentMethod !== 'string') {
+  if (!body || typeof body.companyId !== 'string' || typeof body.offerId !== 'string' || typeof body.customerName !== 'string' || typeof body.siteId !== 'string' || body.paymentMethod !== 'cash') {
     return json('Entreprise, offre, client et mode de paiement sont requis.', 400);
   }
   try {
