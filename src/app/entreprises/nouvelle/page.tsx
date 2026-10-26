@@ -1,5 +1,7 @@
 'use client';
 
+import BrandLogo from '@/components/brand-logo';
+
 import { useState, type FormEvent } from 'react';
 
 export default function NouvelleEntreprise() {
@@ -29,7 +31,8 @@ export default function NouvelleEntreprise() {
     }
   }
 
-  return <main className="form-shell"><section className="form-card">
+  return <main className="form-shell auth-motion"><section className="form-card">
+    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority /></a></div>
     <p className="eyebrow">ZARAY · GESTION DES ENTREPRISES</p>
     <h1>Enregistrer mon entreprise</h1>
     <p>Votre entreprise est enregistrée dans Supabase après vérification de la session et de l’adresse e-mail. La période d’essai est de 31 jours.</p>
