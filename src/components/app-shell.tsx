@@ -72,6 +72,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
     <div className="app-main">
       <header className="app-topbar">
         <button ref={menuButton} className="app-menu-button" type="button" aria-controls="zaray-app-nav" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}>☰ Menu</button>
+        <a className="app-topbar-brand" href="/mon-compte" aria-label="ZARAY · Espace personnel"><BrandLogo /></a>
         <div className="workspace-context">
           <strong>Compte ZARAY</strong><span className="muted"> / </span>
           {companies.length>0 && activeCompany ? <>

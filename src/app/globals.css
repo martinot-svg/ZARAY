@@ -321,3 +321,14 @@ body{background:var(--canvas);color:var(--text-primary)}
   .auth-brand a{width:min(170px,100%)}
   .workspace-brand a{width:min(158px,100%)}
 }
+
+/* Official transparent logo remains visible in the enterprise/site top navigation. */
+.app-topbar-brand{display:flex;align-items:center;justify-content:center;flex:0 0 122px;
+  min-width:0;background:var(--brand-ink);border-radius:10px;padding:7px 12px}
+.app-topbar-brand .brand-logo{display:block;width:100%;max-width:100%;height:auto;object-fit:contain}
+@media(max-width:700px){
+  .app-topbar{height:auto;min-height:72px;flex-wrap:wrap;gap:10px;padding-block:10px}
+  .app-topbar-brand{flex-basis:100px;padding:7px 10px}
+  .app-topbar .workspace-context{order:3;flex:1 0 100%}
+  .app-topbar-links{margin-left:auto}
+}
