@@ -1,0 +1,30 @@
+import PersonalShell from '@/components/personal-shell';
+import { loadPersonalContext } from '@/lib/personal-context';
+
+export const dynamic = 'force-dynamic';
+
+export default async function PersonalHomePage() {
+  const { identity, companies, error } = await loadPersonalContext();
+  return <PersonalShell active="/mon-compte" email={identity.email}>
+    <header className="personal-page-heading">
+      <p className="eyebrow">MON COMPTE ZARAY</p>
+      <h1>{identity.name ? `Bonjour, ${identity.name}` : 'Bonjour'}</h1>
+      <p>Votre accueil personnel. Choisissez une entreprise pour ouvrir son espace de gestion.</p>
+    </header>
+    {error ? <div className="alert alert-error" role="alert">{error}</div> : <>
+      {companies.length ? <section className="panel">
+        <div className="panel-head"><h2 className="panel-title">Mes entreprises</h2><a className="header-link" href="/entreprises">Voir toutes mes entreprises</a></div>
+        <div className="personal-business-list">{companies.map(company => <a key={company.id} className="personal-business-item" href={'/tableau-de-bord?companyId=' + encodeURIComponent(company.id)}>
+          <span><strong>{company.legal_name}</strong><small>{company.slug}</small></span><span className="status-pill">{company.role}</span>
+        </a>)}</div>
+      </section> : <section className="empty-state"><strong>Aucune entreprise accessible</strong>
+        <p>Votre compte personnel est prêt. Vous pouvez créer votre première entreprise.</p>
+        <a className="primary-link" href="/entreprises/nouvelle">+ Créer une entreprise</a>
+      </section>}
+      <div className="personal-quick-actions">
+        <a href="/entreprises" className="quick-action">Mes entreprises</a>
+        <a href="/finance-globale" className="quick-action">Finance globale autorisée</a>
+      </div>
+    </>}
+  </PersonalShell>;
+}
