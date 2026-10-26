@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 import BrandLogo from '@/components/brand-logo';
 import { useEffect, useState } from 'react';
 import WorkspaceBreadcrumb from '@/components/workspace-breadcrumb';
@@ -89,21 +90,21 @@ export default function WifiTicketsPage() {
     {paidOrdersWithoutTicket.length > 0 && <section style={{ marginTop: 24 }}>
       <h2>Émettre un ticket après paiement</h2>
       <label>Commande payée<select value={orderId} onChange={(e) => setOrderId(e.target.value)}><option value="">Choisir une commande…</option>{paidOrdersWithoutTicket.map((o) => <option key={o.id} value={o.id}>{o.public_reference} · {o.customer_name} · {o.offer_name}</option>)}</select></label>
-      <button className="primary-link" type="button" style={{ marginTop: 14 }} disabled={saving || !orderId} onClick={issue}>{saving ? 'Émission…' : 'Générer un ticket Wi-Fi'}</button>
+      <button className="primary-link" type="button" style={{ marginTop: 14 }} disabled={saving || !orderId} onClick={issue}><ZarayIcon name="ticket" size={18} /> {saving ? 'Émission…' : 'Générer un ticket Wi-Fi'}</button>
     </section>}
     {oneTimeCode && <section className="module" style={{ marginTop: 22, minHeight: 0 }}>
       <span className="module-number">CODE AFFICHÉ UNE SEULE FOIS</span><h2 style={{ overflowWrap: 'anywhere' }}>{oneTimeCode}</h2>
       <p>Conservez ce code dans un endroit sûr. ZARAY ne stocke que son empreinte cryptographique.</p>
-      <button type="button" onClick={() => { void navigator.clipboard?.writeText(oneTimeCode); setNotice('Code copié si le navigateur autorise le presse-papiers.'); }}>Copier le code</button>
+      <button type="button" onClick={() => { void navigator.clipboard?.writeText(oneTimeCode); setNotice('Code copié si le navigateur autorise le presse-papiers.'); }}><ZarayIcon name="copy" size={18} /> Copier le code</button>
     </section>}
     {busy ? <MotionSkeleton rows={3}/> : tickets.length ? <><h2 style={{ marginTop: 32 }}>Tickets existants</h2><div className="module-grid">
       {tickets.map((t) => <article className="module" key={t.id}>
         <span className="module-number">{statusLabel[t.status] ?? t.status}</span><h3>{t.code_prefix}••••</h3>
         <p>{t.duration_minutes} minutes · {t.max_devices} appareil(s)</p><p>Valide du {new Date(t.valid_from).toLocaleString('fr-FR')}</p><p>Jusqu’au {new Date(t.valid_until).toLocaleString('fr-FR')}</p>
-        {t.status === 'issued' && new Date(t.valid_until).getTime() > Date.now() && <button type="button" style={{ marginTop: 16 }} onClick={() => revoke(t.id)}>Révoquer le ticket</button>}
+        {t.status === 'issued' && new Date(t.valid_until).getTime() > Date.now() && <button type="button" style={{ marginTop: 16 }} onClick={() => revoke(t.id)}><ZarayIcon name="delete" size={18} /> Révoquer le ticket</button>}
       </article>)}
     </div></> : !busy ? <p>Aucun ticket émis. Les commandes en attente de paiement ne peuvent pas générer de ticket.</p> : null}
     <MotionFeedback message={error || notice} kind={error ? 'error' : 'success'}/>
-    <p style={{ marginTop: 28 }}><a href="/commandes">Commandes →</a> · <a href="/tableau-de-bord">Tableau de bord</a></p>
+    <p style={{ marginTop: 28 }}><a href="/commandes"><ZarayIcon name="orders" size={18} /> Commandes →</a> · <a href="/tableau-de-bord"><ZarayIcon name="next" size={18} /> Tableau de bord</a></p>
   </section></main>;
 }

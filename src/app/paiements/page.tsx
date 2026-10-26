@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 import BrandLogo from '@/components/brand-logo';
 import { useEffect, useState } from 'react';
 import WorkspaceBreadcrumb from '@/components/workspace-breadcrumb';
@@ -60,6 +61,6 @@ export default function PaymentsPage() {
       </article>)}
     </div>:!busy?<p>Aucun paiement enregistré pour cette entreprise.</p>:null}
     <MotionFeedback message={error} kind="error"/>
-    <p style={{marginTop:28}}><a href="/commandes">Commandes →</a> · <a href="/tickets">Tickets Wi-Fi</a> · <a href="/tableau-de-bord">Tableau de bord</a></p>
+    <p style={{marginTop:28}}><a href="/commandes"><ZarayIcon name="orders" size={18} /> Commandes →</a> · <a href="/tickets"><ZarayIcon name="next" size={18} /> Tickets Wi-Fi</a> · <a href="/tableau-de-bord"><ZarayIcon name="next" size={18} /> Tableau de bord</a></p>
   </section></main>;
 }
