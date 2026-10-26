@@ -53,3 +53,19 @@ test('responsiveness and reduced-motion are retained',()=>{
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(css,/:focus-visible/);
 });
+
+test('favicon and browser metadata are configured with real transparent ZARAY artwork',()=>{
+  const layout=read('src/app/layout.tsx');
+  const favicon=read('src/app/icon.svg');
+  const generated=read('scripts/generate-favicon.mjs');
+  const manifest=read('public/site.webmanifest');
+  assert.match(layout,/title: 'ZARAY'/);
+  assert.match(layout,/url: '\/favicon\.svg'/);
+  assert.match(layout,/favicon-16x16\.png/);
+  assert.match(layout,/favicon-32x32\.png/);
+  assert.match(layout,/favicon-48x48\.png/);
+  assert.match(favicon,/viewBox="0 0 192 186"/);
+  assert.doesNotMatch(favicon,/<rect\b/);
+  assert.match(generated,/sizes = \[16, 32, 48\]/);
+  assert.match(manifest,/favicon\.svg/);
+});

@@ -1,0 +1,16 @@
+{
+  "name": "ZARAY",
+  "short_name": "ZARAY",
+  "start_url": "/",
+  "display": "browser",
+  "theme_color": "#0a0d0b",
+  "background_color": "#0a0d0b",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

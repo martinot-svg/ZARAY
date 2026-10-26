@@ -301,3 +301,23 @@ body{background:var(--canvas);color:var(--text-primary)}
  .personal-topbar-label{font-size:11px}
 }
 @media(prefers-reduced-motion:reduce){.personal-drawer,.personal-menu-backdrop,.app-shell .app-nav,.app-shell .app-nav-scrim{transition:none!important}}
+
+/* Responsive brand sizing: transparent wordmark, never cropped, stretched or recolored. */
+.brand-logo{display:block;width:100%;height:auto;max-width:100%;aspect-ratio:785/247;object-fit:contain;object-position:center}
+.site-logo{width:clamp(128px,14vw,182px);max-width:100%;flex:0 1 auto}
+.site-logo .brand-logo{width:100%;height:auto}
+.app-brand{width:100%;min-width:0}
+.app-brand .brand-logo{width:min(188px,100%);height:auto;max-width:100%}
+.personal-logo{width:clamp(112px,12vw,146px);min-width:0;max-width:100%;flex:0 1 auto}
+.personal-logo .brand-logo{width:100%;height:auto}
+.auth-brand a{width:min(206px,100%);max-width:100%}
+.auth-brand .brand-logo{width:100%;height:auto}
+.workspace-brand a{width:min(188px,100%);max-width:100%}
+.workspace-brand .brand-logo{width:100%;height:auto}
+@media(max-width:700px){
+  .site-logo{width:clamp(116px,32vw,150px)}
+  .app-brand .brand-logo{width:min(172px,100%)}
+  .personal-logo{width:clamp(104px,30vw,128px)}
+  .auth-brand a{width:min(170px,100%)}
+  .workspace-brand a{width:min(158px,100%)}
+}
