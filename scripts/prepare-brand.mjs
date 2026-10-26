@@ -51,7 +51,7 @@ const white=Buffer.from(pixels);
 for(let i=0;i<white.length;i+=4){
  const r=white[i],g=white[i+1],b=white[i+2];
  const leaf=g>45&&g>r*1.30&&g>b*1.20;
- if(!leaf){white[i]=254;white[i+1]=254;white[i+2]=254;}
+ if(leaf){white[i]=36;white[i+1]=252;white[i+2]=44;}else{white[i]=254;white[i+1]=254;white[i+2]=254;}
 }
 await writeFile(join(root,'public/brand/zaray-dark.png'),encode(width,height,white));
 function favicon(size){
