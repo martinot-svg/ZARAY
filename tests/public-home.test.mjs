@@ -44,3 +44,13 @@ test('loading transitions are reduced-motion friendly and errors offer a real re
  assert.match(css,/\.landing-feature-grid/);
  assert.match(err,/onClick=\{\(\) => reset\(\)\}/);
 });
+
+test('module navigation uses Next.js links so route skeletons work during transitions',()=>{
+ const shell=read('src/components/app-shell.tsx');
+ const personal=read('src/components/personal-shell.tsx');
+ assert.match(shell,/import Link from 'next\/link'/);
+ assert.match(shell,/<Link key=\{href\}/);
+ assert.match(shell,/prefetch=\{false\}/);
+ assert.match(personal,/import Link from 'next\/link'/);
+ assert.match(personal,/<Link key=\{link\.href\}/);
+});
