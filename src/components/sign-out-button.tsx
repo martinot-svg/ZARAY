@@ -1,3 +1,4 @@
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 'use client';
 
 import { useState } from 'react';
@@ -18,5 +19,5 @@ export default function SignOutButton() {
       setBusy(false);
     }
   }
-  return <div className="account-signout"><button type="button" onClick={signOut} disabled={busy}>{busy ? 'Déconnexion…' : 'Se déconnecter'}</button>{error && <p role="alert">{error}</p>}</div>;
+  return <div className="account-signout"><button type="button" onClick={signOut} disabled={busy}><ZarayIcon name="logout" size={18} /> {busy ? 'Déconnexion…' : 'Se déconnecter'}</button>{error && <p role="alert">{error}</p>}</div>;
 }

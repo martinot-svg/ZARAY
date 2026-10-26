@@ -1,3 +1,4 @@
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 'use client';
 
 import BrandLogo from '@/components/brand-logo';
@@ -101,7 +102,7 @@ export default function InscriptionPage() {
       <label>Nom complet<input name="name" autoComplete="name" required minLength={2} maxLength={120} /></label>
       <label>Adresse e-mail<input name="email" type="email" autoComplete="email" required /></label>
       <label>Mot de passe<input name="password" type="password" autoComplete="new-password" required minLength={12} /></label>
-      <button disabled={busy} className="primary-link" type="submit">{busy ? 'Création…' : 'Créer mon compte'}</button>
+      <button disabled={busy} className="primary-link" type="submit"><ZarayIcon name="signup" size={18} /> {busy ? 'Création…' : 'Créer mon compte'}</button>
     </form>}
 
     {registeredEmail && !verified && <form onSubmit={verifyCode} className="form-stack">
@@ -109,12 +110,12 @@ export default function InscriptionPage() {
       <label>Code de confirmation à 6 chiffres
         <input name="token" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required placeholder="123456" />
       </label>
-      <button disabled={busy} className="primary-link" type="submit">{busy ? 'Vérification…' : 'Confirmer mon adresse e-mail'}</button>
-      <button type="button" disabled={busy} onClick={resend}>Demander un nouveau code</button>
+      <button disabled={busy} className="primary-link" type="submit"><ZarayIcon name="confirm" size={18} /> {busy ? 'Vérification…' : 'Confirmer mon adresse e-mail'}</button>
+      <button type="button" disabled={busy} onClick={resend}><ZarayIcon name="refresh" size={18} /> Demander un nouveau code</button>
     </form>}
 
     {message && <p role="status" aria-live="polite">{message}</p>}
-    {verified && <p><a className="primary-link" href="/connexion">Continuer vers la connexion</a></p>}
+    {verified && <p><a className="primary-link" href="/connexion"><ZarayIcon name="login" size={18} /> Continuer vers la connexion</a></p>}
     {!verified && <p><a href="/connexion">Déjà inscrit ou adresse déjà confirmée ? Se connecter</a></p>}
   </section></main>;
 }
