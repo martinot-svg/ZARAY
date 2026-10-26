@@ -62,7 +62,8 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
       {sections.map((section) => <div className="app-nav-group" key={section.label}>
         <span className="app-nav-label">{section.label}</span>
         {section.items.map(([href, label]) => {
-          const scoped=href === '/entreprises' ? href : activeCompany ? href+(href.includes('?')?'&':'?')+'companyId='+encodeURIComponent(activeCompany)+(activeSite && href !== '/tableau-de-bord' ? '&siteId='+encodeURIComponent(activeSite) : '') : href;
+          const siteOperational = ['/clients','/commandes','/tickets','/paiements/verification'].includes(href);
+          const scoped=href === '/entreprises' ? href : activeCompany ? href+(href.includes('?')?'&':'?')+'companyId='+encodeURIComponent(activeCompany)+(activeSite && siteOperational ? '&siteId='+encodeURIComponent(activeSite) : '') : href;
           return <a key={href} ref={href === '/tableau-de-bord' ? firstMenuLink : undefined} className={'app-nav-link' + (activePath === href ? ' active' : '')} href={scoped} aria-current={activePath === href ? 'page' : undefined} onClick={() => setMenuOpen(false)}>{label}</a>;
         })}
       </div>)}
