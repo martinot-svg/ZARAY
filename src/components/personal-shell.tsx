@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import BrandLogo from '@/components/brand-logo';
+import ThemeSelector from '@/components/theme-selector';
 import Link from 'next/link';
 import SignOutButton from '@/components/sign-out-button';
 
@@ -33,7 +34,7 @@ export default function PersonalShell({ children, active, email }: { children: R
     <header className="personal-topbar">
       <button ref={menuButton} type="button" className="personal-menu-toggle" aria-controls="personal-navigation" aria-expanded={open} onClick={() => setOpen(v => !v)}>☰ <span>Menu</span></button>
       <a href="/mon-compte" className="personal-logo" aria-label="Accueil personnel ZARAY"><BrandLogo priority /></a>
-      <span className="personal-topbar-label">Espace personnel</span>
+      <ThemeSelector /><span className="personal-topbar-label">Espace personnel</span>
     </header>
     <main className="personal-content">{email && <p className="personal-email">Compte : {email}</p>}{children}</main>
   </div>;

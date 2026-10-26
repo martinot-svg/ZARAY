@@ -1,4 +1,5 @@
 import BrandLogo from '@/components/brand-logo';
+import ThemeSelector from '@/components/theme-selector';
 
 const features = [
   { tag: 'ORGANISATION', number: '01', title: 'Entreprises et sites', description: 'Retrouvez vos entreprises dans votre compte personnel et consultez les opérations de chacun de leurs sites.' },
@@ -25,7 +26,7 @@ export default function HomePage() {
           <a href="#fonctionnement">Fonctionnement</a>
           <a href="#avantages">Avantages</a>
         </nav>
-        <div className="landing-header-actions">
+        <div className="landing-header-actions"><ThemeSelector />
           <a href="/connexion" className="landing-header-login">Se connecter</a>
           <a href="/inscription" className="landing-button landing-button-primary landing-header-signup">Créer un compte <span aria-hidden="true">↗</span></a>
         </div>

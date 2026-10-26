@@ -493,3 +493,47 @@ body{background:var(--canvas);color:var(--text-primary)}
 }
 @keyframes module-shimmer{from{opacity:.65}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.module-loading-screen,.module-loading-rows span,.module-loading-kpis span,.module-loading-toolbar span,.module-loading-panel-title{animation:none!important}}
+
+/* Official 2026 uploaded light (black/green) and dark (white/green) transparent wordmarks. */
+:root{--zaray-logo-surface:#fff;--zaray-logo-stroke:#d7e6d7}
+.brand-logo{width:100%;max-width:100%;height:auto;aspect-ratio:640/187;display:block;position:relative}
+.brand-logo .brand-logo-variant{width:100%;height:auto;max-width:100%;aspect-ratio:640/187;object-fit:contain;object-position:center}
+.brand-logo .brand-logo-on-light{display:block}
+.brand-logo .brand-logo-on-dark{display:none}
+html[data-theme="dark"]{--zaray-logo-surface:#0a0d0b;--zaray-logo-stroke:#304833;color-scheme:dark}
+html[data-theme="dark"] .brand-logo .brand-logo-on-light{display:none}
+html[data-theme="dark"] .brand-logo .brand-logo-on-dark{display:block}
+@media(prefers-color-scheme:dark){
+ html:not([data-theme]){--zaray-logo-surface:#0a0d0b;--zaray-logo-stroke:#304833;color-scheme:dark}
+ html:not([data-theme]) .brand-logo .brand-logo-on-light{display:none}
+ html:not([data-theme]) .brand-logo .brand-logo-on-dark{display:block}
+}
+html[data-theme="light"]{--zaray-logo-surface:#fff;--zaray-logo-stroke:#d7e6d7;color-scheme:light}
+:where(.landing-brand,.landing-footer-brand,.app-brand,.app-topbar-brand,.personal-logo,.auth-brand,.workspace-brand,.site-logo,.module-loading-logo,.module-error-brand){
+ background:var(--zaray-logo-surface);border-color:var(--zaray-logo-stroke);border-style:solid;border-width:1px;border-radius:9px;
+}
+:where(.landing-brand,.landing-footer-brand,.personal-logo,.site-logo){padding:7px 10px}
+.auth-brand{justify-content:space-between;gap:12px}
+.theme-selector{display:inline-flex;align-items:center;gap:7px;color:#e9f1ea;font-size:11px;font-weight:700;white-space:nowrap}
+.theme-selector select{font:inherit;padding:6px 7px;border:1px solid #6e8470;border-radius:7px;min-height:35px;min-width:77px;background:#1b2d1f;color:#fff;cursor:pointer}
+.theme-selector select:focus-visible{outline:2px solid #21f728;outline-offset:2px}
+.auth-brand .theme-selector{color:#1c2e20}
+.auth-brand .theme-selector select{background:#fff;color:#19351f;border-color:#bbcbbb}
+html[data-theme="dark"] .auth-brand .theme-selector{color:#f2fbf3}
+html[data-theme="dark"] .auth-brand .theme-selector select{background:#15271a;color:#fff;border-color:#6c886b}
+@media(prefers-color-scheme:dark){
+ html:not([data-theme]) .auth-brand .theme-selector{color:#f2fbf3}
+ html:not([data-theme]) .auth-brand .theme-selector select{background:#15271a;color:#fff;border-color:#6c886b}
+}
+.landing-header-actions .theme-selector{margin-right:6px}
+.app-topbar-links .theme-selector{color:#28402e}
+.app-topbar-links .theme-selector select{background:#fff;color:#1c3320;border-color:#c7d7c7}
+.personal-topbar .theme-selector{margin-left:auto}
+.personal-topbar-label{margin-left:0}
+@media(max-width:700px){
+ .landing-header-actions .theme-selector{order:2;margin-right:0}
+ .auth-brand a{max-width:62%}
+ .app-topbar-links .theme-selector span{display:none}
+ .app-topbar-links .theme-selector select{min-width:70px}
+}
+@media(max-width:430px){.auth-brand .theme-selector span,.landing-header-actions .theme-selector span{display:none}}
