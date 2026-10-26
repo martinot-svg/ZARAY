@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import { useEffect } from 'react';
 import Link from 'next/link';
@@ -9,7 +10,7 @@ export default function PersonalError({ error, reset }: { error: Error & { diges
     <p className="eyebrow">ESPACE PERSONNEL ZARAY</p>
     <h1>Impossible d’afficher cette page</h1>
     <p role="alert">Une erreur est survenue lors du chargement des informations. Aucune donnée de remplacement n'a été générée.</p>
-    <div className="page-actions"><button className="primary-link" type="button" onClick={reset}>Réessayer</button>
-      <Link className="header-link" href="/mon-compte">Accueil personnel</Link></div>
+    <div className="page-actions"><button className="primary-link" type="button" onClick={reset}><ZarayIcon name="refresh" size={18} /> Réessayer</button>
+      <Link className="header-link" href="/mon-compte"><ZarayIcon name="home" size={18} /> Accueil personnel</Link></div>
   </section></main>;
 }

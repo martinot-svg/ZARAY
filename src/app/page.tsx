@@ -22,9 +22,9 @@ export default function HomePage() {
       <div className="landing-container landing-header-inner">
         <a href="/" className="landing-brand" aria-label="ZARAY — accueil"><BrandLogo priority /></a>
         <nav className="landing-navigation" aria-label="Navigation publique">
-          <a href="#fonctionnalites">Fonctionnalités</a>
-          <a href="#fonctionnement">Fonctionnement</a>
-          <a href="#avantages">Avantages</a>
+          <a href="#fonctionnalites"><ZarayIcon name="dashboard" size={18} /> Fonctionnalités</a>
+          <a href="#fonctionnement"><ZarayIcon name="settings" size={18} /> Fonctionnement</a>
+          <a href="#avantages"><ZarayIcon name="confirm" size={18} /> Avantages</a>
         </nav>
         <div className="landing-header-actions">
           <a href="/connexion" className="landing-header-login"><ZarayIcon name="login" size={18} /> Se connecter</a>
@@ -98,13 +98,13 @@ export default function HomePage() {
       <section className="landing-final" aria-labelledby="landing-final-title">
         <div className="landing-container landing-final-inner">
           <div><p className="landing-label">COMMENCER AVEC ZARAY</p><h2 id="landing-final-title">Donnez une structure claire à votre activité Wi-Fi.</h2><p>Créez votre compte, organisez vos entreprises et retrouvez vos opérations dans un espace commun.</p></div>
-          <div className="landing-final-actions"><a href="/inscription" className="landing-button landing-button-primary"><ZarayIcon name="signup" size={18} /> Créer un compte</a><a href="/connexion" className="landing-button landing-button-outline">J’ai déjà un compte</a></div>
+          <div className="landing-final-actions"><a href="/inscription" className="landing-button landing-button-primary"><ZarayIcon name="signup" size={18} /> Créer un compte</a><a href="/connexion" className="landing-button landing-button-outline"><ZarayIcon name="next" size={18} /> J’ai déjà un compte</a></div>
         </div>
       </section>
     </main>
     <footer className="landing-footer">
       <div className="landing-container landing-footer-inner"><div><a href="/" className="landing-footer-brand" aria-label="ZARAY — accueil"><BrandLogo /></a><p>Plateforme de gestion des activités et des réseaux Wi-Fi.</p></div>
-        <nav aria-label="Navigation de pied de page"><a href="#fonctionnalites">Fonctionnalités</a><a href="#fonctionnement">Fonctionnement</a><a href="/connexion">Se connecter</a><a href="/inscription">Créer un compte</a></nav>
+        <nav aria-label="Navigation de pied de page"><a href="#fonctionnalites"><ZarayIcon name="login" size={18} /> Fonctionnalités</a><a href="#fonctionnement"><ZarayIcon name="signup" size={18} /> Fonctionnement</a><a href="/connexion"><ZarayIcon name="signup" size={18} /> Se connecter</a><a href="/inscription"><ZarayIcon name="signup" size={18} /> Créer un compte</a></nav>
       </div>
       <div className="landing-container landing-footer-bottom"><span>© {new Date().getFullYear()} ZARAY</span><span>Gestion multi-entreprises et multi-sites.</span></div>
     </footer>

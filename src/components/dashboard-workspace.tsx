@@ -72,7 +72,7 @@ export default function DashboardWorkspace({ siteId }: { siteId?:string }) {
     </section>
     {!site && <section className="panel" style={{marginBottom:16}}>
       <div className="panel-head"><div><div className="panel-title">Sites de {company.legal_name}</div><div className="muted">Sélectionnez un site pour afficher ses opérations.</div></div></div>
-      {sites.length?<div className="data-list">{sites.map(s=><a className="data-row" key={s.id} href={'/sites/'+encodeURIComponent(s.id)+'?companyId='+encodeURIComponent(company.id)}>
+      {sites.length?<div className="data-list">{sites.map(s=><a className="data-row" key={s.id} href={'/sites/'+encodeURIComponent(s.id)+'?companyId='+encodeURIComponent(company.id)}><ZarayIcon name="site" size={18} /> 
         <strong><ZarayIcon name="site" size={18} /> {s.name}</strong><span className="status-pill">{statuses[s.status]??s.status}</span>
       </a>)}</div>:<div className="empty-state"><strong>Entreprise créée.</strong><p>Vous pouvez maintenant créer votre premier site.</p><a className="primary-link" href={contextual('/sites')}><ZarayIcon name="add" size={18} /> Créer un site</a></div>}
     </section>}
