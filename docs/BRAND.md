@@ -25,3 +25,12 @@ du visuel fourni, simplifiées en chemins vectoriels pour l'affichage web.
    la hiérarchie transactionnelle reste prioritaire.
 
 Les composants de référence sont `BrandLogo`, `AppShell` et les tokens CSS.
+
+## Logos officiels non modifiés — intégration prévue
+Deux fichiers PNG originaux distincts, à enregistrer sans conversion :
+- `public/brand/zaray-noir-vert-original.png` : 2048×746, SHA-256 `4c7615f63f466d10baf4ec955a1562a17fa0e99a861c84b7a69bc4c57271326f`
+- `public/brand/zaray-blanc-vert-original.png` : 2048×682, SHA-256 `258c67cadb203f207958af93b96fa47be5971a1fc31283d5fec1f9d86a474140`
+
+Le composant `BrandLogo` référence directement ces PNG originaux. Aucune génération des variantes, transformation de leur transparence, filtre, contour, fond ou effet sur le logo.
+
+**Blocage actuel :** les PNG joints à la conversation ne sont pas encore dans le dépôt. Cette branche ne doit pas être déployée avant copie intégrale des fichiers et réussite du contrôle SHA-256. La production stable reste active.
