@@ -1,3 +1,4 @@
+import BrandLogo from '@/components/brand-logo';
 const modules = [
   { number: '01', title: 'Entreprises & sites', description: 'Organisations, sites, membres et permissions multi-entreprises.', status: 'Disponible', href: '/sites', action: 'Gérer les sites' },
   { number: '02', title: 'Clients', description: 'Fiches clients, coordonnées et rattachement à un site.', status: 'Disponible', href: '/clients', action: 'Gérer les clients' },
@@ -11,7 +12,7 @@ export default function HomePage() {
   return (
     <main className="shell">
       <header className="header">
-        <div className="wordmark">ZARAY<span className="dot">.</span></div>
+        <a href="/" className="site-logo" aria-label="ZARAY · Accueil"><BrandLogo priority /></a>
         <nav style={{ display: 'flex', gap: 18, alignItems: 'center' }} aria-label="Navigation principale">
           <a className="header-link" href="/tableau-de-bord">Tableau de bord</a>
           <a className="header-link" href="/connexion">Se connecter <span aria-hidden="true">↗</span></a>
