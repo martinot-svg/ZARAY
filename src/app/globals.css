@@ -82,3 +82,9 @@ a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}
 /* Keep the disclosure header clean inside generic panel button styles; focus is visible for reduced-motion users too. */
 .motion-disclosure .motion-disclosure-trigger,.motion-disclosure .motion-disclosure-trigger:hover{width:100%;padding:0;border:0;background:transparent;color:inherit;font-size:inherit}
 :where(button,a,input,select,textarea,summary):focus-visible{outline:2px solid #087f75;outline-offset:3px}
+
+/* Company and site context: always visible, even when animations are reduced. */
+.workspace-context{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
+.workspace-context label{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:750;color:#49616b}
+.workspace-context select{background:#fff;color:#081e2a;border:1px solid #c5d3d8;border-radius:7px;padding:7px;max-width:190px;min-height:36px}
+@media(max-width:700px){.workspace-context{flex:1}.workspace-context label{flex:1 1 135px}.workspace-context select{width:100%;max-width:100%}.app-topbar .header-link{font-size:12px}}
