@@ -1,116 +1,19 @@
 'use client';
-import { useEffect, useState } from 'react';
-
-type Company = { id: string; legal_name: string; role: string };
-type Submission = {
-  id: string; order_id: string; provider: 'orange_money' | 'mvola'; sender_phone: string; transaction_reference: string;
-  amount: number | string; currency: string; proofUrl: string | null; customer_note: string;
-  status: 'submitted' | 'approved' | 'rejected'; created_at: string; review_note: string;
-  order: null | { id: string; public_reference: string; customer_name: string; customer_email: string; offer_name: string; amount: number | string; currency: string; status: string };
-};
-const providerLabel: Record<string,string> = { orange_money: 'Orange Money', mvola: 'MVola' };
-const statusLabel: Record<string,string> = { submitted: 'À vérifier', approved: 'Validé', rejected: 'Rejeté' };
-const money = (amount: number | string, currency: string) => Number(amount).toLocaleString('fr-FR') + ' ' + currency;
-
-export default function VerificationPaiementsPage() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [companyId, setCompanyId] = useState('');
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [busy, setBusy] = useState(true);
-  const [working, setWorking] = useState('');
-  const [reviewNotes, setReviewNotes] = useState<Record<string,string>>({});
-  const [notice, setNotice] = useState('');
-  const [error, setError] = useState('');
-
-  async function load(id: string) {
-    if (!id) return;
-    const response = await fetch('/api/manual-payments/review?companyId=' + encodeURIComponent(id), { cache: 'no-store' });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Impossible de charger les justificatifs.');
-    setSubmissions(data.submissions ?? []);
-  }
-
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const response = await fetch('/api/sites', { cache: 'no-store' });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Impossible de charger les entreprises.');
-        const candidates = (data.companies ?? []).filter((company: Company) => ['owner','admin'].includes(company.role));
-        const checked = await Promise.all(candidates.map(async (company: Company) => {
-          if (company.role === 'owner') return company;
-          try {
-            const accessResponse = await fetch('/api/manual-payments/access?companyId=' + encodeURIComponent(company.id), { cache: 'no-store' });
-            const access = await accessResponse.json();
-            return accessResponse.ok && access.canReview === true ? company : null;
-          } catch { return null; }
-        }));
-        const authorized = checked.filter((company): company is Company => company !== null);
-        if (!active) return;
-        setCompanies(authorized);
-        if (authorized[0]) setCompanyId(authorized[0].id);
-      } catch (e) { if (active) setError(e instanceof Error ? e.message : 'Erreur de chargement.'); }
-      finally { if (active) setBusy(false); }
-    })();
-    return () => { active = false; };
-  }, []);
-
-  useEffect(() => {
-    if (!companyId) return;
-    let active = true;
-    setBusy(true); setError('');
-    load(companyId).catch((e) => { if (active) setError(e instanceof Error ? e.message : 'Erreur de chargement.'); }).finally(() => { if (active) setBusy(false); });
-    return () => { active = false; };
-  }, [companyId]);
-
-  async function review(item: Submission, action: 'approve' | 'reject') {
-    if (action === 'approve' && !window.confirm('As-tu vérifié le reçu dans le compte Orange Money/MVola et confirmé le montant ?')) return;
-    if (action === 'reject' && !window.confirm('Rejeter ce justificatif ? Le client pourra en soumettre un nouveau.')) return;
-    setWorking(item.id); setError(''); setNotice('');
-    try {
-      const response = await fetch('/api/manual-payments/review', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submissionId: item.id, action, reviewNote: reviewNotes[item.id] ?? '' }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Action impossible.');
-      setNotice(action === 'approve' ? 'Paiement validé. La commande est marquée comme payée.' : 'Justificatif rejeté.');
-      await load(companyId);
-    } catch (e) { setError(e instanceof Error ? e.message : 'Action impossible.'); }
-    finally { setWorking(''); }
-  }
-
-  return <main className="form-shell"><section className="form-card" style={{ maxWidth: 1100, width: 'min(100%,1100px)' }}>
-    <p className="eyebrow">ZARAY · FINANCES</p><h1>Vérification des paiements</h1>
-    <p>Vérifie chaque transaction dans le compte bénéficiaire avant de valider le reçu. Une image seule ne prouve pas que l’argent a été reçu.</p>
-    {companies.length > 0 && <label>Entreprise<select value={companyId} onChange={(e) => setCompanyId(e.target.value)}>{companies.map((company) => <option key={company.id} value={company.id}>{company.legal_name}</option>)}</select></label>}
-    {companies.length === 0 && !busy && <p>Aucune entreprise accessible : le dirigeant peut valider directement ou autoriser un administrateur depuis les <a href="/autorisations-paiement">autorisations des validateurs</a>.</p>}
-    {busy ? <p>Chargement des paiements…</p> : submissions.length ? <div className="module-grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))' }}>
-      {submissions.map((item) => <article className="module" key={item.id} style={{ minHeight: 0 }}>
-        <span className="module-number">{statusLabel[item.status] ?? item.status}</span>
-        <h2>{item.order?.customer_name ?? 'Commande inconnue'}</h2>
-        <p>Référence commande : <strong>{item.order?.public_reference ?? item.order_id}</strong></p>
-        <p>Forfait : {item.order?.offer_name ?? '—'}</p>
-        <p>Montant déclaré : <strong>{money(item.amount, item.currency)}</strong></p>
-        <p>Moyen : {providerLabel[item.provider]} · Envoyé depuis {item.sender_phone}</p>
-        <p>Référence transaction : <strong>{item.transaction_reference}</strong></p>
-        <p>E-mail : {item.order?.customer_email ?? '—'}</p>
-        {item.customer_note && <p>Note client : {item.customer_note}</p>}
-        <p>Soumis le {new Date(item.created_at).toLocaleString('fr-FR')}</p>
-        {item.proofUrl && <p><a href={item.proofUrl} target="_blank" rel="noreferrer">Ouvrir le justificatif privé ↗</a></p>}
-        {!item.proofUrl && <p role="alert">Le justificatif n’a pas pu être chargé.</p>}
-        {item.status !== 'submitted' && <p>Décision : {item.review_note || statusLabel[item.status]}</p>}
-        {item.status === 'submitted' && <>
-          <label>Note de validation (facultatif)<textarea rows={2} maxLength={1000} value={reviewNotes[item.id] ?? ''} onChange={(e) => setReviewNotes((old) => ({ ...old, [item.id]: e.target.value }))} /></label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 12 }}>
-            <button className="primary-link" type="button" disabled={working === item.id} onClick={() => void review(item,'approve')}>{working === item.id ? 'Traitement…' : 'Valider le paiement'}</button>
-            <button type="button" disabled={working === item.id} onClick={() => void review(item,'reject')}>Rejeter</button>
-          </div>
-        </>}
-      </article>)}
-    </div> : !busy ? <p>Aucun justificatif pour cette entreprise.</p> : null}
-    {notice && <p role="status">{notice}</p>}{error && <p role="alert">{error}</p>}
-    <p style={{ marginTop: 28 }}><a href="/autorisations-paiement">Gérer les validateurs →</a> · <a href="/parametres-paiement">Configurer les numéros</a> · <a href="/commandes">Commandes</a> · <a href="/tableau-de-bord">Tableau de bord</a></p>
-  </section></main>;
+import { useEffect, useMemo, useState } from 'react';
+import AppShell from '@/components/app-shell';
+type Company={id:string;legal_name:string;role:string};type Submission={id:string;order_id:string;provider:'orange_money'|'mvola';sender_phone:string;transaction_reference:string;amount:number|string;currency:string;proofUrl:string|null;customer_note:string;status:'submitted'|'approved'|'rejected';created_at:string;review_note:string;order:null|{id:string;public_reference:string;customer_name:string;customer_email:string;offer_name:string;amount:number|string;currency:string;status:string}};
+const providerLabel:Record<string,string>={orange_money:'Orange Money',mvola:'MVola'};const statusLabel:Record<string,string>={submitted:'À vérifier',approved:'Validé',rejected:'Rejeté'};const money=(a:number|string,c:string)=>Number(a).toLocaleString('fr-FR')+' '+c;
+export default function VerificationPaiementsPage(){
+ const [companies,setCompanies]=useState<Company[]>([]),[companyId,setCompanyId]=useState(''),[submissions,setSubmissions]=useState<Submission[]>([]),[search,setSearch]=useState(''),[statusFilter,setStatusFilter]=useState('submitted'),[busy,setBusy]=useState(true),[working,setWorking]=useState(''),[reviewNotes,setReviewNotes]=useState<Record<string,string>>({}),[notice,setNotice]=useState(''),[error,setError]=useState('');
+ async function load(id:string){if(!id)return;const r=await fetch('/api/manual-payments/review?companyId='+encodeURIComponent(id),{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les justificatifs.');setSubmissions(d.submissions??[]);}
+ useEffect(()=>{let active=true;(async()=>{try{const r=await fetch('/api/sites',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les entreprises.');const candidates=(d.companies??[]).filter((c:Company)=>['owner','admin'].includes(c.role));const checked=await Promise.all(candidates.map(async(c:Company)=>{if(c.role==='owner')return c;try{const ar=await fetch('/api/manual-payments/access?companyId='+encodeURIComponent(c.id),{cache:'no-store'});const ad=await ar.json();return ar.ok&&ad.canReview===true?c:null;}catch{return null;}}));const authorized=checked.filter((c):c is Company=>c!==null);if(active){setCompanies(authorized);if(authorized[0])setCompanyId(authorized[0].id);}}catch(e){if(active)setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{if(active)setBusy(false);}})();return()=>{active=false};},[]);
+ useEffect(()=>{if(!companyId)return;setBusy(true);setError('');load(companyId).catch(e=>setError(e instanceof Error?e.message:'Erreur')).finally(()=>setBusy(false));},[companyId]);
+ async function review(item:Submission,action:'approve'|'reject'){if(action==='approve'&&!window.confirm('Confirmer après vérification du montant dans le compte bénéficiaire ?'))return;if(action==='reject'&&!window.confirm('Rejeter ce justificatif ?'))return;setWorking(item.id);setError('');setNotice('');try{const r=await fetch('/api/manual-payments/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({submissionId:item.id,action,reviewNote:reviewNotes[item.id]??''})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Action impossible.');setNotice(action==='approve'?'Paiement validé.':'Justificatif rejeté.');await load(companyId);}catch(e){setError(e instanceof Error?e.message:'Action impossible.');}finally{setWorking('');}}
+ const filtered=useMemo(()=>submissions.filter(s=>(statusFilter==='all'||s.status===statusFilter)&&((s.order?.public_reference??'')+' '+(s.order?.customer_name??'')+' '+s.transaction_reference+' '+s.sender_phone).toLowerCase().includes(search.toLowerCase().trim())),[submissions,statusFilter,search]);const pending=submissions.filter(s=>s.status==='submitted').length;
+ return <AppShell activePath="/paiements/verification" eyebrow="FINANCE · CONTRÔLE" title="Vérification des paiements" description="Rapprochez les paiements manuels avant de libérer une commande. La validation reste une décision humaine et traçable." actions={<a className="primary-link" href="/parametres-paiement">Configurer les moyens</a>}>
+  <section className="kpi-grid"><article className="kpi"><div className="kpi-label">À VÉRIFIER</div><div className="kpi-value">{pending}</div><div className="kpi-note">Justificatifs soumis</div></article><article className="kpi"><div className="kpi-label">TOTAL CHARGÉ</div><div className="kpi-value">{submissions.length}</div><div className="kpi-note">Historique disponible</div></article><article className="kpi"><div className="kpi-label">ORANGE MONEY</div><div className="kpi-value">{submissions.filter(s=>s.provider==='orange_money').length}</div><div className="kpi-note">Transactions</div></article><article className="kpi"><div className="kpi-label">MVOLA</div><div className="kpi-value">{submissions.filter(s=>s.provider==='mvola').length}</div><div className="kpi-note">Transactions</div></article></section>
+  <section className="toolbar panel"><div className="toolbar-main"><label className="toolbar-field">Entreprise<select value={companyId} onChange={e=>setCompanyId(e.target.value)}>{companies.map(c=><option key={c.id} value={c.id}>{c.legal_name}</option>)}</select></label><label className="toolbar-field toolbar-grow">Rechercher<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Client, référence transaction…"/></label><label className="toolbar-field">État<select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="submitted">À vérifier</option><option value="approved">Validés</option><option value="rejected">Rejetés</option><option value="all">Tous</option></select></label></div><div className="toolbar-meta">{filtered.length} dossier{filtered.length!==1?'s':''}</div></section>
+  {companies.length===0&&!busy?<div className="empty-state"><strong>Aucun périmètre de validation</strong><p>Le propriétaire peut valider directement ou autoriser un administrateur depuis les validateurs.</p><a className="primary-link" href="/autorisations-paiement">Gérer les validateurs</a></div>:busy?<div className="panel"><div className="skeleton-list"><span/><span/><span/></div></div>:<div className="module-grid">{filtered.map(item=><article className="panel" key={item.id}><div className="panel-head"><div><span className="status-pill">{statusLabel[item.status]??item.status}</span><div className="panel-title" style={{marginTop:8}}>{item.order?.customer_name??'Commande inconnue'}</div><div className="muted">{item.order?.public_reference??item.order_id} · {providerLabel[item.provider]}</div></div><strong>{money(item.amount,item.currency)}</strong></div><div className="data-list"><div className="data-row"><span>Référence transaction</span><strong>{item.transaction_reference}</strong></div><div className="data-row"><span>Numéro émetteur</span><span>{item.sender_phone}</span></div><div className="data-row"><span>Forfait</span><span>{item.order?.offer_name??'—'}</span></div><div className="data-row"><span>Soumis le</span><span>{new Date(item.created_at).toLocaleString('fr-FR')}</span></div></div>{item.customer_note&&<p className="muted" style={{marginTop:14}}>Note : {item.customer_note}</p>}{item.proofUrl?<p style={{marginTop:14}}><a className="header-link" href={item.proofUrl} target="_blank" rel="noreferrer">Ouvrir le justificatif privé ↗</a></p>:<p className="alert alert-error">Justificatif non disponible.</p>}{item.status==='submitted'?<><label className="toolbar-field" style={{marginTop:14}}>Note de validation<textarea rows={3} maxLength={1000} value={reviewNotes[item.id]??''} onChange={e=>setReviewNotes(old=>({...old,[item.id]:e.target.value}))}/></label><div className="page-actions" style={{marginTop:12}}><button className="primary-link" type="button" disabled={working===item.id} onClick={()=>void review(item,'approve')}>{working===item.id?'Traitement…':'Valider le paiement'}</button><button type="button" disabled={working===item.id} onClick={()=>void review(item,'reject')}>Rejeter</button></div></>:<p className="muted" style={{marginTop:14}}>Décision : {item.review_note||statusLabel[item.status]}</p>}</article>)}</div>}
+  {(notice||error)&&<div className={error?'alert alert-error':'alert alert-success'} role={error?'alert':'status'}>{error||notice}</div>}<p style={{marginTop:16}}><a className="header-link" href="/autorisations-paiement">Gérer les validateurs →</a> · <a className="header-link" href="/commandes">Commandes</a></p>
+ </AppShell>;
 }
