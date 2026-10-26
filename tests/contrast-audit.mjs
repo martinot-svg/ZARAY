@@ -120,11 +120,19 @@ try {
       const name=(path.replaceAll('/','_') || 'home').replace(/[^a-zA-Z0-9_-]/g,'');
       await page.screenshot({path:`artifacts/contrast/${name}-desktop.png`,fullPage:true,timeout:20000});
       const audit=await auditPage(page);
-      const outcome={path,actual,status,...audit};
+      const outcome={path,actual,status,desktop:audit};
       if(status>=500) failures.push(`${path} returned HTTP ${status}`);
       if(path==='/' || path==='/connexion' || path==='/inscription') {
         outcome.probes=await probe(page);
       }
+      await page.emulateMedia({colorScheme:'dark'});
+      await page.waitForTimeout(200);
+      outcome.darkPreference=await auditPage(page);
+      await page.screenshot({path:`artifacts/contrast/${name}-dark-preference.png`,fullPage:true,timeout:20000});
+      await page.setViewportSize({width:390,height:844});
+      await page.waitForTimeout(200);
+      outcome.mobile=await auditPage(page);
+      await page.screenshot({path:`artifacts/contrast/${name}-mobile.png`,fullPage:true,timeout:20000});
       results.push(outcome);
       console.log(JSON.stringify(outcome));
     } catch (error) {
