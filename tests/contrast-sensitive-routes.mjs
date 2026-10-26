@@ -127,6 +127,34 @@ try {
   }catch(e){findings.push('payment unknown: '+String(e));}
   finally{await page.close();}
 
+
+  // Safe visual fixtures use the actual production styles but no private data,
+  // cookie spoofing or authentication bypass. They cover protected-page
+  // *presentation* only; they are not proof of real authenticated access.
+  const privateFixtures=[
+    ['compte-personnel', '<div class="personal-shell"><header class="personal-topbar"><span class="personal-topbar-label">Espace personnel</span></header><main class="personal-content"><header class="personal-page-heading"><p class="eyebrow">MON COMPTE ZARAY</p><h1>Bonjour, compte de démonstration</h1><p>Choisissez une entreprise pour ouvrir son espace de gestion.</p></header><section class="panel"><div class="panel-head"><h2 class="panel-title">Mes entreprises</h2><a class="header-link" href="#">Voir toutes mes entreprises</a></div><div class="personal-business-list"><div class="personal-business-item"><span><strong>Entreprise fictive</strong><small>entreprise-fictive</small></span><span class="status-pill">owner</span></div></div></section></main></div>'],
+    ['entreprises', '<div class="personal-shell"><main class="personal-content"><div class="personal-page-heading"><p class="eyebrow">ESPACE PERSONNEL</p><h1>Mes entreprises</h1><p>Uniquement les organisations auxquelles votre compte est rattaché.</p></div><a class="primary-link" href="#">Créer une entreprise</a><section class="personal-business-list"><article class="panel personal-business-card"><div><p class="eyebrow">ENTREPRISE</p><h2>Entreprise fictive</h2><p class="muted">entreprise-fictive</p><span class="status-pill">Rôle : owner</span></div><a class="primary-link" href="#">Ouvrir l’entreprise</a></article></section></main></div>'],
+    ['finance-globale', '<div class="personal-shell"><main class="personal-content"><header class="personal-page-heading"><p class="eyebrow">COMPTE PERSONNEL · FINANCE</p><h1>Finance globale</h1><p>Consolidation des paiements confirmés.</p></header><section class="panel"><h2 class="panel-title">Montants consolidés par devise</h2><div class="personal-finance-totals"><div class="kpi"><p class="kpi-label">PAIEMENTS CONFIRMÉS · MGA</p><strong class="kpi-value">5 000 MGA</strong></div></div></section><section class="panel"><h2 class="panel-title">Détail par entreprise autorisée</h2><div class="data-row"><span><strong>Entreprise fictive</strong><span class="muted"> · 1 paiement confirmé</span></span><span>5 000 MGA</span></div></section></main></div>'],
+    ['tableau-de-bord', '<div class="app-shell"><aside class="app-nav" style="position:static;min-height:500px"><div class="app-brand">ZARAY</div><div class="app-nav-group"><span class="app-nav-label">GESTION</span><a class="app-nav-link active" href="#">Tableau de bord</a><a class="app-nav-link" href="#">Clients</a></div></aside><div class="app-main" style="margin-left:0"><header class="app-topbar"><strong>Compte ZARAY / Entreprise fictive</strong></header><main class="app-content"><header class="page-header"><div><p class="eyebrow">VUE GÉNÉRALE</p><h1 class="app-title">Tableau de bord</h1><p class="app-subtitle">Informations de gestion de l’entreprise</p></div></header><div class="kpi-grid"><article class="kpi"><p class="kpi-label">CLIENTS</p><div class="kpi-value">15</div><p class="kpi-note">Exemple de contrôle</p></article><article class="kpi"><p class="kpi-label">PAIEMENTS</p><div class="kpi-value">5 000</div></article></div><section class="panel"><div class="panel-head"><h2 class="panel-title">Activité récente</h2></div><table class="data-table"><thead><tr><th>Libellé</th><th>Statut</th></tr></thead><tbody><tr><td>Commande fictive</td><td><span class="status-pill">Confirmé</span></td></tr></tbody></table><div class="alert alert-error" role="alert">Exemple d’alerte de contraste</div><div class="form-stack"><label>Recherche<input placeholder="Recherche des clients"></label><button class="primary-link" disabled>Action indisponible</button></div></section></main></div></div>'],
+  ];
+  for(const [fixtureName,markup] of privateFixtures){
+    const page=await context.newPage();
+    try{
+      await page.goto(new URL('/connexion',base).toString(),{waitUntil:'domcontentloaded'});
+      await page.evaluate(html=>{
+        const host=document.createElement('section');
+        host.id='zaray-safe-private-style-fixture';
+        host.innerHTML=html;
+        document.body.append(host);
+      },markup);
+      await page.waitForTimeout(260);
+      await audit(page,'isolated-style-'+fixtureName+'-desktop');
+      await page.setViewportSize({width:390,height:844});
+      await audit(page,'isolated-style-'+fixtureName+'-mobile');
+    }catch(e){findings.push('private style fixture '+fixtureName+': '+String(e));}
+    finally{await page.close();}
+  }
+
   // Optional real login, using a dedicated QA account. Credentials are never
   // written to artifacts/logs; the company must be a permitted QA tenant.
   const email=process.env.ZARAY_QA_EMAIL;
