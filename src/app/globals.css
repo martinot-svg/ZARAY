@@ -516,11 +516,6 @@ html[data-theme="light"] .brand-logo .brand-logo-dark{display:none}
   .landing-brand,.landing-footer-brand,.personal-logo,.module-loading-logo,.module-error-brand){
   background:transparent!important;border:0!important;box-shadow:none!important;
   filter:none!important}
-:where(.auth-brand,.workspace-brand,.site-logo,.app-brand,.app-topbar-brand,
-  .landing-brand,.landing-footer-brand,.personal-logo,.module-loading-logo,.module-error-brand)::before,
-:where(.auth-brand,.workspace-brand,.site-logo,.app-brand,.app-topbar-brand,
-  .landing-brand,.landing-footer-brand,.personal-logo,.module-loading-logo,.module-error-brand)::after{
-  content:none!important}
 /* Les surfaces existantes restent foncées ou claires indépendamment de la préférence globale. */
 :where(.app-brand,.landing-brand,.landing-footer-brand,.personal-logo,.site-logo) .brand-logo-light{display:none!important}
 :where(.app-brand,.landing-brand,.landing-footer-brand,.personal-logo,.site-logo) .brand-logo-dark{display:block!important}
