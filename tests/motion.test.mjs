@@ -6,7 +6,7 @@ const source = path => readFileSync(new URL('../' + path, import.meta.url), 'utf
 const css = source('src/app/globals.css');
 const motion = source('src/components/motion.tsx');
 const shell = source('src/components/app-shell.tsx');
-const dashboard = source('src/app/tableau-de-bord/page.tsx');
+const dashboard = source('src/components/dashboard-workspace.tsx');
 const login = source('src/app/connexion/page.tsx');
 const tickets = source('src/app/tickets/page.tsx');
 
@@ -35,11 +35,13 @@ test('Mobile navigation and disclosure expose accessible controls', () => {
   assert.ok(motion.includes('inert={!open}'));
 });
 test('Count-up uses the actual data and hides transient visual numbers from assistive technology', () => {
-  assert.ok(dashboard.includes('<MotionCount value={summary.customers}/>'));
-  assert.ok(dashboard.includes('<MotionCount value={summary.pendingPayments}/>'));
+  assert.ok(dashboard.includes('<MotionCount value={values[key]!}/>'));
+  assert.ok(dashboard.includes('values[key]===null'));
   assert.ok(motion.includes('aria-hidden="true"'));
 });
 test('Background movement is limited to the existing login page', () => {
   assert.ok(login.includes('form-shell auth-motion'));
   assert.ok(css.includes('.auth-motion::before'));
 });
+
+test('Company and site dashboards use validated tenant context',()=>{const api=source('src/app/api/dashboard/route.ts');const auth=source('src/lib/tenant-context.ts');assert.ok(api.includes('authorizeTenant'));assert.ok(api.includes("count:'exact'"));assert.ok(api.includes("subscription_orders.site_id"));assert.ok(auth.includes(".eq('company_id',companyId)"));});
