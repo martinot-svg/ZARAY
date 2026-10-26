@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/app-shell';
+import { ZarayIcon, type ZarayIconName } from '@/components/ui/zaray-icon';
 import { MotionCount, MotionSkeleton } from '@/components/motion';
 
 type Company = { id:string; legal_name:string; slug:string; role:string };
@@ -10,6 +11,7 @@ type Order = { id:string; public_reference:string; customer_name:string; offer_n
 type Metric = number|null;
 type Metrics = { sites:Metric;customers:Metric;offers:Metric;subscription_orders:Metric;payments:Metric;wifi_tickets:Metric;walkin_sales:Metric };
 type Payload = { company:Company; site:Site|null; metrics:Metrics; sites:Site[];recentOrders:Order[] };
+const metricIcons: Partial<Record<keyof Metrics, ZarayIconName>> = { sites:'site', customers:'customers', subscription_orders:'orders', payments:'payment', wifi_tickets:'wifi', walkin_sales:'cash' };
 const metrics: {key:keyof Metrics;label:string}[]=[
   {key:'sites',label:'Sites'}, {key:'customers',label:'Clients'},
   {key:'subscription_orders',label:'Commandes'}, {key:'payments',label:'Paiements'},
@@ -50,7 +52,7 @@ export default function DashboardWorkspace({ siteId }: { siteId?:string }) {
     return()=>{active=false};
   },[siteId]);
   if(busy)return <main className="form-shell"><section className="form-card"><h1>Chargement du tableau de bord</h1><MotionSkeleton rows={4}/></section></main>;
-  if(error||!payload)return <main className="form-shell"><section className="form-card"><h1>Contexte inaccessible</h1><p role="alert">{error||'Aucun contexte disponible.'}</p><a href="/tableau-de-bord">Revenir aux entreprises</a></section></main>;
+  if(error||!payload)return <main className="form-shell"><section className="form-card"><h1>Contexte inaccessible</h1><p role="alert">{error||'Aucun contexte disponible.'}</p><a href="/tableau-de-bord"><ZarayIcon name="back" size={18} /> Revenir aux entreprises</a></section></main>;
   const {company,site,sites,metrics:values,recentOrders}=payload;
   const companyLink='/tableau-de-bord?companyId='+encodeURIComponent(company.id);
   const params=new URLSearchParams({companyId:company.id});
@@ -60,10 +62,10 @@ export default function DashboardWorkspace({ siteId }: { siteId?:string }) {
     eyebrow={site?'ENTREPRISE / SITE':'ENTREPRISE · VUE GÉNÉRALE'}
     title={site?company.legal_name+' / '+site.name+' — Tableau de bord':company.legal_name+' — Tableau de bord'}
     description={site?company.legal_name+' / '+site.name+' · Données de ce site exclusivement.': 'Vue globale de '+company.legal_name+' · données réelles issues de Supabase.'}
-    actions={site?<a className="primary-link" href={companyLink}>Retour à la vue générale</a>:<a className="primary-link" href={contextual('/sites')}>Gérer les sites</a>}>
+    actions={site?<a className="primary-link" href={companyLink}><ZarayIcon name="back" size={18} /> Retour à la vue générale</a>:<a className="primary-link" href={contextual('/sites')}><ZarayIcon name="site" size={18} /> Gérer les sites</a>}>
     <section className="kpi-grid motion-stagger" aria-label="Indicateurs réels">
       {metrics.map(({key,label})=><article className="kpi" key={key}>
-        <div className="kpi-label">{label.toUpperCase()}</div>
+        <div className="kpi-label"><ZarayIcon name={metricIcons[key] ?? "dashboard"} size={18} /> {label.toUpperCase()}</div>
         <div className="kpi-value">{values[key]===null?<span className="muted">Indisponible</span>:<MotionCount value={values[key]!}/>}</div>
         <div className="kpi-note">{site?'Pour '+site.name:'Pour '+company.legal_name}</div>
       </article>)}
@@ -71,8 +73,8 @@ export default function DashboardWorkspace({ siteId }: { siteId?:string }) {
     {!site && <section className="panel" style={{marginBottom:16}}>
       <div className="panel-head"><div><div className="panel-title">Sites de {company.legal_name}</div><div className="muted">Sélectionnez un site pour afficher ses opérations.</div></div></div>
       {sites.length?<div className="data-list">{sites.map(s=><a className="data-row" key={s.id} href={'/sites/'+encodeURIComponent(s.id)+'?companyId='+encodeURIComponent(company.id)}>
-        <strong>{s.name}</strong><span className="status-pill">{statuses[s.status]??s.status}</span>
-      </a>)}</div>:<div className="empty-state"><strong>Entreprise créée.</strong><p>Vous pouvez maintenant créer votre premier site.</p><a className="primary-link" href={contextual('/sites')}>Créer un site</a></div>}
+        <strong><ZarayIcon name="site" size={18} /> {s.name}</strong><span className="status-pill">{statuses[s.status]??s.status}</span>
+      </a>)}</div>:<div className="empty-state"><strong>Entreprise créée.</strong><p>Vous pouvez maintenant créer votre premier site.</p><a className="primary-link" href={contextual('/sites')}><ZarayIcon name="add" size={18} /> Créer un site</a></div>}
     </section>}
     <div className="module-grid">
       <section className="panel"><div className="panel-head"><div className="panel-title">Activité récente</div></div>
@@ -83,12 +85,12 @@ export default function DashboardWorkspace({ siteId }: { siteId?:string }) {
       </section>
       <section className="panel"><div className="panel-head"><div className="panel-title">Opérations</div></div>
         <div className="quick-grid">
-          <a className="quick-action" href={contextual('/clients')}>Clients</a>
-          <a className="quick-action" href={contextual('/commandes')}>Commandes</a>
-          <a className="quick-action" href={contextual('/paiements/verification')}>Paiements</a>
-          <a className="quick-action" href={contextual('/tickets')}>Tickets Wi-Fi</a>
-          <a className="quick-action" href={contextual('/caisse')}>Caisse</a>
-          <a className="quick-action" href={contextual('/offres')}>Offres de l’entreprise</a>
+          <a className="quick-action" href={contextual('/clients')}><ZarayIcon name="customers" size={20} /> Clients</a>
+          <a className="quick-action" href={contextual('/commandes')}><ZarayIcon name="orders" size={20} /> Commandes</a>
+          <a className="quick-action" href={contextual('/paiements/verification')}><ZarayIcon name="payment" size={20} /> Paiements</a>
+          <a className="quick-action" href={contextual('/tickets')}><ZarayIcon name="wifi" size={20} /> Tickets Wi-Fi</a>
+          <a className="quick-action" href={contextual('/caisse')}><ZarayIcon name="cash" size={20} /> Caisse</a>
+          <a className="quick-action" href={contextual('/offres')}><ZarayIcon name="wifi" size={20} /> Offres de l’entreprise</a>
         </div>
       </section>
     </div>
