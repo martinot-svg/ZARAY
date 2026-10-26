@@ -1,4 +1,5 @@
 'use client';
+import BrandLogo from '@/components/brand-logo';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useParams } from 'next/navigation';
 
@@ -109,6 +110,7 @@ export default function CaptivePortalPage() {
   const offerPayable = selectedOffer?.currency === 'MGA';
 
   return <main className="form-shell"><section className="form-card" style={{ width: 'min(100%, 760px)' }}>
+      <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
     <p className="eyebrow">ZARAY · PORTAIL CAPTIF</p>
     <h1>{companyName || 'Connexion Wi-Fi'}</h1>
     <p>Choisissez un forfait, envoyez le paiement sur le numéro indiqué et transmettez le reçu. L’accès ne sera accordé qu’après vérification du paiement.</p>
