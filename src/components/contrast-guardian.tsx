@@ -12,6 +12,12 @@ export function ContrastGuardian() {
     const corrected = new Map<HTMLElement, { color: string; priority: string }>();
     let pending = false;
     let auditing = false;
+    let destroyed = false;
+    const placeholderOriginal = new Map<HTMLElement, { value: string; priority: string }>();
+    const watchOptions: MutationObserverInit = {
+      subtree: true, childList: true, attributes: true, characterData: true,
+    };
+    let observer: MutationObserver;
     const rgb = (value: string): [number, number, number, number] | null => {
       const match = value.match(/^rgba?\(\s*([\d.]+)[, ]+([\d.]+)[, ]+([\d.]+)(?:\s*[,/]\s*([\d.]+%?))?\s*\)$/i);
       if (!match) return null;
@@ -49,12 +55,15 @@ export function ContrastGuardian() {
     const inspect = () => {
       if (auditing) return;
       auditing = true;
+      observer?.disconnect(); // No self-triggered mutation loops; still observe app changes.
       try {
-        const nodes = document.body.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6,p,span,a,button,label,small,strong,em,li,td,th,dt,dd,div,input,textarea,select,option,[role="alert"],[role="status"]');
+        for (const node of corrected.keys()) if (!node.isConnected) corrected.delete(node);
+        for (const node of placeholderOriginal.keys()) if (!node.isConnected) placeholderOriginal.delete(node);
+        const nodes = document.body.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6,p,span,a,button,label,small,strong,em,li,td,th,dt,dd,div,input,textarea,select,option,summary,legend,figcaption,caption,blockquote,pre,code,time,output,header,footer,nav,[role="alert"],[role="status"],[role="button"],[role="tab"]');
         nodes.forEach(element => {
           if (element.closest('[data-contrast-ignore],svg,canvas,[aria-hidden="true"]')) return;
           if (!hasText(element) && !element.matches('input,textarea,select,option')) return;
-          if (element.matches('input[type="hidden"],input[type="checkbox"],input[type="radio"]')) return;
+          if (element.matches('input[type="hidden"],input[type="checkbox"],input[type="radio"],input[type="range"],input[type="color"],input[type="image"]')) return;
           const existing = corrected.get(element);
           if (existing) {
             element.style.removeProperty('color');
@@ -66,6 +75,18 @@ export function ContrastGuardian() {
           const fg = rgb(style.color);
           if (!fg) return;
           const bg = background(element);
+          if (element.matches('input,textarea')) {
+            const muted = [88, 104, 91, 1]; // Accessible muted ink on light fields.
+            const dark = [17, 25, 20, 1], light = [255, 255, 255, 1];
+            const suggested = contrast(muted, bg) >= 4.5 ? '#58685b'
+              : contrast(dark, bg) >= contrast(light, bg) ? '#111914' : '#ffffff';
+            if (!placeholderOriginal.has(element)) placeholderOriginal.set(element, {
+              value: element.style.getPropertyValue('--zaray-placeholder-color'),
+              priority: element.style.getPropertyPriority('--zaray-placeholder-color'),
+            });
+            if (element.style.getPropertyValue('--zaray-placeholder-color') !== suggested)
+              element.style.setProperty('--zaray-placeholder-color', suggested);
+          }
           const rendered = over(fg, bg);
           const size = parseFloat(style.fontSize);
           const bold = Number(style.fontWeight) >= 700 || style.fontWeight === 'bold';
@@ -76,27 +97,35 @@ export function ContrastGuardian() {
           corrected.set(element, { color: element.style.getPropertyValue('color'), priority: element.style.getPropertyPriority('color') });
           element.style.setProperty('color', replacement, 'important');
         });
-      } finally { auditing = false; }
+      } finally {
+        auditing = false;
+        if (!destroyed) observer.observe(document.documentElement, watchOptions);
+      }
     };
     const schedule = () => {
-      if (pending) return;
+      if (pending || destroyed) return;
       pending = true;
-      requestAnimationFrame(() => { pending = false; inspect(); });
+      requestAnimationFrame(() => { pending = false; if (!destroyed) inspect(); });
     };
-    const observer = new MutationObserver(records => {
-      if (auditing) return;
-      // Ignore the inline fixes made by this guard to avoid observation loops.
-      if (records.some(record => !(record.type === 'attributes' && record.attributeName === 'style' && corrected.has(record.target as HTMLElement)))) schedule();
-    });
-    observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, characterData: true, attributeFilter: ['class', 'style', 'data-theme'] });
+    observer = new MutationObserver(schedule);
+    observer.observe(document.documentElement, watchOptions);
     const media = matchMedia('(prefers-color-scheme: dark)');
     media.addEventListener('change', schedule);
     window.addEventListener('resize', schedule);
+    // CSS pseudo-classes change visual contrast without DOM mutations.
+    const interactionEvents = ['pointerover','pointerout','focusin','focusout','input','change'];
+    interactionEvents.forEach(event => document.addEventListener(event, schedule, true));
     schedule();
     return () => {
+      destroyed = true;
       observer.disconnect();
       media.removeEventListener('change', schedule);
       window.removeEventListener('resize', schedule);
+      interactionEvents.forEach(event => document.removeEventListener(event, schedule, true));
+      placeholderOriginal.forEach((original, element) => {
+        element.style.removeProperty('--zaray-placeholder-color');
+        if (original.value) element.style.setProperty('--zaray-placeholder-color', original.value, original.priority);
+      });
       corrected.forEach((original, element) => {
         element.style.removeProperty('color');
         if (original.color) element.style.setProperty('color', original.color, original.priority);
