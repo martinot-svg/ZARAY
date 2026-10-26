@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { MotionFeedback, MotionSkeleton } from '@/components/motion';
 type Company = { id: string; legal_name: string; role: string };
 type Order = { id: string; public_reference: string; customer_name: string; customer_email: string; customer_phone: string | null; offer_name: string; amount: number | string; currency: string; status: string; created_at: string; paid_at: string | null; activated_at: string | null };
 type CashReceipt = {receipt_number:string;public_reference:string;customer_name:string;offer_name:string;amount:number|string;currency:string;paid_at:string;payment_method:string};
@@ -61,7 +62,7 @@ export default function OrdersPage() {
     <p>Les commandes publiques sont enregistrées avec un montant et un forfait figés. Leur création ne vaut ni paiement confirmé ni activation Internet.</p>
     {companies.length > 0 && <label>Entreprise<select value={companyId} onChange={(e) => setCompanyId(e.target.value)}>{companies.map((c) => <option key={c.id} value={c.id}>{c.legal_name}</option>)}</select></label>}
     {companies.length === 0 && !busy && <p>Aucune entreprise accessible.</p>}
-    {busy ? <p role="status">Chargement…</p> : orders.length ? <div className="module-grid" style={{ marginTop: 24 }}>
+    {busy ? <MotionSkeleton rows={3}/> : orders.length ? <div className="module-grid" style={{ marginTop: 24 }}>
       {orders.map((o) => <article className="module" key={o.id}>
         <span className="module-number">{statusLabel[o.status] ?? o.status}</span><h3>{o.offer_name}</h3><p>Référence : <strong>{o.public_reference}</strong></p>
         <p>{o.customer_name} · {o.customer_email}</p>{o.customer_phone && <p>{o.customer_phone}</p>}
@@ -72,7 +73,7 @@ export default function OrdersPage() {
         {o.activated_at && <p style={{ marginTop: 12 }}>Activation enregistrée le {new Date(o.activated_at).toLocaleString('fr-FR')}</p>}
       </article>)}
     </div> : !busy ? <p>Aucune commande pour cette entreprise. Le portail public sera accessible via <code>/portail/identifiant-entreprise</code>.</p> : null}
-    {notice && <p role="status">{notice}</p>}
+    <MotionFeedback message={error || notice} kind={error ? 'error' : 'success'}/>
     {receipt && <section id="cash-receipt" className="module" style={{minHeight:0,maxWidth:460,marginTop:22}}>
       <p className="eyebrow">REÇU DE PAIEMENT D’ABONNEMENT · ESPÈCES</p>
       <h2>ZARAY · Reçu</h2>
@@ -85,7 +86,7 @@ export default function OrdersPage() {
       <p>Ce reçu atteste du règlement de l'abonnement. Il ne constitue pas un identifiant Wi-Fi ni une activation du réseau.</p>
       <button type="button" className="primary-link receipt-print-button" style={{marginTop:18}} onClick={() => window.print()}>Imprimer le reçu d'abonnement</button>
     </section>}
-    {error && <p role="alert">{error}</p>}
+    
     <p style={{ marginTop: 28 }}><a href="/tickets">Gestion des tickets Wi-Fi →</a> · <a href="/offres">Offres</a> · <a href="/tableau-de-bord">Tableau de bord</a></p>
   </section><style jsx global>{`@media print{body *{visibility:hidden!important}#cash-receipt,#cash-receipt *{visibility:visible!important}#cash-receipt{position:absolute!important;top:0;left:0;width:80mm;max-width:80mm;box-shadow:none;border:0;padding:4mm}.receipt-print-button{display:none!important}@page{size:80mm auto;margin:5mm}}`}</style></main>;
 }
