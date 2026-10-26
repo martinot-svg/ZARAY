@@ -79,10 +79,10 @@ test('official logo variants retain transparency, proportions, and automatic the
   const light=fs('public/brand/zaray-light.png');
   const dark=fs('public/brand/zaray-dark.png');
   assert.equal(light.toString('ascii',1,4),'PNG');
-  assert.equal(light.readUInt32BE(16),640);
-  assert.equal(light.readUInt32BE(20),187);
-  assert.equal(dark.readUInt32BE(16),640);
-  assert.equal(dark.readUInt32BE(20),187);
+  assert.equal(light.readUInt32BE(16),512);
+  assert.equal(light.readUInt32BE(20),150);
+  assert.equal(dark.readUInt32BE(16),512);
+  assert.equal(dark.readUInt32BE(20),150);
   assert.ok(light.includes(Buffer.from('tRNS')));
   assert.equal(dark[25],6);
   const code=read('src/components/theme-selector.tsx');

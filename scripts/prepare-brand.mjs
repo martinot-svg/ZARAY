@@ -17,7 +17,7 @@ while(at<pngFile.length){
  if(type==='IDAT')compressed.push(data);
  if(type==='IEND')break;
 }
-if(!palette||!transparency||width!==640||height<160||bitDepth!==8||colorType!==3)throw new Error('Unexpected ZARAY logo file');
+if(!palette||!transparency||width!==512||height<140||bitDepth!==8||colorType!==3)throw new Error('Unexpected ZARAY logo file');
 const scan=inflateSync(Buffer.concat(compressed)),pixels=Buffer.alloc(width*height*4),rowSize=width;
 let cursor=0,previous=Buffer.alloc(rowSize);
 for(let y=0;y<height;y++){
@@ -55,7 +55,7 @@ for(let i=0;i<white.length;i+=4){
 }
 await writeFile(join(root,'public/brand/zaray-dark.png'),encode(width,height,white));
 function favicon(size){
- const out=Buffer.alloc(size*size*4),cropW=148,cropH=height;
+ const out=Buffer.alloc(size*size*4),cropW=Math.round(width*148/640),cropH=height;
  const inset=Math.round(size*.08),scale=Math.min((size-inset*2)/cropW,(size-inset*2)/cropH);
  const dstW=cropW*scale,dstH=cropH*scale,left=(size-dstW)/2,top=(size-dstH)/2;
  for(let y=0;y<size;y++)for(let x=0;x<size;x++){

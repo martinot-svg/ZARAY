@@ -496,8 +496,8 @@ body{background:var(--canvas);color:var(--text-primary)}
 
 /* Official 2026 uploaded light (black/green) and dark (white/green) transparent wordmarks. */
 :root{--zaray-logo-surface:#fff;--zaray-logo-stroke:#d7e6d7}
-.brand-logo{width:100%;max-width:100%;height:auto;aspect-ratio:640/187;display:block;position:relative}
-.brand-logo .brand-logo-variant{width:100%;height:auto;max-width:100%;aspect-ratio:640/187;object-fit:contain;object-position:center}
+.brand-logo{width:100%;max-width:100%;height:auto;aspect-ratio:512/150;display:block;position:relative}
+.brand-logo .brand-logo-variant{width:100%;height:auto;max-width:100%;aspect-ratio:512/150;object-fit:contain;object-position:center}
 .brand-logo .brand-logo-on-light{display:block}
 .brand-logo .brand-logo-on-dark{display:none}
 html[data-theme="dark"]{--zaray-logo-surface:#0a0d0b;--zaray-logo-stroke:#304833;color-scheme:dark}
