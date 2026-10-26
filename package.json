@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:motion": "node --test tests/motion.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.7.0",
