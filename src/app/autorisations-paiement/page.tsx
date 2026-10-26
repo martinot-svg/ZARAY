@@ -1,4 +1,5 @@
 'use client';
+import { MotionSkeleton } from '@/components/motion';
 import BrandLogo from '@/components/brand-logo';
 
 import { selectedCompany,switchCompany } from '@/lib/workspace-url';
@@ -73,7 +74,7 @@ export default function AutorisationsPaiementPage() {
     <p>Le dirigeant conserve le droit de validation. Les autres administrateurs ne peuvent accéder aux justificatifs ni confirmer un paiement qu’après une autorisation explicite ici.</p>
     {companies.length > 0 && <label>Entreprise<select value={companyId} onChange={(e) => setCompanyId(e.target.value)}>{companies.map((company) => <option key={company.id} value={company.id}>{company.legal_name}</option>)}</select></label>}
     {!busy && companies.length === 0 && <p>Aucune entreprise dont vous êtes le dirigeant. Seul le dirigeant peut modifier ces autorisations.</p>}
-    {busy ? <p>Chargement des administrateurs…</p> : reviewers.length ? <div className="module-grid" style={{ marginTop: 24 }}>
+    {busy ? <MotionSkeleton rows={3}/> : reviewers.length ? <div className="module-grid" style={{ marginTop: 24 }}>
       {reviewers.map((reviewer) => <article className="module" key={reviewer.user_id} style={{ minHeight: 0 }}>
         <span className="module-number">Administrateur</span>
         <h2>{reviewer.email}</h2>
