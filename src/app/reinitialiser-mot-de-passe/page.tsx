@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import BrandLogo from '@/components/brand-logo';
 
@@ -81,11 +82,11 @@ export default function ReinitialiserMotDePassePage() {
       <label>Nouveau mot de passe<input name="password" type="password" autoComplete="new-password" minLength={12} required /></label>
       <label>Confirmer le mot de passe<input name="confirmation" type="password" autoComplete="new-password" minLength={12} required /></label>
       <p>Utilisez au moins 12 caractères.</p>
-      <button type="submit" disabled={busy} className="primary-link">{busy ? 'Mise à jour…' : 'Mettre à jour le mot de passe'}</button>
+      <button type="submit" disabled={busy} className="primary-link"><ZarayIcon name="save" size={18} /> {busy ? 'Mise à jour…' : 'Mettre à jour le mot de passe'}</button>
     </form>}
     {message && <p role="status">{message}</p>}
     {error && <p role="alert">{error}</p>}
-    {error && <p><a href="/mot-de-passe-oublie">Demander un nouveau lien</a></p>}
-    <p><a href="/connexion">Retour à la connexion</a></p>
+    {error && <p><a href="/mot-de-passe-oublie"><ZarayIcon name="login" size={18} /> Demander un nouveau lien</a></p>}
+    <p><a href="/connexion"><ZarayIcon name="login" size={18} /> Retour à la connexion</a></p>
   </section></main>;
 }

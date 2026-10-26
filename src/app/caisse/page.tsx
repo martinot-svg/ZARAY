@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/app-shell';
@@ -150,7 +151,7 @@ export default function CaissePage() {
                 <label>Mode de paiement<select value="cash" disabled><option value="cash">Espèces · encaissé au comptoir</option></select></label>
               </div>
               {selectedOffer && <div className="module" style={{ marginTop: 18, minHeight: 0 }}><div className="module-number">OFFRE SÉLECTIONNÉE</div><h3>{selectedOffer.name}</h3><p>{selectedOffer.description}</p><p><strong>{Number(selectedOffer.price_amount).toLocaleString('fr-FR')} {selectedOffer.currency}</strong> · {selectedOffer.duration_minutes} min · {selectedOffer.max_devices} appareil(s) · validité {selectedOffer.validity_days} jour(s)</p>{selectedSite && <p>Site : {selectedSite.name}</p>}</div>}
-              <button className="primary-link" type="button" onClick={generateTicket} disabled={saving || busy || !siteId || !offerId || !customerName.trim()} style={{ marginTop: 18 }}>{saving ? 'Génération…' : 'Encaisser & générer le ticket'}</button>
+              <button className="primary-link" type="button" onClick={generateTicket} disabled={saving || busy || !siteId || !offerId || !customerName.trim()} style={{ marginTop: 18 }}><ZarayIcon name="ticket" size={18} /> {saving ? 'Génération…' : 'Encaisser & générer le ticket'}</button>
               <MotionFeedback message={error || notice} kind={error ? 'error' : 'success'}/>
             </article>
 
@@ -178,8 +179,8 @@ export default function CaissePage() {
                 <p className="receipt-note">Conservez ce code. La connexion n'est possible qu'après configuration effective du réseau MikroTik/RADIUS.</p>
                 </div>
                 <div className="screen-only" style={{display:'flex',gap:10,flexWrap:'wrap',marginTop:16}}>
-                  <button type="button" onClick={() => printDocument('receipt')} className="primary-link">Imprimer le reçu de caisse</button>
-                  <button type="button" onClick={() => printDocument('ticket')} className="primary-link">Imprimer le ticket Wi-Fi</button>
+                  <button type="button" onClick={() => printDocument('receipt')} className="primary-link"><ZarayIcon name="print" size={18} /> Imprimer le reçu de caisse</button>
+                  <button type="button" onClick={() => printDocument('ticket')} className="primary-link"><ZarayIcon name="print" size={18} /> Imprimer le ticket Wi-Fi</button>
                 </div>
               </div> : <div className="empty-state"><strong>Aucun ticket généré dans cette session</strong><p>Une fois la vente enregistrée, le reçu et le code Wi-Fi apparaîtront ici.</p></div>}
             </article>

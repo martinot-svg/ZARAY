@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import SignOutButton from '@/components/sign-out-button';
@@ -11,6 +12,12 @@ const sections = [
   { label: 'FINANCE & RÉSEAU', items: [['/paiements/verification', 'Paiements'], ['/parametres-paiement', 'Moyens de paiement'], ['/portail', 'Portail captif']] },
 ];
 
+const navigationIcons = {
+  '/tableau-de-bord': 'dashboard', '/entreprises': 'home', '/sites': 'home',
+  '/membres': 'profile', '/clients': 'profile', '/offres': 'settings',
+  '/commandes': 'save', '/tickets': 'print', '/paiements/verification': 'finance',
+  '/parametres-paiement': 'finance', '/portail': 'settings',
+} as const;
 type WorkspaceCompany = { id:string; legal_name:string; role:string };
 type WorkspaceSite = { id:string; company_id:string; name:string };
 type AppShellProps = { children: ReactNode; activePath: string; companyId?:string; siteId?:string; eyebrow?: string; title?: string; description?: string; actions?: ReactNode };
@@ -57,22 +64,22 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
     <button type="button" className={`app-nav-scrim${menuOpen ? ' is-open' : ''}`}
       aria-label="Fermer la navigation" tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)} />
     <aside id="zaray-app-nav" className={`app-nav${menuOpen ? ' is-open' : ''}`} aria-label="Navigation de l’entreprise" inert={!menuOpen}>
-      <div className="app-nav-mobile-head"><strong>Gestion de l'entreprise</strong><button type="button" onClick={() => { setMenuOpen(false); menuButton.current?.focus(); }}>Fermer</button></div>
+      <div className="app-nav-mobile-head"><strong>Gestion de l'entreprise</strong><button type="button" onClick={() => { setMenuOpen(false); menuButton.current?.focus(); }}><ZarayIcon name="close" size={18} /> Fermer</button></div>
       <a className="app-brand" href="/" aria-label="ZARAY · Accueil"><BrandLogo priority /></a>
-      {activeSite && activeCompany && <div className="app-nav-group"><span className="app-nav-label">SITE ACTIF</span><a className="app-nav-link" href={'/sites/'+encodeURIComponent(activeSite)+'?companyId='+encodeURIComponent(activeCompany)}>Tableau de bord du site</a></div>}
+      {activeSite && activeCompany && <div className="app-nav-group"><span className="app-nav-label">SITE ACTIF</span><a className="app-nav-link" href={'/sites/'+encodeURIComponent(activeSite)+'?companyId='+encodeURIComponent(activeCompany)}><ZarayIcon name="dashboard" size={18} /> Tableau de bord du site</a></div>}
       {sections.map((section) => <div className="app-nav-group" key={section.label}>
         <span className="app-nav-label">{section.label}</span>
         {section.items.map(([href, label]) => {
           const siteOperational = ['/clients','/commandes','/tickets','/paiements/verification'].includes(href);
           const scoped=href === '/entreprises' ? href : activeCompany ? href+(href.includes('?')?'&':'?')+'companyId='+encodeURIComponent(activeCompany)+(activeSite && siteOperational ? '&siteId='+encodeURIComponent(activeSite) : '') : href;
-          return <Link key={href} ref={href === '/tableau-de-bord' ? firstMenuLink : undefined} className={'app-nav-link' + (activePath === href ? ' active' : '')} href={scoped} prefetch={false} aria-current={activePath === href ? 'page' : undefined} onClick={() => setMenuOpen(false)}>{label}</Link>;
+          return <Link key={href} ref={href === '/tableau-de-bord' ? firstMenuLink : undefined} className={'app-nav-link' + (activePath === href ? ' active' : '')} href={scoped} prefetch={false} aria-current={activePath === href ? 'page' : undefined} onClick={() => setMenuOpen(false)}><ZarayIcon name={navigationIcons[href as keyof typeof navigationIcons] ?? "next"} size={18} /> {label}</Link>;
         })}
       </div>)}
-      <div className="app-nav-footer"><a className="app-nav-link" href="/mon-compte">Retour au compte personnel</a><a className="app-nav-link" href="/entreprises">Mes entreprises</a><SignOutButton /></div>
+      <div className="app-nav-footer"><a className="app-nav-link" href="/mon-compte"><ZarayIcon name="back" size={18} /> Retour au compte personnel</a><a className="app-nav-link" href="/entreprises"><ZarayIcon name="home" size={18} /> Mes entreprises</a><SignOutButton /></div>
     </aside>
     <div className="app-main">
       <header className="app-topbar">
-        <button ref={menuButton} className="app-menu-button" type="button" aria-controls="zaray-app-nav" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}>☰ Menu</button>
+        <button ref={menuButton} className="app-menu-button" type="button" aria-controls="zaray-app-nav" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}><ZarayIcon name="settings" size={18} /> Menu</button>
         <a className="app-topbar-brand" href="/mon-compte" aria-label="ZARAY · Espace personnel"><BrandLogo /></a>
         <div className="workspace-context">
           <strong>Compte ZARAY</strong><span className="muted"> / </span>
@@ -88,7 +95,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
             </select></label>
           </>:<span className="muted">{contextError||'Chargement du contexte…'}</span>}
         </div>
-        <div className="app-topbar-links"><a className="header-link" href="/mon-compte">Mon compte</a><a className="header-link" href={activeCompany?'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany):'/entreprises'}>Vue générale</a></div>
+        <div className="app-topbar-links"><a className="header-link" href="/mon-compte"><ZarayIcon name="profile" size={18} /> Mon compte</a><a className="header-link" href={activeCompany?'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany):'/entreprises'}><ZarayIcon name="dashboard" size={18} /> Vue générale</a></div>
       </header>
       <main className="app-content">
         {(eyebrow || title || description || actions) && <header className="page-header"><div>{eyebrow && <p className="eyebrow">{eyebrow}</p>}{title && <h1 className="app-title">{title}</h1>}{description && <p className="app-subtitle">{description}</p>}</div>{actions && <div className="page-actions">{actions}</div>}</header>}

@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 import BrandLogo from '@/components/brand-logo';
 import { useEffect, useState } from 'react';
 import WorkspaceBreadcrumb from '@/components/workspace-breadcrumb';
@@ -72,7 +73,7 @@ export default function OrdersPage() {
         <p>{o.customer_name} · {o.customer_email}</p>{o.customer_phone && <p>{o.customer_phone}</p>}
         <p style={{ marginTop: 10 }}>{Number(o.amount).toLocaleString('fr-FR')} {o.currency}</p>
         <span className="module-status">Créée le {new Date(o.created_at).toLocaleString('fr-FR')}</span>
-        {o.status === 'pending_payment' && <><p style={{ marginTop: 12 }}><strong>Pas de ticket : paiement non confirmé.</strong></p>{companies.find(c => c.id === companyId && (c.role === 'owner' || c.role === 'admin')) && <button type="button" className="primary-link" disabled={!!recordingId} onClick={() => collectCash(o.id)} style={{marginTop:12}}>{recordingId === o.id ? 'Enregistrement…' : 'Encaisser en espèces et créer le reçu'}</button>}</>}
+        {o.status === 'pending_payment' && <><p style={{ marginTop: 12 }}><strong>Pas de ticket : paiement non confirmé.</strong></p>{companies.find(c => c.id === companyId && (c.role === 'owner' || c.role === 'admin')) && <button type="button" className="primary-link" disabled={!!recordingId} onClick={() => collectCash(o.id)} style={{marginTop:12}}><ZarayIcon name="save" size={18} /> {recordingId === o.id ? 'Enregistrement…' : 'Encaisser en espèces et créer le reçu'}</button>}</>}
         {o.status === 'paid' && !o.activated_at && <p style={{ marginTop: 12 }}>Paiement confirmé. Le ticket peut être émis ; l’accès réseau n’est pas encore activé.</p>}
         {o.activated_at && <p style={{ marginTop: 12 }}>Activation enregistrée le {new Date(o.activated_at).toLocaleString('fr-FR')}</p>}
       </article>)}
@@ -88,9 +89,9 @@ export default function OrdersPage() {
       <h2>{Number(receipt.amount).toLocaleString('fr-FR')} {receipt.currency}</h2>
       <p>Payé en espèces le {new Date(receipt.paid_at).toLocaleString('fr-FR')}</p>
       <p>Ce reçu atteste du règlement de l'abonnement. Il ne constitue pas un identifiant Wi-Fi ni une activation du réseau.</p>
-      <button type="button" className="primary-link receipt-print-button" style={{marginTop:18}} onClick={() => window.print()}>Imprimer le reçu d'abonnement</button>
+      <button type="button" className="primary-link receipt-print-button" style={{marginTop:18}} onClick={() => window.print()}><ZarayIcon name="print" size={18} /> Imprimer le reçu d'abonnement</button>
     </section>}
     
-    <p style={{ marginTop: 28 }}><a href="/tickets">Gestion des tickets Wi-Fi →</a> · <a href="/offres">Offres</a> · <a href="/tableau-de-bord">Tableau de bord</a></p>
+    <p style={{ marginTop: 28 }}><a href="/tickets"><ZarayIcon name="print" size={18} /> Gestion des tickets Wi-Fi →</a> · <a href="/offres"><ZarayIcon name="print" size={18} /> Offres</a> · <a href="/tableau-de-bord"><ZarayIcon name="print" size={18} /> Tableau de bord</a></p>
   </section><style jsx global>{`@media print{body *{visibility:hidden!important}#cash-receipt,#cash-receipt *{visibility:visible!important}#cash-receipt{position:absolute!important;top:0;left:0;width:80mm;max-width:80mm;box-shadow:none;border:0;padding:4mm}.receipt-print-button{display:none!important}@page{size:80mm auto;margin:5mm}}`}</style></main>;
 }
