@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test:motion": "node --test tests/motion.test.mjs",
     "test:context": "node --test tests/context.test.mjs",
-    "test:brand": "node --test tests/brand.test.mjs"
+    "test:brand": "node --test tests/brand.test.mjs",
+    "test:navigation": "node --test tests/navigation.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.7.0",
