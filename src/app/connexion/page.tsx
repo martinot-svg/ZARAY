@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { MotionFeedback } from '@/components/motion';
 
 export default function ConnexionPage() {
   const [error, setError] = useState('');
@@ -27,7 +28,7 @@ export default function ConnexionPage() {
     }
   }
 
-  return <main className="form-shell"><section className="form-card">
+  return <main className="form-shell auth-motion"><section className="form-card">
     <p className="eyebrow">ZARAY · ACCÈS SÉCURISÉ</p>
     <h1>Connexion administrateur</h1>
     <form className="form-stack" onSubmit={submit}>
@@ -36,7 +37,7 @@ export default function ConnexionPage() {
       <p><a href="/mot-de-passe-oublie">Mot de passe oublié ?</a></p>
       <button type="submit" disabled={busy} className="primary-link">{busy ? 'Connexion…' : 'Se connecter'}</button>
     </form>
-    {error && <p role="alert">{error}</p>}
+    <MotionFeedback message={error} kind="error" />
     <p><a href="/inscription">Créer un compte</a></p>
   </section></main>;
 }

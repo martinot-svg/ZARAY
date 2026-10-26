@@ -12,3 +12,69 @@ a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}
 @keyframes zaray-enter{from{opacity:.01;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes skeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}.primary-link:hover,.module:hover{transform:none!important}}
+
+/* ZARAY motion system: all duration, easing and distances are shared tokens. */
+:root{
+  --motion-fast:120ms;
+  --motion-standard:180ms;
+  --motion-page:240ms;
+  --motion-curve:cubic-bezier(.2,.75,.25,1);
+  --motion-distance:8px;
+}
+.motion-sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.app-nav-mobile-head,.app-menu-button{display:none}
+.app-nav-scrim{display:none}
+.motion-disclosure{margin-top:16px}
+.motion-disclosure-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;text-align:left;background:none;border:0;padding:0;color:inherit;cursor:pointer}
+.motion-disclosure-description{display:block;margin-top:4px}
+.motion-disclosure-chevron{font-size:24px;line-height:1;transition:transform var(--motion-standard) var(--motion-curve)}
+.motion-disclosure-trigger[aria-expanded="true"] .motion-disclosure-chevron{transform:rotate(180deg)}
+.motion-disclosure-content{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--motion-standard) var(--motion-curve),opacity var(--motion-standard) ease;opacity:0}
+.motion-disclosure-content.is-open{grid-template-rows:1fr;opacity:1}
+.motion-disclosure-inner{overflow:hidden;min-height:0}
+.motion-disclosure-inner > :first-child{margin-top:16px}
+.motion-skeleton{max-width:700px}
+.form-shell.auth-motion{position:relative;isolation:isolate;overflow:hidden;display:grid;place-items:center}
+.auth-motion .form-card{position:relative;z-index:1}
+.auth-motion::before{content:"";position:absolute;inset:-15%;z-index:0;pointer-events:none;background:radial-gradient(circle at 16% 26%,rgb(64 214 188 / 10%),transparent 29%),radial-gradient(circle at 86% 78%,rgb(8 30 42 / 7%),transparent 28%)}
+@media(max-width:700px){
+  .app-menu-button{display:inline-flex;align-items:center;justify-content:center;border:1px solid #c8d7db;border-radius:8px;background:#fff;color:#081e2a;min-height:40px;padding:8px 12px;font-weight:750;cursor:pointer}
+  .app-nav{position:fixed;inset:0 auto 0 0;width:min(290px,86vw);height:100dvh;min-height:0;padding:20px 14px;display:flex;flex-direction:column;align-items:stretch;overflow-y:auto;overflow-x:hidden;transform:translate3d(-101%,0,0);visibility:hidden;z-index:35}
+  .app-nav.is-open{transform:translate3d(0,0,0);visibility:visible}
+  .app-nav-mobile-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding:0 12px;color:#fff}
+  .app-nav-mobile-head button{padding:7px 10px;color:#fff;border:1px solid #53727d;border-radius:8px;background:#143b4a;cursor:pointer}
+  .app-nav-group{display:grid;gap:4px}
+  .app-nav-label{display:block}
+  .app-nav-link{white-space:normal;min-height:40px}
+  .app-nav-footer{display:block;margin-top:auto}
+  .app-nav-scrim{display:block;position:fixed;inset:0;background:rgb(8 30 42 / 44%);border:0;opacity:0;visibility:hidden;pointer-events:none;z-index:30}
+  .app-nav-scrim.is-open{opacity:1;visibility:visible;pointer-events:auto}
+  .app-topbar{gap:12px}
+}
+@media(prefers-reduced-motion:no-preference){
+  .app-content,.form-card:not(.receipt-preview){animation:zaray-page-in var(--motion-page) var(--motion-curve) both}
+  .motion-feedback{animation:zaray-fade-in var(--motion-standard) var(--motion-curve) both}
+  .motion-feedback.is-exiting{animation:zaray-fade-out var(--motion-standard) ease both}
+  .motion-stagger > :nth-child(-n+8){animation:zaray-page-in var(--motion-page) var(--motion-curve) both;animation-delay:calc(min(var(--motion-index, 0), 7) * 28ms)}
+  .motion-stagger > :nth-child(2){--motion-index:1}
+  .motion-stagger > :nth-child(3){--motion-index:2}
+  .motion-stagger > :nth-child(4){--motion-index:3}
+  .motion-stagger > :nth-child(5){--motion-index:4}
+  .motion-stagger > :nth-child(6){--motion-index:5}
+  .motion-stagger > :nth-child(7){--motion-index:6}
+  .motion-stagger > :nth-child(8){--motion-index:7}
+  .auth-motion::before{animation:zaray-ambient 11s ease-in-out infinite alternate}
+  :where(.primary-link,.app-menu-button,.app-nav-mobile-head button,.motion-disclosure-trigger,.data-table button,.panel button):active:not(:disabled){transform:scale(.985)}
+  :where(button,a,input,select,textarea):focus-visible{outline:2px solid #087f75;outline-offset:3px}
+  .app-nav,.app-nav-scrim{transition:transform var(--motion-page) var(--motion-curve),opacity var(--motion-page) ease,visibility var(--motion-page)}
+  .motion-disclosure-chevron{transition:transform var(--motion-standard) var(--motion-curve)}
+  .data-table tbody tr{transition:background-color var(--motion-fast) ease}
+}
+@keyframes zaray-page-in{from{opacity:0;transform:translateY(var(--motion-distance))}to{opacity:1;transform:translateY(0)}}
+@keyframes zaray-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes zaray-fade-out{from{opacity:1}to{opacity:0}}
+@keyframes zaray-ambient{from{transform:translate3d(-1.4%,0,0)}to{transform:translate3d(1.4%,.6%,0)}}
+@media(prefers-reduced-motion:reduce){
+  .app-nav,.app-nav-scrim,.motion-disclosure-content,.motion-disclosure-chevron{transition:none!important}
+  .motion-stagger > *,.motion-feedback,.app-content,.auth-motion::before{animation:none!important}
+}
