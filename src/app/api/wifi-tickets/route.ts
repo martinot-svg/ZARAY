@@ -35,7 +35,8 @@ export async function GET(request:NextRequest){
     const {data,error}=await query.order('created_at',{ascending:false}).limit(200);
     if(error)return json('Impossible de charger les tickets Wi-Fi.',503);
     const now=Date.now();
-    const tickets=(data??[]).map(t=>({...t,status:t.status==='issued'&&new Date(t.valid_until).getTime()<=now?'expired':t.status}));
+    const rows=(data??[]) as unknown as Array<{status:string;valid_until:string;[key:string]:unknown}>;
+    const tickets=rows.map(t=>({...t,status:t.status==='issued'&&new Date(t.valid_until).getTime()<=now?'expired':t.status}));
     return NextResponse.json({tickets},{headers:{'Cache-Control':'no-store'}});
   }catch{return json('Service indisponible.',503);}
 }
