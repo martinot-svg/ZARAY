@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import WorkspaceBreadcrumb from '@/components/workspace-breadcrumb';
 import { activeSiteId, scopedQuery, selectedCompany, switchCompany } from '@/lib/workspace-url';
 import { MotionFeedback, MotionSkeleton } from '@/components/motion';
 type Company = { id: string; legal_name: string; role: string };
@@ -41,7 +42,7 @@ export default function PaymentsPage() {
   },[companyId]);
 
   return <main className="form-shell"><section className="form-card" style={{maxWidth:1100,width:'min(100%,1100px)'}}>
-    <p className="eyebrow">ZARAY · MODULE 9 · PAIEMENTS</p><h1>Suivi des paiements</h1>
+    <WorkspaceBreadcrumb companyId={companyId}/><p className="eyebrow">ZARAY · MODULE 9 · PAIEMENTS</p><h1>Suivi des paiements</h1>
     <p>Les confirmations proviennent du webhook signé et sont vérifiées côté serveur contre la référence, le montant et la devise de la commande. Un événement répété est traité de façon idempotente ; un paiement ne déclenche pas directement l’activation Internet.</p>
     <section className="module" style={{marginTop:20,minHeight:0}}>
       <h2>Passerelle de paiement</h2>
