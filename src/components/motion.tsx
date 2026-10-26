@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import { useEffect, useId, useState, type ReactNode } from 'react';
 
@@ -68,7 +69,7 @@ export function MotionDisclosure({ title, description, children, defaultOpen = t
       onClick={() => setOpen(current => !current)}>
       <span><strong className="panel-title">{title}</strong>
         {description && <span className="muted motion-disclosure-description">{description}</span>}
-      </span><span className="motion-disclosure-chevron" aria-hidden="true">⌄</span>
+      </span><span className="motion-disclosure-chevron" aria-hidden="true"><ZarayIcon name="expand" size={18} /></span>
     </button>
     <div id={id} className={`motion-disclosure-content${open ? ' is-open' : ''}`}
       aria-hidden={!open} inert={!open}>

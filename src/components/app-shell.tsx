@@ -13,10 +13,10 @@ const sections = [
 ];
 
 const navigationIcons = {
-  '/tableau-de-bord': 'dashboard', '/entreprises': 'home', '/sites': 'home',
-  '/membres': 'profile', '/clients': 'profile', '/offres': 'settings',
-  '/commandes': 'save', '/tickets': 'print', '/paiements/verification': 'finance',
-  '/parametres-paiement': 'finance', '/portail': 'settings',
+  '/tableau-de-bord': 'dashboard', '/entreprises': 'company', '/sites': 'site',
+  '/membres': 'members', '/clients': 'customers', '/offres': 'wifi',
+  '/commandes': 'orders', '/tickets': 'ticket', '/paiements/verification': 'payment',
+  '/parametres-paiement': 'finance', '/portail': 'network',
 } as const;
 type WorkspaceCompany = { id:string; legal_name:string; role:string };
 type WorkspaceSite = { id:string; company_id:string; name:string };
@@ -75,11 +75,11 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
           return <Link key={href} ref={href === '/tableau-de-bord' ? firstMenuLink : undefined} className={'app-nav-link' + (activePath === href ? ' active' : '')} href={scoped} prefetch={false} aria-current={activePath === href ? 'page' : undefined} onClick={() => setMenuOpen(false)}><ZarayIcon name={navigationIcons[href as keyof typeof navigationIcons] ?? "next"} size={18} /> {label}</Link>;
         })}
       </div>)}
-      <div className="app-nav-footer"><a className="app-nav-link" href="/mon-compte"><ZarayIcon name="back" size={18} /> Retour au compte personnel</a><a className="app-nav-link" href="/entreprises"><ZarayIcon name="home" size={18} /> Mes entreprises</a><SignOutButton /></div>
+      <div className="app-nav-footer"><a className="app-nav-link" href="/mon-compte"><ZarayIcon name="back" size={18} /> Retour au compte personnel</a><a className="app-nav-link" href="/entreprises"><ZarayIcon name="company" size={18} /> Mes entreprises</a><SignOutButton /></div>
     </aside>
     <div className="app-main">
       <header className="app-topbar">
-        <button ref={menuButton} className="app-menu-button" type="button" aria-controls="zaray-app-nav" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}><ZarayIcon name="settings" size={18} /> Menu</button>
+        <button ref={menuButton} className="app-menu-button" type="button" aria-controls="zaray-app-nav" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}><ZarayIcon name="menu" size={18} /> Menu</button>
         <a className="app-topbar-brand" href="/mon-compte" aria-label="ZARAY · Espace personnel"><BrandLogo /></a>
         <div className="workspace-context">
           <strong>Compte ZARAY</strong><span className="muted"> / </span>
