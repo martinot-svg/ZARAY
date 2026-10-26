@@ -7,6 +7,12 @@ on:
       - 'src/components/contrast-guardian.tsx'
       - 'src/app/globals.css'
       - 'tests/contrast-audit.mjs'
+      - 'tests/contrast-sensitive-routes.mjs'
+      - 'src/app/paiement/**'
+      - 'src/app/mon-compte/**'
+      - 'src/app/entreprises/**'
+      - 'src/app/tableau-de-bord/**'
+      - 'src/app/finance-globale/**'
       - '.github/workflows/contrast-audit.yml'
   workflow_dispatch:
 
@@ -39,11 +45,20 @@ jobs:
         env:
           BASE_URL: https://zaray.vercel.app
         run: node tests/contrast-audit.mjs
+      - name: Check payment status views and protected visual routes
+        env:
+          BASE_URL: https://zaray.vercel.app
+          ZARAY_QA_EMAIL: ${{ secrets.ZARAY_QA_EMAIL }}
+          ZARAY_QA_PASSWORD: ${{ secrets.ZARAY_QA_PASSWORD }}
+          ZARAY_QA_COMPANY_ID: ${{ secrets.ZARAY_QA_COMPANY_ID }}
+        run: node tests/contrast-sensitive-routes.mjs
       - name: Preserve screenshot and audit evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: zaray-contrast-audit
-          path: artifacts/contrast/
+          path: |
+            artifacts/contrast/
+            artifacts/contrast-sensitive/
           retention-days: 14
           if-no-files-found: warn
