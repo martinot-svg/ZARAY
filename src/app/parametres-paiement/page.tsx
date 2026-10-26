@@ -1,98 +1,17 @@
 'use client';
 import { useEffect, useState, type FormEvent } from 'react';
-
-type Company = { id: string; legal_name: string; role: string };
-type Provider = 'orange_money' | 'mvola';
-type Method = { id?: string; company_id?: string; provider: Provider; account_number: string; account_name: string; instructions: string; is_active: boolean; updated_at?: string };
-const providers: { id: Provider; label: string; help: string }[] = [
-  { id: 'orange_money', label: 'Orange Money', help: 'Numéro Orange Money qui reçoit les paiements des clients.' },
-  { id: 'mvola', label: 'MVola', help: 'Numéro MVola qui reçoit les paiements des clients.' },
-];
-const emptyMethod = (provider: Provider): Method => ({ provider, account_number: '', account_name: '', instructions: '', is_active: false });
-
-export default function ParametresPaiementPage() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [companyId, setCompanyId] = useState('');
-  const [methods, setMethods] = useState<Record<Provider, Method>>({ orange_money: emptyMethod('orange_money'), mvola: emptyMethod('mvola') });
-  const [busy, setBusy] = useState(true);
-  const [saving, setSaving] = useState<Provider | null>(null);
-  const [notice, setNotice] = useState('');
-  const [error, setError] = useState('');
-
-  async function loadMethods(id: string) {
-    if (!id) return;
-    const response = await fetch('/api/manual-payments/methods?companyId=' + encodeURIComponent(id), { cache: 'no-store' });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Impossible de charger les coordonnées de paiement.');
-    const next = { orange_money: emptyMethod('orange_money'), mvola: emptyMethod('mvola') };
-    for (const method of (data.methods ?? []) as Method[]) next[method.provider] = { ...method };
-    setMethods(next);
-  }
-
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const response = await fetch('/api/sites', { cache: 'no-store' });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Impossible de charger les entreprises.');
-        if (!active) return;
-        setCompanies(data.companies ?? []);
-        if (data.companies?.[0]) setCompanyId(data.companies[0].id);
-      } catch (e) { if (active) setError(e instanceof Error ? e.message : 'Erreur de chargement.'); }
-      finally { if (active) setBusy(false); }
-    })();
-    return () => { active = false; };
-  }, []);
-
-  useEffect(() => {
-    if (!companyId) return;
-    let active = true;
-    setBusy(true); setError(''); setNotice('');
-    loadMethods(companyId).catch((e) => { if (active) setError(e instanceof Error ? e.message : 'Erreur de chargement.'); }).finally(() => { if (active) setBusy(false); });
-    return () => { active = false; };
-  }, [companyId]);
-
-  function change(provider: Provider, field: 'account_number' | 'account_name' | 'instructions' | 'is_active', value: string | boolean) {
-    setMethods((current) => ({ ...current, [provider]: { ...current[provider], [field]: value } }));
-  }
-
-  async function save(event: FormEvent<HTMLFormElement>, provider: Provider) {
-    event.preventDefault(); setError(''); setNotice(''); setSaving(provider);
-    const method = methods[provider];
-    try {
-      const response = await fetch('/api/manual-payments/methods', {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ companyId, provider, accountNumber: method.account_number, accountName: method.account_name, instructions: method.instructions, isActive: method.is_active }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Enregistrement impossible.');
-      setMethods((current) => ({ ...current, [provider]: { ...data.method } }));
-      setNotice(providers.find((item) => item.id === provider)?.label + ' enregistré.');
-    } catch (e) { setError(e instanceof Error ? e.message : 'Enregistrement impossible.'); }
-    finally { setSaving(null); }
-  }
-
-  return <main className="form-shell"><section className="form-card" style={{ maxWidth: 1000, width: 'min(100%,1000px)' }}>
-    <p className="eyebrow">ZARAY · CONFIGURATION</p><h1>Moyens de paiement manuels</h1>
-    <p>Configure les numéros sur lesquels les clients doivent envoyer l’argent. Seuls le dirigeant et les administrateurs autorisés peuvent enregistrer ces coordonnées.</p>
-    {companies.length > 0 && <label>Entreprise<select value={companyId} onChange={(e) => setCompanyId(e.target.value)}>{companies.map((company) => <option key={company.id} value={company.id}>{company.legal_name} · {company.role}</option>)}</select></label>}
-    {companies.length === 0 && !busy && <p>Aucune entreprise accessible.</p>}
-    {providers.map((provider) => {
-      const method = methods[provider.id];
-      return <article className="module" key={provider.id} style={{ marginTop: 24, minHeight: 0 }}>
-        <h2>{provider.label}</h2><p>{provider.help}</p>
-        <form className="form-stack" onSubmit={(event) => save(event, provider.id)}>
-          <label>Numéro bénéficiaire<input type="tel" value={method.account_number} onChange={(e) => change(provider.id, 'account_number', e.target.value)} placeholder="0341234567" pattern="03[0-9]{8}" maxLength={10} required /></label>
-          <label>Nom affiché du bénéficiaire<input value={method.account_name} onChange={(e) => change(provider.id, 'account_name', e.target.value)} minLength={2} maxLength={120} required /></label>
-          <label>Instructions au client (facultatif)<textarea value={method.instructions} onChange={(e) => change(provider.id, 'instructions', e.target.value)} maxLength={1000} rows={3} placeholder="Ex. Indiquez la référence de commande dans le motif du transfert."/></label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}><input type="checkbox" checked={method.is_active} onChange={(e) => change(provider.id, 'is_active', e.target.checked)} /> Activer ce moyen de paiement sur le portail</label>
-          <button className="primary-link" type="submit" disabled={busy || saving !== null || !companyId}>{saving === provider.id ? 'Enregistrement…' : 'Enregistrer ' + provider.label}</button>
-          {method.updated_at && <small>Mis à jour le {new Date(method.updated_at).toLocaleString('fr-FR')}</small>}
-        </form>
-      </article>;
-    })}
-    {notice && <p role="status">{notice}</p>}{error && <p role="alert">{error}</p>}
-    <p style={{ marginTop: 28 }}><a href="/paiements/verification">Vérifier les paiements →</a> · <a href="/tableau-de-bord">Tableau de bord</a></p>
-  </section></main>;
+import AppShell from '@/components/app-shell';
+type Company={id:string;legal_name:string;role:string};type Provider='orange_money'|'mvola';type Method={id?:string;company_id?:string;provider:Provider;account_number:string;account_name:string;instructions:string;is_active:boolean;updated_at?:string};
+const providers:{id:Provider;label:string;help:string}[]=[{id:'orange_money',label:'Orange Money',help:'Numéro Orange Money qui reçoit les paiements des clients.'},{id:'mvola',label:'MVola',help:'Numéro MVola qui reçoit les paiements des clients.'}];const emptyMethod=(provider:Provider):Method=>({provider,account_number:'',account_name:'',instructions:'',is_active:false});
+export default function ParametresPaiementPage(){
+ const [companies,setCompanies]=useState<Company[]>([]),[companyId,setCompanyId]=useState(''),[methods,setMethods]=useState<Record<Provider,Method>>({orange_money:emptyMethod('orange_money'),mvola:emptyMethod('mvola')}),[busy,setBusy]=useState(true),[saving,setSaving]=useState<Provider|null>(null),[notice,setNotice]=useState(''),[error,setError]=useState('');
+ async function loadMethods(id:string){if(!id)return;const r=await fetch('/api/manual-payments/methods?companyId='+encodeURIComponent(id),{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les coordonnées de paiement.');const next={orange_money:emptyMethod('orange_money'),mvola:emptyMethod('mvola')};for(const method of (d.methods??[]) as Method[])next[method.provider]={...method};setMethods(next);}
+ useEffect(()=>{let active=true;(async()=>{try{const r=await fetch('/api/sites',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les entreprises.');if(active){setCompanies(d.companies??[]);if(d.companies?.[0])setCompanyId(d.companies[0].id);}}catch(e){if(active)setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{if(active)setBusy(false);}})();return()=>{active=false};},[]);useEffect(()=>{if(!companyId)return;setBusy(true);setError('');loadMethods(companyId).catch(e=>setError(e instanceof Error?e.message:'Erreur de chargement.')).finally(()=>setBusy(false));},[companyId]);
+ function change(provider:Provider,field:'account_number'|'account_name'|'instructions'|'is_active',value:string|boolean){setMethods(current=>({...current,[provider]:{...current[provider],[field]:value}}));}
+ async function save(event:FormEvent<HTMLFormElement>,provider:Provider){event.preventDefault();setError('');setNotice('');setSaving(provider);const method=methods[provider];try{const r=await fetch('/api/manual-payments/methods',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,provider,accountNumber:method.account_number,accountName:method.account_name,instructions:method.instructions,isActive:method.is_active})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Enregistrement impossible.');setMethods(current=>({...current,[provider]:{...d.method}}));setNotice(providers.find(p=>p.id===provider)?.label+' enregistré.');}catch(e){setError(e instanceof Error?e.message:'Enregistrement impossible.');}finally{setSaving(null);}}
+ return <AppShell activePath="/parametres-paiement" eyebrow="FINANCE · CONFIGURATION" title="Moyens de paiement" description="Configurez les comptes bénéficiaires affichés sur le portail. L’activation d’un moyen ne valide jamais un paiement automatiquement.">
+  <section className="toolbar panel"><div className="toolbar-main"><label className="toolbar-field toolbar-grow">Entreprise<select value={companyId} onChange={e=>setCompanyId(e.target.value)}>{companies.map(c=><option key={c.id} value={c.id}>{c.legal_name} · {c.role}</option>)}</select></label></div><div className="toolbar-meta">{methods.orange_money.is_active||methods.mvola.is_active?'Portail configuré':'Aucun moyen actif'}</div></section>
+  <div className="module-grid">{providers.map(provider=>{const method=methods[provider.id];return <article className="panel" key={provider.id}><div className="panel-head"><div><span className="status-pill">{method.is_active?'Actif':'Inactif'}</span><div className="panel-title" style={{marginTop:8}}>{provider.label}</div><div className="muted">{provider.help}</div></div></div><form className="form-stack compact-form" onSubmit={e=>void save(e,provider.id)}><label>Numéro bénéficiaire<input type="tel" value={method.account_number} onChange={e=>change(provider.id,'account_number',e.target.value)} placeholder="0341234567" pattern="03[0-9]{8}" maxLength={10} required/></label><label>Nom du bénéficiaire<input value={method.account_name} onChange={e=>change(provider.id,'account_name',e.target.value)} minLength={2} maxLength={120} required/></label><label>Instructions client<textarea value={method.instructions} onChange={e=>change(provider.id,'instructions',e.target.value)} maxLength={1000} rows={3} placeholder="Ex. Indiquez la référence de commande dans le motif."/></label><label style={{display:'flex',alignItems:'center',gap:10}}><input type="checkbox" checked={method.is_active} onChange={e=>change(provider.id,'is_active',e.target.checked)}/> Activer sur le portail</label><button className="primary-link" type="submit" disabled={busy||saving!==null||!companyId}>{saving===provider.id?'Enregistrement…':'Enregistrer '+provider.label}</button>{method.updated_at&&<small className="muted">Mis à jour le {new Date(method.updated_at).toLocaleString('fr-FR')}</small>}</form></article>})}</div>
+  {(notice||error)&&<div className={error?'alert alert-error':'alert alert-success'} role={error?'alert':'status'}>{error||notice}</div>}<p style={{marginTop:16}}><a className="header-link" href="/paiements/verification">Vérifier les paiements →</a></p>
+ </AppShell>;
 }
