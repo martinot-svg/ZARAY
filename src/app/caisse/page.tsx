@@ -149,7 +149,7 @@ export default function CaissePage() {
               </div>
               {selectedOffer && <div className="module" style={{ marginTop: 18, minHeight: 0 }}><div className="module-number">OFFRE SÉLECTIONNÉE</div><h3>{selectedOffer.name}</h3><p>{selectedOffer.description}</p><p><strong>{Number(selectedOffer.price_amount).toLocaleString('fr-FR')} {selectedOffer.currency}</strong> · {selectedOffer.duration_minutes} min · {selectedOffer.max_devices} appareil(s) · validité {selectedOffer.validity_days} jour(s)</p>{selectedSite && <p>Site : {selectedSite.name}</p>}</div>}
               <button className="primary-link" type="button" onClick={generateTicket} disabled={saving || busy || !siteId || !offerId || !customerName.trim()} style={{ marginTop: 18 }}>{saving ? 'Génération…' : 'Encaisser & générer le ticket'}</button>
-              <MotionFeedback message={error || notice} kind={error ? 'error' : 'success'}/>}
+              <MotionFeedback message={error || notice} kind={error ? 'error' : 'success'}/>
             </article>
 
             <article className="panel">
