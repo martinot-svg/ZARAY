@@ -78,3 +78,7 @@ a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}
   .app-nav,.app-nav-scrim,.motion-disclosure-content,.motion-disclosure-chevron{transition:none!important}
   .motion-stagger > *,.motion-feedback,.app-content,.auth-motion::before{animation:none!important}
 }
+
+/* Keep the disclosure header clean inside generic panel button styles; focus is visible for reduced-motion users too. */
+.motion-disclosure .motion-disclosure-trigger,.motion-disclosure .motion-disclosure-trigger:hover{width:100%;padding:0;border:0;background:transparent;color:inherit;font-size:inherit}
+:where(button,a,input,select,textarea,summary):focus-visible{outline:2px solid #087f75;outline-offset:3px}
