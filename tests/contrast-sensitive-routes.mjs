@@ -28,7 +28,7 @@ async function audit(page, name, { screenshots = true } = {}) {
   // backgrounds. Gradients/images require subsequent manual image review.
   const result = await page.evaluate(() => {
     const rgb = value => {
-      const match = value.match(/^rgba?\\(\\s*([\\d.]+)[, ]+([\\d.]+)[, ]+([\\d.]+)(?:\\s*[,/]\\s*([\\d.]+%?))?\\s*\\)$/i);
+      const match = value.match(/^rgba?\(\s*([\d.]+)[, ]+([\d.]+)[, ]+([\d.]+)(?:\s*[,/]\s*([\d.]+%?))?\s*\)$/i);
       if (!match) return null;
       const alpha = match[4] ? (match[4].endsWith('%') ? parseFloat(match[4]) / 100 : Number(match[4])) : 1;
       return [Number(match[1]),Number(match[2]),Number(match[3]),alpha];
@@ -157,5 +157,5 @@ try {
   console.log('Payment actual page tested with intercepted safe responses: '+scenarios.length+' states + unknown reference.');
   console.log('Real authenticated audit: '+(authenticated?'ran with dedicated QA user':'NOT run - QA credentials not provided'));
   console.log('Contrast cases: '+cases.length+'; failures: '+findings.length);
-  if(findings.length){console.error(findings.join('\\n'));process.exitCode=1;}
+  if(findings.length){console.error(findings.join('\n'));process.exitCode=1;}
 }finally{await browser.close();}
