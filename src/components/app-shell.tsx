@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type ReactNode } from 'react';
+import BrandLogo from '@/components/brand-logo';
 
 const sections = [
   { label: 'ESPACE', items: [['/tableau-de-bord', 'Tableau de bord'], ['/entreprises/nouvelle', 'Entreprises'], ['/sites', 'Sites'], ['/membres', 'Membres']] },
@@ -52,7 +53,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
       aria-label="Fermer la navigation" tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)} />
     <aside id="zaray-app-nav" className={`app-nav${menuOpen ? ' is-open' : ''}`} aria-label="Navigation ZARAY">
       <div className="app-nav-mobile-head"><strong>Navigation</strong><button type="button" onClick={() => setMenuOpen(false)}>Fermer</button></div>
-      <a className="app-brand" href="/">ZARAY<span>.</span></a>
+      <a className="app-brand" href="/" aria-label="ZARAY · Accueil"><BrandLogo priority /></a>
       {activeSite && activeCompany && <div className="app-nav-group"><span className="app-nav-label">SITE ACTIF</span><a className="app-nav-link" href={'/sites/'+encodeURIComponent(activeSite)+'?companyId='+encodeURIComponent(activeCompany)}>Tableau de bord du site</a></div>}
       {sections.map((section) => <div className="app-nav-group" key={section.label}>
         <span className="app-nav-label">{section.label}</span>
