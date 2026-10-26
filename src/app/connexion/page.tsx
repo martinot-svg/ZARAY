@@ -31,7 +31,7 @@ export default function ConnexionPage() {
   }
 
   return <main className="form-shell auth-motion"><section className="form-card">
-    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority /></a></div>
+    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority surface="light" /></a></div>
     <p className="eyebrow">ZARAY · ACCÈS SÉCURISÉ</p>
     <h1>Connexion à mon compte ZARAY</h1>
     <form className="form-stack" onSubmit={submit}>
