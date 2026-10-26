@@ -28,8 +28,13 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Install browser audit dependency
         run: npm install --no-save --ignore-scripts --no-audit --no-fund playwright@1.56.1
-      - name: Install headless Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Select available browser
+        run: |
+          if command -v google-chrome >/dev/null 2>&1; then
+            echo "CHROME_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+          else
+            npx playwright install chromium
+          fi
       - name: Inspect production pages, contrast, and screenshots
         env:
           BASE_URL: https://zaray.vercel.app
