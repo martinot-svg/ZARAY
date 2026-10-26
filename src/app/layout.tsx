@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { ContrastGuardian } from '@/components/contrast-guardian';
 
 export const viewport: Viewport = { themeColor: '#0a0d0b' };
 
@@ -22,5 +23,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="fr"><body>{children}</body></html>;
+  return <html lang="fr"><body><ContrastGuardian />{children}</body></html>;
 }
