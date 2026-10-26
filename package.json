@@ -12,7 +12,8 @@
     "test:brand": "node scripts/verify-brand.mjs && node --test tests/brand.test.mjs",
     "test:navigation": "node --test tests/navigation.test.mjs",
     "prebuild": "node scripts/verify-brand.mjs && node scripts/generate-favicon.mjs",
-    "test:public": "node --test tests/public-home.test.mjs"
+    "test:public": "node --test tests/public-home.test.mjs",
+    "test:logo-surface": "node --test tests/logo-surface.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.7.0",
