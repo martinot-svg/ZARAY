@@ -15,7 +15,7 @@ jobs:
       - run: npm run test:context
       - run: npm run test:navigation
       - run: npm run test:logo-surface
-      - run: npm run test:brand
       - run: npm run test:public
       - run: npm run typecheck
+      - run: npm run test:brand
       - run: npm run build
