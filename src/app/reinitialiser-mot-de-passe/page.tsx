@@ -73,7 +73,7 @@ export default function ReinitialiserMotDePassePage() {
   }
 
   return <main className="form-shell auth-motion"><section className="form-card">
-    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority /></a></div>
+    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority surface="light" /></a></div>
     <p className="eyebrow">ZARAY · SÉCURITÉ DU COMPTE</p>
     <h1>Créer un nouveau mot de passe</h1>
     {!ready && !error && <p>Vérification du lien sécurisé…</p>}
