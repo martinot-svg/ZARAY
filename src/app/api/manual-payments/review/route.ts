@@ -2,22 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { authorizeManualPaymentReviewer } from '@/lib/manual-payment-auth';
+import { authorizeTenant } from '@/lib/tenant-context';
 
 export const dynamic = 'force-dynamic';
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
 
 export async function GET(request: NextRequest) {
   const companyId = request.nextUrl.searchParams.get('companyId') ?? '';
+  const siteId = request.nextUrl.searchParams.get('siteId') || null;
   if (!/^[0-9a-f-]{36}$/i.test(companyId)) return json({ error: 'Entreprise invalide.' }, 400);
   try {
     const session = await createClient();
     const authorization = await authorizeManualPaymentReviewer(session, companyId);
     if (!authorization.ok) return json({ error: authorization.error }, authorization.status);
+    const tenant=await authorizeTenant(session,companyId,siteId);
+    if(!tenant.ok)return json({error:tenant.error},tenant.status);
     const service = createServiceClient();
     if (!service) return json({ error: 'Service indisponible.' }, 503);
-    const { data: submissions, error } = await service.from('manual_payment_submissions')
-      .select('id,company_id,order_id,provider,sender_phone,transaction_reference,amount,currency,proof_path,customer_note,status,reviewer_user_id,reviewed_at,review_note,created_at')
-      .eq('company_id', companyId).order('created_at', { ascending: false }).limit(100);
+    const columns='id,company_id,order_id,provider,sender_phone,transaction_reference,amount,currency,proof_path,customer_note,status,reviewer_user_id,reviewed_at,review_note,created_at';
+    let query=service.from('manual_payment_submissions').select(columns+(siteId?',subscription_orders!inner(site_id)':'')).eq('company_id',companyId);
+    if(siteId)query=query.eq('subscription_orders.site_id',siteId);
+    const {data:submissions,error}=await query.order('created_at',{ascending:false}).limit(100);
     if (error) {
       console.error('manual payment review list failed', { code: error.code });
       return json({ error: 'Impossible de charger les justificatifs.' }, 503);

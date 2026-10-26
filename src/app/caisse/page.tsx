@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/app-shell';
 import { MotionFeedback, MotionSkeleton } from '@/components/motion';
+import { activeSiteId,scopedQuery,selectedCompany,switchCompany } from '@/lib/workspace-url';
 
 type Company = { id: string; legal_name: string; role: string };
 type Site = { id: string; company_id: string; name: string; status: string };
@@ -41,14 +42,15 @@ export default function CaissePage() {
     if (!id) return;
     const [sitesResponse, offersResponse, salesResponse] = await Promise.all([
       fetch('/api/sites?companyId=' + encodeURIComponent(id), { cache: 'no-store' }),
-      fetch('/api/offers?companyId=' + encodeURIComponent(id), { cache: 'no-store' }),
-      fetch('/api/caisse?companyId=' + encodeURIComponent(id), { cache: 'no-store' }),
+      fetch('/api/offers?' + scopedQuery(id), { cache: 'no-store' }),
+      fetch('/api/caisse?' + scopedQuery(id), { cache: 'no-store' }),
     ]);
     const [sitesData, offersData, salesData] = await Promise.all([sitesResponse.json(), offersResponse.json(), salesResponse.json()]);
     if (!sitesResponse.ok) throw new Error(sitesData.error || 'Impossible de charger les sites.');
     if (!offersResponse.ok) throw new Error(offersData.error || 'Impossible de charger les offres.');
     if (!salesResponse.ok) throw new Error(salesData.error || 'Impossible de charger les ventes.');
-    setSites((sitesData.sites ?? []).filter((site: Site) => site.status === 'active'));
+    setSites((sitesData.sites ?? []).filter((site: Site) => site.status === 'active' && site.company_id===id && (!activeSiteId()||site.id===activeSiteId())));
+    if(activeSiteId())setSiteId(activeSiteId()||'');
     setOffers((offersData.offers ?? []).filter((offer: Offer) => offer.status === 'active'));
     setSales(salesData.sales ?? []);
   }
@@ -62,8 +64,8 @@ export default function CaissePage() {
         if (!response.ok) throw new Error(data.error || 'Impossible de charger votre espace.');
         if (!active) return;
         setCompanies(data.companies ?? []);
-        const first = data.companies?.[0]?.id ?? '';
-        setCompanyId(first);
+        
+        setCompanyId(selectedCompany(data.companies??[],data.sites??[]));
       } catch (e) {
         if (active) setError(e instanceof Error ? e.message : 'Erreur de chargement.');
       } finally {
@@ -135,7 +137,7 @@ export default function CaissePage() {
     <>
       <div className="screen-only">
         <AppShell activePath="/caisse" eyebrow="VENTE RAPIDE · CLIENTS OCCASIONNELS" title="Caisse & tickets" description="Encaissez un client de passage, générez immédiatement son reçu et son ticket Wi-Fi imprimable.">
-          {companies.length > 1 && <label>Entreprise<select value={companyId} onChange={(e) => setCompanyId(e.target.value)}>{companies.map((company) => <option key={company.id} value={company.id}>{company.legal_name}</option>)}</select></label>}
+          {companies.length > 1 && <label>Entreprise<select value={companyId} onChange={(e) => switchCompany('/caisse',e.target.value)}>{companies.map((company) => <option key={company.id} value={company.id}>{company.legal_name}</option>)}</select></label>}
 
           <section className="module-grid" style={{ alignItems: 'start' }}>
             <article className="panel">
@@ -143,7 +145,7 @@ export default function CaissePage() {
               <div className="form-grid">
                 <label>Nom du client<input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Ex. Rakoto Jean" autoComplete="off" /></label>
                 <label>Téléphone <span className="muted">(facultatif)</span><input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="03x xx xxx xx" inputMode="tel" /></label>
-                <label>Site actif<select value={siteId} onChange={(e) => setSiteId(e.target.value)}><option value="">Choisir un site actif…</option>{sites.map((site) => <option key={site.id} value={site.id}>{site.name}</option>)}</select></label>
+                <label>Site actif<select value={siteId} onChange={(e) => setSiteId(e.target.value)} disabled={!!activeSiteId()}><option value="">Choisir un site actif…</option>{sites.map((site) => <option key={site.id} value={site.id}>{site.name}</option>)}</select></label>
                 <label>Offre Wi-Fi<select value={offerId} onChange={(e) => setOfferId(e.target.value)}><option value="">Choisir une offre…</option>{offers.map((offer) => <option key={offer.id} value={offer.id}>{offer.name} · {Number(offer.price_amount).toLocaleString('fr-FR')} {offer.currency}</option>)}</select></label>
                 <label>Mode de paiement<select value="cash" disabled><option value="cash">Espèces · encaissé au comptoir</option></select></label>
               </div>
