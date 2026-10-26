@@ -1,5 +1,7 @@
 'use client';
 
+import BrandLogo from '@/components/brand-logo';
+
 import { useState, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -30,7 +32,8 @@ export default function MotDePasseOubliePage() {
     }
   }
 
-  return <main className="form-shell"><section className="form-card">
+  return <main className="form-shell auth-motion"><section className="form-card">
+    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority /></a></div>
     <p className="eyebrow">ZARAY · RÉCUPÉRATION DU COMPTE</p>
     <h1>Mot de passe oublié</h1>
     <p>Indiquez l’adresse e-mail associée à votre compte pour recevoir un lien de réinitialisation.</p>
