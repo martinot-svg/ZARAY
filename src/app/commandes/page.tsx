@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { activeSiteId, scopedQuery, selectedCompany, switchCompany } from '@/lib/workspace-url';
 import { MotionFeedback, MotionSkeleton } from '@/components/motion';
 type Company = { id: string; legal_name: string; role: string };
 type Order = { id: string; public_reference: string; customer_name: string; customer_email: string; customer_phone: string | null; offer_name: string; amount: number | string; currency: string; status: string; created_at: string; paid_at: string | null; activated_at: string | null };
@@ -22,7 +23,7 @@ export default function OrdersPage() {
         const response = await fetch('/api/sites', { cache: 'no-store' });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Impossible de charger les entreprises.');
-        if (active) { setCompanies(data.companies ?? []); setCompanyId(data.companies?.[0]?.id ?? ''); }
+        if (active) { setCompanies(data.companies ?? []); setCompanyId(selectedCompany(data.companies??[],data.sites??[])); }
       } catch (e) { if (active) setError(e instanceof Error ? e.message : 'Erreur de chargement.'); }
       finally { if (active) setBusy(false); }
     })();
@@ -33,7 +34,7 @@ export default function OrdersPage() {
     let active = true; setBusy(true);
     (async () => {
       try {
-        const response = await fetch('/api/subscription-orders?companyId=' + encodeURIComponent(companyId), { cache: 'no-store' });
+        const response = await fetch('/api/subscription-orders?' + scopedQuery(companyId), { cache: 'no-store' });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Impossible de charger les commandes.');
         if (active) setOrders(data.orders ?? []);
@@ -60,7 +61,7 @@ export default function OrdersPage() {
   return <main className="form-shell"><section className="form-card" style={{ maxWidth: 1100, width: 'min(100%,1100px)' }}>
     <p className="eyebrow">ZARAY · MODULE 7 · SOUSCRIPTIONS</p><h1>Commandes du portail captif</h1>
     <p>Les commandes publiques sont enregistrées avec un montant et un forfait figés. Leur création ne vaut ni paiement confirmé ni activation Internet.</p>
-    {companies.length > 0 && <label>Entreprise<select value={companyId} onChange={(e) => setCompanyId(e.target.value)}>{companies.map((c) => <option key={c.id} value={c.id}>{c.legal_name}</option>)}</select></label>}
+    {companies.length > 0 && <label>Entreprise<select value={companyId} onChange={(e) => switchCompany('/commandes',e.target.value)}>{companies.map((c) => <option key={c.id} value={c.id}>{c.legal_name}</option>)}</select></label>}
     {companies.length === 0 && !busy && <p>Aucune entreprise accessible.</p>}
     {busy ? <MotionSkeleton rows={3}/> : orders.length ? <div className="module-grid" style={{ marginTop: 24 }}>
       {orders.map((o) => <article className="module" key={o.id}>

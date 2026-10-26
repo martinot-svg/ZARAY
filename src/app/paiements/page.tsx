@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { activeSiteId, scopedQuery, selectedCompany, switchCompany } from '@/lib/workspace-url';
 import { MotionFeedback, MotionSkeleton } from '@/components/motion';
 type Company = { id: string; legal_name: string; role: string };
 type Payment = { id: string; order_id: string; provider: string; provider_payment_id: string; amount: number | string; currency: string; status: string; confirmed_at: string | null; created_at: string };
@@ -18,7 +19,7 @@ export default function PaymentsPage() {
         const response=await fetch('/api/sites',{cache:'no-store'});
         const data=await response.json();
         if(!response.ok) throw new Error(data.error || 'Impossible de charger les entreprises.');
-        if(active){setCompanies(data.companies ?? []);setCompanyId(data.companies?.[0]?.id ?? '');}
+        if(active){setCompanies(data.companies ?? []);setCompanyId(selectedCompany(data.companies??[],data.sites??[]));}
       } catch(e){if(active)setError(e instanceof Error?e.message:'Erreur de chargement.');}
       finally{if(active)setBusy(false);}
     })();
@@ -29,7 +30,7 @@ export default function PaymentsPage() {
     let active=true;setBusy(true);
     (async()=>{
       try{
-        const response=await fetch('/api/payments?companyId='+encodeURIComponent(companyId),{cache:'no-store'});
+        const response=await fetch('/api/payments?'+scopedQuery(companyId),{cache:'no-store'});
         const data=await response.json();
         if(!response.ok)throw new Error(data.error || 'Impossible de charger les paiements.');
         if(active)setPayments(data.payments ?? []);
@@ -47,7 +48,7 @@ export default function PaymentsPage() {
       <p>Le registre et le point d’entrée sécurisé sont prêts. La création de sessions de paiement et le format de signature doivent être raccordés à la passerelle choisie ; aucune passerelle n’est activée par défaut.</p>
       <p><strong>Ne renseignez pas de clé privée dans le navigateur.</strong> Le secret webhook attendu est une variable serveur <code>ZARAY_PAYMENT_WEBHOOK_SECRET</code>.</p>
     </section>
-    {companies.length>0&&<label>Entreprise<select value={companyId} onChange={(e)=>setCompanyId(e.target.value)}>{companies.map(c=><option key={c.id} value={c.id}>{c.legal_name}</option>)}</select></label>}
+    {companies.length>0&&<label>Entreprise<select value={companyId} onChange={(e)=>switchCompany('/paiements',e.target.value)}>{companies.map(c=><option key={c.id} value={c.id}>{c.legal_name}</option>)}</select></label>}
     {busy?<MotionSkeleton rows={3}/>:payments.length?<div className="module-grid" style={{marginTop:24}}>
       {payments.map(p=><article className="module" key={p.id}>
         <span className="module-number">{labels[p.status] ?? p.status}</span><h3>{Number(p.amount).toLocaleString('fr-FR')} {p.currency}</h3>
