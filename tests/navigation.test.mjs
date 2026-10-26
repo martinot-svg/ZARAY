@@ -74,3 +74,10 @@ test('company dashboard scope stays visible, navigation remains compact and mobi
  assert.match(css,/@media\(max-width:700px\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 });
+
+test('site filtering is limited to operational pages and company-wide site directory remains global',()=>{
+ const shell=source('src/components/app-shell.tsx');
+ assert.match(shell,/const siteOperational = \['\/clients','\/commandes','\/tickets','\/paiements\/verification'\]/);
+ assert.match(shell,/activeSite && siteOperational/);
+ assert.match(shell,/href === '\/entreprises'/);
+});
