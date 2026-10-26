@@ -1,4 +1,5 @@
 'use client';
+import BrandLogo from '@/components/brand-logo';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 
@@ -27,6 +28,7 @@ export default function PaymentStatusPage() {
   }
   useEffect(() => { void refresh(); }, [reference]);
   return <main className="form-shell"><section className="form-card" style={{ width: 'min(100%, 680px)' }}>
+      <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
     <p className="eyebrow">ZARAY · PAIEMENT MANUEL</p><h1>Suivi du paiement</h1>
     <p>Référence de commande : <strong>{reference}</strong></p>
     {busy && <p role="status">Vérification du statut…</p>}
