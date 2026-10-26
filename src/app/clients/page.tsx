@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import AppShell from '@/components/app-shell';
+import { MotionFeedback } from '@/components/motion';
 
 type Company={id:string;legal_name:string;role:string};
 type Site={id:string;company_id:string;name:string};
@@ -41,6 +42,6 @@ export default function ClientsPage(){
       {busy?<div className="skeleton-list" aria-label="Chargement"><span/><span/><span/></div>:filtered.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Client</th><th>Site</th><th>Statut</th><th>Créé</th><th></th></tr></thead><tbody>{filtered.map(c=><tr key={c.id}><td><strong>{c.full_name}</strong><small>{c.email||'Sans e-mail'}{c.phone?' · '+c.phone:''}</small></td><td>{availableSites.find(s=>s.id===c.site_id)?.name||'—'}</td><td><span className="status-pill">{statusLabels[c.status]??c.status}</span></td><td>{new Date(c.created_at).toLocaleDateString('fr-FR')}</td><td><button type="button" onClick={()=>startEdit(c)}>Modifier</button></td></tr>)}</tbody></table></div>:<div className="empty-state"><strong>{customers.length?'Aucun résultat':'Aucun client'}</strong><p>{customers.length?'Modifiez vos filtres ou votre recherche.':'Créez votre première fiche client avec le formulaire.'}</p><a className="primary-link" href="#client-form">Créer un client</a></div>}
     </section>
    </div>
-   {(notice||error)&&<div className={error?'alert alert-error':'alert alert-success'} role={error?'alert':'status'}>{error||notice}</div>}
+   <MotionFeedback message={error || notice} kind={error ? 'error' : 'success'}/>
  </AppShell>;
 }
