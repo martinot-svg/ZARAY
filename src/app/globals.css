@@ -493,3 +493,49 @@ body{background:var(--canvas);color:var(--text-primary)}
 }
 @keyframes module-shimmer{from{opacity:.65}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.module-loading-screen,.module-loading-rows span,.module-loading-kpis span,.module-loading-toolbar span,.module-loading-panel-title{animation:none!important}}
+
+/*
+ * Global accessibility palette (WCAG AA).
+ * Local surfaces own their foreground: a white card remains dark-on-light
+ * inside a dark page, while the sidebar remains light-on-dark.
+ */
+:root {
+  color-scheme: light;
+  --zaray-on-light: #111914;
+  --zaray-on-dark: #ffffff;
+  --zaray-muted-light: #485c4c;
+  --zaray-muted-dark: #c8d9ca;
+  --zaray-surface-light: #ffffff;
+  --zaray-surface-dark: #111914;
+}
+:where(.form-card,.panel,.kpi,.module,.quick-action,.landing-feature,.module-loading-panel,.module-error-card) {
+  --zaray-surface-foreground: var(--zaray-on-light);
+}
+:where(.app-nav,.landing-footer,.landing-final,.landing-structure,.landing-hero,.landing-header) {
+  --zaray-surface-foreground: var(--zaray-on-dark);
+}
+:where(input,select,textarea) {
+  color: var(--zaray-on-light);
+  caret-color: currentColor;
+}
+:where(input,textarea)::placeholder {
+  color: #58685b;
+  opacity: 1;
+}
+:where(input,textarea):disabled::placeholder {
+  color: #58685b;
+}
+:where(.app-nav,.landing-footer,.landing-final) :is(input,textarea,select) {
+  background: var(--zaray-surface-light);
+  color: var(--zaray-on-light);
+}
+:where(.app-nav,.landing-footer,.landing-final) :is(input,textarea)::placeholder {
+  color: #58685b;
+}
+/* Browser-managed autofill, validation and focus must preserve readability. */
+:where(input,textarea,select):focus-visible {
+  outline-offset: 2px;
+}
+:where(.app-nav,.landing-footer,.landing-final) :focus-visible {
+  outline-color: #91ff95;
+}
