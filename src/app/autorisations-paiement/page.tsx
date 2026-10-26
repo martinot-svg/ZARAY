@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 import { MotionSkeleton } from '@/components/motion';
 import BrandLogo from '@/components/brand-logo';
 
@@ -87,6 +88,6 @@ export default function AutorisationsPaiementPage() {
       </article>)}
     </div> : !busy && companyId ? <p>Aucun administrateur actif dans cette entreprise. Ajoutez d’abord un administrateur depuis la gestion des membres.</p> : null}
     {notice && <p role="status">{notice}</p>}{error && <p role="alert">{error}</p>}
-    <p style={{ marginTop: 28 }}><a href="/paiements/verification">Vérification des paiements →</a> · <a href="/membres">Gestion des membres</a> · <a href="/tableau-de-bord">Tableau de bord</a></p>
+    <p style={{ marginTop: 28 }}><a href="/paiements/verification"><ZarayIcon name="payment" size={18} /> Vérification des paiements →</a> · <a href="/membres"><ZarayIcon name="members" size={18} /> Gestion des membres</a> · <a href="/tableau-de-bord"><ZarayIcon name="next" size={18} /> Tableau de bord</a></p>
   </section></main>;
 }

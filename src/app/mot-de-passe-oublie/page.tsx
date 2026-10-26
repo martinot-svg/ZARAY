@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import BrandLogo from '@/components/brand-logo';
 
@@ -39,10 +40,10 @@ export default function MotDePasseOubliePage() {
     <p>Indiquez l’adresse e-mail associée à votre compte pour recevoir un lien de réinitialisation.</p>
     <form className="form-stack" onSubmit={submit}>
       <label>Adresse e-mail<input name="email" type="email" autoComplete="email" required /></label>
-      <button type="submit" disabled={busy} className="primary-link">{busy ? 'Envoi en cours…' : 'Recevoir le lien'}</button>
+      <button type="submit" disabled={busy} className="primary-link"><ZarayIcon name="send" size={18} /> {busy ? 'Envoi en cours…' : 'Recevoir le lien'}</button>
     </form>
     {message && <p role="status">{message}</p>}
     {error && <p role="alert">{error}</p>}
-    <p><a href="/connexion">Retour à la connexion</a></p>
+    <p><a href="/connexion"><ZarayIcon name="login" size={18} /> Retour à la connexion</a></p>
   </section></main>;
 }

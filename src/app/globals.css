@@ -587,3 +587,16 @@ body{background:var(--canvas);color:var(--text-primary)}
 :where(button):disabled {
   cursor: not-allowed;
 }
+
+/* Lucide — consistent alignment, sizing and inherited foreground contrast */
+.app-nav-link,.app-menu-button,.app-topbar-links a,.app-nav-mobile-head button,.landing-header-login,.account-signout button,.form-stack button,.form-card .primary-link{display:inline-flex;align-items:center;gap:9px}
+.app-nav-link svg,.app-menu-button svg,.app-topbar-links svg,.app-nav-mobile-head svg,.landing-header-login svg,.landing-button svg,.account-signout svg,.form-stack button svg,.form-card .primary-link svg{flex-shrink:0;color:currentColor}
+button:disabled svg,[aria-disabled="true"] svg{opacity:.65}
+
+/* Unified Lucide typography, interaction contrast and responsive sizing. */
+svg[data-zaray-icon]{display:inline-block;vertical-align:-.22em;flex-shrink:0;color:currentColor;stroke:currentColor;max-width:100%;}
+:where(.app-nav-link,.personal-nav-link,.app-menu-button,.personal-menu-toggle,.app-topbar-links a,.landing-header-login,.landing-button,.quick-action,.account-signout button,.form-stack button,.data-table button,.panel button,.primary-link):has(>svg[data-zaray-icon]){align-items:center;column-gap:9px}
+:where(.personal-nav-link,.quick-action,.personal-menu-toggle):has(>svg[data-zaray-icon]){display:flex}
+:where(.landing-feature h3,.kpi-label,.panel-title):has(>svg[data-zaray-icon]){display:flex;align-items:center;gap:9px}
+:where(button,a)[aria-disabled="true"] svg[data-zaray-icon],button:disabled svg[data-zaray-icon]{opacity:.55}
+@media(max-width:600px){svg[data-zaray-icon]{width:18px;height:18px}}

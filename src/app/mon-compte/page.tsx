@@ -1,3 +1,4 @@
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 import PersonalShell from '@/components/personal-shell';
 import { loadPersonalContext } from '@/lib/personal-context';
 
@@ -13,17 +14,17 @@ export default async function PersonalHomePage() {
     </header>
     {error ? <div className="alert alert-error" role="alert">{error}</div> : <>
       {companies.length ? <section className="panel">
-        <div className="panel-head"><h2 className="panel-title">Mes entreprises</h2><a className="header-link" href="/entreprises">Voir toutes mes entreprises</a></div>
-        <div className="personal-business-list">{companies.map(company => <a key={company.id} className="personal-business-item" href={'/tableau-de-bord?companyId=' + encodeURIComponent(company.id)}>
+        <div className="panel-head"><h2 className="panel-title">Mes entreprises</h2><a className="header-link" href="/entreprises"><ZarayIcon name="show" size={18} /> Voir toutes mes entreprises</a></div>
+        <div className="personal-business-list">{companies.map(company => <a key={company.id} className="personal-business-item" href={'/tableau-de-bord?companyId=' + encodeURIComponent(company.id)}><ZarayIcon name="next" size={18} /> 
           <span><strong>{company.legal_name}</strong><small>{company.slug}</small></span><span className="status-pill">{company.role}</span>
         </a>)}</div>
       </section> : <section className="empty-state"><strong>Aucune entreprise accessible</strong>
         <p>Votre compte personnel est prêt. Vous pouvez créer votre première entreprise.</p>
-        <a className="primary-link" href="/entreprises/nouvelle">+ Créer une entreprise</a>
+        <a className="primary-link" href="/entreprises/nouvelle"><ZarayIcon name="add" size={18} /> + Créer une entreprise</a>
       </section>}
       <div className="personal-quick-actions">
-        <a href="/entreprises" className="quick-action">Mes entreprises</a>
-        <a href="/finance-globale" className="quick-action">Finance globale autorisée</a>
+        <a href="/entreprises" className="quick-action"><ZarayIcon name="payment" size={18} /> Mes entreprises</a>
+        <a href="/finance-globale" className="quick-action"><ZarayIcon name="payment" size={18} /> Finance globale autorisée</a>
       </div>
     </>}
   </PersonalShell>;

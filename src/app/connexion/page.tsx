@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import BrandLogo from '@/components/brand-logo';
 
@@ -37,10 +38,10 @@ export default function ConnexionPage() {
     <form className="form-stack" onSubmit={submit}>
       <label>E-mail<input name="email" type="email" autoComplete="email" required /></label>
       <label>Mot de passe<input name="password" type="password" autoComplete="current-password" required /></label>
-      <p><a href="/mot-de-passe-oublie">Mot de passe oublié ?</a></p>
-      <button type="submit" disabled={busy} className="primary-link">{busy ? 'Connexion…' : 'Se connecter'}</button>
+      <p><a href="/mot-de-passe-oublie"><ZarayIcon name="login" size={18} /> Mot de passe oublié ?</a></p>
+      <button type="submit" disabled={busy} className="primary-link"><ZarayIcon name="login" size={18} /> {busy ? 'Connexion…' : 'Se connecter'}</button>
     </form>
     <MotionFeedback message={error} kind="error" />
-    <p><a href="/inscription">Créer un compte</a></p>
+    <p><a href="/inscription"><ZarayIcon name="signup" size={18} /> Créer un compte</a></p>
   </section></main>;
 }

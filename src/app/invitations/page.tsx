@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 import { MotionSkeleton } from '@/components/motion';
 import BrandLogo from '@/components/brand-logo';
 
@@ -37,9 +38,9 @@ export default function InvitationsPage() {
     <p>Les invitations sont associées à votre adresse e-mail vérifiée. Connectez-vous avec l’adresse exacte qui a reçu l’invitation.</p>
     {busy ? <MotionSkeleton rows={3}/> : invitations.length ? <div className="module-grid">{invitations.map(inv=><article className="module" key={inv.id}>
       <span className="module-number">INVITATION</span><h2>{inv.company_name}</h2><p>Rôle proposé : {labels[inv.role] ?? inv.role}</p><p>Expire le {new Date(inv.expires_at).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'})}</p>
-      <button className="primary-link" type="button" disabled={busy} onClick={()=>void accept(inv.id)}>Accepter l’invitation</button>
+      <button className="primary-link" type="button" disabled={busy} onClick={()=>void accept(inv.id)}><ZarayIcon name="confirm" size={18} /> Accepter l’invitation</button>
     </article>)}</div> : <p>Aucune invitation en attente pour cette adresse.</p>}
     {notice && <p role="status">{notice}</p>}{error && <p role="alert">{error}</p>}
-    <p style={{marginTop:28}}><a href="/membres">Gestion des membres</a> · <a href="/tableau-de-bord">Tableau de bord</a> · <a href="/connexion">Connexion</a></p>
+    <p style={{marginTop:28}}><a href="/membres"><ZarayIcon name="login" size={18} /> Gestion des membres</a> · <a href="/tableau-de-bord"><ZarayIcon name="login" size={18} /> Tableau de bord</a> · <a href="/connexion"><ZarayIcon name="login" size={18} /> Connexion</a></p>
   </section></main>;
 }
