@@ -212,3 +212,20 @@ body{background:var(--canvas);color:var(--text-primary)}
 @media(prefers-reduced-motion:reduce){
   .hero,.module,.app-content,.auth-motion .form-card{animation:none!important;transform:none!important}
 }
+
+/* Branded header for existing standalone operational and public-flow forms. */
+.workspace-brand{
+  display:flex;align-items:center;justify-content:flex-start;
+  margin:-8px 0 24px;padding:13px 18px;min-height:76px;
+  background:var(--brand-ink);border:1px solid #263829;border-radius:12px;
+}
+.workspace-brand a{display:block;width:172px;max-width:100%}
+.workspace-brand .brand-logo{width:100%}
+@media(max-width:700px){
+  .workspace-brand{min-height:68px;margin-bottom:18px;padding:10px 14px}
+  .workspace-brand a{width:148px}
+}
+@media print{
+  /* Avoid black fills and bright brand controls on thermal receipts. */
+  .workspace-brand,.auth-brand,.app-nav,.app-topbar{display:none!important}
+}
