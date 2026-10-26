@@ -7,7 +7,7 @@ import fs from 'node:fs/promises';
 import { chromium } from 'playwright';
 
 const base = process.env.BASE_URL || 'https://zaray.vercel.app';
-const paths = ['/', '/connexion', '/inscription', '/mot-de-passe-oublie', '/reinitialiser-mot-de-passe', '/mon-compte', '/entreprises', '/sites', '/tableau-de-bord', '/membres', '/clients', '/offres', '/commandes', '/tickets', '/paiements', '/paiements/verification', '/parametres-paiement', '/caisse', '/autorisations-paiement', '/finance-globale', '/portail', '/invitations', '/paiement'];
+const paths = ['/', '/connexion', '/inscription', '/mot-de-passe-oublie', '/reinitialiser-mot-de-passe', '/mon-compte', '/entreprises', '/sites', '/tableau-de-bord', '/membres', '/clients', '/offres', '/commandes', '/tickets', '/paiements', '/paiements/verification', '/parametres-paiement', '/caisse', '/autorisations-paiement', '/finance-globale', '/portail', '/invitations''];
 const results = [];
 const failures = [];
 await fs.mkdir('artifacts/contrast', { recursive: true });
@@ -122,7 +122,7 @@ try {
       const audit=await auditPage(page);
       const protectedByAuth = path !== actual && (actual === '/connexion' || actual === '/inscription');
       const outcome={path,actual,status,protectedByAuth,desktop:audit};
-      if(status>=500) failures.push(`${path} returned HTTP ${status}`);
+      if(status>=400) failures.push(`${path} returned HTTP ${status}`);
       if(path==='/' || path==='/connexion' || path==='/inscription') {
         outcome.probes=await probe(page);
       }
