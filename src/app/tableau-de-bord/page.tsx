@@ -1,3 +1,4 @@
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 import { redirect } from 'next/navigation';
 import DashboardWorkspace from '@/components/dashboard-workspace';
 import { createClient } from '@/lib/supabase/server';
@@ -17,7 +18,7 @@ export default async function TableauDeBord({ searchParams }: { searchParams: Pr
     return <main className="form-shell"><section className="form-card">
       <h1>Accès à l’entreprise refusé</h1>
       <p role="alert">{permission.error}</p>
-      <a className="primary-link" href="/entreprises">Revenir à mes entreprises</a>
+      <a className="primary-link" href="/entreprises"><ZarayIcon name="back" size={18} /> Revenir à mes entreprises</a>
     </section></main>;
   }
   return <DashboardWorkspace />;
