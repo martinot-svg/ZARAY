@@ -5,11 +5,12 @@ export function activeSiteId(): string | null {
   return typeof window==='undefined' ? null : new URLSearchParams(window.location.search).get('siteId');
 }
 export function selectedCompany(companies:CompanyOption[],sites:SiteOption[]=[]): string {
-  if(typeof window==='undefined')return companies[0]?.id||'';
+  if(typeof window==='undefined')return '';
   const params=new URLSearchParams(window.location.search);
   const fromURL=params.get('companyId');
   const site=params.get('siteId');
-  const chosen=fromURL || (site ? sites.find(s=>s.id===site)?.company_id : '') || companies[0]?.id || '';
+  const chosen=fromURL || (site ? sites.find(s=>s.id===site)?.company_id : '') || '';
+  if(!chosen){ window.location.assign('/entreprises'); return ''; }
   if(fromURL&&!companies.some(c=>c.id===fromURL))throw new Error('Entreprise inaccessible.');
   if(site&&!sites.some(s=>s.id===site&&s.company_id===chosen))throw new Error('Site inaccessible dans cette entreprise.');
   return chosen;

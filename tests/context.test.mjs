@@ -9,7 +9,7 @@ const source=read('src/lib/workspace-url.ts');
 const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
 function scope(search){
  const target={};
- const browser={location:{search,assign(url){target.url=url;}}};
+ const browser={location:{search,assign(url){target.url=url;},replace(url){target.url=url;}}};
  const exports={};
  runInNewContext(compiled,{exports,window:browser,URLSearchParams,encodeURIComponent});
  return {api:exports,target,browser};
@@ -17,9 +17,10 @@ function scope(search){
 const companies=[{id:'a'},{id:'b'}];
 const sites=[{id:'a1',company_id:'a'},{id:'b1',company_id:'b'}];
 
-test('personal account can select a company without creating one',()=>{
- const {api}=scope('');
- assert.equal(api.selectedCompany(companies,sites),'a');
+test('a legacy company route without a selection redirects to Mes entreprises',()=>{
+ const {api,target}=scope('');
+ assert.equal(api.selectedCompany(companies,sites),'');
+ assert.equal(target.url,'/entreprises');
 });
 test('explicit company selection is honored',()=>{
  const {api}=scope('?companyId=b');
