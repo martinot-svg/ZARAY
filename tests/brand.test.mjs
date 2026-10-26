@@ -68,4 +68,6 @@ test('favicon and browser metadata are configured with real transparent ZARAY ar
   assert.doesNotMatch(favicon,/<rect\b/);
   assert.match(generated,/sizes = \[16, 32, 48\]/);
   assert.match(manifest,/favicon\.svg/);
+  assert.match(layout,/apple-touch-icon\.png/);
+  assert.match(manifest,/android-chrome-192x192\.png/);
 });
