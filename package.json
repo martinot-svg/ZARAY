@@ -9,9 +9,9 @@
     "typecheck": "tsc --noEmit",
     "test:motion": "node --test tests/motion.test.mjs",
     "test:context": "node --test tests/context.test.mjs",
-    "test:brand": "node --test tests/brand.test.mjs",
+    "test:brand": "node scripts/verify-brand.mjs && node --test tests/brand.test.mjs",
     "test:navigation": "node --test tests/navigation.test.mjs",
-    "prebuild": "node scripts/generate-favicon.mjs",
+    "prebuild": "node scripts/verify-brand.mjs && node scripts/generate-favicon.mjs",
     "test:public": "node --test tests/public-home.test.mjs"
   },
   "dependencies": {

@@ -19,8 +19,9 @@ test('the uploaded wordmark silhouette is a local scalable asset',()=>{
  assert.match(svg,/fill="#fff"/);
  assert.match(svg,/fill="#21f728"/);
  assert.doesNotMatch(svg,/<(?:text|image|script|foreignObject)/);
- assert.match(brand,/src="\/brand\/zaray-logo\.svg"/);
- assert.match(brand,/alt="ZARAY"/);
+ assert.match(brand,/src="\/brand\/zaray-noir-vert-original\.png"/);
+ assert.match(brand,/src="\/brand\/zaray-blanc-vert-original\.png"/);
+ assert.match(brand,/aria-label="ZARAY"/);
 });
 test('brand identity is present on public, workspace and all auth screens',()=>{
  for(const path of [
@@ -35,7 +36,7 @@ test('brand identity is present on public, workspace and all auth screens',()=>{
  assert.doesNotMatch(read('src/app/page.tsx'),/ZARAY<span className="dot"/);
  assert.doesNotMatch(read('src/components/app-shell.tsx'),/ZARAY<span>/);
 });
-test('logo is backed by a dark panel and all accent tokens are logo-derived',()=>{
+test('logo styling is transparent and original palette remains unchanged',()=>{
  for(const fragment of ['--brand-ink:#0a0d0b','--brand-green:#21f728','--brand-white:#ffffff',
  '.app-nav{background:var(--brand-ink)', '.auth-brand{', '.hero{', '.brand-logo{']){
   assert.ok(css.includes(fragment),fragment);
@@ -70,4 +71,18 @@ test('favicon and browser metadata are configured with real transparent ZARAY ar
   assert.match(manifest,/favicon\.svg/);
   assert.match(layout,/apple-touch-icon\.png/);
   assert.match(manifest,/android-chrome-192x192\.png/);
+});
+
+test('official logo images are checked verbatim, not generated', () => {
+ const verifier = read('scripts/verify-brand.mjs');
+ const packageJson = JSON.parse(read('package.json'));
+ assert.match(verifier, /createHash\('sha256'\)/);
+ assert.match(verifier, /zaray-noir-vert-original\.png/);
+ assert.match(verifier, /zaray-blanc-vert-original\.png/);
+ assert.doesNotMatch(verifier, /writeFile|deflate|sharp|canvas/);
+ assert.doesNotMatch(read('src/components/brand-logo.tsx'), /filter:|drop-shadow|backgroundColor/);
+ assert.match(css, /\.brand-logo-dark/);
+ assert.match(css, /prefers-color-scheme:dark/);
+ assert.match(packageJson.scripts.prebuild, /scripts\/verify-brand\.mjs/);
+ assert.doesNotMatch(packageJson.scripts.prebuild, /prepare-brand/);
 });
