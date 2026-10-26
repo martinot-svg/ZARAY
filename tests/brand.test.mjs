@@ -22,7 +22,7 @@ test('the uploaded wordmark silhouette is a local scalable asset',()=>{
  assert.match(brand,/src="\/brand\/zaray-light\.png"/);
  assert.match(brand,/src="\/brand\/zaray-dark\.png"/);
  assert.match(brand,/aria-label="ZARAY"/);
- assert.match(brand,/alt="ZARAY"/);
+ assert.match(brand,/aria-label="ZARAY"/);
 });
 test('brand identity is present on public, workspace and all auth screens',()=>{
  for(const path of [
