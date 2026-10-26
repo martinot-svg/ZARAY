@@ -1,8 +1,10 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
+export const viewport: Viewport = { themeColor: '#0a0d0b' };
+
 export const metadata: Metadata = {
-  title: 'Zaray | Plateforme de gestion Wi-Fi',
+  title: 'ZARAY | Plateforme de gestion Wi-Fi',
   description: 'Zaray V1.0 — plateforme SaaS de gestion des entreprises, des réseaux Wi-Fi et des services clients.',
 };
 
