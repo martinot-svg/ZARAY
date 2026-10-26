@@ -1,24 +1,46 @@
 'use client';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import AppShell from '@/components/app-shell';
+
 type Company={id:string;legal_name:string;role:string};
 type Site={id:string;company_id:string;name:string};
 type Customer={id:string;company_id:string;site_id:string|null;full_name:string;email:string|null;phone:string|null;notes:string;status:string;created_at:string};
+
+const statusLabels:Record<string,string>={active:'Actif',inactive:'Inactif',archived:'Archivé'};
+
 export default function ClientsPage(){
- const [companies,setCompanies]=useState<Company[]>([]);const [sites,setSites]=useState<Site[]>([]);const [customers,setCustomers]=useState<Customer[]>([]);const [companyId,setCompanyId]=useState('');const [siteId,setSiteId]=useState('');const [fullName,setFullName]=useState('');const [email,setEmail]=useState('');const [phone,setPhone]=useState('');const [notes,setNotes]=useState('');const [busy,setBusy]=useState(true);const [notice,setNotice]=useState('');const [error,setError]=useState('');
+ const [companies,setCompanies]=useState<Company[]>([]),[sites,setSites]=useState<Site[]>([]),[customers,setCustomers]=useState<Customer[]>([]);
+ const [companyId,setCompanyId]=useState(''),[search,setSearch]=useState(''),[statusFilter,setStatusFilter]=useState('all');
+ const [editing,setEditing]=useState<string|null>(null),[form,setForm]=useState({fullName:'',email:'',phone:'',siteId:'',notes:'',status:'active'});
+ const [busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState('');
+
+ async function loadCustomers(id:string){if(!id)return;setBusy(true);setError('');try{const r=await fetch('/api/customers?companyId='+encodeURIComponent(id),{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les clients.');setCustomers(d.customers??[]);}catch(e){setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{setBusy(false);}}
  useEffect(()=>{let active=true;(async()=>{try{const r=await fetch('/api/sites',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les entreprises.');if(active){setCompanies(d.companies??[]);setSites(d.sites??[]);if(d.companies?.[0])setCompanyId(d.companies[0].id);}}catch(e){if(active)setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{if(active)setBusy(false);}})();return()=>{active=false};},[]);
- useEffect(()=>{if(!companyId)return;let active=true;setBusy(true);(async()=>{try{const r=await fetch('/api/customers?companyId='+encodeURIComponent(companyId),{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les clients.');if(active)setCustomers(d.customers??[]);}catch(e){if(active)setError(e instanceof Error?e.message:'Erreur.');}finally{if(active)setBusy(false);}})();return()=>{active=false};},[companyId]);
- async function create(event:FormEvent<HTMLFormElement>){event.preventDefault();setError('');setNotice('');setBusy(true);try{const r=await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,siteId,fullName,email,phone,notes})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Création impossible.');setFullName('');setEmail('');setPhone('');setNotes('');setSiteId('');setCustomers(old=>[d.customer,...old]);setNotice('Client enregistré.');}catch(e){setError(e instanceof Error?e.message:'Création impossible.');}finally{setBusy(false);}}
+ useEffect(()=>{if(companyId)void loadCustomers(companyId);},[companyId]);
  const availableSites=sites.filter(s=>s.company_id===companyId);
- return <main className="form-shell"><section className="form-card" style={{maxWidth:1000,width:'min(100%,1000px)'}}><p className="eyebrow">ZARAY · MODULE 5 · CRM</p><h1>Gestion des clients</h1><p>Les fiches clients sont isolées par entreprise. Les accès et modifications sont contrôlés par les permissions Supabase.</p>
- {companies.length>0&&<label>Entreprise<select value={companyId} onChange={e=>{setCompanyId(e.target.value);setSiteId('')}}>{companies.map(c=><option key={c.id} value={c.id}>{c.legal_name}</option>)}</select></label>}
- {companies.length===0&&!busy&&<p>Aucune entreprise accessible. Créez d’abord une entreprise.</p>}
- <h2 style={{marginTop:28}}>Nouveau client</h2><form className="form-stack" onSubmit={create}>
- <label>Nom complet<input value={fullName} onChange={e=>setFullName(e.target.value)} minLength={2} maxLength={160} required/></label>
- <label>E-mail (facultatif)<input type="email" value={email} onChange={e=>setEmail(e.target.value)} maxLength={254}/></label>
- <label>Téléphone (facultatif)<input type="tel" value={phone} onChange={e=>setPhone(e.target.value)} maxLength={32}/></label>
- <label>Site (facultatif)<select value={siteId} onChange={e=>setSiteId(e.target.value)}><option value="">Aucun site spécifique</option>{availableSites.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
- <label>Notes internes<textarea value={notes} onChange={e=>setNotes(e.target.value)} maxLength={2000} rows={3}/></label>
- <button className="primary-link" type="submit" disabled={busy||!companyId}>Enregistrer le client</button></form>
- <h2 style={{marginTop:32}}>Clients enregistrés</h2>{busy?<p>Chargement…</p>:customers.length?<div className="module-grid">{customers.map(c=><article className="module" key={c.id}><span className="module-number">{c.status==='active'?'ACTIF':c.status.toUpperCase()}</span><h3>{c.full_name}</h3><p>{c.email||'Sans e-mail'}{c.phone?' · '+c.phone:''}</p><p>{availableSites.find(s=>s.id===c.site_id)?.name||'Aucun site attribué'}</p>{c.notes&&<p>{c.notes}</p>}<span className="module-status">Créé le {new Date(c.created_at).toLocaleDateString('fr-FR')}</span></article>)}</div>:<p>Aucun client pour cette entreprise.</p>}
- {notice&&<p role="status">{notice}</p>}{error&&<p role="alert">{error}</p>}<p style={{marginTop:28}}><a href="/offres">Gestion des offres →</a> · <a href="/tableau-de-bord">Tableau de bord</a></p></section></main>;
+ const filtered=useMemo(()=>customers.filter(c=>(statusFilter==='all'||c.status===statusFilter)&&((c.full_name+' '+(c.email??'')+' '+(c.phone??'')).toLowerCase().includes(search.toLowerCase().trim()))),[customers,search,statusFilter]);
+ function startEdit(c:Customer){setEditing(c.id);setForm({fullName:c.full_name,email:c.email??'',phone:c.phone??'',siteId:c.site_id??'',notes:c.notes??'',status:c.status});setNotice('');setError('');}
+ function reset(){setEditing(null);setForm({fullName:'',email:'',phone:'',siteId:'',notes:'',status:'active'});}
+ async function save(event:FormEvent<HTMLFormElement>){event.preventDefault();setSaving(true);setError('');setNotice('');try{const payload={companyId,customerId:editing,fullName:form.fullName,email:form.email,phone:form.phone,siteId:form.siteId,notes:form.notes,status:form.status};const r=await fetch('/api/customers',{method:editing?'PATCH':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const d=await r.json();if(!r.ok)throw new Error(d.error||'Enregistrement impossible.');if(editing)setCustomers(old=>old.map(c=>c.id===editing?d.customer:c));else setCustomers(old=>[d.customer,...old]);setNotice(editing?'Client mis à jour.':'Client créé.');reset();}catch(e){setError(e instanceof Error?e.message:'Enregistrement impossible.');}finally{setSaving(false);}}
+ const formTitle=editing?'Modifier le client':'Nouveau client';
+ return <AppShell activePath="/clients" eyebrow="ACTIVITÉ · CRM" title="Clients" description="Centralisez vos clients, leurs coordonnées, leur site et leur statut dans un espace de travail multi-entreprises." actions={<a className="primary-link" href="#client-form">+ Nouveau client</a>}>
+   <section className="toolbar panel"><div className="toolbar-main"><label className="toolbar-field">Entreprise<select value={companyId} onChange={e=>setCompanyId(e.target.value)}>{companies.map(c=><option key={c.id} value={c.id}>{c.legal_name}</option>)}</select></label><label className="toolbar-field toolbar-grow">Rechercher<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Nom, e-mail ou téléphone…"/></label><label className="toolbar-field">Statut<select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="all">Tous</option><option value="active">Actifs</option><option value="inactive">Inactifs</option><option value="archived">Archivés</option></select></label></div><div className="toolbar-meta">{filtered.length} client{filtered.length!==1?'s':''}</div></section>
+   <div className="workspace-grid">
+    <section id="client-form" className="panel sticky-panel"><div className="panel-head"><div><div className="panel-title">{formTitle}</div><div className="muted">Les modifications sont contrôlées côté serveur.</div></div>{editing&&<button type="button" onClick={reset}>Annuler</button>}</div>
+      <form className="form-stack compact-form" onSubmit={save}>
+       <label>Nom complet<input value={form.fullName} onChange={e=>setForm({...form,fullName:e.target.value})} minLength={2} maxLength={160} required/></label>
+       <label>E-mail<input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} maxLength={254}/></label>
+       <label>Téléphone<input type="tel" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} maxLength={32}/></label>
+       <label>Site<select value={form.siteId} onChange={e=>setForm({...form,siteId:e.target.value})}><option value="">Aucun site</option>{availableSites.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+       <label>Statut<select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option value="active">Actif</option><option value="inactive">Inactif</option><option value="archived">Archivé</option></select></label>
+       <label>Notes internes<textarea value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} maxLength={2000} rows={4}/></label>
+       <button className="primary-link" type="submit" disabled={saving||!companyId}>{saving?'Enregistrement…':editing?'Enregistrer les modifications':'Créer le client'}</button>
+      </form>
+    </section>
+    <section className="panel"><div className="panel-head"><div><div className="panel-title">Répertoire clients</div><div className="muted">Sélectionnez une fiche pour la modifier.</div></div><span className="status-pill">{customers.length} total</span></div>
+      {busy?<div className="skeleton-list" aria-label="Chargement"><span/><span/><span/></div>:filtered.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Client</th><th>Site</th><th>Statut</th><th>Créé</th><th></th></tr></thead><tbody>{filtered.map(c=><tr key={c.id}><td><strong>{c.full_name}</strong><small>{c.email||'Sans e-mail'}{c.phone?' · '+c.phone:''}</small></td><td>{availableSites.find(s=>s.id===c.site_id)?.name||'—'}</td><td><span className="status-pill">{statusLabels[c.status]??c.status}</span></td><td>{new Date(c.created_at).toLocaleDateString('fr-FR')}</td><td><button type="button" onClick={()=>startEdit(c)}>Modifier</button></td></tr>)}</tbody></table></div>:<div className="empty-state"><strong>{customers.length?'Aucun résultat':'Aucun client'}</strong><p>{customers.length?'Modifiez vos filtres ou votre recherche.':'Créez votre première fiche client avec le formulaire.'}</p><a className="primary-link" href="#client-form">Créer un client</a></div>}
+    </section>
+   </div>
+   {(notice||error)&&<div className={error?'alert alert-error':'alert alert-success'} role={error?'alert':'status'}>{error||notice}</div>}
+ </AppShell>;
 }
