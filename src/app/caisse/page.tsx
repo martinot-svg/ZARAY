@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/app-shell';
+import { MotionFeedback, MotionSkeleton } from '@/components/motion';
 
 type Company = { id: string; legal_name: string; role: string };
 type Site = { id: string; company_id: string; name: string; status: string };
@@ -148,8 +149,7 @@ export default function CaissePage() {
               </div>
               {selectedOffer && <div className="module" style={{ marginTop: 18, minHeight: 0 }}><div className="module-number">OFFRE SÉLECTIONNÉE</div><h3>{selectedOffer.name}</h3><p>{selectedOffer.description}</p><p><strong>{Number(selectedOffer.price_amount).toLocaleString('fr-FR')} {selectedOffer.currency}</strong> · {selectedOffer.duration_minutes} min · {selectedOffer.max_devices} appareil(s) · validité {selectedOffer.validity_days} jour(s)</p>{selectedSite && <p>Site : {selectedSite.name}</p>}</div>}
               <button className="primary-link" type="button" onClick={generateTicket} disabled={saving || busy || !siteId || !offerId || !customerName.trim()} style={{ marginTop: 18 }}>{saving ? 'Génération…' : 'Encaisser & générer le ticket'}</button>
-              {notice && <p role="status" style={{ marginTop: 14 }}>{notice}</p>}
-              {error && <p role="alert" style={{ marginTop: 14 }}>{error}</p>}
+              <MotionFeedback message={error || notice} kind={error ? 'error' : 'success'}/>}
             </article>
 
             <article className="panel">
@@ -185,7 +185,7 @@ export default function CaissePage() {
 
           <section className="panel" style={{ marginTop: 16 }}>
             <div className="panel-head"><div><div className="panel-title">Ventes récentes</div><div className="muted">Historique des tickets générés pour les clients occasionnels.</div></div></div>
-            {sales.length ? <div className="data-list">{sales.slice(0, 20).map((sale) => <div className="data-row" key={sale.id}><div><strong>{sale.receipt_number}</strong><div className="muted">{sale.customer_name} · {sale.offer_name} · {paymentLabels[sale.payment_method] ?? sale.payment_method}</div></div><div style={{ textAlign: 'right' }}><strong>{Number(sale.amount).toLocaleString('fr-FR')} {sale.currency}</strong><div className="muted">{statusLabels[sale.ticket_status] ?? sale.ticket_status}</div></div></div>)}</div> : <div className="empty-state"><strong>Aucune vente occasionnelle</strong><p>Les encaissements réalisés depuis cette caisse apparaîtront ici.</p></div>}
+            {busy ? <MotionSkeleton rows={3}/> : sales.length ? <div className="data-list">{sales.slice(0, 20).map((sale) => <div className="data-row" key={sale.id}><div><strong>{sale.receipt_number}</strong><div className="muted">{sale.customer_name} · {sale.offer_name} · {paymentLabels[sale.payment_method] ?? sale.payment_method}</div></div><div style={{ textAlign: 'right' }}><strong>{Number(sale.amount).toLocaleString('fr-FR')} {sale.currency}</strong><div className="muted">{statusLabels[sale.ticket_status] ?? sale.ticket_status}</div></div></div>)}</div> : <div className="empty-state"><strong>Aucune vente occasionnelle</strong><p>Les encaissements réalisés depuis cette caisse apparaîtront ici.</p></div>}
           </section>
         </AppShell>
       </div>
