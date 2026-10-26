@@ -48,6 +48,6 @@ export default function NouvelleEntreprise() {
       <button type="submit" className="primary-link" disabled={busy}>{busy ? 'Enregistrement…' : 'Créer l’entreprise'}</button>
     </form>}
     {notice && <p role="alert">{notice}</p>}
-    <p><a href="/tableau-de-bord">Tableau de bord</a> · <a href="/connexion">Se connecter</a></p>
+    <p><a href="/entreprises">Mes entreprises</a> · <a href="/mon-compte">Mon compte</a></p>
   </section></main>;
 }

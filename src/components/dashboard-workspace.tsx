@@ -30,8 +30,9 @@ export default function DashboardWorkspace({ siteId }: { siteId?:string }) {
         if(!contextResponse.ok) throw new Error(context.error||'Impossible de charger les entreprises.');
         if(!active)return;
         const companies:Company[]=context.companies??[];
-        if(!companies.length){window.location.replace('/entreprises/nouvelle');return;}
+        if(!companies.length){window.location.replace('/entreprises');return;}
         const requested=new URLSearchParams(window.location.search).get('companyId');
+        if(!requested && !siteId){window.location.replace('/entreprises');return;}
         const matchingSite=siteId ? (context.sites??[]).find((s:Site)=>s.id===siteId) : null;
         const companyId=requested || matchingSite?.company_id || companies[0].id;
         if(!companies.some(c=>c.id===companyId))throw new Error('Entreprise inaccessible.');
@@ -57,7 +58,7 @@ export default function DashboardWorkspace({ siteId }: { siteId?:string }) {
   const contextual=(path:string)=>path+'?'+params.toString();
   return <AppShell activePath={site?'/sites/'+site.id:'/tableau-de-bord'} companyId={company.id} siteId={site?.id}
     eyebrow={site?'ENTREPRISE / SITE':'ENTREPRISE · VUE GÉNÉRALE'}
-    title={site?site.name+' — Tableau de bord':company.legal_name+' — Vue générale'}
+    title={site?company.legal_name+' / '+site.name+' — Tableau de bord':company.legal_name+' — Tableau de bord'}
     description={site?company.legal_name+' / '+site.name+' · Données de ce site exclusivement.': 'Vue globale de '+company.legal_name+' · données réelles issues de Supabase.'}
     actions={site?<a className="primary-link" href={companyLink}>Retour à la vue générale</a>:<a className="primary-link" href={contextual('/sites')}>Gérer les sites</a>}>
     <section className="kpi-grid motion-stagger" aria-label="Indicateurs réels">
@@ -84,7 +85,7 @@ export default function DashboardWorkspace({ siteId }: { siteId?:string }) {
         <div className="quick-grid">
           <a className="quick-action" href={contextual('/clients')}>Clients</a>
           <a className="quick-action" href={contextual('/commandes')}>Commandes</a>
-          <a className="quick-action" href={contextual('/paiements')}>Paiements</a>
+          <a className="quick-action" href={contextual('/paiements/verification')}>Paiements</a>
           <a className="quick-action" href={contextual('/tickets')}>Tickets Wi-Fi</a>
           <a className="quick-action" href={contextual('/caisse')}>Caisse</a>
           <a className="quick-action" href={contextual('/offres')}>Offres de l’entreprise</a>

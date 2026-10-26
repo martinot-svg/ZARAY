@@ -229,3 +229,75 @@ body{background:var(--canvas);color:var(--text-primary)}
   /* Avoid black fills and bright brand controls on thermal receipts. */
   .workspace-brand,.auth-brand,.app-nav,.app-topbar{display:none!important}
 }
+
+/* Three-level navigation: personal account, chosen company, chosen site.
+   The drawer remains closed on desktop and mobile until Menu is pressed. */
+.app-shell .app-nav{
+  position:fixed;inset:0 auto 0 0;width:min(294px,85vw);height:100dvh;
+  min-height:0;overflow-y:auto;overflow-x:hidden;z-index:51;
+  padding:20px 15px;transform:translate3d(-101%,0,0);
+  visibility:hidden;pointer-events:none;display:flex;flex-direction:column;
+}
+.app-shell .app-nav.is-open{transform:translate3d(0,0,0);visibility:visible;pointer-events:auto}
+.app-shell .app-nav-scrim{
+  display:block;position:fixed;inset:0;border:0;padding:0;margin:0;
+  background:rgb(4 12 6 / 57%);z-index:50;opacity:0;
+  visibility:hidden;pointer-events:none
+}
+.app-shell .app-nav-scrim.is-open{opacity:1;visibility:visible;pointer-events:auto}
+.app-shell .app-nav-mobile-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 7px 13px;color:#fff}
+.app-shell .app-nav-mobile-head button{border:1px solid #5a735d;border-radius:8px;background:#1e3123;color:white;padding:8px 10px;cursor:pointer}
+.app-shell .app-nav-link{min-height:40px}
+.app-shell .app-nav-footer{display:grid;gap:6px;margin-top:auto}
+.app-shell .app-main{margin-left:0}
+.app-shell .app-menu-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:0 0 auto;min-height:42px;padding:8px 13px;border:1px solid #c9d6c9;border-radius:9px;background:#fff;color:#17251a;font-weight:800;cursor:pointer}
+.app-topbar-links{display:flex;gap:16px;align-items:center;white-space:nowrap}
+.account-signout button{width:100%;text-align:left;cursor:pointer;background:transparent;border:1px solid #56725a;border-radius:8px;padding:10px 12px;color:#e7f2e8;font-weight:750}
+.account-signout button:hover{background:#203b25}
+.account-signout p{color:#ffd7d7;font-size:12px}
+.personal-shell{min-height:100dvh;background:var(--canvas)}
+.personal-topbar{display:flex;align-items:center;gap:18px;padding:12px clamp(16px,3vw,42px);background:var(--brand-ink);color:#fff;border-bottom:1px solid #28422b;min-height:76px}
+.personal-menu-toggle{border:1px solid #537a57;background:#182a1c;color:#fff;border-radius:9px;padding:10px 14px;min-height:42px;font-weight:800;cursor:pointer}
+.personal-menu-toggle:hover{background:#243c2a}
+.personal-logo{width:130px;display:block}
+.personal-topbar-label{margin-left:auto;color:#c3d7c6;font-size:12px}
+.personal-content{max-width:1180px;padding:clamp(20px,4vw,48px);margin:0 auto}
+.personal-email{font-size:12px;color:#506653;margin:0 0 20px}
+.personal-page-heading{margin:0 0 28px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.personal-page-heading h1{font-size:clamp(30px,4.6vw,52px);letter-spacing:-.048em;margin:9px 0 13px;color:#0b180e}
+.personal-page-heading p:last-child{color:#526555;max-width:750px;line-height:1.65}
+.personal-business-list{display:grid;gap:12px;margin-top:16px}
+.personal-business-card{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.personal-business-card h2{margin:7px 0 4px;font-size:23px;color:#17251a}
+.personal-business-card .primary-link{flex-shrink:0}
+.personal-business-item{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px;border:1px solid var(--border);border-radius:9px;background:#fff}
+.personal-business-item:hover{border-color:#8cd994;background:#f5fff4}
+.personal-business-item small{display:block;margin-top:5px;color:#526555}
+.personal-quick-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:20px}
+.personal-finance-totals{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px}
+.personal-finance-totals .kpi{flex:1;min-width:220px}
+.personal-shell .panel{margin:20px 0}
+.personal-menu-backdrop{position:fixed;inset:0;z-index:59;background:rgb(5 14 7 / 55%);opacity:0;visibility:hidden;pointer-events:none;border:0}
+.personal-menu-backdrop.is-open{opacity:1;visibility:visible;pointer-events:auto}
+.personal-drawer{position:fixed;inset:0 auto 0 0;width:min(305px,87vw);padding:22px 16px;background:#0a0d0b;color:#eaf4eb;z-index:60;
+  transform:translateX(-103%);visibility:hidden;display:flex;flex-direction:column;gap:7px;box-shadow:15px 0 45px rgb(0 0 0 / 18%)}
+.personal-drawer.is-open{transform:translateX(0);visibility:visible}
+.personal-drawer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.personal-drawer-head button{background:#203325;border:1px solid #526854;color:#fff;border-radius:8px;padding:7px 10px;cursor:pointer}
+.personal-nav-link{display:block;padding:13px 14px;border-radius:9px;color:#d8e9da}
+.personal-nav-link:hover,.personal-nav-link:focus-visible{background:#1f3224;color:#fff}
+.personal-nav-link.active{background:var(--brand-green-action);color:#09170c;font-weight:800}
+.personal-drawer-footer{margin-top:auto}
+@media(prefers-reduced-motion:no-preference){
+ .personal-drawer,.personal-menu-backdrop,.app-shell .app-nav,.app-shell .app-nav-scrim{transition:transform 180ms cubic-bezier(.2,.75,.25,1),opacity 180ms ease,visibility 180ms ease}
+}
+@media(max-width:700px){
+ .app-topbar-links{gap:9px}.app-topbar-links .header-link{font-size:11px}
+ .app-shell .app-menu-button{padding:8px 10px}
+ .personal-business-card{flex-direction:column;align-items:stretch}
+ .personal-quick-actions{grid-template-columns:1fr}
+ .personal-topbar{gap:12px}
+ .personal-logo{width:112px}
+ .personal-topbar-label{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){.personal-drawer,.personal-menu-backdrop,.app-shell .app-nav,.app-shell .app-nav-scrim{transition:none!important}}

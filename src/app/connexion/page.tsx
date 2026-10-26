@@ -22,7 +22,7 @@ export default function ConnexionPage() {
         password: String(data.get('password')),
       });
       if (signInError) throw new Error('E-mail ou mot de passe incorrect, ou adresse non vérifiée.');
-      window.location.assign('/tableau-de-bord');
+      window.location.replace('/mon-compte');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur de connexion.');
     } finally {
@@ -33,7 +33,7 @@ export default function ConnexionPage() {
   return <main className="form-shell auth-motion"><section className="form-card">
     <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority /></a></div>
     <p className="eyebrow">ZARAY · ACCÈS SÉCURISÉ</p>
-    <h1>Connexion administrateur</h1>
+    <h1>Connexion à mon compte ZARAY</h1>
     <form className="form-stack" onSubmit={submit}>
       <label>E-mail<input name="email" type="email" autoComplete="email" required /></label>
       <label>Mot de passe<input name="password" type="password" autoComplete="current-password" required /></label>
