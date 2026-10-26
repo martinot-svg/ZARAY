@@ -11,7 +11,7 @@ const paths = ['/', '/connexion', '/inscription', '/mot-de-passe-oublie', '/rein
 const results = [];
 const failures = [];
 await fs.mkdir('artifacts/contrast', { recursive: true });
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_PATH || undefined });
 const context = await browser.newContext({ viewport: { width: 1365, height: 900 }, colorScheme: 'light' });
 
 async function auditPage(page) {
