@@ -19,7 +19,8 @@ test('the uploaded wordmark silhouette is a local scalable asset',()=>{
  assert.match(svg,/fill="#fff"/);
  assert.match(svg,/fill="#21f728"/);
  assert.doesNotMatch(svg,/<(?:text|image|script|foreignObject)/);
- assert.match(brand,/src="\/brand\/zaray-logo\.svg"/);
+ assert.match(brand,/surface === 'light'/);
+ assert.match(brand,/\/brand\/zaray-logo-on-light\.svg/);
  assert.match(brand,/alt="ZARAY"/);
 });
 test('brand identity is present on public, workspace and all auth screens',()=>{
@@ -70,4 +71,18 @@ test('favicon and browser metadata are configured with real transparent ZARAY ar
   assert.match(manifest,/favicon\.svg/);
   assert.match(layout,/apple-touch-icon\.png/);
   assert.match(manifest,/android-chrome-192x192\.png/);
+});
+
+test('light auth card contains black/green transparent logo without an artificial black banner',()=>{
+ const light=read('public/brand/zaray-logo-on-light.svg');
+ assert.match(light,/fill="#111914"/);
+ assert.match(light,/fill="#21f728"/);
+ assert.match(svg,/fill="#fff"/);
+ for (const path of ['src/app/connexion/page.tsx','src/app/inscription/page.tsx',
+ 'src/app/mot-de-passe-oublie/page.tsx','src/app/reinitialiser-mot-de-passe/page.tsx',
+ 'src/app/entreprises/nouvelle/page.tsx']) {
+  assert.match(read(path),/BrandLogo priority surface="light"/,path);
+ }
+ assert.match(css,/\.form-shell\.auth-motion \.form-card \.auth-brand\{/);
+ assert.match(css,/background:transparent!important;border:0!important/);
 });
