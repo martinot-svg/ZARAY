@@ -33,7 +33,7 @@ export default function MotDePasseOubliePage() {
   }
 
   return <main className="form-shell auth-motion"><section className="form-card">
-    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority /></a></div>
+    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority surface="light" /></a></div>
     <p className="eyebrow">ZARAY · RÉCUPÉRATION DU COMPTE</p>
     <h1>Mot de passe oublié</h1>
     <p>Indiquez l’adresse e-mail associée à votre compte pour recevoir un lien de réinitialisation.</p>
