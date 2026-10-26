@@ -575,3 +575,15 @@ body{background:var(--canvas);color:var(--text-primary)}
 @media(max-width:700px){
  .form-shell.auth-motion .form-card .auth-brand a{width:clamp(145px,43vw,187px)}
 }
+
+/* Disabled controls must remain readable; never fade text with opacity.
+   Inactive state is communicated by semantics, cursor and reduced saturation. */
+:where(button,input,select,textarea):disabled,
+:where(button,[role="button"])[aria-disabled="true"] {
+  opacity: 1 !important;
+  filter: saturate(.75);
+}
+:where(button,[role="button"])[aria-disabled="true"],
+:where(button):disabled {
+  cursor: not-allowed;
+}
