@@ -7,7 +7,7 @@ import fs from 'node:fs/promises';
 import { chromium } from 'playwright';
 
 const base = process.env.BASE_URL || 'https://zaray.vercel.app';
-const paths = ['/', '/connexion', '/inscription', '/tableau-de-bord', '/entreprises', '/clients', '/paiements', '/tickets', '/parametres'];
+const paths = ['/', '/connexion', '/inscription', '/mot-de-passe-oublie', '/reinitialiser-mot-de-passe', '/mon-compte', '/entreprises', '/sites', '/tableau-de-bord', '/membres', '/clients', '/offres', '/commandes', '/tickets', '/paiements', '/paiements/verification', '/parametres-paiement', '/caisse', '/autorisations-paiement', '/finance-globale', '/portail', '/invitations', '/paiement'];
 const results = [];
 const failures = [];
 await fs.mkdir('artifacts/contrast', { recursive: true });
@@ -120,7 +120,8 @@ try {
       const name=(path.replaceAll('/','_') || 'home').replace(/[^a-zA-Z0-9_-]/g,'');
       await page.screenshot({path:`artifacts/contrast/${name}-desktop.png`,fullPage:true,timeout:20000});
       const audit=await auditPage(page);
-      const outcome={path,actual,status,desktop:audit};
+      const protectedByAuth = path !== actual && (actual === '/connexion' || actual === '/inscription');
+      const outcome={path,actual,status,protectedByAuth,desktop:audit};
       if(status>=500) failures.push(`${path} returned HTTP ${status}`);
       if(path==='/' || path==='/connexion' || path==='/inscription') {
         outcome.probes=await probe(page);
@@ -133,6 +134,13 @@ try {
       await page.waitForTimeout(200);
       outcome.mobile=await auditPage(page);
       await page.screenshot({path:`artifacts/contrast/${name}-mobile.png`,fullPage:true,timeout:20000});
+      // Persist observable WCAG errors. A protected route's login screen
+      // is audited as the login screen, never represented as its private UI.
+      for (const mode of ['desktop','darkPreference','mobile']) {
+        if (outcome[mode]?.violations?.length) {
+          failures.push(`${path} [${mode}]${protectedByAuth?' (authentication redirect)':''}: ${outcome[mode].violations.length} insufficient contrast samples; ${JSON.stringify(outcome[mode].violations.slice(0,5))}`);
+        }
+      }
       results.push(outcome);
       console.log(JSON.stringify(outcome));
     } catch (error) {
@@ -141,5 +149,5 @@ try {
   }
 } finally {await browser.close();}
 await fs.writeFile('artifacts/contrast/summary.json',JSON.stringify({base,results,failures},null,2));
-console.log('Contrast audit: '+results.length+' routes inspected, '+failures.length+' test failures.');
+console.log('Contrast audit: '+results.length+' route requests, '+results.filter(r=>!r.protectedByAuth).length+' without auth redirect, '+failures.length+' test failures.');
 if(failures.length){console.error(failures.join('\n'));process.exitCode=1;}
