@@ -1,3 +1,4 @@
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 import BrandLogo from '@/components/brand-logo';
 
 const features = [
@@ -26,8 +27,8 @@ export default function HomePage() {
           <a href="#avantages">Avantages</a>
         </nav>
         <div className="landing-header-actions">
-          <a href="/connexion" className="landing-header-login">Se connecter</a>
-          <a href="/inscription" className="landing-button landing-button-primary landing-header-signup">Créer un compte <span aria-hidden="true">↗</span></a>
+          <a href="/connexion" className="landing-header-login"><ZarayIcon name="login" size={18} /> Se connecter</a>
+          <a href="/inscription" className="landing-button landing-button-primary landing-header-signup"><ZarayIcon name="signup" size={18} /> Créer un compte</a>
         </div>
       </div>
     </header>
@@ -39,8 +40,8 @@ export default function HomePage() {
             <h1 id="landing-title">Votre activité Wi-Fi mérite <span>une gestion plus claire.</span></h1>
             <p className="landing-hero-description">Entreprises, sites, clients, offres Internet, commandes et paiements : regroupez l’essentiel de votre activité dans un logiciel pensé pour les opérateurs Wi-Fi.</p>
             <div className="landing-hero-actions">
-              <a href="/inscription" className="landing-button landing-button-primary">Créer un compte <span aria-hidden="true">↗</span></a>
-              <a href="/connexion" className="landing-button landing-button-outline">Se connecter <span aria-hidden="true">→</span></a>
+              <a href="/inscription" className="landing-button landing-button-primary"><ZarayIcon name="signup" size={18} /> Créer un compte</a>
+              <a href="/connexion" className="landing-button landing-button-outline"><ZarayIcon name="login" size={18} /> Se connecter</a>
             </div>
             <p className="landing-hero-note">Un compte personnel pour accéder aux entreprises auxquelles vous êtes autorisé.</p>
           </div>
@@ -97,7 +98,7 @@ export default function HomePage() {
       <section className="landing-final" aria-labelledby="landing-final-title">
         <div className="landing-container landing-final-inner">
           <div><p className="landing-label">COMMENCER AVEC ZARAY</p><h2 id="landing-final-title">Donnez une structure claire à votre activité Wi-Fi.</h2><p>Créez votre compte, organisez vos entreprises et retrouvez vos opérations dans un espace commun.</p></div>
-          <div className="landing-final-actions"><a href="/inscription" className="landing-button landing-button-primary">Créer un compte <span aria-hidden="true">↗</span></a><a href="/connexion" className="landing-button landing-button-outline">J’ai déjà un compte</a></div>
+          <div className="landing-final-actions"><a href="/inscription" className="landing-button landing-button-primary"><ZarayIcon name="signup" size={18} /> Créer un compte</a><a href="/connexion" className="landing-button landing-button-outline">J’ai déjà un compte</a></div>
         </div>
       </section>
     </main>
