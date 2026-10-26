@@ -494,34 +494,37 @@ body{background:var(--canvas);color:var(--text-primary)}
 @keyframes module-shimmer{from{opacity:.65}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.module-loading-screen,.module-loading-rows span,.module-loading-kpis span,.module-loading-toolbar span,.module-loading-panel-title{animation:none!important}}
 
-/* L'original reste un PNG transparent : aucun contour, fond, effet ou détourage. */
-.brand-logo{display:block;position:relative;width:100%;max-width:100%;height:auto;
-  aspect-ratio:auto!important;overflow:visible!important;background:transparent!important;
-  border:0!important;box-shadow:none!important;filter:none!important;outline:none!important}
-.brand-logo .brand-logo-variant{display:block;width:100%!important;max-width:100%;height:auto!important;
-  aspect-ratio:auto!important;object-fit:contain!important;object-position:center!important;
-  border:0!important;background:transparent!important;box-shadow:none!important;
-  filter:none!important;outline:none!important;clip-path:none!important}
+
+/* Un seul composant Logo global. Les PNG officiels sont affichés tels quels. */
+.brand-logo {
+  display:grid;place-items:center;position:relative;
+  width:100%;max-width:100%;height:auto;aspect-ratio:2048/746;
+  overflow:visible;background:transparent;border:0;
+  box-shadow:none;filter:none;outline:none;
+}
+.brand-logo .brand-logo-variant {
+  grid-area:1/1;display:block;width:100%;height:auto;
+  max-width:100%;object-fit:contain;object-position:center;
+  background:transparent;border:0;box-shadow:none;filter:none;
+  outline:none;clip-path:none;
+}
 .brand-logo .brand-logo-dark{display:none}
-html[data-theme="dark"] .brand-logo .brand-logo-light{display:none}
-html[data-theme="dark"] .brand-logo .brand-logo-dark{display:block}
-html[data-theme="light"] .brand-logo .brand-logo-light{display:block}
-html[data-theme="light"] .brand-logo .brand-logo-dark{display:none}
-@media(prefers-color-scheme:dark){
-  html:not([data-theme]) .brand-logo .brand-logo-light{display:none}
-  html:not([data-theme]) .brand-logo .brand-logo-dark{display:block}
-}
-/* Conserver les fonds structurels existants, sans en créer derrière le logo. */
+.brand-logo[data-logo-tone="light"] .brand-logo-light{display:block}
+.brand-logo[data-logo-tone="light"] .brand-logo-dark{display:none}
+.brand-logo[data-logo-tone="dark"] .brand-logo-light{display:none}
+.brand-logo[data-logo-tone="dark"] .brand-logo-dark{display:block}
+/* Instant SSR presentation, overridden before paint by computed surface detection. */
+:where(.landing-header,.landing-footer,.app-nav,.personal-topbar) .brand-logo:not([data-logo-tone]) .brand-logo-light{display:none}
+:where(.landing-header,.landing-footer,.app-nav,.personal-topbar) .brand-logo:not([data-logo-tone]) .brand-logo-dark{display:block}
+
+/* Remove only logo-specific decoration. The surrounding page and forms keep their style. */
 :where(.auth-brand,.workspace-brand,.site-logo,.app-brand,.app-topbar-brand,
-  .landing-brand,.landing-footer-brand,.personal-logo,.module-loading-logo,.module-error-brand){
+.landing-brand,.landing-footer-brand,.personal-logo,.module-loading-logo,.module-error-brand){
   background:transparent!important;border:0!important;box-shadow:none!important;
-  filter:none!important}
-/* Les surfaces existantes restent foncées ou claires indépendamment de la préférence globale. */
-:where(.app-brand,.landing-brand,.landing-footer-brand,.personal-logo,.site-logo) .brand-logo-light{display:none!important}
-:where(.app-brand,.landing-brand,.landing-footer-brand,.personal-logo,.site-logo) .brand-logo-dark{display:block!important}
-:where(.auth-brand,.workspace-brand,.app-topbar-brand,.module-loading-logo,.module-error-brand) .brand-logo-light{display:block!important}
-:where(.auth-brand,.workspace-brand,.app-topbar-brand,.module-loading-logo,.module-error-brand) .brand-logo-dark{display:none!important}
-@media(max-width:700px){
-  .brand-logo{max-width:100%}
-  .brand-logo .brand-logo-variant{width:100%;height:auto}
+  filter:none!important;outline:none!important;
 }
+.auth-brand{padding:0;min-height:0}
+.workspace-brand{padding:0;min-height:0}
+.app-topbar-brand,.module-loading-logo,.module-error-brand{padding:0}
+.landing-brand,.landing-footer-brand,.personal-logo,.site-logo{padding:0}
+@media(max-width:700px){.brand-logo .brand-logo-variant{max-width:100%;height:auto}}
