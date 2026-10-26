@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import WorkspaceBreadcrumb from '@/components/workspace-breadcrumb';
 import { activeSiteId, scopedQuery, selectedCompany, switchCompany } from '@/lib/workspace-url';
 import { MotionFeedback, MotionSkeleton } from '@/components/motion';
 type Company = { id: string; legal_name: string; role: string };
@@ -80,7 +81,7 @@ export default function WifiTicketsPage() {
 
   const paidOrdersWithoutTicket = orders.filter((o) => o.status === 'paid' && !tickets.some((t) => t.subscription_order_id === o.id));
   return <main className="form-shell"><section className="form-card" style={{ maxWidth: 1100, width: 'min(100%,1100px)' }}>
-    <p className="eyebrow">ZARAY · MODULE 8 · ACCÈS WI-FI</p><h1>Tickets Wi-Fi</h1>
+    <WorkspaceBreadcrumb companyId={companyId}/><p className="eyebrow">ZARAY · MODULE 8 · ACCÈS WI-FI</p><h1>Tickets Wi-Fi</h1>
     <p>Les codes sont hachés en base et affichés une seule fois. L’émission est refusée tant que la commande n’a pas un paiement confirmé côté serveur. Un ticket émis ne déclenche pas lui-même la connexion réseau.</p>
     {companies.length > 0 && <label>Entreprise<select value={companyId} onChange={(e) => switchCompany('/tickets',e.target.value)}>{companies.map((c) => <option key={c.id} value={c.id}>{c.legal_name}</option>)}</select></label>}
     {paidOrdersWithoutTicket.length > 0 && <section style={{ marginTop: 24 }}>
