@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import AppShell from '@/components/app-shell';
+import { MotionFeedback } from '@/components/motion';
 
 type Company={id:string;legal_name:string;role:string};
 type Offer={id:string;company_id:string;name:string;description:string;duration_minutes:number;validity_days:number;price_amount:number|string;currency:string;max_devices:number;status:string;created_at:string;updated_at:string};
@@ -36,6 +37,6 @@ export default function OffresPage(){
     {busy?<div className="skeleton-list"><span/><span/><span/></div>:filtered.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Offre</th><th>Prix</th><th>Paramètres</th><th>Statut</th><th></th></tr></thead><tbody>{filtered.map(o=><tr key={o.id}><td><strong>{o.name}</strong><small>{o.description||'Sans description'}</small></td><td><strong>{money(o.price_amount,o.currency)}</strong></td><td>{o.duration_minutes} min · {o.validity_days} j · {o.max_devices} appareil(s)</td><td><span className="status-pill">{statusLabels[o.status]??o.status}</span></td><td><button type="button" onClick={()=>startEdit(o)}>Modifier</button></td></tr>)}</tbody></table></div>:<div className="empty-state"><strong>{offers.length?'Aucun résultat':'Catalogue vide'}</strong><p>{offers.length?'Ajustez vos filtres.':'Créez votre premier forfait Internet.'}</p><a className="primary-link" href="#offer-form">Créer une offre</a></div>}
    </section>
   </div>
-  {(notice||error)&&<div className={error?'alert alert-error':'alert alert-success'} role={error?'alert':'status'}>{error||notice}</div>}
+  <MotionFeedback message={error || notice} kind={error ? 'error' : 'success'}/>
  </AppShell>;
 }
