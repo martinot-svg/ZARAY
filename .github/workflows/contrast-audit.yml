@@ -24,11 +24,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
       - name: Install project dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
       - name: Install browser audit dependency
-        run: npm install --no-save --ignore-scripts playwright@1.56.1
+        run: npm install --no-save --ignore-scripts --no-audit --no-fund playwright@1.56.1
       - name: Install headless Chromium
         run: npx playwright install --with-deps chromium
       - name: Inspect production pages, contrast, and screenshots
