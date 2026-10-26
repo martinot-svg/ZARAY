@@ -1,5 +1,7 @@
 'use client';
 
+import BrandLogo from '@/components/brand-logo';
+
 import { useEffect, useState, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -70,7 +72,8 @@ export default function ReinitialiserMotDePassePage() {
     }
   }
 
-  return <main className="form-shell"><section className="form-card">
+  return <main className="form-shell auth-motion"><section className="form-card">
+    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority /></a></div>
     <p className="eyebrow">ZARAY · SÉCURITÉ DU COMPTE</p>
     <h1>Créer un nouveau mot de passe</h1>
     {!ready && !error && <p>Vérification du lien sécurisé…</p>}
