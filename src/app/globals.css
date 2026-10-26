@@ -449,3 +449,47 @@ body{background:var(--canvas);color:var(--text-primary)}
 }
 @keyframes landing-reveal{from{opacity:.05;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.landing-structure,.landing-hero-copy{animation:none!important}}
+
+
+/* Shared App Router fallback for module navigation; no simulated records. */
+.module-loading-screen{min-height:100dvh;background:#f5f8f4;color:#162019}
+.module-loading-bar{height:72px;background:#fff;border-bottom:1px solid #dae6d9;display:flex;align-items:center;gap:20px;padding:11px clamp(16px,3vw,36px)}
+.module-loading-menu{border:1px solid #d5e1d4;border-radius:9px;width:45px;height:40px;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center}
+.module-loading-menu i{display:block;background:#a8bea9;width:18px;height:2px;border-radius:3px}
+.module-loading-logo{display:flex;width:122px;background:#0a0d0b;padding:7px 12px;border-radius:8px}
+.module-loading-logo .brand-logo{width:100%;height:auto}
+.module-loading-bar-text{color:#627565;font-size:12px;margin-left:auto}
+.module-loading-content{width:min(100% - 40px,1240px);margin:0 auto;padding:36px 0 72px}
+.module-loading-title h1{font-size:clamp(23px,3vw,33px);margin:4px 0 10px;letter-spacing:-.03em}
+.module-loading-title>p:last-child{color:#5a6d5c;font-size:13px;margin:0}
+.module-loading-toolbar{display:flex;gap:12px;margin-top:27px;margin-bottom:16px}
+.module-loading-toolbar span{display:block;width:clamp(100px,16vw,200px);height:45px;border-radius:9px;background:#e3ede2}
+.module-loading-toolbar span:last-child{width:clamp(120px,28vw,350px)}
+.module-loading-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:29px 0 16px}
+.module-loading-kpis span{height:124px;border-radius:13px;background:#e4eee3}
+.module-loading-panel{background:#fff;padding:24px;border:1px solid #e0eae0;border-radius:14px;min-height:250px}
+.module-loading-panel-title{width:170px;max-width:70%;height:18px;border-radius:5px;background:#dbe7db;margin-bottom:23px}
+.module-loading-rows{display:grid;gap:13px}
+.module-loading-rows span{height:47px;border-radius:8px;background:#ecf3eb}
+.module-loading-rows span:nth-child(2){width:93%}
+.module-loading-rows span:nth-child(3){width:86%}
+.module-loading-rows span:nth-child(4){width:97%}
+.module-loading-panel.module-loading-form{max-width:730px;min-height:260px}
+.module-loading-panel.module-loading-cards .module-loading-rows{grid-template-columns:repeat(2,1fr)}
+.module-loading-panel.module-loading-cards .module-loading-rows span{height:105px;width:100%}
+.module-loading-note{color:#667b68;font-size:12px;margin-top:19px}
+.module-error-screen{min-height:100dvh;display:grid;place-items:center;padding:28px;background:#f5f8f4}
+.module-error-card{background:#fff;border:1px solid #deebdd;border-radius:15px;padding:clamp(26px,5vw,48px);max-width:580px}
+.module-error-brand{width:152px;background:#0a0d0b;padding:10px;border-radius:8px;margin-bottom:29px}
+.module-error-brand .brand-logo{width:100%;height:auto}
+.module-error-card h1{font-size:clamp(30px,5vw,43px);letter-spacing:-.045em}
+.module-error-card p{font-size:14px;line-height:1.7;color:#526555}
+.module-error-actions{display:flex;gap:11px;flex-wrap:wrap;margin-top:23px}
+.module-error-actions .landing-button-outline{background:#fff;color:#1b3420;border-color:#a3b6a4}
+@media(max-width:700px){.module-loading-kpis{grid-template-columns:repeat(2,1fr)}.module-loading-panel.module-loading-cards .module-loading-rows{grid-template-columns:1fr}.module-loading-toolbar span:last-child{display:none}.module-loading-content{padding-top:24px}}
+@media(prefers-reduced-motion:no-preference){
+ .module-loading-rows span,.module-loading-kpis span,.module-loading-toolbar span,.module-loading-panel-title{animation:module-shimmer 1.25s ease-in-out infinite alternate}
+ .module-loading-screen{animation:zaray-fade-in 140ms ease-out both}
+}
+@keyframes module-shimmer{from{opacity:.65}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.module-loading-screen,.module-loading-rows span,.module-loading-kpis span,.module-loading-toolbar span,.module-loading-panel-title{animation:none!important}}
