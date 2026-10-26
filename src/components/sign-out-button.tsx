@@ -1,5 +1,5 @@
-import { ZarayIcon } from '@/components/ui/zaray-icon';
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
