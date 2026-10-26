@@ -1,4 +1,5 @@
 'use client';
+import BrandLogo from '@/components/brand-logo';
 
 import { useEffect, useState } from 'react';
 type Invitation = { id: string; company_id: string; company_name: string; role: string; created_at: string; expires_at: string };
@@ -30,6 +31,7 @@ export default function InvitationsPage() {
     } catch(e) { setError(e instanceof Error ? e.message : 'Erreur.'); setBusy(false); }
   }
   return <main className="form-shell"><section className="form-card" style={{maxWidth:900,width:'min(100%,900px)'}}>
+      <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
     <p className="eyebrow">ZARAY · ESPACE ÉQUIPE</p><h1>Mes invitations</h1>
     <p>Les invitations sont associées à votre adresse e-mail vérifiée. Connectez-vous avec l’adresse exacte qui a reçu l’invitation.</p>
     {busy ? <p>Chargement…</p> : invitations.length ? <div className="module-grid">{invitations.map(inv=><article className="module" key={inv.id}>
