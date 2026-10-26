@@ -1,125 +1,20 @@
 'use client';
-
 import { useEffect, useState, type FormEvent } from 'react';
-
-type Company = { id: string; legal_name: string; role: string };
-type Member = { user_id: string; email: string; role: string; status: string; created_at: string };
-type AuditEvent = { id: number; event: string; actor_email: string | null; metadata: Record<string, unknown>; created_at: string };
-const roleLabels: Record<string, string> = { owner: 'Propriétaire', admin: 'Administrateur', site_manager: 'Responsable de site', support: 'Support', technician: 'Technicien', sales: 'Commercial', finance: 'Finance' };
-const roles = [{value:'admin',label:'Administrateur'},{value:'site_manager',label:'Responsable de site'},{value:'support',label:'Support'},{value:'technician',label:'Technicien'},{value:'sales',label:'Commercial'},{value:'finance',label:'Finance'}];
-const dateLabel = (value: string) => new Date(value).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
-
-export default function MembresPage() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [companyId, setCompanyId] = useState('');
-  const [members, setMembers] = useState<Member[]>([]);
-  const [events, setEvents] = useState<AuditEvent[]>([]);
-  const [currentRole, setCurrentRole] = useState('');
-  const [email, setEmail] = useState('');
-  const [role, setRole] = useState('support');
-  const [changes, setChanges] = useState<Record<string, {role:string;status:string}>>({});
-  const [busy, setBusy] = useState(true);
-  const [notice, setNotice] = useState('');
-  const [error, setError] = useState('');
-
-  async function loadCompany(id: string) {
-    if (!id) return;
-    const [memberResponse, auditResponse] = await Promise.all([
-      fetch('/api/company-members?companyId=' + encodeURIComponent(id), { cache: 'no-store' }),
-      fetch('/api/audit-logs?companyId=' + encodeURIComponent(id), { cache: 'no-store' }),
-    ]);
-    const memberData = await memberResponse.json();
-    const auditData = await auditResponse.json();
-    if (!memberResponse.ok) throw new Error(memberData.error || 'Impossible de charger les membres.');
-    setMembers(memberData.members ?? []);
-    setCurrentRole(memberData.current_role ?? '');
-    setChanges(Object.fromEntries((memberData.members ?? []).map((m: Member) => [m.user_id, { role: m.role, status: m.status }])));
-    if (auditResponse.ok) setEvents(auditData.events ?? []);
-    else setEvents([]);
-  }
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const response = await fetch('/api/sites', { cache: 'no-store' });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Impossible de charger les entreprises.');
-        if (!active) return;
-        setCompanies(data.companies ?? []);
-        if (data.companies?.[0]) setCompanyId(data.companies[0].id);
-      } catch (e) { if (active) setError(e instanceof Error ? e.message : 'Erreur de chargement.'); }
-      finally { if (active) setBusy(false); }
-    })();
-    return () => { active = false; };
-  }, []);
-  useEffect(() => {
-    if (!companyId) return;
-    let active = true;
-    setBusy(true); setError('');
-    (async () => {
-      try {
-        const [mr, ar] = await Promise.all([
-          fetch('/api/company-members?companyId=' + encodeURIComponent(companyId), {cache:'no-store'}),
-          fetch('/api/audit-logs?companyId=' + encodeURIComponent(companyId), {cache:'no-store'}),
-        ]);
-        const md = await mr.json(); const ad = await ar.json();
-        if (!mr.ok) throw new Error(md.error || 'Impossible de charger les membres.');
-        if (!active) return;
-        setMembers(md.members ?? []); setCurrentRole(md.current_role ?? '');
-        setChanges(Object.fromEntries((md.members ?? []).map((m: Member) => [m.user_id, {role:m.role,status:m.status}])));
-        setEvents(ar.ok ? (ad.events ?? []) : []);
-        setNotice(ar.ok ? '' : (ad.error ?? 'Journal réservé aux rôles propriétaire, administrateur et finance.'));
-      } catch (e) { if (active) setError(e instanceof Error ? e.message : 'Erreur de chargement.'); }
-      finally { if (active) setBusy(false); }
-    })();
-    return () => { active = false; };
-  }, [companyId]);
-
-  async function invite(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setNotice(''); setError('');
-    try {
-      const response = await fetch('/api/company-members', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,email,role})});
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Invitation impossible.');
-      setEmail(''); setNotice('Invitation créée pour ' + data.invitation.email + '. La personne doit créer/confirmer son compte avec cette adresse puis accepter l’invitation dans « Mes invitations ». Aucun e-mail automatique n’est envoyé pour le moment.');
-    } catch (e) { setError(e instanceof Error ? e.message : 'Invitation impossible.'); }
-  }
-  async function save(member: Member) {
-    const value = changes[member.user_id];
-    setNotice(''); setError('');
-    try {
-      const response = await fetch('/api/company-members', {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,userId:member.user_id,role:value.role,status:value.status})});
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Modification impossible.');
-      setNotice('Rôle et statut mis à jour.'); await loadCompany(companyId);
-    } catch (e) { setError(e instanceof Error ? e.message : 'Modification impossible.'); }
-  }
-  const canManage = currentRole === 'owner' || currentRole === 'admin';
-
-  return <main className="form-shell"><section className="form-card" style={{maxWidth:1000,width:'min(100%,1000px)'}}>
-    <p className="eyebrow">ZARAY · MODULE 4</p><h1>Membres, rôles et audit</h1>
-    <p>Les autorisations sont contrôlées par l’API et Supabase. Les invitations sont limitées à l’entreprise sélectionnée.</p>
-    {companies.length > 0 && <label>Entreprise<select value={companyId} onChange={e=>setCompanyId(e.target.value)}>{companies.map(c=><option key={c.id} value={c.id}>{c.legal_name} · {roleLabels[c.role] ?? c.role}</option>)}</select></label>}
-    {companies.length===0 && !busy && <p>Aucune entreprise accessible.</p>}
-    {canManage && <><h2 style={{marginTop:28}}>Inviter un membre</h2>
-      <form className="form-stack" onSubmit={invite}>
-        <label>E-mail de la personne<input type="email" autoComplete="email" required maxLength={254} value={email} onChange={e=>setEmail(e.target.value)} placeholder="collegue@exemple.com"/></label>
-        <label>Rôle<select value={role} onChange={e=>setRole(e.target.value)}>{roles.filter(r=>currentRole==='owner'||!['admin','finance'].includes(r.value)).map(r=><option key={r.value} value={r.value}>{r.label}</option>)}</select></label>
-        <button className="primary-link" type="submit" disabled={busy||!companyId}>Créer l’invitation</button>
-      </form>
-    </>}
-    <h2 style={{marginTop:32}}>Membres de l’entreprise</h2>
-    {busy ? <p>Chargement…</p> : members.length ? <div className="module-grid">{members.map(member=><article className="module" key={member.user_id}>
-      <span className="module-number">{roleLabels[member.role] ?? member.role}</span><h3>{member.email}</h3><p>Ajouté le {dateLabel(member.created_at)}</p><span className="module-status">{member.status==='active'?'Actif':member.status}</span>
-      {canManage && member.role!=='owner' && <div className="form-stack" style={{marginTop:14}}>
-        <label>Rôle<select value={changes[member.user_id]?.role ?? member.role} disabled={member.user_id===members.find(m=>m.role===currentRole&&m.role==='owner')?.user_id} onChange={e=>setChanges(old=>({...old,[member.user_id]:{...old[member.user_id],role:e.target.value}}))}>{[{value:'owner',label:'Propriétaire'},...roles].filter(r=>r.value!=='owner'&&(currentRole==='owner'||!['admin','finance'].includes(r.value))).map(r=><option key={r.value} value={r.value}>{r.label}</option>)}</select></label>
-        <label>Statut<select value={changes[member.user_id]?.status ?? member.status} onChange={e=>setChanges(old=>({...old,[member.user_id]:{...old[member.user_id],status:e.target.value}}))}><option value="active">Actif</option><option value="suspended">Suspendu</option></select></label>
-        <button type="button" onClick={()=>void save(member)} disabled={busy}>Enregistrer</button>
-      </div>}
-    </article>)}</div> : <p>Aucun membre à afficher.</p>}
-    <h2 style={{marginTop:36}}>Journal d’audit</h2>
-    {events.length ? <div className="module-grid">{events.map(event=><article className="module" key={event.id}><span className="module-number">{event.event}</span><h3>{event.actor_email ?? 'Système'}</h3><p>{dateLabel(event.created_at)}</p><p>{JSON.stringify(event.metadata)}</p></article>)}</div> : <p>Journal non disponible pour votre rôle ou aucun événement enregistré.</p>}
-    {notice && <p role="status" aria-live="polite">{notice}</p>}{error && <p role="alert">{error}</p>}
-    <p style={{marginTop:28}}><a href="/invitations">Mes invitations →</a> · <a href="/tableau-de-bord">Tableau de bord</a> · <a href="/sites">Sites</a></p>
-  </section></main>;
+import AppShell from '@/components/app-shell';
+type Company={id:string;legal_name:string;role:string};type Member={user_id:string;email:string;role:string;status:string;created_at:string};type AuditEvent={id:number;event:string;actor_email:string|null;metadata:Record<string,unknown>;created_at:string};
+const roleLabels:Record<string,string>={owner:'Propriétaire',admin:'Administrateur',site_manager:'Responsable de site',support:'Support',technician:'Technicien',sales:'Commercial',finance:'Finance'};const roles=[{value:'admin',label:'Administrateur'},{value:'site_manager',label:'Responsable de site'},{value:'support',label:'Support'},{value:'technician',label:'Technicien'},{value:'sales',label:'Commercial'},{value:'finance',label:'Finance'}];const dateLabel=(v:string)=>new Date(v).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'});
+export default function MembresPage(){
+ const [companies,setCompanies]=useState<Company[]>([]),[companyId,setCompanyId]=useState(''),[members,setMembers]=useState<Member[]>([]),[events,setEvents]=useState<AuditEvent[]>([]),[currentRole,setCurrentRole]=useState(''),[email,setEmail]=useState(''),[role,setRole]=useState('support'),[changes,setChanges]=useState<Record<string,{role:string;status:string}>>({}),[busy,setBusy]=useState(true),[notice,setNotice]=useState(''),[error,setError]=useState('');
+ async function load(id:string){if(!id)return;setBusy(true);setError('');try{const [mr,ar]=await Promise.all([fetch('/api/company-members?companyId='+encodeURIComponent(id),{cache:'no-store'}),fetch('/api/audit-logs?companyId='+encodeURIComponent(id),{cache:'no-store'})]);const md=await mr.json(),ad=await ar.json();if(!mr.ok)throw new Error(md.error||'Impossible de charger les membres.');setMembers(md.members??[]);setCurrentRole(md.current_role??'');setChanges(Object.fromEntries((md.members??[]).map((m:Member)=>[m.user_id,{role:m.role,status:m.status}])));setEvents(ar.ok?(ad.events??[]):[]);if(!ar.ok)setNotice(ad.error??'Journal non accessible pour ce rôle.');}catch(e){setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{setBusy(false);}}
+ useEffect(()=>{let active=true;(async()=>{try{const r=await fetch('/api/sites',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les entreprises.');if(active){setCompanies(d.companies??[]);if(d.companies?.[0])setCompanyId(d.companies[0].id);}}catch(e){if(active)setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{if(active)setBusy(false);}})();return()=>{active=false};},[]);useEffect(()=>{if(companyId)void load(companyId);},[companyId]);
+ async function invite(e:FormEvent<HTMLFormElement>){e.preventDefault();setNotice('');setError('');try{const r=await fetch('/api/company-members',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,email,role})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Invitation impossible.');setEmail('');setNotice('Invitation créée pour '+d.invitation.email+'. La personne pourra l’accepter depuis « Mes invitations ».');}catch(e){setError(e instanceof Error?e.message:'Invitation impossible.');}}
+ async function save(member:Member){const value=changes[member.user_id];setNotice('');setError('');try{const r=await fetch('/api/company-members',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,userId:member.user_id,role:value.role,status:value.status})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Modification impossible.');setNotice('Membre mis à jour.');await load(companyId);}catch(e){setError(e instanceof Error?e.message:'Modification impossible.');}}
+ const canManage=currentRole==='owner'||currentRole==='admin';const roleText=(roleLabels[currentRole]??currentRole)||'—';
+ return <AppShell activePath="/membres" eyebrow="ESPACE · GOUVERNANCE" title="Membres & rôles" description="Gérez les accès de votre équipe par entreprise et conservez une trace des actions sensibles.">
+  <section className="panel toolbar"><div className="toolbar-main"><label className="toolbar-field toolbar-grow">Entreprise<select value={companyId} onChange={e=>setCompanyId(e.target.value)}>{companies.map(c=><option key={c.id} value={c.id}>{c.legal_name} · {roleLabels[c.role]??c.role}</option>)}</select></label></div><div className="toolbar-meta">Votre rôle : {roleText}</div></section>
+  <div className="workspace-grid"><section className="panel sticky-panel">{canManage?<><div className="panel-head"><div><div className="panel-title">Inviter un membre</div><div className="muted">L’invitation reste limitée à l’entreprise sélectionnée.</div></div></div><form className="form-stack compact-form" onSubmit={invite}><label>E-mail<input type="email" autoComplete="email" required maxLength={254} value={email} onChange={e=>setEmail(e.target.value)} placeholder="collegue@exemple.com"/></label><label>Rôle<select value={role} onChange={e=>setRole(e.target.value)}>{roles.filter(r=>currentRole==='owner'||!['admin','finance'].includes(r.value)).map(r=><option key={r.value} value={r.value}>{r.label}</option>)}</select></label><button className="primary-link" type="submit" disabled={busy||!companyId}>Créer l’invitation</button></form></>:<div className="empty-state"><strong>Accès en lecture</strong><p>Votre rôle ne permet pas de gérer les membres de cette entreprise.</p></div>}</section>
+   <section className="panel"><div className="panel-head"><div><div className="panel-title">Équipe</div><div className="muted">{members.length} membre{members.length!==1?'s':''} dans cette entreprise.</div></div></div>{busy?<div className="skeleton-list"><span/><span/><span/></div>:members.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Membre</th><th>Rôle</th><th>Statut</th><th>Ajouté</th><th></th></tr></thead><tbody>{members.map(m=><tr key={m.user_id}><td><strong>{m.email}</strong></td><td>{canManage&&m.role!=='owner'?<select value={changes[m.user_id]?.role??m.role} onChange={e=>setChanges(old=>({...old,[m.user_id]:{...old[m.user_id],role:e.target.value}}))}>{roles.map(r=><option key={r.value} value={r.value}>{r.label}</option>)}</select>:roleLabels[m.role]??m.role}</td><td>{canManage&&m.role!=='owner'?<select value={changes[m.user_id]?.status??m.status} onChange={e=>setChanges(old=>({...old,[m.user_id]:{...old[m.user_id],status:e.target.value}}))}><option value="active">Actif</option><option value="suspended">Suspendu</option></select>:<span className="status-pill">{m.status==='active'?'Actif':m.status}</span>}</td><td>{dateLabel(m.created_at)}</td><td>{canManage&&m.role!=='owner'&&<button type="button" onClick={()=>void save(m)}>Enregistrer</button>}</td></tr>)}</tbody></table></div>:<div className="empty-state"><strong>Aucun membre</strong><p>Invitez votre première personne dans cette entreprise.</p></div>}</section></div>
+  <section className="panel" style={{marginTop:16}}><div className="panel-head"><div><div className="panel-title">Journal d’audit</div><div className="muted">Actions sensibles et événements de gouvernance.</div></div></div>{events.length?<div className="data-list">{events.map(e=><div className="data-row" key={e.id}><div><strong>{e.event}</strong><div className="muted">{e.actor_email??'Système'} · {dateLabel(e.created_at)}</div></div><span className="muted">{JSON.stringify(e.metadata)}</span></div>)}</div>:<div className="empty-state"><strong>Journal indisponible</strong><p>Il peut être masqué selon votre rôle ou vide pour cette entreprise.</p></div>}</section>
+  {(notice||error)&&<div className={error?'alert alert-error':'alert alert-success'} role={error?'alert':'status'}>{error||notice}</div>}<p style={{marginTop:16}}><a className="header-link" href="/invitations">Mes invitations →</a></p>
+ </AppShell>;
 }

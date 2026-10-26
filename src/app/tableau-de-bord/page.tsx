@@ -1,52 +1,22 @@
 'use client';
 import { useEffect, useState } from 'react';
-type Company = { id: string; legal_name: string; slug: string; role: string };
-type Site = { id: string; company_id: string; company_name: string; name: string; status: string; created_at: string };
-const statusLabels: Record<string, string> = { planned: 'Planifié', active: 'Actif', suspended: 'Suspendu', archived: 'Archivé' };
+import AppShell from '@/components/app-shell';
 
-export default function DashboardPage() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [sites, setSites] = useState<Site[]>([]);
-  const [busy, setBusy] = useState(true);
-  const [error, setError] = useState('');
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      try {
-        const response = await fetch('/api/sites', { cache: 'no-store' });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Impossible de charger le tableau de bord.');
-        if (active) { setCompanies(data.companies || []); setSites(data.sites || []); }
-      } catch (e) { if (active) setError(e instanceof Error ? e.message : 'Une erreur est survenue.'); }
-      finally { if (active) setBusy(false); }
-    }
-    load(); return () => { active = false; };
-  }, []);
+type Company={id:string;legal_name:string;slug:string;role:string};
+type Site={id:string;company_id:string;company_name:string;name:string;status:string;created_at:string};
+type Summary={customers:number;offers:number;orders:number;tickets:number;pendingPayments:number};
+const statusLabels:Record<string,string>={planned:'Planifié',active:'Actif',suspended:'Suspendu',archived:'Archivé'};
 
-  return <main className="form-shell"><section className="form-card" style={{ width: 'min(100%, 1000px)' }}>
-    <p className="eyebrow">ZARAY · ESPACE ADMINISTRATEUR</p><h1>Tableau de bord</h1>
-    <p>Vue d’ensemble de vos entreprises et de leurs sites. Les données affichées proviennent de votre session et de vos autorisations.</p>
-    {busy ? <p role="status">Chargement de votre espace…</p> : error ? <p role="alert">{error}</p> : <>
-      <div className="module-grid" style={{ margin: '26px 0' }}>
-        <article className="module"><span className="module-number">01 · ENTREPRISES</span><h3>{companies.length}</h3><p>Entreprise(s) accessible(s)</p></article>
-        <article className="module"><span className="module-number">02 · SITES</span><h3>{sites.length}</h3><p>Site(s) enregistré(s)</p></article>
-        <article className="module"><span className="module-number">03 · COMPTE</span><h3>Actif</h3><p>Session authentifiée requise</p></article>
-      </div>
-      <div className="section-head"><div><div className="eyebrow">VOTRE ORGANISATION</div><h2>Entreprises</h2></div><div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}><a className="primary-link" href="/entreprises/nouvelle">Ajouter une entreprise →</a><a className="primary-link" href="/membres">Gérer les membres →</a></div></div>
-      {companies.length ? <div className="module-grid">{companies.map((company) => <article className="module" key={company.id}>
-        <span className="module-number">{company.role || 'Membre'}</span><h3>{company.legal_name}</h3><p>Identifiant : {company.slug}</p><span className="module-status">Accès autorisé</span>
-        <p style={{ marginTop: 16 }}><a href={'/portail/' + encodeURIComponent(company.slug)}>Ouvrir le portail public →</a></p>
-      </article>)}</div> : <p>Aucune entreprise liée à ce compte. Créez votre première entreprise pour commencer.</p>}
-      <div className="section-head" style={{ marginTop: 36 }}><div><div className="eyebrow">IMPLANTATIONS</div><h2>Sites</h2></div><a className="primary-link" href="/sites">Gérer les sites →</a></div>
-      {sites.length ? <div className="module-grid">{sites.map((site) => <article className="module" key={site.id}><span className="module-number">SITE</span><h3>{site.name}</h3><p>{site.company_name}</p><span className="module-status">{statusLabels[site.status] || site.status}</span></article>)}</div> : <p>Aucun site enregistré pour le moment.</p>}
-      <div className="section-head" style={{ marginTop: 36 }}><div><div className="eyebrow">PARCOURS WI-FI</div><h2>Souscriptions et paiements</h2></div></div>
-      <div className="module-grid">
-        <article className="module"><span className="module-number">07 · PORTAIL CAPTIF</span><h3>Commandes</h3><p>Suivre les souscriptions et les paiements en attente.</p><p style={{ marginTop: 18 }}><a href="/commandes">Ouvrir les commandes →</a></p></article>
-        <article className="module"><span className="module-number">08 · PAIEMENTS MANUELS</span><h3>Vérifier les reçus</h3><p>Examiner les justificatifs Orange Money et MVola. La validation exige une vérification réelle de la transaction.</p><p style={{ marginTop: 18 }}><a href="/paiements/verification">Ouvrir la vérification →</a></p></article>
-        <article className="module"><span className="module-number">09 · CONFIGURATION</span><h3>Numéros de paiement</h3><p>Configurer les numéros bénéficiaires et les instructions visibles par les clients.</p><p style={{ marginTop: 18 }}><a href="/parametres-paiement">Configurer les moyens de paiement →</a></p></article>
-        <article className="module"><span className="module-number">10 · TICKETS WI-FI</span><h3>Tickets</h3><p>Émission sécurisée après confirmation du paiement. L’activation réseau reste une intégration distincte.</p><p style={{ marginTop: 18 }}><a href="/tickets">Gérer les tickets →</a></p></article>
-      </div>
-    </>}
-    <p style={{ marginTop: 32 }}><a href="/">← Accueil</a> · <a href="/sites">Sites</a> · <a href="/membres">Membres</a> · <a href="/clients">Clients</a> · <a href="/offres">Offres Internet</a> · <a href="/commandes">Commandes</a> · <a href="/tickets">Tickets Wi-Fi</a> · <a href="/paiements/verification">Vérifier les paiements</a> · <a href="/parametres-paiement">Paramètres de paiement</a></p>
-  </section></main>;
+export default function DashboardPage(){
+ const [companies,setCompanies]=useState<Company[]>([]),[sites,setSites]=useState<Site[]>([]),[summary,setSummary]=useState<Summary>({customers:0,offers:0,orders:0,tickets:0,pendingPayments:0}),[busy,setBusy]=useState(true),[error,setError]=useState('');
+ useEffect(()=>{let active=true;(async()=>{try{const r=await fetch('/api/sites',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger votre espace.');const companiesData:Company[]=d.companies??[];const sitesData:Site[]=d.sites??[];const companyId=companiesData[0]?.id;let next:Summary={customers:0,offers:0,orders:0,tickets:0,pendingPayments:0};if(companyId){const [cr,or,ord,tr,pr]=await Promise.all([fetch('/api/customers?companyId='+encodeURIComponent(companyId),{cache:'no-store'}),fetch('/api/offers?companyId='+encodeURIComponent(companyId),{cache:'no-store'}),fetch('/api/subscription-orders?companyId='+encodeURIComponent(companyId),{cache:'no-store'}),fetch('/api/wifi-tickets?companyId='+encodeURIComponent(companyId),{cache:'no-store'}),fetch('/api/manual-payments/review?companyId='+encodeURIComponent(companyId),{cache:'no-store'})]);const [cd,od,ordd,td,pd]=await Promise.all([cr.json(),or.json(),ord.json(),tr.json(),pr.json()]);next={customers:cr.ok?(cd.customers??[]).length:0,offers:or.ok?(od.offers??[]).length:0,orders:ord.ok?(ordd.orders??[]).length:0,tickets:tr.ok?(td.tickets??[]).length:0,pendingPayments:pr.ok?(pd.submissions??[]).filter((x:{status:string})=>x.status==='submitted').length:0};}if(active){setCompanies(companiesData);setSites(sitesData);setSummary(next);}}catch(e){if(active)setError(e instanceof Error?e.message:'Une erreur est survenue.');}finally{if(active)setBusy(false);}})();return()=>{active=false};},[]);
+ if(busy)return <main className="form-shell"><section className="form-card"><p className="eyebrow">ZARAY · ESPACE ADMINISTRATEUR</p><h1>Chargement de votre espace</h1><p role="status">Nous préparons vos indicateurs et vos opérations…</p></section></main>;
+ if(error)return <main className="form-shell"><section className="form-card"><p className="eyebrow">ZARAY · ESPACE ADMINISTRATEUR</p><h1>Impossible de charger le tableau de bord</h1><p role="alert">{error}</p><p><a href="/connexion">Retour à la connexion →</a></p></section></main>;
+ const activeSites=sites.filter(s=>s.status==='active').length;
+ return <AppShell activePath="/tableau-de-bord" eyebrow="VUE D’ENSEMBLE" title="Tableau de bord" description="Pilotez vos entreprises, vos clients, vos ventes et vos opérations Wi-Fi depuis un seul espace.">
+  <section className="kpi-grid" aria-label="Indicateurs opérationnels"><article className="kpi"><div className="kpi-label">ENTREPRISES</div><div className="kpi-value">{companies.length}</div><div className="kpi-note">Accès autorisés</div></article><article className="kpi"><div className="kpi-label">SITES ACTIFS</div><div className="kpi-value">{activeSites}<span className="muted"> / {sites.length}</span></div><div className="kpi-note">Statut opérationnel</div></article><article className="kpi"><div className="kpi-label">CLIENTS</div><div className="kpi-value">{summary.customers}</div><div className="kpi-note">Fiches CRM</div></article><article className="kpi"><div className="kpi-label">PAIEMENTS À VÉRIFIER</div><div className="kpi-value">{summary.pendingPayments}</div><div className="kpi-note">Justificatifs soumis</div></article></section>
+  <section className="panel" style={{marginBottom:16}}><div className="panel-head"><div><div className="panel-title">Centre d’activité</div><div className="muted">Accès direct aux opérations qui demandent une action.</div></div></div><div className="quick-grid"><a className="quick-action" href="/clients"><strong>Clients</strong><div className="muted">{summary.customers} fiche(s) · rechercher ou modifier</div></a><a className="quick-action" href="/offres"><strong>Offres Internet</strong><div className="muted">{summary.offers} offre(s) · catalogue commercial</div></a><a className="quick-action" href="/commandes"><strong>Commandes</strong><div className="muted">{summary.orders} commande(s) · suivi des paiements</div></a><a className="quick-action" href="/tickets"><strong>Tickets Wi-Fi</strong><div className="muted">{summary.tickets} ticket(s) · émission et révocation</div></a><a className="quick-action" href="/paiements/verification"><strong>Vérifier les paiements</strong><div className="muted">{summary.pendingPayments} justificatif(s) en attente</div></a><a className="quick-action" href="/sites"><strong>Gérer les sites</strong><div className="muted">{activeSites} actif(s) sur {sites.length}</div></a></div></section>
+  <div className="module-grid"><section className="panel" style={{minHeight:280}}><div className="panel-head"><div><div className="panel-title">Entreprises accessibles</div><div className="muted">Vos périmètres de travail.</div></div><a className="header-link" href="/entreprises/nouvelle">+ Ajouter</a></div>{companies.length?<div className="data-list">{companies.map(c=><div className="data-row" key={c.id}><div><strong>{c.legal_name}</strong><div className="muted">{c.slug}</div></div><span className="status-pill">{c.role||'Membre'}</span></div>)}</div>:<div className="empty-state"><strong>Aucune entreprise</strong><p>Créez votre première organisation pour commencer.</p><a className="primary-link" href="/entreprises/nouvelle">Créer une entreprise</a></div>}</section><section className="panel" style={{minHeight:280}}><div className="panel-head"><div><div className="panel-title">Sites récents</div><div className="muted">Derniers emplacements accessibles.</div></div><a className="header-link" href="/sites">Gérer</a></div>{sites.length?<div className="data-list">{sites.slice(0,6).map(s=><div className="data-row" key={s.id}><div><strong>{s.name}</strong><div className="muted">{s.company_name}</div></div><span className="status-pill">{statusLabels[s.status]||s.status}</span></div>)}</div>:<div className="empty-state"><strong>Aucun site</strong><p>Ajoutez un site pour commencer l’exploitation.</p><a className="primary-link" href="/sites">Créer un site</a></div>}</section></div>
+  <section className="panel" style={{marginTop:16}}><div className="panel-head"><div><div className="panel-title">État du produit</div><div className="muted">Ce qui est réellement disponible dans votre espace.</div></div></div><div className="data-list"><div className="data-row"><span>Entreprises, sites et membres</span><span className="status-pill">Opérationnel</span></div><div className="data-row"><span>Clients et catalogue d’offres</span><span className="status-pill">Opérationnel</span></div><div className="data-row"><span>Commandes, paiements manuels et tickets</span><span className="status-pill">Opérationnel</span></div><div className="data-row"><span>Activation réseau / RADIUS</span><span className="muted">À intégrer</span></div></div></section>
+ </AppShell>;
 }
