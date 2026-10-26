@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import SignOutButton from '@/components/sign-out-button';
 import BrandLogo from '@/components/brand-logo';
+import Link from 'next/link';
 
 const sections = [
   { label: 'GESTION', items: [['/tableau-de-bord', 'Tableau de bord'], ['/entreprises', 'Entreprises'], ['/sites', 'Sites'], ['/membres', 'Membres']] },
@@ -64,7 +65,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
         {section.items.map(([href, label]) => {
           const siteOperational = ['/clients','/commandes','/tickets','/paiements/verification'].includes(href);
           const scoped=href === '/entreprises' ? href : activeCompany ? href+(href.includes('?')?'&':'?')+'companyId='+encodeURIComponent(activeCompany)+(activeSite && siteOperational ? '&siteId='+encodeURIComponent(activeSite) : '') : href;
-          return <a key={href} ref={href === '/tableau-de-bord' ? firstMenuLink : undefined} className={'app-nav-link' + (activePath === href ? ' active' : '')} href={scoped} aria-current={activePath === href ? 'page' : undefined} onClick={() => setMenuOpen(false)}>{label}</a>;
+          return <Link key={href} ref={href === '/tableau-de-bord' ? firstMenuLink : undefined} className={'app-nav-link' + (activePath === href ? ' active' : '')} href={scoped} prefetch={false} aria-current={activePath === href ? 'page' : undefined} onClick={() => setMenuOpen(false)}>{label}</Link>;
         })}
       </div>)}
       <div className="app-nav-footer"><a className="app-nav-link" href="/mon-compte">Retour au compte personnel</a><a className="app-nav-link" href="/entreprises">Mes entreprises</a><SignOutButton /></div>
