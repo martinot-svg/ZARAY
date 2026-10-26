@@ -1,4 +1,5 @@
 'use client';
+import BrandLogo from '@/components/brand-logo';
 import { useEffect, useState } from 'react';
 import WorkspaceBreadcrumb from '@/components/workspace-breadcrumb';
 import { activeSiteId, scopedQuery, selectedCompany, switchCompany } from '@/lib/workspace-url';
@@ -60,6 +61,7 @@ export default function OrdersPage() {
   }
 
   return <main className="form-shell"><section className="form-card" style={{ maxWidth: 1100, width: 'min(100%,1100px)' }}>
+      <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
     <WorkspaceBreadcrumb companyId={companyId}/><p className="eyebrow">ZARAY · MODULE 7 · SOUSCRIPTIONS</p><h1>Commandes du portail captif</h1>
     <p>Les commandes publiques sont enregistrées avec un montant et un forfait figés. Leur création ne vaut ni paiement confirmé ni activation Internet.</p>
     {companies.length > 0 && <label>Entreprise<select value={companyId} onChange={(e) => switchCompany('/commandes',e.target.value)}>{companies.map((c) => <option key={c.id} value={c.id}>{c.legal_name}</option>)}</select></label>}
