@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import AppShell from '@/components/app-shell';
+import { MotionFeedback } from '@/components/motion';
 
 type Site={id:string;company_id:string;company_name:string;company_slug:string;name:string;status:string;created_at:string};
 type CompanyOption={id:string;legal_name:string;slug:string};
@@ -22,6 +23,6 @@ export default function SitesPage(){
    <section id="site-form" className="panel sticky-panel"><div className="panel-head"><div><div className="panel-title">Nouveau site</div><div className="muted">Un site est toujours rattaché à une entreprise.</div></div></div><form className="form-stack compact-form" onSubmit={create}><label>Entreprise<select value={companyId==='all'?'':companyId} onChange={e=>setCompanyId(e.target.value)} required><option value="">Sélectionner</option>{companies.map(c=><option key={c.id} value={c.id}>{c.legal_name}</option>)}</select></label><label>Nom du site<input value={name} onChange={e=>setName(e.target.value)} required minLength={2} maxLength={120} placeholder="Ex. Antananarivo Centre"/></label><button className="primary-link" type="submit" disabled={saving||!companyId||companyId==='all'}>{saving?'Création…':'Créer le site'}</button></form></section>
    <section className="panel"><div className="panel-head"><div><div className="panel-title">Répertoire des sites</div><div className="muted">Renommez un site ou faites évoluer son statut.</div></div></div>{busy?<div className="skeleton-list"><span/><span/><span/></div>:filtered.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Site</th><th>Entreprise</th><th>Statut</th><th>Créé</th><th></th></tr></thead><tbody>{filtered.map(s=><tr key={s.id}><td><strong>{s.name}</strong><small>{s.company_slug}</small></td><td>{s.company_name}</td><td><select aria-label={'Statut de '+s.name} value={s.status} disabled={saving} onChange={e=>void save(s,s.name,e.target.value)}><option value="planned">Planifié</option><option value="active">Actif</option><option value="suspended">Suspendu</option><option value="archived">Archivé</option></select></td><td>{new Date(s.created_at).toLocaleDateString('fr-FR')}</td><td><button type="button" onClick={()=>rename(s)} disabled={saving}>Renommer</button></td></tr>)}</tbody></table></div>:<div className="empty-state"><strong>{sites.length?'Aucun résultat':'Aucun site'}</strong><p>{sites.length?'Ajustez vos filtres.':'Créez le premier site de votre entreprise.'}</p><a className="primary-link" href="#site-form">Créer un site</a></div>}</section>
   </div>
-  {(notice||error)&&<div className={error?'alert alert-error':'alert alert-success'} role={error?'alert':'status'}>{error||notice}</div>}
+  <MotionFeedback message={error || notice} kind={error ? 'error' : 'success'}/>
  </AppShell>;
 }
