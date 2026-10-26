@@ -12,5 +12,6 @@ jobs:
           node-version: '22'
       - run: npm install --no-audit --no-fund
       - run: npm run test:motion
+      - run: npm run test:context
       - run: npm run typecheck
       - run: npm run build
