@@ -1,0 +1,45 @@
+name: ZARAY visual contrast audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/components/contrast-guardian.tsx'
+      - 'src/app/globals.css'
+      - 'tests/contrast-audit.mjs'
+      - '.github/workflows/contrast-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contrast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install project dependencies
+        run: npm ci
+      - name: Install browser audit dependency
+        run: npm install --no-save --ignore-scripts playwright@1.56.1
+      - name: Install headless Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Inspect production pages, contrast, and screenshots
+        env:
+          BASE_URL: https://zaray.vercel.app
+        run: node tests/contrast-audit.mjs
+      - name: Preserve screenshot and audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zaray-contrast-audit
+          path: artifacts/contrast/
+          retention-days: 14
+          if-no-files-found: warn
