@@ -19,10 +19,8 @@ test('the uploaded wordmark silhouette is a local scalable asset',()=>{
  assert.match(svg,/fill="#fff"/);
  assert.match(svg,/fill="#21f728"/);
  assert.doesNotMatch(svg,/<(?:text|image|script|foreignObject)/);
- assert.match(brand,/src="\/brand\/zaray-light\.png"/);
- assert.match(brand,/src="\/brand\/zaray-dark\.png"/);
- assert.match(brand,/aria-label="ZARAY"/);
- assert.match(brand,/aria-label="ZARAY"/);
+ assert.match(brand,/src="\/brand\/zaray-logo\.svg"/);
+ assert.match(brand,/alt="ZARAY"/);
 });
 test('brand identity is present on public, workspace and all auth screens',()=>{
  for(const path of [
@@ -66,36 +64,10 @@ test('favicon and browser metadata are configured with real transparent ZARAY ar
   assert.match(layout,/favicon-16x16\.png/);
   assert.match(layout,/favicon-32x32\.png/);
   assert.match(layout,/favicon-48x48\.png/);
-  assert.match(favicon,/viewBox="0 0 168 152"/);
+  assert.match(favicon,/viewBox="0 0 192 186"/);
   assert.doesNotMatch(favicon,/<rect\b/);
   assert.match(generated,/sizes = \[16, 32, 48\]/);
   assert.match(manifest,/favicon\.svg/);
   assert.match(layout,/apple-touch-icon\.png/);
   assert.match(manifest,/android-chrome-192x192\.png/);
 });
-
-test('official logo variants retain transparency, proportions, and automatic theme choice',()=>{
-  const fs=awaitImportRead();
-  const light=fs('public/brand/zaray-light.png');
-  const dark=fs('public/brand/zaray-dark.png');
-  assert.equal(light.toString('ascii',1,4),'PNG');
-  assert.equal(light.readUInt32BE(16),512);
-  assert.equal(light.readUInt32BE(20),150);
-  assert.equal(dark.readUInt32BE(16),512);
-  assert.equal(dark.readUInt32BE(20),150);
-  assert.ok(light.includes(Buffer.from('tRNS')));
-  assert.equal(dark[25],6);
-  const code=read('src/components/theme-selector.tsx');
-  const css=read('src/app/globals.css');
-  for(const value of ["'auto'","'light'","'dark'"])assert.ok(code.includes(value));
-  assert.ok(code.includes('localStorage'));
-  assert.ok(code.includes('document.documentElement.dataset.theme'));
-  assert.match(css,/prefers-color-scheme:dark/);
-  assert.match(css,/\.brand-logo-on-dark/);
-  assert.match(css,/\.brand-logo-on-light/);
-  const authPages=['src/app/connexion/page.tsx','src/app/inscription/page.tsx'];
-  for(const path of authPages)assert.match(read(path),/<ThemeSelector \/>/);
-});
-function awaitImportRead(){
-  return (path)=>readFileSync(new URL('../'+path,import.meta.url));
-}

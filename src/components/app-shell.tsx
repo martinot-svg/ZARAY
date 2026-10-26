@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import SignOutButton from '@/components/sign-out-button';
 import BrandLogo from '@/components/brand-logo';
-import ThemeSelector from '@/components/theme-selector';
 import Link from 'next/link';
 
 const sections = [
@@ -89,7 +88,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
             </select></label>
           </>:<span className="muted">{contextError||'Chargement du contexte…'}</span>}
         </div>
-        <div className="app-topbar-links"><ThemeSelector /><a className="header-link" href="/mon-compte">Mon compte</a><a className="header-link" href={activeCompany?'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany):'/entreprises'}>Vue générale</a></div>
+        <div className="app-topbar-links"><a className="header-link" href="/mon-compte">Mon compte</a><a className="header-link" href={activeCompany?'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany):'/entreprises'}>Vue générale</a></div>
       </header>
       <main className="app-content">
         {(eyebrow || title || description || actions) && <header className="page-header"><div>{eyebrow && <p className="eyebrow">{eyebrow}</p>}{title && <h1 className="app-title">{title}</h1>}{description && <p className="app-subtitle">{description}</p>}</div>{actions && <div className="page-actions">{actions}</div>}</header>}

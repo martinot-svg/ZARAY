@@ -22,5 +22,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="fr" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: "(()=>{try{const t=localStorage.getItem('zaray-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}})()" }} /></head><body>{children}</body></html>;
+  return <html lang="fr"><body>{children}</body></html>;
 }

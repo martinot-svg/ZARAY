@@ -1,7 +1,6 @@
 'use client';
 
 import BrandLogo from '@/components/brand-logo';
-import ThemeSelector from '@/components/theme-selector';
 
 import { useState, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -32,7 +31,7 @@ export default function ConnexionPage() {
   }
 
   return <main className="form-shell auth-motion"><section className="form-card">
-    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority /></a><ThemeSelector /></div>
+    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority /></a></div>
     <p className="eyebrow">ZARAY · ACCÈS SÉCURISÉ</p>
     <h1>Connexion à mon compte ZARAY</h1>
     <form className="form-stack" onSubmit={submit}>

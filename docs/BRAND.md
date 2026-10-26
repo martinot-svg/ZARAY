@@ -25,12 +25,3 @@ du visuel fourni, simplifiées en chemins vectoriels pour l'affichage web.
    la hiérarchie transactionnelle reste prioritaire.
 
 Les composants de référence sont `BrandLogo`, `AppShell` et les tokens CSS.
-
-
-## Versions officielles du logo (26 octobre 2026)
-- \`public/brand/zaray-light.png\` : lettres noires, feuille verte, fond transparent, issu du fichier officiel fourni.
-- \`public/brand/zaray-dark.png\` : lettres blanches, feuille verte, fond transparent ; généré à la compilation en préservant exactement la silhouette et le canal alpha du logo officiel. Le fichier blanc fourni comportant un aplat blanc intégré, cette opération est nécessaire pour garantir une véritable transparence.
-- \`BrandLogo\` bascule instantanément entre ces deux images selon \`data-theme\` ou \`prefers-color-scheme\`.
-- \`ThemeSelector\` propose Auto/Clair/Sombre ; Auto respecte la préférence système et la sélection explicite est sauvegardée localement.
-- Le favicon SVG représente le Z et sa feuille verte issus de la silhouette officielle. Les variantes PNG sont produites au build.
-- Aucun formulaire ou module métier n'utilise de données fictives pour cette intégration.
