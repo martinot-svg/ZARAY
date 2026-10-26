@@ -539,3 +539,16 @@ body{background:var(--canvas);color:var(--text-primary)}
 :where(.app-nav,.landing-footer,.landing-final) :focus-visible {
   outline-color: #91ff95;
 }
+
+/* Live contrast tokens also apply to native placeholder pseudo-elements. */
+:where(input,textarea)::placeholder {
+  color: var(--zaray-placeholder-color,#58685b) !important;
+  opacity: 1 !important;
+}
+:where(input,textarea,select) {
+  -webkit-text-fill-color: currentColor;
+}
+/* Make controls follow their own surface, even when nested in a dark shell. */
+:where(input,textarea,select):not([style*="background"]) {
+  color-scheme: light;
+}
