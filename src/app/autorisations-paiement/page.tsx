@@ -1,5 +1,6 @@
 'use client';
 
+import { selectedCompany,switchCompany } from '@/lib/workspace-url';
 import { useEffect, useState } from 'react';
 
 type Company = { id: string; legal_name: string; role: string };
@@ -32,7 +33,7 @@ export default function AutorisationsPaiementPage() {
         const owned = (data.companies ?? []).filter((company: Company) => company.role === 'owner');
         if (!active) return;
         setCompanies(owned);
-        if (owned[0]) setCompanyId(owned[0].id);
+        if (owned[0]) setCompanyId(selectedCompany(owned,data.sites??[]));
       } catch (e) { if (active) setError(e instanceof Error ? e.message : 'Erreur de chargement.'); }
       finally { if (active) setBusy(false); }
     })();
