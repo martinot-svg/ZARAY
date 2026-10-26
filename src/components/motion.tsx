@@ -53,7 +53,7 @@ export function MotionFeedback({ message, kind = 'success' }: { message: string;
 export function MotionSkeleton({ rows = 3 }: { rows?: number }) {
   return <div className="skeleton-list motion-skeleton" role="status" aria-label="Chargement des données">
     {Array.from({ length: Math.min(Math.max(rows, 1), 6) }, (_, index) => <span key={index} aria-hidden="true" />)}
-    <span className="motion-sr-only">Chargement en cours…</span>
+    <p className="motion-sr-only">Chargement en cours…</p>
   </div>;
 }
 
