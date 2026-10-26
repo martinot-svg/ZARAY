@@ -1,4 +1,5 @@
 'use client';
+import BrandLogo from '@/components/brand-logo';
 
 import { selectedCompany,switchCompany } from '@/lib/workspace-url';
 import { useEffect, useState } from 'react';
@@ -66,6 +67,7 @@ export default function AutorisationsPaiementPage() {
   }
 
   return <main className="form-shell"><section className="form-card" style={{ maxWidth: 900, width: 'min(100%,900px)' }}>
+      <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
     <p className="eyebrow">ZARAY · SÉCURITÉ FINANCIÈRE</p>
     <h1>Autorisations des validateurs</h1>
     <p>Le dirigeant conserve le droit de validation. Les autres administrateurs ne peuvent accéder aux justificatifs ni confirmer un paiement qu’après une autorisation explicite ici.</p>
