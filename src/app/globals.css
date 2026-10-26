@@ -540,15 +540,7 @@ body{background:var(--canvas);color:var(--text-primary)}
   outline-color: #91ff95;
 }
 
-/* Live contrast tokens also apply to native placeholder pseudo-elements. */
-:where(input,textarea)::placeholder {
-  color: var(--zaray-placeholder-color,#58685b) !important;
-  opacity: 1 !important;
-}
-:where(input,textarea,select) {
-  -webkit-text-fill-color: currentColor;
-}
-/* Make controls follow their own surface, even when nested in a dark shell. */
-:where(input,textarea,select):not([style*="background"]) {
-  color-scheme: light;
-}
+/* Lucide — consistent alignment, sizing and inherited foreground contrast */
+.app-nav-link,.app-menu-button,.app-topbar-links a,.app-nav-mobile-head button,.landing-header-login,.account-signout button,.form-stack button,.form-card .primary-link{display:inline-flex;align-items:center;gap:9px}
+.app-nav-link svg,.app-menu-button svg,.app-topbar-links svg,.app-nav-mobile-head svg,.landing-header-login svg,.landing-button svg,.account-signout svg,.form-stack button svg,.form-card .primary-link svg{flex-shrink:0;color:currentColor}
+button:disabled svg,[aria-disabled="true"] svg{opacity:.65}
