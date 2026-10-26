@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 import BrandLogo from '@/components/brand-logo';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useParams } from 'next/navigation';
@@ -117,7 +118,7 @@ export default function CaptivePortalPage() {
     {busy ? <p role="status">Chargement des offres…</p> : offers.length ? <>
       <h2>Forfaits disponibles</h2>
       <div className="module-grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', margin: '18px 0 28px' }}>
-        {offers.map((offer) => <button key={offer.id} type="button" className="module" disabled={offer.currency !== 'MGA'} onClick={() => setOfferId(offer.id)} aria-pressed={offerId === offer.id} style={{ textAlign: 'left', cursor: offer.currency === 'MGA' ? 'pointer' : 'not-allowed', opacity: offer.currency === 'MGA' ? 1 : 0.55, borderColor: offerId === offer.id ? '#087f75' : undefined, color: '#102e3b', background: offerId === offer.id ? '#e4f3f1' : 'white' }}>
+        {offers.map((offer) => <button key={offer.id} type="button" className="module" disabled={offer.currency !== 'MGA'} onClick={() => setOfferId(offer.id)} aria-pressed={offerId === offer.id} style={{ textAlign: 'left', cursor: offer.currency === 'MGA' ? 'pointer' : 'not-allowed', opacity: offer.currency === 'MGA' ? 1 : 0.55, borderColor: offerId === offer.id ? '#087f75' : undefined, color: '#102e3b', background: offerId === offer.id ? '#e4f3f1' : 'white' }}><ZarayIcon name="login" size={18} /> 
           <span className="module-number">{offer.durationMinutes} min de connexion</span><h3>{offer.name}</h3><p>{offer.description || 'Forfait Internet'}</p>
           <p style={{ marginTop: 12 }}>{offer.validityDays} jour(s) de validité · {offer.maxDevices} appareil(s)</p><strong style={{ display: 'block', marginTop: 18 }}>{money(offer)}</strong>{offer.currency !== 'MGA' && <p>Indisponible : Orange Money/MVola exige un tarif en ariary (MGA).</p>}
         </button>)}
@@ -128,7 +129,7 @@ export default function CaptivePortalPage() {
           <label>Nom complet<input value={customerName} onChange={(e) => setCustomerName(e.target.value)} minLength={2} maxLength={160} required /></label>
           <label>Adresse e-mail<input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} maxLength={254} required /></label>
           <label>Téléphone de contact (facultatif)<input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} maxLength={32} placeholder="0341234567" /></label>
-          <button className="primary-link" type="submit" disabled={submitting || !offerId || !offerPayable}>{submitting ? 'Création de la commande…' : 'Créer la commande et voir les instructions de paiement'}</button>
+          <button className="primary-link" type="submit" disabled={submitting || !offerId || !offerPayable}><ZarayIcon name="payment" size={18} /> {submitting ? 'Création de la commande…' : 'Créer la commande et voir les instructions de paiement'}</button>
         </form>
       </>}
     </> : !error ? <p>Aucune offre active n’est disponible sur ce portail pour le moment.</p> : null}
@@ -142,7 +143,7 @@ export default function CaptivePortalPage() {
         <h2 style={{ marginTop: 24 }}>1. Envoyez le montant au bénéficiaire</h2>
         {paymentMethods.length ? <>
           <div className="module-grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', margin: '14px 0' }}>
-            {paymentMethods.map((method) => <button key={method.provider} type="button" className="module" aria-pressed={selectedProvider === method.provider} onClick={() => setSelectedProvider(method.provider)} style={{ textAlign: 'left', cursor: 'pointer', borderColor: selectedProvider === method.provider ? '#087f75' : undefined, background: selectedProvider === method.provider ? '#e4f3f1' : 'white', color: '#102e3b' }}>
+            {paymentMethods.map((method) => <button key={method.provider} type="button" className="module" aria-pressed={selectedProvider === method.provider} onClick={() => setSelectedProvider(method.provider)} style={{ textAlign: 'left', cursor: 'pointer', borderColor: selectedProvider === method.provider ? '#087f75' : undefined, background: selectedProvider === method.provider ? '#e4f3f1' : 'white', color: '#102e3b' }}><ZarayIcon name="confirm" size={18} /> 
               <span className="module-number">{providerLabel[method.provider]}</span><h3>{method.accountNumber}</h3><p>Bénéficiaire : <strong>{method.accountName}</strong></p>{method.instructions && <p>{method.instructions}</p>}
             </button>)}
           </div>
@@ -153,16 +154,16 @@ export default function CaptivePortalPage() {
             <label>Référence de la transaction<input value={transactionReference} onChange={(e) => setTransactionReference(e.target.value)} minLength={2} maxLength={120} required placeholder="Référence visible sur le reçu" /></label>
             <label>Justificatif (JPG, PNG, WEBP ou PDF, 5 Mo maximum)<input id="payment-proof" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={(e) => setProof(e.target.files?.[0] ?? null)} required /></label>
             <label>Note (facultatif)<textarea value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} maxLength={1000} rows={2} placeholder="Information utile pour rapprocher le paiement."/></label>
-            <button className="primary-link" type="submit" disabled={sendingProof || !selectedProvider || !proof}>{sendingProof ? 'Envoi du justificatif…' : 'Transmettre le justificatif'}</button>
+            <button className="primary-link" type="submit" disabled={sendingProof || !selectedProvider || !proof}><ZarayIcon name="confirm" size={18} /> {sendingProof ? 'Envoi du justificatif…' : 'Transmettre le justificatif'}</button>
           </form>
           {proofError && <p role="alert">{proofError}</p>}
         </> : <p role="alert">Les moyens de paiement ne sont pas encore configurés. Contactez le responsable du portail avant d’envoyer de l’argent.</p>}
       </>}
       {submissionState && <div role="status"><h2>Justificatif transmis</h2><p>{submissionState.message}</p><p>Référence de commande : <strong>{order.reference}</strong></p><p>Le responsable vérifiera la transaction avant de valider le paiement.</p></div>}
-      <p style={{ marginTop: 24 }}><a href={'/paiement/' + encodeURIComponent(order.reference)}>Consulter le statut du paiement</a></p>
+      <p style={{ marginTop: 24 }}><a href={'/paiement/' + encodeURIComponent(order.reference)}><ZarayIcon name="confirm" size={18} /> Consulter le statut du paiement</a></p>
       <p><strong>Un reçu téléversé ne valide pas automatiquement le paiement. L’accès Internet ne sera pas activé par le seul envoi du justificatif.</strong></p>
     </section>}
     {error && <p role="alert">{error}</p>}
-    <p style={{ marginTop: 28 }}><a href="/">ZARAY</a></p>
+    <p style={{ marginTop: 28 }}><a href="/"><ZarayIcon name="next" size={18} /> ZARAY</a></p>
   </section></main>;
 }

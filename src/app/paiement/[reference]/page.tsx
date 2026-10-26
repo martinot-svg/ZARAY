@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 import BrandLogo from '@/components/brand-logo';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
@@ -42,10 +43,10 @@ export default function PaymentStatusPage() {
         <p>Justificatif transmis le {new Date(status.submission.createdAt).toLocaleString('fr-FR')}</p>
         {status.submission.reviewedAt && <p>Décision le {new Date(status.submission.reviewedAt).toLocaleString('fr-FR')}</p>}
       </>}
-      <button type="button" className="primary-link" onClick={() => { setBusy(true); void refresh(); }}>Actualiser le statut</button>
+      <button type="button" className="primary-link" onClick={() => { setBusy(true); void refresh(); }}><ZarayIcon name="refresh" size={18} /> Actualiser le statut</button>
       <p><strong>Le paiement est confirmé uniquement après vérification du transfert par un responsable autorisé. Aucun accès Internet n’est activé par la simple soumission d’un reçu.</strong></p>
     </section>}
     {error && <p role="alert">{error}</p>}
-    <p style={{ marginTop: 28 }}><a href="/">Retour à ZARAY</a></p>
+    <p style={{ marginTop: 28 }}><a href="/"><ZarayIcon name="back" size={18} /> Retour à ZARAY</a></p>
   </section></main>;
 }

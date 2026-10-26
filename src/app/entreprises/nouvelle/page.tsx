@@ -1,4 +1,5 @@
 'use client';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import BrandLogo from '@/components/brand-logo';
 
@@ -40,14 +41,14 @@ export default function NouvelleEntreprise() {
       <h2>Entreprise créée</h2>
       <p>{created.legal_name} · {created.slug} · {created.status}</p>
       <p>Votre compte est maintenant propriétaire de cette entreprise. Vous pouvez ouvrir le tableau de bord ou créer votre premier site.</p>
-      <p><a className="primary-link" href={'/tableau-de-bord?companyId='+encodeURIComponent(created.id)}>Ouvrir le tableau de bord →</a></p>
-      <p><a href={'/sites?companyId='+encodeURIComponent(created.id)}>Créer ou gérer un site</a></p>
+      <p><a className="primary-link" href={'/tableau-de-bord?companyId='+encodeURIComponent(created.id)}><ZarayIcon name="add" size={18} /> Ouvrir le tableau de bord →</a></p>
+      <p><a href={'/sites?companyId='+encodeURIComponent(created.id)}><ZarayIcon name="add" size={18} /> Créer ou gérer un site</a></p>
     </div> : <form onSubmit={submit} className="form-stack">
       <label>Nom de l’entreprise<input name="legalName" required minLength={2} maxLength={160} placeholder="Nom de l’entreprise" /></label>
       <label>Identifiant unique<input name="slug" required pattern="[a-z0-9][a-z0-9-]{2,62}" placeholder="identifiant-entreprise" title="Lettres minuscules, chiffres et tirets" /></label>
-      <button type="submit" className="primary-link" disabled={busy}>{busy ? 'Enregistrement…' : 'Créer l’entreprise'}</button>
+      <button type="submit" className="primary-link" disabled={busy}><ZarayIcon name="save" size={18} /> {busy ? 'Enregistrement…' : 'Créer l’entreprise'}</button>
     </form>}
     {notice && <p role="alert">{notice}</p>}
-    <p><a href="/entreprises">Mes entreprises</a> · <a href="/mon-compte">Mon compte</a></p>
+    <p><a href="/entreprises"><ZarayIcon name="company" size={18} /> Mes entreprises</a> · <a href="/mon-compte"><ZarayIcon name="home" size={18} /> Mon compte</a></p>
   </section></main>;
 }
