@@ -3,6 +3,7 @@ import {
   ArrowLeft, ArrowRight, Bell, Check, CircleHelp, Download, Eye, EyeOff,
   House, LayoutDashboard, LogIn, LogOut, Pencil, Plus, Printer, RefreshCw,
   Save, Search, Settings, Trash2, Upload, UserRound, UserRoundPlus, Wallet, X,
+  Building2, Users, Wifi, Ticket, Receipt, CreditCard, MapPin, KeyRound, Copy, Mail, Menu, ClipboardList, FileText, Router, ShieldCheck, Send, Store,
   type LucideIcon
 } from 'lucide-react';
 
@@ -16,6 +17,9 @@ export const zarayIcons = {
   refresh: RefreshCw, confirm: Check, cancel: X,
   show: Eye, hide: EyeOff, notifications: Bell, profile: UserRound,
   help: CircleHelp,
+  company: Building2, members: Users, customers: Users, wifi: Wifi, ticket: Ticket, receipt: Receipt,
+  payment: CreditCard, site: MapPin, password: KeyRound, copy: Copy, email: Mail, menu: Menu,
+  orders: ClipboardList, document: FileText, network: Router, permissions: ShieldCheck, send: Send, cash: Store,
 } satisfies Record<string, LucideIcon>;
 
 export type ZarayIconName = keyof typeof zarayIcons;
@@ -26,5 +30,5 @@ export type ZarayIconProps = Omit<ComponentProps<LucideIcon>, 'name'> & {
 /** Icons inherit currentColor, so text contrast rules cover them in every theme. */
 export function ZarayIcon({ name, size = 20, strokeWidth = 1.9, 'aria-hidden': ariaHidden = true, ...props }: ZarayIconProps) {
   const Icon = zarayIcons[name];
-  return <Icon size={size} strokeWidth={strokeWidth} aria-hidden={ariaHidden} focusable="false" {...props} />;
+  return <Icon size={size} strokeWidth={strokeWidth} aria-hidden={ariaHidden} focusable="false" data-zaray-icon="" {...props} />;
 }
