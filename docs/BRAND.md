@@ -34,3 +34,17 @@ Deux fichiers PNG originaux distincts, à enregistrer sans conversion :
 Le composant `BrandLogo` référence directement ces PNG originaux. Aucune génération des variantes, transformation de leur transparence, filtre, contour, fond ou effet sur le logo.
 
 **Blocage actuel :** les PNG joints à la conversation ne sont pas encore dans le dépôt. Cette branche ne doit pas être déployée avant copie intégrale des fichiers et réussite du contrôle SHA-256. La production stable reste active.
+
+## Choix du logo selon la surface (mise à jour)
+Le composant unique `BrandLogo` mesure la **couleur calculée de la surface immédiatement derrière lui**, en remontant ses ancêtres CSS. Les ancêtres transparents sont ignorés et les surfaces translucides sont compositées selon leur alpha. Le contraste détermine l'image officielle à afficher, indépendamment du mode du système si le fond du composant est réellement peint.
+
+Exemples :
+- Carte de connexion blanche, fond général sombre → fichier `zaray-noir-vert-original.png`.
+- En-tête noir, navigateur réglé en mode clair → fichier `zaray-blanc-vert-original.png`.
+- Changement de classe, de style CSS, du thème du document ou de préférence système → recalcul immédiat, sans rechargement.
+
+Les deux PNG sont servis **tels quels** : aucune conversion, aucun détourage, aucun filtre ni aplatissement des couleurs. Les fonds, bordures et ombres associés à l'ancien logo sont retirés des conteneurs de marque.
+
+Seule limite technique : une image/photo/vidéo ou un dégradé très contrasté ne possède pas nécessairement une *couleur unique* lisible via `background-color`. Une surface particulière de ce type peut indiquer explicitement son ton avec `data-logo-surface="dark"` ou `data-logo-surface="light"` sur un élément parent du logo ; ce n'est pas une sélection par thème du navigateur.
+
+**La production ne doit pas dépendre de cette branche tant que les deux PNG originaux manquent dans le dépôt et que les vérifications SHA-256 n'ont pas réussi.**
