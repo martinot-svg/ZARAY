@@ -1,5 +1,7 @@
 'use client';
 
+import BrandLogo from '@/components/brand-logo';
+
 import { useState, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -89,7 +91,8 @@ export default function InscriptionPage() {
     }
   }
 
-  return <main className="form-shell"><section className="form-card">
+  return <main className="form-shell auth-motion"><section className="form-card">
+    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority /></a></div>
     <p className="eyebrow">ZARAY · MODULE 1</p>
     <h1>Créer un compte administrateur</h1>
     <p>Créez votre compte, puis confirmez votre adresse e-mail avant d’inscrire votre entreprise.</p>
