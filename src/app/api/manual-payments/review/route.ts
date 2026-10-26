@@ -27,13 +27,14 @@ export async function GET(request: NextRequest) {
       console.error('manual payment review list failed', { code: error.code });
       return json({ error: 'Impossible de charger les justificatifs.' }, 503);
     }
-    const orderIds = [...new Set((submissions ?? []).map((item) => item.order_id))];
+    const rows = (submissions ?? []) as unknown as Array<{id:string;order_id:string;proof_path:string;[key:string]:unknown}>;
+    const orderIds = [...new Set(rows.map(item=>item.order_id))];
     const { data: orders, error: ordersError } = orderIds.length
       ? await service.from('subscription_orders').select('id,public_reference,customer_name,customer_email,offer_name,amount,currency,status,created_at').in('id', orderIds)
       : { data: [], error: null };
     if (ordersError) return json({ error: 'Impossible de charger les commandes.' }, 503);
     const orderById = new Map((orders ?? []).map((order) => [order.id, order]));
-    const items = await Promise.all((submissions ?? []).map(async (submission) => {
+    const items = await Promise.all(rows.map(async (submission) => {
       const { data: signed } = await service.storage.from('manual-payment-proofs').createSignedUrl(submission.proof_path, 300);
       return { ...submission, order: orderById.get(submission.order_id) ?? null, proofUrl: signed?.signedUrl ?? null };
     }));
