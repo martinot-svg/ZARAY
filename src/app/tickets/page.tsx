@@ -4,7 +4,7 @@ import BrandLogo from '@/components/brand-logo';
 import { useEffect, useState } from 'react';
 import WorkspaceBreadcrumb from '@/components/workspace-breadcrumb';
 import { activeSiteId, scopedQuery, selectedCompany, switchCompany } from '@/lib/workspace-url';
-import { MotionFeedback, MotionSkeleton } from '@/components/motion';
+import { MotionFeedback } from '@/components/motion';
 type Company = { id: string; legal_name: string; role: string };
 type Order = { id: string; public_reference: string; offer_name: string; customer_name: string; amount: number | string; currency: string; status: string; paid_at: string | null };
 type Ticket = { id: string; subscription_order_id: string; code_prefix: string; status: string; duration_minutes: number; max_devices: number; valid_from: string; valid_until: string; created_at: string };
@@ -97,7 +97,7 @@ export default function WifiTicketsPage() {
       <p>Conservez ce code dans un endroit sûr. ZARAY ne stocke que son empreinte cryptographique.</p>
       <button type="button" onClick={() => { void navigator.clipboard?.writeText(oneTimeCode); setNotice('Code copié si le navigateur autorise le presse-papiers.'); }}><ZarayIcon name="copy" size={18} /> Copier le code</button>
     </section>}
-    {busy ? <MotionSkeleton rows={3}/> : tickets.length ? <><h2 style={{ marginTop: 32 }}>Tickets existants</h2><div className="module-grid">
+    {busy ? null : tickets.length ? <><h2 style={{ marginTop: 32 }}>Tickets existants</h2><div className="module-grid">
       {tickets.map((t) => <article className="module" key={t.id}>
         <span className="module-number">{statusLabel[t.status] ?? t.status}</span><h3>{t.code_prefix}••••</h3>
         <p>{t.duration_minutes} minutes · {t.max_devices} appareil(s)</p><p>Valide du {new Date(t.valid_from).toLocaleString('fr-FR')}</p><p>Jusqu’au {new Date(t.valid_until).toLocaleString('fr-FR')}</p>

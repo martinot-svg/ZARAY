@@ -93,7 +93,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
             }}>
               <option value="">Vue générale</option>{sites.filter(s=>s.company_id===activeCompany).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
             </select></label>
-          </>:<span className="muted">{contextError||'Chargement du contexte…'}</span>}
+          </>:<span className="muted">{contextError||null}</span>}
         </div>
         <div className="app-topbar-links"><a className="header-link" href="/mon-compte"><ZarayIcon name="profile" size={18} /> Mon compte</a><a className="header-link" href={activeCompany?'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany):'/entreprises'}><ZarayIcon name="dashboard" size={18} /> Vue générale</a></div>
       </header>

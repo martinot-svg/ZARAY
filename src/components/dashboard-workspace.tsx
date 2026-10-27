@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/app-shell';
 import { ZarayIcon, type ZarayIconName } from '@/components/ui/zaray-icon';
-import { MotionCount, MotionSkeleton } from '@/components/motion';
+import { MotionCount } from '@/components/motion';
 
 type Company = { id:string; legal_name:string; slug:string; role:string };
 type Site = { id:string; company_id:string; name:string; status:string };
@@ -51,7 +51,7 @@ export default function DashboardWorkspace({ siteId }: { siteId?:string }) {
     void load();
     return()=>{active=false};
   },[siteId]);
-  if(busy)return <main className="form-shell"><section className="form-card"><h1>Chargement du tableau de bord</h1><MotionSkeleton rows={4}/></section></main>;
+  if(busy)return null;
   if(error||!payload)return <main className="form-shell"><section className="form-card"><h1>Contexte inaccessible</h1><p role="alert">{error||'Aucun contexte disponible.'}</p><a href="/tableau-de-bord"><ZarayIcon name="back" size={18} /> Revenir aux entreprises</a></section></main>;
   const {company,site,sites,metrics:values,recentOrders}=payload;
   const companyLink='/tableau-de-bord?companyId='+encodeURIComponent(company.id);

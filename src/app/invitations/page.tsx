@@ -1,6 +1,5 @@
 'use client';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
-import { MotionSkeleton } from '@/components/motion';
 import BrandLogo from '@/components/brand-logo';
 
 import { useEffect, useState } from 'react';
@@ -36,7 +35,7 @@ export default function InvitationsPage() {
       <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
     <p className="eyebrow">ZARAY · ESPACE ÉQUIPE</p><h1>Mes invitations</h1>
     <p>Les invitations sont associées à votre adresse e-mail vérifiée. Connectez-vous avec l’adresse exacte qui a reçu l’invitation.</p>
-    {busy ? <MotionSkeleton rows={3}/> : invitations.length ? <div className="module-grid">{invitations.map(inv=><article className="module" key={inv.id}>
+    {busy ? null : invitations.length ? <div className="module-grid">{invitations.map(inv=><article className="module" key={inv.id}>
       <span className="module-number">INVITATION</span><h2>{inv.company_name}</h2><p>Rôle proposé : {labels[inv.role] ?? inv.role}</p><p>Expire le {new Date(inv.expires_at).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'})}</p>
       <button className="primary-link" type="button" disabled={busy} onClick={()=>void accept(inv.id)}><ZarayIcon name="confirm" size={18} /> Accepter l’invitation</button>
     </article>)}</div> : <p>Aucune invitation en attente pour cette adresse.</p>}
