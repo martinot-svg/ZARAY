@@ -1,35 +1,35 @@
-# Z’Alliance — état d’intégration et prérequis de mise en service
+# Z’Alliance — état technique vérifié (27 octobre 2026)
 
-## Audit du code existant (27 octobre 2026)
-- Auth Supabase SSR (session signée, compte avec e-mail confirmé).
-- Tables référencées par les migrations GitHub : `company_members`, `company_invitations`, `audit_logs`.
-- Invitations : RPC existante `create_company_invitation(company_id,email,role)` (propriétaire/administrateur seulement). Les administrateurs ne peuvent pas attribuer `admin` ni `finance`. Identifiants et rôle vérifiés dans la RPC, et non dans le seul navigateur.
-- Acceptation : RPC `accept_company_invitation(invitation_id)` : correspondance d'e-mail confirmé, invitation en attente non expirée, verrou `FOR UPDATE` et insertion protégée de l'appartenance. Le destinataire doit ouvrir `/invitations` connecté.
-- Liste des membres : RPC `list_company_members`.
-- Journal : RPC `list_company_audit_logs` (limité à 50 événements par appel).
-- **Aucun envoi d'e-mail dans le flux existant `/api/company-members` : une création d'invitation NE représente PAS un envoi.**
-- **Aucun jeton d'acceptation secret généré et envoyé** dans ce flux. L'identifiant UUID d'invitation n'est pas un jeton à forte entropie destiné aux liens d'e-mail.
-- La migration `db/migrations/0004_company_members_rbac_audit.sql` définit une invitation par entreprise et adresse, avec `expires_at`, et statut pending/accepted/revoked/expired ; aucune route de renvoi ou révocation n'existe actuellement.
-- L'accès au Supabase de production n'a PAS été possible dans cette session (connecteur indisponible). Les schémas/RLS/migrations exécutés en production ne sont donc **pas vérifiés**, et aucun test réel avec deux comptes n'a été effectué.
+## Accès et migrations
+- Projet Supabase Zaray `hosyeygtaksbahnxxiqf` identifié et consulté directement.
+- Tables existantes auditées : `companies`, `company_members`, `company_invitations`, `audit_logs`.
+- **Migration `zalliance_secure_invitation_tokens` appliquée avec succès** au projet Supabase. Elle ajoute la génération de jetons aléatoires de 32 octets, le stockage du condensat SHA-256, les fonctions de prévisualisation, acceptation, émission, renvoi, révocation et suivi d'envoi.
+- Droits SQL vérifiés : aucune nouvelle fonction d'invitation n'est exécutable par `anon` ; `zalliance_mark_delivery` est réservée au rôle de service.
+- Le projet avait zéro invitation au moment de l'audit. Les anciennes données, entreprises et membres n'ont pas été supprimés.
 
-## Portée de cette branche
-- Remplacement « Inviter un collaborateur » par « Z’Alliance » et icône Lucide UsersRound dans le menu de profil, tout en conservant « Quitter mon espace ».
-- Route authentifiée `/z-alliance` avec en-tête, bouton de fermeture et sections : formulaire d'invitation, créations visibles dans l'audit, membres actifs.
-- Entreprises accessibles : uniquement celles autorisées en `owner`/`admin`; rôles proposés adaptés au rôle et revérifiés par la RPC.
-- Création via l'API et la RPC existantes, avec validation e-mail, verrou anti-double-clic et résultat explicite : **enregistrée, aucun e-mail automatique envoyé**.
-- Journal des créations : n'affiche jamais « envoyée » ni « acceptée » à partir du journal seul. Le journal peut être incomplet (limite de 50). Liste membres actifs issue de la RPC existante, sans faux exemples.
-- L'acceptation par adresse confirmée reste disponible via `/invitations`.
-- Aucune migration, clé d'administration ou politique RLS modifiée.
+## Code implémenté
+- Menu profil `Z’Alliance` et route `/z-alliance`, navigation mobile et desktop.
+- Liste des entreprises où le membre est propriétaire/administrateur, rôles réels `admin`, `site_manager`, `support`, `technician`, `sales`, `finance` limités par autorisation.
+- API `/api/z-alliance` : lister, émettre, renvoyer, révoquer ; API de prévisualisation et acceptation vérifiée.
+- L'acceptation exige une session authentifiée avec l'adresse e-mail confirmée correspondante et propose l'entreprise et le rôle au destinataire. Le jeton à usage unique est placé dans le fragment du lien et supprimé de l'URL visible au chargement.
+- Livraison conditionnelle avec Resend (API HTTP) à partir de variables côté serveur uniquement. Les réponses signalent l'envoi accepté par le fournisseur, pas une réception effectivement garantie.
+- En l'absence de fournisseur, Z’Alliance autorise seulement la création d'une invitation **sans e-mail**, avec un état explicite ; le destinataire peut consulter `/invitations` avec son compte vérifié. Aucune fausse confirmation d'envoi.
 
-## Bloqueurs avant un parcours complet réellement opérationnel
-1. **Connecter le projet Supabase ZARAY** et auditer en direct tables, indexes, rôles, RLS, RPC `SECURITY DEFINER`, grants et migrations déployées. Le SQL GitHub n'est pas la preuve du schéma réel.
-2. **Configurer/identifier un fournisseur d'e-mails transactionnels** côté serveur, définir l'URL publique/allow-list et vérifier le SMTP. Ne pas mettre de secret dans `NEXT_PUBLIC_*`.
-3. **Concevoir une migration reviewée** pour les jetons secrets stockés sous forme condensée, usages uniques/expiration atomique, idempotence, tentatives et états d'envoi, et une RPC de liste/historique envoyée autorisée et paginée.
-4. **Implémenter** la génération des liens, le contenu d'e-mail, une route d'acceptation non destructive au GET, l'acceptation atomique, réémission/révocation, les contrôles d'accès par entreprise, le suivi des échecs d'e-mail et le rate limiting.
-5. **Tester le parcours complet** avec des comptes de test et une boîte e-mail de test : invitation, délivrabilité, première inscription, acceptation vérifiée, lien expiré/révoqué/consommé, acceptations concurrentes, accès entre tenants, droits supérieurs, erreurs fournisseurs.
-6. Confirmer les décisions de produit sur la révocation et la suppression/suspension de membres ; ne jamais supprimer le compte global par retrait local.
-7. Exécuter les migrations via le workflow contrôlé du projet après sauvegarde, vérification des advisors et validation des tests.
-8. Après seulement, activer le libellé « Envoyer l’invitation » et les statuts « envoyée » / « échec d’envoi ».
+## Configuration encore nécessaire pour les e-mails
+Les variables suivantes doivent être définies dans Vercel (production et prévisualisation) :
+- `ZARAY_RESEND_API_KEY` : clé API créée dans un compte Resend autorisé ;
+- `ZARAY_INVITE_FROM` : expéditeur vérifié, par exemple `no-reply@domaine-verifie` ;
+- `NEXT_PUBLIC_APP_URL` : URL HTTPS publique déjà configurée.
 
-## Condition de lancement
-Ne pas fusionner cette PR comme une fonctionnalité d'envoi prête à l'emploi ; elle est une **fondation UI et une intégration partielle explicite**. Les tests CI valident le code, pas l'envoi, l'acceptation réelle ou le schéma en production.
+Aucune clé Resend n'était présente dans les variables Vercel accessibles lors de l'audit. Impossible d'inventer une clé, de vérifier un domaine ou d'envoyer un message réel sans compte de messagerie transactionnelle actif.
+
+## Vérification et risques
+- Compilation Vercel de la branche réussie en prévisualisation.
+- Migration réelle appliquée et droits des nouvelles fonctions vérifiés par SQL.
+- Les tests de bout en bout nécessitent deux comptes de test et un destinataire e-mail réel : envoi/délivrabilité, inscription, expiration, double acceptation, rôles non autorisés, révocation et réémission.
+- Le statut « envoi accepté » reflète la réponse du fournisseur, sans webhook de délivrabilité.
+- Les politiques RLS des tables existantes restent inchangées ; les fonctions SECURTY DEFINER ont un contrôle explicite des rôles et de l'adresse confirmée.
+- Le travail n'est **pas encore certifié prêt à une livraison par e-mail en production** faute de fournisseur configuré et de tests de livraison réelle.
+
+## Publication
+Tant qu'il n'y a pas de fournisseur transactionnel confirmé et de tests réels, garder cette fonctionnalité en prévisualisation, ou publier uniquement le mode « invitation enregistrée sans e-mail » avec avertissement explicite. Ne pas annoncer « e-mail envoyé » en l'absence de confirmation fournisseur.
