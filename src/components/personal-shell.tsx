@@ -8,13 +8,13 @@ import SignOutButton from '@/components/sign-out-button';
 
 const links = [
   { href: '/mon-compte', label: 'Tableau de bord', icon: 'dashboard' },
-  { href: '/entreprises', label: 'Entreprises', icon: 'company' },
-  { href: '/finance-globale', label: 'Finance globale', icon: 'finance' },
+  { href: '/entreprises', label: 'Mes entreprises', icon: 'company' },
+  { href: '/finance-globale', label: 'Finances des entreprises', icon: 'finance' },
 ];
 
 export default function PersonalShell({ children, active, email, name }: { children: ReactNode; active: string; email: string | null; name: string | null }) {
   const [open, setOpen] = useState(false);
-  const [spaceMenuOpen, setSpaceMenuOpen] = useState(true);
+  const [spaceMenuOpen, setSpaceMenuOpen] = useState(false);
   const [desktop, setDesktop] = useState(false);
   const displayName = name?.trim() || email?.split('@')[0] || 'Utilisateur ZARAY';
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -28,26 +28,56 @@ export default function PersonalShell({ children, active, email, name }: { child
   useEffect(() => { if (desktop) setOpen(false); }, [desktop]);
   const firstLink = useRef<HTMLAnchorElement>(null);
   const spaceMenuButton = useRef<HTMLButtonElement>(null);
+  const spaceMenuPanel = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!open) return;
-    if (spaceMenuOpen) firstLink.current?.focus();
-    else spaceMenuButton.current?.focus();
-    const key = (event: KeyboardEvent) => { if (event.key === 'Escape') { setOpen(false); menuButton.current?.focus(); } };
-    window.addEventListener('keydown', key);
-    return () => window.removeEventListener('keydown', key);
+    if (open) spaceMenuButton.current?.focus();
+  }, [open]);
+  useEffect(() => {
+    if (!spaceMenuOpen) return;
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (spaceMenuButton.current?.contains(target) || spaceMenuPanel.current?.contains(target)) return;
+      setSpaceMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    return () => document.removeEventListener('pointerdown', closeOnOutsideClick);
+  }, [spaceMenuOpen]);
+  useEffect(() => {
+    if (!open && !spaceMenuOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (spaceMenuOpen) {
+        setSpaceMenuOpen(false);
+        spaceMenuButton.current?.focus();
+      } else if (open) {
+        setOpen(false);
+        menuButton.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
   }, [open, spaceMenuOpen]);
   return <div className="personal-shell">
     <button type="button" className={'personal-menu-backdrop' + (open ? ' is-open' : '')} tabIndex={open ? 0 : -1} aria-label="Fermer le menu" onClick={() => setOpen(false)} />
     <nav id="personal-navigation" className={'personal-drawer' + (open ? ' is-open' : '')} aria-label="Navigation du compte personnel" inert={!desktop && !open}>
-      <div className="personal-drawer-head"><strong>Mon compte ZARAY</strong><button type="button" onClick={() => { setOpen(false); menuButton.current?.focus(); }}><ZarayIcon name="close" size={18} /> Fermer</button></div>
-      <button ref={spaceMenuButton} type="button" className="personal-space-toggle"
-        aria-controls="personal-space-links" aria-expanded={spaceMenuOpen}
-        onClick={() => setSpaceMenuOpen(value => !value)}>
-        <ZarayIcon name="menu" size={20} /><span>Mon espace Zaray</span>
-      </button>
-      <div id="personal-space-links" className="personal-space-links" hidden={!spaceMenuOpen}>
-        {links.map((link, index) => <Link key={link.href} ref={index === 0 ? firstLink : undefined} href={link.href} prefetch={false} aria-current={active === link.href ? 'page' : undefined}
-          className={'personal-nav-link' + (active === link.href ? ' active' : '')} onClick={() => setOpen(false)}><ZarayIcon name={link.icon as ZarayIconName} size={19} /> {link.label}</Link>)}
+      <div className="personal-drawer-head">
+        <button ref={spaceMenuButton} type="button" className="personal-space-toggle"
+          aria-controls="personal-space-links" aria-expanded={spaceMenuOpen}
+          onClick={() => setSpaceMenuOpen(value => !value)}>
+          <ZarayIcon name="menu" size={20} /><span>Mon espace Zaray</span>
+        </button>
+        <button className="personal-drawer-close" type="button" onClick={() => { setOpen(false); menuButton.current?.focus(); }}><ZarayIcon name="close" size={18} /> Fermer</button>
+      </div>
+      <div ref={spaceMenuPanel} id="personal-space-links"
+        className={'personal-space-reveal' + (spaceMenuOpen ? ' is-open' : '')}
+        inert={!spaceMenuOpen} aria-hidden={!spaceMenuOpen}>
+        <div className="personal-space-reveal-inner">
+          <div className="personal-space-links">
+            {links.map((link, index) => <Link key={link.href} ref={index === 0 ? firstLink : undefined} href={link.href} prefetch={false} aria-current={active === link.href ? 'page' : undefined}
+              className={'personal-nav-link' + (active === link.href ? ' active' : '')} onClick={() => { setSpaceMenuOpen(false); setOpen(false); }}><ZarayIcon name={link.icon as ZarayIconName} size={19} /> {link.label}</Link>)}
+          </div>
+        </div>
       </div>
       <div className="personal-drawer-footer"><SignOutButton /></div>
     </nav>
