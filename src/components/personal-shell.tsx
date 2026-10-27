@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import BrandLogo from '@/components/brand-logo';
+import GalaxyBackdrop from '@/components/galaxy-backdrop';
 import { ZarayIcon, type ZarayIconName } from '@/components/ui/zaray-icon';
 import Link from 'next/link';
 import SignOutButton from '@/components/sign-out-button';
@@ -66,6 +67,7 @@ export default function PersonalShell({
   }, [homeNavOpen, profileOpen]);
 
   return <div className={'personal-shell personal-no-sidebar' + (home ? ' personal-home-shell' : '')}>
+    <GalaxyBackdrop />
     <header className="personal-topbar">
       <div className="personal-home-nav-control" ref={homeNavRef}>
         <button ref={homeNavButton} type="button" className="personal-home-nav-toggle"

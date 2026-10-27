@@ -4,6 +4,7 @@ import { ZarayIcon } from '@/components/ui/zaray-icon';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import SignOutButton from '@/components/sign-out-button';
 import BrandLogo from '@/components/brand-logo';
+import GalaxyBackdrop from '@/components/galaxy-backdrop';
 import Link from 'next/link';
 
 const sections = [
@@ -66,6 +67,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
     return () => { window.removeEventListener('keydown', closeOnEscape); document.removeEventListener('pointerdown', closeOutside); };
   }, [menuOpen]);
   return <div className="app-shell app-no-sidebar">
+    <GalaxyBackdrop />
     <div className="app-main">
       <header className="app-topbar">
         <div className="app-menu-container" ref={menuContainer}>
