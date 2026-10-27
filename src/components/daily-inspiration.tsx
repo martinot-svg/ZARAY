@@ -80,7 +80,7 @@ export default function DailyInspiration() {
       </figcaption>
       <p className="personal-quote-provenance">
         {daily.quote.translatedFrom === 'en'
-          ? 'Traduction française automatique · Attribution selon ' + daily.quote.sourceTitle
+          ? 'Source : ' + daily.quote.sourceTitle
           : 'Pensée originale · ZARAY'}
       </p>
     </figure>}
