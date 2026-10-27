@@ -1100,3 +1100,37 @@ svg[data-zaray-icon]{display:inline-block;vertical-align:-.22em;flex-shrink:0;co
     white-space:normal;text-align:center;
   }
 }
+
+
+/* Route transitions: keep the authenticated canvas alive in the root layout
+   and prevent background resets when changing personal/company shells. */
+body:has(.personal-shell.personal-no-sidebar),
+body:has(.app-shell.app-no-sidebar){background-color:#020805}
+body > .zaray-galaxy-backdrop{z-index:0}
+.personal-shell.personal-no-sidebar,
+.personal-shell.personal-no-sidebar.personal-home-shell,
+.app-shell.app-no-sidebar{
+  position:relative;
+  z-index:1;
+  isolation:auto;
+  background-color:transparent;
+  background-image:none;
+}
+/* Remove opacity-zero entrance frames. Actual data can load independently of
+   the stable shell; feedback and menu interactions remain available. */
+.app-no-sidebar .app-content,
+.app-no-sidebar .motion-stagger > *,
+.personal-no-sidebar .personal-content,
+.form-shell .form-card:not(.receipt-preview){
+  animation:none!important;
+  opacity:1;
+  transform:none;
+}
+.dashboard-availability{min-height:130px;display:grid;align-content:center;gap:8px}
+.dashboard-availability h2{margin:0;color:#193725;font-size:17px}
+.dashboard-availability p{margin:0;color:#526756;font-size:13px;line-height:1.6}
+@media(prefers-reduced-motion:reduce){
+  .dashboard-availability,.app-no-sidebar .app-content,.personal-no-sidebar .personal-content{
+    animation:none!important;transition:none!important;
+  }
+}
