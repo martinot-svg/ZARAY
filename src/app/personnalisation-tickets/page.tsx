@@ -151,12 +151,12 @@ export default function TicketCustomizationPage(){
         </label>)}
       </div>
       <div className="field-grid">
-        {([['show_duration','Afficher la durée'],['show_price','Afficher le prix'],['show_ticket_id','Afficher le numéro'],['show_wifi_ssid','Afficher le SSID']] as const).map(([key,label])=>
+        {([['show_ticket_id','Afficher le numéro'],['show_wifi_ssid','Afficher le SSID']] as const).map(([key,label])=>
           <label key={key} className="wifi-template-check">
             <input type="checkbox" checked={form[key]===true} onChange={e=>change(key,e.target.checked)}/> {label}
           </label>)}
       </div>
-      <p className="muted">Certains détails facultatifs peuvent être omis dans un ticket de 20 mm de haut pour garantir la lisibilité. Aucun QR code factice ne sera imprimé.</p>
+      <p className="muted">La durée, le prix et l’état « Non activé » restent toujours visibles. Les détails facultatifs s’ajustent à l’espace disponible. Aucun QR code factice n’est imprimé.</p>
       <h2>Codes d'accès — réglages existants</h2>
       <div className="field-grid">
         <label>Longueur du nom d’utilisateur (3–5)<input type="number" min={3} max={5} value={form.username_length} onChange={e=>change('username_length',Number(e.target.value))}/></label>
