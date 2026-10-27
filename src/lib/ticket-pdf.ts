@@ -80,7 +80,7 @@ export function paintVoucher(ctx:CanvasRenderingContext2D,x:number,y:number,tick
    ctx.fillStyle='rgba(0,0,0,.38)';ctx.fillRect(x,y,w,h);
  }
  const darkTheme=kind==='event'||(design.gradient_enabled&&kind!=='classic');
- const fg=darkTheme?legibleInk('#ffffff',primary):ink;
+ const fg=darkTheme?'#ffffff':ink;
  const secondary=darkTheme?'rgba(255,255,255,.82)':legibleInk(preferred,background);
  if(kind==='classic'){
    ctx.fillStyle=primary;ctx.fillRect(x,y,3,h);
