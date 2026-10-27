@@ -553,3 +553,31 @@ test('Open enterprise is a client route and dashboard never returns a blank fram
  assert.match(css,/body:has\(\.app-shell\.app-no-sidebar\)/);
  assert.match(css,/\.app-no-sidebar \.app-content,/);
 });
+
+
+test('personal header remains sticky only on the three requested personal pages',()=>{
+ const shell=source('src/components/personal-shell.tsx');
+ const css=source('src/app/globals.css');
+ assert.match(shell,/\['\/mon-compte', '\/entreprises', '\/finance-globale'\]\.includes\(active\)/);
+ assert.match(shell,/personal-sticky-topbar/);
+ assert.match(css,/\.personal-shell\.personal-sticky-topbar > \.personal-topbar\{\s*position:sticky;\s*top:0;\s*z-index:90;/);
+ assert.match(css,/html:has\(\.personal-sticky-topbar\)/);
+ assert.match(css,/scrollbar-width:none/);
+ assert.match(css,/::-webkit-scrollbar/);
+ assert.doesNotMatch(css.slice(css.indexOf('/* Personal workspace (Z\'Accueil, Mes entreprises, Finance globale):')),/overflow:\s*hidden/);
+ assert.match(shell,/active === '\/entreprises' &&/);
+});
+
+test('finance page has only its title above the existing payments and filters',()=>{
+ const page=source('src/app/finance-globale/page.tsx');
+ const shell=source('src/components/personal-shell.tsx');
+ const css=source('src/app/globals.css');
+ assert.match(page,/<header className="personal-page-heading personal-finance-page-heading"><h1>Finance globale<\/h1><\/header>/);
+ assert.doesNotMatch(page,/COMPTE PERSONNEL · FINANCE|Consolidation des paiements confirmés du registre uniquement/);
+ assert.match(shell,/active !== '\/entreprises' && active !== '\/finance-globale'/);
+ assert.match(page,/PersonalFinanceOverview/);
+ assert.match(page,/filtersAction="\/finance-globale"/);
+ assert.match(page,/hasPayments/);
+ assert.match(css,/\.personal-no-sidebar \.personal-finance-page-heading\{/);
+ assert.match(css,/\.personal-no-sidebar \.personal-finance-page-heading h1\{margin:0\}/);
+});
