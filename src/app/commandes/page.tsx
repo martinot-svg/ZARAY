@@ -3,7 +3,7 @@ import { ZarayIcon } from '@/components/ui/zaray-icon';
 import BrandLogo from '@/components/brand-logo';
 import { useEffect, useState } from 'react';
 import WorkspaceBreadcrumb from '@/components/workspace-breadcrumb';
-import { activeSiteId, scopedQuery, selectedCompany, switchCompany } from '@/lib/workspace-url';
+import { activeSiteId, scopedQuery, selectedCompany } from '@/lib/workspace-url';
 import { MotionFeedback } from '@/components/motion';
 type Company = { id: string; legal_name: string; role: string };
 type Order = { id: string; public_reference: string; customer_name: string; customer_email: string; customer_phone: string | null; offer_name: string; amount: number | string; currency: string; status: string; created_at: string; paid_at: string | null; activated_at: string | null };
@@ -65,7 +65,7 @@ export default function OrdersPage() {
       <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
     <WorkspaceBreadcrumb companyId={companyId}/><p className="eyebrow">ZARAY · MODULE 7 · SOUSCRIPTIONS</p><h1>Commandes du portail captif</h1>
     <p>Les commandes publiques sont enregistrées avec un montant et un forfait figés. Leur création ne vaut ni paiement confirmé ni activation Internet.</p>
-    {companies.length > 0 && <label>Entreprise<select value={companyId} onChange={(e) => switchCompany('/commandes',e.target.value)}>{companies.map((c) => <option key={c.id} value={c.id}>{c.legal_name}</option>)}</select></label>}
+    {companies.length > 0 && <span className="muted">Entreprise active : {companies.find(c=>c.id===companyId)?.legal_name ?? '—'}</span>}
     {companies.length === 0 && !busy && <p>Aucune entreprise accessible.</p>}
     {busy ? null : orders.length ? <div className="module-grid" style={{ marginTop: 24 }}>
       {orders.map((o) => <article className="module" key={o.id}>
