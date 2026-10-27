@@ -153,13 +153,13 @@ export default function PersonalShell({ children, active, email, name, home = fa
           className={'personal-profile-dropdown' + (profileOpen ? ' is-open' : '')}
           inert={!profileOpen} aria-hidden={!profileOpen}>
           {inviteCompanyId ?
-            <Link href={'/membres?companyId=' + encodeURIComponent(inviteCompanyId)}
+            <Link href="/z-alliance"
               className="personal-profile-action" onClick={() => setProfileOpen(false)}>
-              <ZarayIcon name="members" size={18} /> Inviter un collaborateur
+              <ZarayIcon name="alliance" size={18} /> Z’Alliance
             </Link>
             : <span className="personal-profile-action is-disabled" aria-disabled="true"
                 title="Cette action nécessite le rôle de propriétaire ou d’administrateur d’une entreprise.">
-              <ZarayIcon name="members" size={18} /> Inviter un collaborateur
+              <ZarayIcon name="alliance" size={18} /> Z’Alliance
             </span>}
           <SignOutButton profile />
         </div>
