@@ -87,14 +87,21 @@ export function paintVoucher(ctx:CanvasRenderingContext2D,x:number,y:number,tick
    let left=x+11;
    if(logoPaint(ctx,logo,x+9,y+19,59,74))left=x+73;
    const available=x+w-8-left;
-   fit(ctx,name,left,y+20,available,16,primary,font,true);
+   fit(ctx,name,left,y+20,available,16,legibleInk(primary,background),font,true);
    fit(ctx,ticket.offer_name,left,y+40,available,14,ink,font,true);
    fit(ctx,'User: '+ticket.username,left,y+61,available,15,ink,font);
    fit(ctx,'Pass: '+ticket.password,left,y+82,available,15,ink,font);
-   fit(ctx,ticket.duration_minutes+' min · '+ticket.price_amount+' '+ticket.currency+' · Non activé',
-      left,y+103,available,12,ink,font);
+   const metadata=[design.show_duration!==false?ticket.duration_minutes+' min':'',design.show_price!==false?String(ticket.price_amount)+' '+ticket.currency:'','Non activé'].filter(Boolean).join(' · ');
+   fit(ctx,metadata,left,y+103,available,12,ink,font);
  }else{
    const split=x+w*.76,mainX=x+11,mainWidth=split-mainX-8,sideX=split+7,sideWidth=x+w-sideX-9;
+   if(kind==='corporate'&&!darkTheme){
+     ctx.fillStyle=primary;ctx.fillRect(split,y,w*.24,h);
+     ctx.fillStyle=accent;ctx.fillRect(x,y,4,h);
+   }
+   if(kind==='minimal'&&!darkTheme){
+     ctx.fillStyle=primary;ctx.fillRect(x,y+h-2,w,2);
+   }
    if(design.decorations_enabled!==false&&kind==='event'){
      ctx.fillStyle='rgba(255,255,255,.08)';
      ctx.beginPath();ctx.arc(x+w-28,y+17,50,0,Math.PI*2);ctx.fill();
@@ -114,14 +121,16 @@ export function paintVoucher(ctx:CanvasRenderingContext2D,x:number,y:number,tick
    fit(ctx,'MOT DE PASSE  '+ticket.password,mainX,y+85,mainWidth,14,fg,font,true);
    const footer=design.footer_text?.trim()||design.welcome_message?.trim()||'NON ACTIVÉ';
    fit(ctx,footer,mainX,y+105,mainWidth,11,secondary,font,false);
-   fit(ctx,'WI-FI',sideX,y+22,sideWidth,17,fg,font,true);
+   const rightInk=kind==='corporate'&&!darkTheme?legibleInk('#ffffff',primary):fg;
+   const rightSub=kind==='corporate'&&!darkTheme?rightInk:secondary;
+   fit(ctx,'WI-FI',sideX,y+22,sideWidth,17,rightInk,font,true);
    let infoY=y+46;
-   if(design.show_duration!==false){fit(ctx,ticket.duration_minutes+' min',sideX,infoY,sideWidth,13,secondary,font,true);infoY+=20;}
-   if(design.show_price!==false){fit(ctx,String(ticket.price_amount)+' '+ticket.currency,sideX,infoY,sideWidth,12,secondary,font);infoY+=18;}
+   if(design.show_duration!==false){fit(ctx,ticket.duration_minutes+' min',sideX,infoY,sideWidth,13,rightSub,font,true);infoY+=20;}
+   if(design.show_price!==false){fit(ctx,String(ticket.price_amount)+' '+ticket.currency,sideX,infoY,sideWidth,12,rightSub,font);infoY+=18;}
    const sideNote=design.show_ticket_id===true?'N° '+ticket.id.slice(0,8).toUpperCase():
       design.show_wifi_ssid===true&&design.wifi_ssid?design.wifi_ssid:
       design.phone?.trim()||design.address?.trim()||'';
-   if(sideNote)fit(ctx,sideNote,sideX,y+103,sideWidth,10,secondary,font);
+   if(sideNote)fit(ctx,sideNote,sideX,y+103,sideWidth,10,rightSub,font);
  }
  ctx.strokeStyle=border;ctx.lineWidth=1.5;ctx.strokeRect(x+.8,y+.8,w-1.6,h-1.6);
  ctx.restore();
