@@ -37,7 +37,7 @@ float fbm(vec2 p) {
   float n = 0.0;
   float a = 0.52;
   mat2 rot = mat2(1.63, 1.21, -1.21, 1.63);
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     n += a * noise2(p);
     p = rot * p + vec2(11.13, 4.71);
     a *= 0.49;
@@ -71,11 +71,11 @@ void main() {
 
   // Depth: deep black backdrop with diffuse emerald clouds and mist.
   vec3 color = vec3(0.0037, 0.010, 0.0061);
-  float haze = fbm(p * 0.92 + 0.17 * distortion + path2 * 0.34);
+  float haze = noise2(p * 0.92 + 0.17 * distortion + path2 * 0.34);
   color += vec3(0.007, 0.028, 0.013) * haze;
   color += vec3(0.022, 0.28, 0.047) * ribbon * 0.91;
   color += vec3(0.014, 0.20, 0.089) * billow * 0.68;
-  float fineCloud = smoothstep(0.46, 0.75, fbm(p * 4.1 - path1 * 1.25 + distortion));
+  float fineCloud = smoothstep(0.46, 0.75, noise2(p * 4.1 - path1 * 1.25 + distortion));
   color += vec3(0.012, 0.072, 0.032) * fineCloud * (ribbon + billow);
 
   // Slowly wandering emerald halos — luminous without aggressive neon.
@@ -87,8 +87,8 @@ void main() {
   // Continuous subtle photon streams, moving independently of the clouds.
   float streamA = p.y - (0.16 * sin(p.x * 1.61 + t * 0.058) - 0.10);
   float streamB = p.y - (0.10 * sin(p.x * 1.92 - t * 0.051) + 0.28);
-  float flowA = exp(-abs(streamA) * 29.0) * smoothstep(0.41, 0.77, fbm(vec2(p.x * 2.2 - t * 0.12, p.y * 3.0 + 9.1)));
-  float flowB = exp(-abs(streamB) * 33.0) * smoothstep(0.45, 0.78, fbm(vec2(p.x * 2.0 + t * 0.09, p.y * 3.6 + 16.3)));
+  float flowA = exp(-abs(streamA) * 29.0) * smoothstep(0.41, 0.77, noise2(vec2(p.x * 2.2 - t * 0.12, p.y * 3.0 + 9.1)));
+  float flowB = exp(-abs(streamB) * 33.0) * smoothstep(0.45, 0.78, noise2(vec2(p.x * 2.0 + t * 0.09, p.y * 3.6 + 16.3)));
   color += vec3(0.017, 0.13, 0.043) * flowA * 0.37;
   color += vec3(0.008, 0.091, 0.032) * flowB * 0.32;
 
@@ -153,7 +153,7 @@ export default function GalaxyBackdrop() {
     const connection = navigator as Navigator & { connection?: { saveData?: boolean } };
     const dataSaver = Boolean(connection.connection?.saveData);
     const fps = dataSaver ? 24 : mobile.matches ? 42 : 60;
-    const maxPixels = mobile.matches ? 680_000 : 1_450_000;
+    const maxPixels = mobile.matches ? 440_000 : 950_000;
 
     let gl: WebGL2RenderingContext | null = null;
     let program: WebGLProgram | null = null;
@@ -177,7 +177,7 @@ export default function GalaxyBackdrop() {
       if (!gl || lost) return;
       const width = Math.max(1, window.innerWidth);
       const height = Math.max(1, window.innerHeight);
-      const ratio = Math.min(window.devicePixelRatio || 1, mobile.matches ? 1.1 : 1.45);
+      const ratio = Math.min(window.devicePixelRatio || 1, mobile.matches ? 1.0 : 1.25);
       const density = Math.min(ratio * quality, Math.sqrt(maxPixels / (width * height)));
       const w = Math.max(1, Math.round(width * density));
       const h = Math.max(1, Math.round(height * density));
