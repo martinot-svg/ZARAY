@@ -3,7 +3,7 @@ import {
   ArrowLeft, ArrowRight, Bell, Check, CircleHelp, Download, Eye, EyeOff,
   House, LayoutDashboard, LogIn, LogOut, Pencil, Plus, Printer, RefreshCw,
   Save, Search, Settings, Trash2, Upload, UserRound, UserRoundPlus, Wallet, X,
-  Building2, Users, ChevronDown, PanelLeft, CreditCard, Wifi, Ticket, Receipt, MapPin, KeyRound, Copy, Mail, Menu, ClipboardList, FileText, Router, ShieldCheck, Send, Store,
+  Building2, Users, UsersRound, ChevronDown, PanelLeft, CreditCard, Wifi, Ticket, Receipt, MapPin, KeyRound, Copy, Mail, Menu, ClipboardList, FileText, Router, ShieldCheck, Send, Store,
   type LucideIcon
 } from 'lucide-react';
 
@@ -17,7 +17,7 @@ export const zarayIcons = {
   refresh: RefreshCw, confirm: Check, cancel: X,
   show: Eye, hide: EyeOff, notifications: Bell, profile: UserRound,
   help: CircleHelp, expand: ChevronDown,
-  company: Building2, members: Users, customers: Users, wifi: Wifi, ticket: Ticket, receipt: Receipt,
+  company: Building2, alliance: UsersRound, members: Users, customers: Users, wifi: Wifi, ticket: Ticket, receipt: Receipt,
   payment: CreditCard, site: MapPin, password: KeyRound, copy: Copy, email: Mail, menu: Menu,
   orders: ClipboardList, document: FileText, network: Router, permissions: ShieldCheck, send: Send, cash: Store,
 } satisfies Record<string, LucideIcon>;
