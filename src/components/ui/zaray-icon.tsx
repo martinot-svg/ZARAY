@@ -3,14 +3,14 @@ import {
   ArrowLeft, ArrowRight, Bell, Check, CircleHelp, Download, Eye, EyeOff,
   House, LayoutDashboard, LogIn, LogOut, Pencil, Plus, Printer, RefreshCw,
   Save, Search, Settings, Trash2, Upload, UserRound, UserRoundPlus, Wallet, X,
-  Building2, Users, ChevronDown, CreditCard, Wifi, Ticket, Receipt, MapPin, KeyRound, Copy, Mail, Menu, ClipboardList, FileText, Router, ShieldCheck, Send, Store,
+  Building2, Users, ChevronDown, PanelLeft, CreditCard, Wifi, Ticket, Receipt, MapPin, KeyRound, Copy, Mail, Menu, ClipboardList, FileText, Router, ShieldCheck, Send, Store,
   type LucideIcon
 } from 'lucide-react';
 
 /** ZARAY functional icon registry: single source for labels and actions. */
 export const zarayIcons = {
   home: House, close: X, login: LogIn, signup: UserRoundPlus,
-  logout: LogOut, dashboard: LayoutDashboard, settings: Settings,
+  logout: LogOut, sidebar: PanelLeft, dashboard: LayoutDashboard, settings: Settings,
   finance: Wallet, add: Plus, edit: Pencil, delete: Trash2,
   save: Save, search: Search, download: Download, upload: Upload,
   print: Printer, back: ArrowLeft, next: ArrowRight,

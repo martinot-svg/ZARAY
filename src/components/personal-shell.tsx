@@ -151,7 +151,7 @@ export default function PersonalShell({ children, active, email, name, home = fa
                 title="Cette action nécessite le rôle de propriétaire ou d’administrateur d’une entreprise.">
               <ZarayIcon name="members" size={18} /> Inviter un collaborateur
             </span>}
-          <SignOutButton />
+          <SignOutButton profile />
         </div>
       </div>
     </header>

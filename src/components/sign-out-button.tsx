@@ -4,7 +4,7 @@ import { ZarayIcon } from '@/components/ui/zaray-icon';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-export default function SignOutButton() {
+export default function SignOutButton({ profile = false }: { profile?: boolean } = {}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   async function signOut() {
@@ -19,5 +19,5 @@ export default function SignOutButton() {
       setBusy(false);
     }
   }
-  return <div className="account-signout"><button type="button" onClick={signOut} disabled={busy}><ZarayIcon name="logout" size={18} /> {busy ? 'Déconnexion…' : 'Se déconnecter'}</button>{error && <p role="alert">{error}</p>}</div>;
+  return <div className="account-signout"><button type="button" onClick={signOut} disabled={busy}><ZarayIcon name={profile ? "sidebar" : "logout"} size={18} /> {busy ? 'Déconnexion…' : profile ? 'Quitter mon espace' : 'Se déconnecter'}</button>{error && <p role="alert">{error}</p>}</div>;
 }

@@ -230,3 +230,22 @@ test('the existing finance overview and its functional filters live on Finance g
  assert.match(overview,/\.eq\('company_id', company\.id\)/);
  assert.match(overview,/\.eq\('status', 'succeeded'\)/);
 });
+
+
+test('profile sign out says Quitter mon espace with Sidebar icon and preserves existing session logic',()=>{
+ const signout=source('src/components/sign-out-button.tsx');
+ const shell=source('src/components/personal-shell.tsx');
+ const icons=source('src/components/ui/zaray-icon.tsx');
+ const css=source('src/app/globals.css');
+ assert.match(shell,/<SignOutButton profile \/>/);
+ assert.match(shell,/Inviter un collaborateur/);
+ assert.match(shell,/\/membres\?companyId=/);
+ assert.match(shell,/aria-disabled="true"/);
+ assert.match(signout,/profile \? "sidebar" : "logout"/);
+ assert.match(signout,/profile \? 'Quitter mon espace' : 'Se déconnecter'/);
+ assert.match(icons,/sidebar: PanelLeft/);
+ assert.match(css,/\.personal-profile-dropdown \.account-signout button\{transition:background-color 180ms ease,color 180ms ease\}/);
+ assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.personal-profile-dropdown \.account-signout button\{transition:none\}\}/);
+ assert.match(signout,/createClient\(\)\.auth\.signOut\(\)/);
+ assert.match(signout,/window\.location\.replace\('\/connexion'\)/);
+});
