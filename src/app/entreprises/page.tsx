@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import PersonalShell from '@/components/personal-shell';
 import { loadPersonalContext } from '@/lib/personal-context';
@@ -17,7 +18,7 @@ export default async function EnterprisesPage() {
         {companies.map(company => <article className="panel personal-business-card" key={company.id}>
           <div><p className="eyebrow">ENTREPRISE</p><h2>{company.legal_name}</h2><p className="muted">{company.slug}</p>
             <span className="status-pill">Rôle : {company.role}</span></div>
-          <a className="primary-link" href={'/tableau-de-bord?companyId=' + encodeURIComponent(company.id)}><ZarayIcon name="company" size={18} /> Ouvrir l'entreprise</a>
+          <Link className="primary-link" href={'/tableau-de-bord?companyId=' + encodeURIComponent(company.id)}><ZarayIcon name="company" size={18} /> Ouvrir l'entreprise</Link>
         </article>)}
       </section>
       : <section className="empty-state"><strong>Aucune entreprise accessible</strong><p>Créez votre première entreprise pour commencer.</p>
