@@ -6,11 +6,18 @@ const headers = { 'Cache-Control': 'no-store' };
 const fail = (error: string, status: number) => NextResponse.json({ error }, { status, headers });
 const colors = ['primary_color','secondary_color','title_color','border_color'] as const;
 const fonts = new Set(['Arial','Georgia','Verdana','Tahoma']);
+const styles = new Set(['classic','event','minimal','corporate']);
+const visualColors=['accent_color'] as const;
+const visualBooleans=['gradient_enabled','decorations_enabled','show_price','show_duration','show_ticket_id','show_wifi_ssid'] as const;
+const visualTexts={brand_name:90,wifi_ssid:64,phone:60,address:160,welcome_message:120,footer_text:100} as const;
 const defaults = {
   primary_color:'#167a46', secondary_color:'#ffffff',title_color:'#10251a',
   border_color:'#a5b9ad',font_family:'Arial',username_length:5,password_length:12,
+  template_key:'classic',accent_color:'#0e9f6e',gradient_enabled:false,decorations_enabled:true,
+  brand_name:'',wifi_ssid:'',phone:'',address:'',welcome_message:'',footer_text:'',
+  show_price:true,show_duration:true,show_ticket_id:false,show_wifi_ssid:false,
 };
-type Row = Partial<Record<keyof typeof defaults|'logo_data_uri',string|number|null>>;
+type Row = Partial<Record<keyof typeof defaults|'logo_data_uri',string|number|boolean|null>>;
 async function authorized(companyId:string,siteId:string,offerId:string|null) {
   const supabase=await createClient();
   const access=await authorizeTenant(supabase,companyId,siteId);
@@ -32,7 +39,7 @@ export async function GET(request:NextRequest){
   try{
     const {supabase,error}=await authorized(companyId,siteId,offerId);if(error)return error;
     const {data, error:dbError}=await supabase.from('ticket_templates')
-      .select('id,company_id,site_id,offer_id,logo_data_uri,primary_color,secondary_color,title_color,border_color,font_family,username_length,password_length')
+      .select('id,company_id,site_id,offer_id,logo_data_uri,primary_color,secondary_color,title_color,border_color,font_family,username_length,password_length,template_key,accent_color,gradient_enabled,decorations_enabled,brand_name,wifi_ssid,phone,address,welcome_message,footer_text,show_price,show_duration,show_ticket_id,show_wifi_ssid')
       .eq('company_id',companyId).eq('site_id',siteId);
     if(dbError)return fail('Paramètres indisponibles. Vérifiez la migration.',503);
     const base=(data??[]).find(r=>r.offer_id===null) as Row|undefined;
@@ -49,7 +56,7 @@ export async function PUT(request:NextRequest){
   try{
     const {supabase,access,error}=await authorized(companyId,siteId,offerId);if(error)return error;
     if(!access.ok||!['owner','admin','site_manager'].includes(access.member.role))return fail('Droits de configuration insuffisants.',403);
-    const values:Record<string,string|number|null>={};
+    const values:Record<string,string|number|boolean|null>={};
     for(const key of colors){
       const v=body[key];
       if(v===null && offerId){values[key]=null;continue;}
@@ -65,6 +72,29 @@ export async function PUT(request:NextRequest){
       const n=Number(v);
       if(!Number.isInteger(n)||(key==='username_length'?(n<3||n>5):(n<12||n>32)))return fail('Longueur des identifiants invalide.',400);
       values[key]=n;
+    }
+    // Visual preferences never influence credential lengths or Wi-Fi provisioning.
+    if(body.template_key===null && offerId)values.template_key=null;
+    else if(typeof body.template_key==='string'&&styles.has(body.template_key))values.template_key=body.template_key;
+    else return fail('Modèle graphique invalide.',400);
+    for(const key of visualColors){
+      const v=body[key];
+      if(v===null&&offerId){values[key]=null;continue;}
+      if(typeof v!=='string'||!/^#[0-9a-fA-F]{6}$/.test(v))return fail('Couleur secondaire invalide.',400);
+      values[key]=v;
+    }
+    for(const key of visualBooleans){
+      const v=body[key];
+      if(v===null&&offerId){values[key]=null;continue;}
+      if(typeof v!=='boolean')return fail('Option d’affichage invalide : '+key,400);
+      values[key]=v;
+    }
+    for(const [key,length] of Object.entries(visualTexts)){
+      const v=body[key];
+      if(v===null&&offerId){values[key]=null;continue;}
+      if(typeof v!=='string'||v.length>length||/[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(v))
+        return fail('Texte de personnalisation invalide : '+key,400);
+      values[key]=v.trim();
     }
     if(!offerId){
       const logo=body.logo_data_uri;
