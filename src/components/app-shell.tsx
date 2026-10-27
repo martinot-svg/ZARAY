@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import SignOutButton from '@/components/sign-out-button';
 import BrandLogo from '@/components/brand-logo';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const sections = [
   { label: 'GESTION', items: [['/tableau-de-bord', 'Tableau de bord'], ['/sites', 'Sites'], ['/membres', 'Membres']] },
@@ -23,6 +24,7 @@ type WorkspaceSite = { id:string; company_id:string; name:string };
 type AppShellProps = { children: ReactNode; activePath: string; companyId?:string; siteId?:string; eyebrow?: string; title?: string; description?: string; actions?: ReactNode };
 
 export default function AppShell({ children, activePath, companyId, siteId, eyebrow, title, description, actions }: AppShellProps) {
+  const router=useRouter();
   const [companies,setCompanies] = useState<WorkspaceCompany[]>([]);
   const [sites,setSites] = useState<WorkspaceSite[]>([]);
   const [activeCompany,setActiveCompany] = useState('');
@@ -80,7 +82,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
             {activeSite && activeCompany && <div className="app-nav-group">
               <span className="app-nav-label">SITE ACTIF</span>
               <Link className="app-nav-link" href={'/sites/'+encodeURIComponent(activeSite)+'?companyId='+encodeURIComponent(activeCompany)}
-                prefetch={false} onClick={() => setMenuOpen(false)}>
+                onClick={() => setMenuOpen(false)}>
                 <ZarayIcon name="dashboard" size={18} /> Tableau de bord du site
               </Link>
             </div>}
@@ -93,7 +95,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
                   : href;
                 return <Link key={href}
                   ref={href === '/tableau-de-bord' ? firstMenuLink : undefined}
-                  href={scoped} prefetch={false}
+                  href={scoped}
                   className={'app-nav-link' + (activePath === href ? ' active' : '')}
                   aria-current={activePath === href ? 'page' : undefined}
                   onClick={() => setMenuOpen(false)}>
@@ -102,30 +104,30 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
               })}
             </div>)}
             <div className="app-nav-footer">
-              <Link className="app-nav-link" href="/mon-compte" prefetch={false} onClick={() => setMenuOpen(false)}>
+              <Link className="app-nav-link" href="/mon-compte" onClick={() => setMenuOpen(false)}>
                 <ZarayIcon name="back" size={18} /> Retour au compte personnel
               </Link>
-              <Link className="app-nav-link" href="/entreprises" prefetch={false} onClick={() => setMenuOpen(false)}>
+              <Link className="app-nav-link" href="/entreprises" onClick={() => setMenuOpen(false)}>
                 <ZarayIcon name="company" size={18} /> Changer d’entreprise
               </Link>
               <SignOutButton />
             </div>
           </nav>
         </div>
-        <a className="app-topbar-brand" href="/mon-compte" aria-label="ZARAY · Espace personnel"><BrandLogo /></a>
+        <Link className="app-topbar-brand" href="/mon-compte" aria-label="ZARAY · Espace personnel"><BrandLogo /></Link>
         <div className="workspace-context">
           <strong>Compte ZARAY</strong><span className="muted"> / </span>
           {companies.length>0 && activeCompany ? <>
             <strong aria-label="Entreprise active">{companies.find(c=>c.id===activeCompany)?.legal_name ?? 'Entreprise'}</strong>
             <label>Site <select aria-label="Site actif" value={activeSite} onChange={e=>{
               const next=e.target.value;
-              window.location.assign(next?'/sites/'+encodeURIComponent(next)+'?companyId='+encodeURIComponent(activeCompany):'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany));
+              router.push(next?'/sites/'+encodeURIComponent(next)+'?companyId='+encodeURIComponent(activeCompany):'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany));
             }}>
               <option value="">Vue générale</option>{sites.filter(s=>s.company_id===activeCompany).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
             </select></label>
           </>:<span className="muted">{contextError||null}</span>}
         </div>
-        <div className="app-topbar-links"><a className="header-link" href="/mon-compte"><ZarayIcon name="profile" size={18} /> Mon compte</a><a className="header-link" href={activeCompany?'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany):'/entreprises'}><ZarayIcon name="dashboard" size={18} /> Vue générale</a></div>
+        <div className="app-topbar-links"><Link className="header-link" href="/mon-compte"><ZarayIcon name="profile" size={18} /> Mon compte</Link><a className="header-link" href={activeCompany?'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany):'/entreprises'}><ZarayIcon name="dashboard" size={18} /> Vue générale</Link></div>
       </header>
       <main className="app-content">
         {(eyebrow || title || description || actions) && <header className="page-header"><div>{eyebrow && <p className="eyebrow">{eyebrow}</p>}{title && <h1 className="app-title">{title}</h1>}{description && <p className="app-subtitle">{description}</p>}</div>{actions && <div className="page-actions">{actions}</div>}</header>}
