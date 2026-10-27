@@ -87,7 +87,7 @@ test('company list preserves creation route and never uses example records',()=>
  const page=source('src/app/entreprises/page.tsx');
  const creation=source('src/app/entreprises/nouvelle/page.tsx');
  assert.match(page,/Mes entreprises/);
- assert.match(page,/\+ Créer une entreprise/);
+ assert.match(source('src/components/personal-shell.tsx'),/\+ Créer une entreprise/);
  assert.match(page,/company\.legal_name/);
  assert.match(page,/companyId=/);
  assert.match(creation,/\/api\/companies/);
@@ -495,4 +495,25 @@ test('premium Wi-Fi templates use the existing single module and preserve 33 A4 
  assert.match(issue,/const batchId=crypto.randomUUID\(\)/);
  assert.match(issue,/status:'available'/);
  assert.doesNotMatch(customize,/AppShell/);
+});
+
+
+test('personal topbar places logo first and company creation beside profile, without extra items',()=>{
+ const shell=source('src/components/personal-shell.tsx');
+ const page=source('src/app/entreprises/page.tsx');
+ const css=source('src/app/globals.css');
+ const header=shell.slice(shell.indexOf('<header className="personal-topbar">'),shell.indexOf('</header>'));
+ const logo=header.indexOf('className="personal-logo"');
+ const menu=header.indexOf('className="personal-home-nav-control"');
+ const create=header.indexOf('className="primary-link personal-topbar-create"');
+ const profile=header.indexOf('className="personal-profile-control"');
+ assert.ok(logo>=0 && logo<menu && menu<create && create<profile);
+ assert.match(header,/active === '\/entreprises' &&/);
+ assert.match(header,/href="\/entreprises\/nouvelle"/);
+ assert.match(shell,/!home && email && active !== '\/entreprises'/);
+ assert.doesNotMatch(page,/ESPACE PERSONNEL|Uniquement les organisations|href="\/entreprises\/nouvelle"/);
+ assert.match(page,/personal-page-heading personal-enterprises-heading/);
+ assert.match(page,/company\.legal_name/);
+ assert.match(css,/\.personal-no-sidebar \.personal-enterprises-heading\{/);
+ assert.match(css,/\.personal-topbar-actions \.personal-profile-control\{margin-left:0\}/);
 });
