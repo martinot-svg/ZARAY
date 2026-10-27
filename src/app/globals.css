@@ -1134,3 +1134,33 @@ body > .zaray-galaxy-backdrop{z-index:0}
     animation:none!important;transition:none!important;
   }
 }
+
+
+/* Personal workspace (Z'Accueil, Mes entreprises, Finance globale):
+   keep the existing navigation visible while the document scrolls normally. */
+.personal-shell.personal-sticky-topbar > .personal-topbar{
+  position:sticky;
+  top:0;
+  z-index:90;
+}
+
+/* Hide ONLY the document scrollbar on these personal pages.
+   Scroll gestures, keyboard scrolling and nested menus remain functional. */
+html:has(.personal-sticky-topbar),
+body:has(.personal-sticky-topbar){
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+html:has(.personal-sticky-topbar)::-webkit-scrollbar,
+body:has(.personal-sticky-topbar)::-webkit-scrollbar{
+  width:0;
+}
+
+/* Finance globale: heading directly above the existing finance content.
+   Do not alter the font, metrics, filters, cards, or data sections. */
+.personal-no-sidebar .personal-finance-page-heading{
+  border:0;
+  padding:0;
+  margin-bottom:18px;
+}
+.personal-no-sidebar .personal-finance-page-heading h1{margin:0}

@@ -40,8 +40,7 @@ export default async function GlobalFinancePage({ searchParams }: { searchParams
 
   return <PersonalShell active="/finance-globale" email={identity.email} name={identity.name}
     inviteCompanyId={companies.find(company => company.role === 'owner' || company.role === 'admin')?.id ?? null} dashboardCompanyId={companies[0]?.id ?? null}>
-    <header className="personal-page-heading"><p className="eyebrow">COMPTE PERSONNEL · FINANCE</p><h1>Finance globale</h1>
-      <p>Consolidation des paiements confirmés du registre uniquement, pour les entreprises auxquelles votre rôle donne accès. Les monnaies restent séparées.</p></header>
+    <header className="personal-page-heading personal-finance-page-heading"><h1>Finance globale</h1></header>
     {error ? <div role="alert" className="alert alert-error">{error}</div>
       : !authorized.length ? <section className="empty-state"><strong>Aucun périmètre financier autorisé</strong>
         <p>Votre compte ne dispose pas d'un rôle donnant accès aux paiements des entreprises.</p></section>
