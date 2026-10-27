@@ -426,8 +426,12 @@ test('shared living galaxy replaces the bitmap without altering application navi
  assert.match(css,/pointer-events:none/);
  assert.match(css,/background-image:none/);
  assert.doesNotMatch(css,/zaray-reference-texture\.avif/);
- assert.match(personal,/<GalaxyBackdrop \/>/);
- assert.match(company,/<GalaxyBackdrop \/>/);
+ const backdrop=source('src/components/workspace-backdrop.tsx');
+ const root=source('src/app/layout.tsx');
+ assert.match(backdrop,/return workspace\?<GalaxyBackdrop\/>:null/);
+ assert.match(root,/<WorkspaceBackdrop \/>/);
+ assert.doesNotMatch(personal,/<GalaxyBackdrop \/>/);
+ assert.doesNotMatch(company,/<GalaxyBackdrop \/>/);
  assert.match(personal,/aria-controls="personal-home-navigation-links"/);
  assert.match(company,/aria-controls="zaray-app-nav"/);
  assert.match(galaxy,/aria-hidden="true"/);
@@ -516,4 +520,35 @@ test('personal topbar places logo first and company creation beside profile, wit
  assert.match(page,/company\.legal_name/);
  assert.match(css,/\.personal-no-sidebar \.personal-enterprises-heading\{/);
  assert.match(css,/\.personal-topbar-actions \.personal-profile-control\{margin-left:0\}/);
+});
+
+
+test('Open enterprise is a client route and dashboard never returns a blank frame while awaiting data',()=>{
+ const enterprises=source('src/app/entreprises/page.tsx');
+ const route=source('src/app/tableau-de-bord/page.tsx');
+ const site=source('src/app/sites/[siteId]/page.tsx');
+ const dashboard=source('src/components/dashboard-workspace.tsx');
+ const shell=source('src/components/app-shell.tsx');
+ const personal=source('src/components/personal-shell.tsx');
+ const root=source('src/app/layout.tsx');
+ const css=source('src/app/globals.css');
+ assert.match(enterprises,/import Link from 'next\/link'/);
+ assert.match(enterprises,/<Link prefetch=\{true\} className="primary-link" href=\{'\/tableau-de-bord\?companyId='/);
+ assert.match(route,/authorizeTenant\(client, companyId\)/);
+ assert.match(route,/<DashboardWorkspace companyId=\{companyId\} \/>/);
+ assert.match(site,/<DashboardWorkspace companyId=\{companyId\} siteId=\{siteId\} \/>/);
+ assert.doesNotMatch(dashboard,/if\(busy\)return null/);
+ assert.match(dashboard,/if\(busy\|\|error\|\|!payload\)return <AppShell/);
+ assert.match(dashboard,/aria-busy=\{busy\}/);
+ assert.match(dashboard,/const query=new URLSearchParams\(\{companyId\}\)/);
+ assert.match(dashboard,/fetch\('\/api\/dashboard\?'\+query\.toString\(\)/);
+ assert.doesNotMatch(dashboard,/fetch\('\/api\/sites'/);
+ assert.doesNotMatch(dashboard,/window\.location\.replace\(/);
+ assert.match(shell,/router\.push\(next\?/);
+ assert.doesNotMatch(shell,/window\.location\.assign/);
+ assert.match(shell,/import Link from 'next\/link'/);
+ assert.doesNotMatch(personal,/prefetch=\{false\}/);
+ assert.match(root,/<WorkspaceBackdrop \/>/);
+ assert.match(css,/body:has\(\.app-shell\.app-no-sidebar\)/);
+ assert.match(css,/\.app-no-sidebar \.app-content,/);
 });
