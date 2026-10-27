@@ -7,7 +7,7 @@ import BrandLogo from '@/components/brand-logo';
 import Link from 'next/link';
 
 const sections = [
-  { label: 'GESTION', items: [['/tableau-de-bord', 'Tableau de bord'], ['/entreprises', 'Entreprises'], ['/sites', 'Sites'], ['/membres', 'Membres']] },
+  { label: 'GESTION', items: [['/tableau-de-bord', 'Tableau de bord'], ['/sites', 'Sites'], ['/membres', 'Membres']] },
   { label: 'ACTIVITÉ', items: [['/clients', 'Clients'], ['/offres', 'Offres Internet'], ['/commandes', 'Commandes'], ['/tickets', 'Tickets Wi-Fi']] },
   { label: 'FINANCE & RÉSEAU', items: [['/paiements/verification', 'Paiements'], ['/parametres-paiement', 'Moyens de paiement'], ['/portail', 'Portail captif']] },
 ];
@@ -106,7 +106,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
                 <ZarayIcon name="back" size={18} /> Retour au compte personnel
               </Link>
               <Link className="app-nav-link" href="/entreprises" prefetch={false} onClick={() => setMenuOpen(false)}>
-                <ZarayIcon name="company" size={18} /> Mes entreprises
+                <ZarayIcon name="company" size={18} /> Changer d’entreprise
               </Link>
               <SignOutButton />
             </div>
@@ -116,9 +116,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
         <div className="workspace-context">
           <strong>Compte ZARAY</strong><span className="muted"> / </span>
           {companies.length>0 && activeCompany ? <>
-            <label>Entreprise <select aria-label="Entreprise active" value={activeCompany} onChange={e=>window.location.assign('/tableau-de-bord?companyId='+encodeURIComponent(e.target.value))}>
-              {companies.map(c=><option key={c.id} value={c.id}>{c.legal_name}</option>)}
-            </select></label>
+            <strong aria-label="Entreprise active">{companies.find(c=>c.id===activeCompany)?.legal_name ?? 'Entreprise'}</strong>
             <label>Site <select aria-label="Site actif" value={activeSite} onChange={e=>{
               const next=e.target.value;
               window.location.assign(next?'/sites/'+encodeURIComponent(next)+'?companyId='+encodeURIComponent(activeCompany):'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany));
