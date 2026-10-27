@@ -2,7 +2,7 @@
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import BrandLogo from '@/components/brand-logo';
 
-import { selectedCompany,switchCompany } from '@/lib/workspace-url';
+import { selectedCompany } from '@/lib/workspace-url';
 import { useEffect, useState } from 'react';
 
 type Company = { id: string; legal_name: string; role: string };
@@ -72,7 +72,7 @@ export default function AutorisationsPaiementPage() {
     <p className="eyebrow">ZARAY · SÉCURITÉ FINANCIÈRE</p>
     <h1>Autorisations des validateurs</h1>
     <p>Le dirigeant conserve le droit de validation. Les autres administrateurs ne peuvent accéder aux justificatifs ni confirmer un paiement qu’après une autorisation explicite ici.</p>
-    {companies.length > 0 && <label>Entreprise<select value={companyId} onChange={(e) => setCompanyId(e.target.value)}>{companies.map((company) => <option key={company.id} value={company.id}>{company.legal_name}</option>)}</select></label>}
+    {companies.length > 0 && <span className="muted">Entreprise active : {companies.find(c=>c.id===companyId)?.legal_name ?? '—'}</span>}
     {!busy && companies.length === 0 && <p>Aucune entreprise dont vous êtes le dirigeant. Seul le dirigeant peut modifier ces autorisations.</p>}
     {busy ? null : reviewers.length ? <div className="module-grid" style={{ marginTop: 24 }}>
       {reviewers.map((reviewer) => <article className="module" key={reviewer.user_id} style={{ minHeight: 0 }}>
