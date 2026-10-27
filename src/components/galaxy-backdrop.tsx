@@ -7,6 +7,9 @@ import { useEffect, useRef } from 'react';
  * continuously evolving nebulae, multi-depth stardust, halos and luminous flows.
  * No textures, libraries, timers driving React renders, or personal data.
  */
+// Retain the motion phase when navigating between ZARAY modules.
+let sharedGalaxyClock = 0;
+
 const vertexSource = `#version 300 es
 precision highp float;
 void main() {
@@ -162,7 +165,7 @@ export default function GalaxyBackdrop() {
     let time: WebGLUniformLocation | null = null;
     let frame = 0;
     let then = 0;
-    let elapsed = 0;
+    let elapsed = sharedGalaxyClock;
     let quality = 1;
     let slowFrames = 0;
     let disposed = false;
@@ -195,7 +198,10 @@ export default function GalaxyBackdrop() {
       }
       const gap = then ? Math.min(now - then, 55) : 0;
       then = now;
-      if (!motionPreference.matches) elapsed += gap / 1000;
+      if (!motionPreference.matches) {
+        elapsed += gap / 1000;
+        sharedGalaxyClock = elapsed;
+      }
 
       gl.useProgram(program);
       gl.bindVertexArray(vao);
@@ -243,7 +249,10 @@ export default function GalaxyBackdrop() {
       }
     };
     const visibility = () => { if (document.hidden) stop(); else start(); };
-    const preferenceChanged = () => { elapsed = 0; start(); };
+    const preferenceChanged = () => {
+      elapsed = motionPreference.matches ? 0 : sharedGalaxyClock;
+      start();
+    };
     const contextLost = (event: Event) => { event.preventDefault(); lost = true; stop(); };
     const contextRestored = () => { lost = false; program = null; vao = null; initialize(); };
 
