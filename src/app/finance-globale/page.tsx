@@ -39,7 +39,7 @@ export default async function GlobalFinancePage({ searchParams }: { searchParams
   const format = (amount: number, currency: string) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(amount) + ' ' + currency;
 
   return <PersonalShell active="/finance-globale" email={identity.email} name={identity.name}
-    inviteCompanyId={companies.find(company => company.role === 'owner' || company.role === 'admin')?.id ?? null}>
+    inviteCompanyId={companies.find(company => company.role === 'owner' || company.role === 'admin')?.id ?? null} dashboardCompanyId={companies[0]?.id ?? null}>
     <header className="personal-page-heading"><p className="eyebrow">COMPTE PERSONNEL · FINANCE</p><h1>Finance globale</h1>
       <p>Consolidation des paiements confirmés du registre uniquement, pour les entreprises auxquelles votre rôle donne accès. Les monnaies restent séparées.</p></header>
     {error ? <div role="alert" className="alert alert-error">{error}</div>

@@ -9,7 +9,7 @@ export default async function PersonalHomePage() {
   const companyForInvitations = companies.find(company => company.role === 'owner' || company.role === 'admin');
 
   return <PersonalShell home active="/mon-compte" email={identity.email} name={identity.name}
-    inviteCompanyId={companyForInvitations?.id ?? null}>
+    inviteCompanyId={companyForInvitations?.id ?? null} dashboardCompanyId={companies[0]?.id ?? null}>
     <section className="personal-home-stage" aria-labelledby="personal-welcome-title">
       <div className="personal-home-welcome">
         <h1 id="personal-welcome-title">

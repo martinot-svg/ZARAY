@@ -19,9 +19,9 @@ test('personal welcome uses the signed-in user profile and active memberships',(
  assert.match(page,/identity\.name \? 'Bonjour, ' \+ identity\.name/);
  assert.doesNotMatch(page,/Martinot|Maleka|1 248|12 450 000/);
 });
-test('personal navigation has exactly the requested three primary destinations',()=>{
+test('personal navigation distinguishes Z’Accueil from the existing management dashboard',()=>{
  const nav=source('src/components/personal-shell.tsx');
- for(const path of ['/mon-compte','/entreprises','/finance-globale'])assert.ok(nav.includes("href: '"+path+"'"));
+ for(const path of ['/mon-compte','/tableau-de-bord','/entreprises','/finance-globale'])assert.ok(nav.includes("href: '"+path+"'"));
  assert.match(nav,/aria-expanded=\{open\}/);
  assert.match(nav,/event\.key !== 'Escape'/);
  assert.match(nav,/inert=\{!desktop && !open\}/);
@@ -41,7 +41,7 @@ test('personal profile card moves to top-right and sidebar menu toggle controls 
  assert.match(sidebar,/name="menu"/);
  assert.match(sidebar,/aria-controls="personal-space-links" aria-expanded=\{spaceMenuOpen\}/);
  assert.match(sidebar,/inert=\{!spaceMenuOpen\}/);
- assert.match(sidebar,/links\.map/);
+ assert.match(sidebar,/navigationLinks\.map/);
  assert.doesNotMatch(sidebar,/personal-profile-avatar/);
  assert.match(topbar,/className="personal-topbar-profile"/);
  assert.match(topbar,/personal-profile-avatar/);
@@ -243,7 +243,7 @@ test('home navigation remains usable after the sidebar disappears',()=>{
  assert.match(shell,/aria-controls="personal-home-navigation-links" aria-expanded=\{homeNavOpen\}/);
  assert.match(shell,/homeNavRef\.current\?\.contains\(event\.target\)/);
  assert.match(shell,/className=\{'personal-home-nav-menu'/);
- for (const path of ['/mon-compte','/entreprises','/finance-globale']) assert.ok(shell.includes("href: '"+path+"'"));
+ for (const path of ['/mon-compte','/tableau-de-bord','/entreprises','/finance-globale']) assert.ok(shell.includes("href: '"+path+"'"));
  assert.match(css,/\.personal-home-nav-menu\.is-open/);
  assert.match(css,/position:absolute;top:calc\(100% \+ 10px\)/);
  assert.match(css,/210ms/);
@@ -276,4 +276,32 @@ test('profile sign out says Quitter mon espace with Sidebar icon and preserves e
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.personal-profile-dropdown \.account-signout button\{transition:none\}\}/);
  assert.match(signout,/createClient\(\)\.auth\.signOut\(\)/);
  assert.match(signout,/window\.location\.replace\('\/connexion'\)/);
+});
+
+
+test('Z’Accueil uses the existing daily welcome; the dashboard uses a company-scoped management route',()=>{
+ const shell=source('src/components/personal-shell.tsx');
+ const home=source('src/app/mon-compte/page.tsx');
+ const login=source('src/app/connexion/page.tsx');
+ const management=source('src/app/tableau-de-bord/page.tsx');
+ const enterprises=source('src/app/entreprises/page.tsx');
+ const finance=source('src/app/finance-globale/page.tsx');
+ const start=shell.indexOf('const links = [');
+ const end=shell.indexOf('];',start);
+ const menu=shell.slice(start,end);
+ assert.ok(menu.indexOf("label: 'Z’Accueil'") < menu.indexOf("label: 'Tableau de bord'"));
+ assert.match(menu,/href: '\/mon-compte', label: 'Z’Accueil', icon: 'home'/);
+ assert.match(menu,/href: '\/tableau-de-bord', label: 'Tableau de bord', icon: 'dashboard'/);
+ assert.match(shell,/const dashboardHref = dashboardCompanyId/);
+ assert.match(shell,/encodeURIComponent\(dashboardCompanyId\)/);
+ assert.match(shell,/navigationLinks\.map\(link => <Link/g);
+ assert.match(shell,/aria-current=\{active === link\.href \? 'page' : undefined\}/);
+ assert.match(home,/<DailyInspiration/);
+ assert.match(home,/dashboardCompanyId=\{companies\[0\]\?\.id \?\? null\}/);
+ assert.match(enterprises,/dashboardCompanyId=\{companies\[0\]\?\.id \?\? null\}/);
+ assert.match(finance,/dashboardCompanyId=\{companies\[0\]\?\.id \?\? null\}/);
+ assert.match(login,/window\.location\.replace\('\/mon-compte'\)/);
+ assert.match(management,/authorizeTenant\(client, companyId\)/);
+ assert.match(management,/return <DashboardWorkspace \/>/);
+ assert.doesNotMatch(home,/DashboardWorkspace/);
 });
