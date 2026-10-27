@@ -136,3 +136,19 @@ test('site filtering is limited to operational pages and company-wide site direc
  assert.match(shell,/activeSite && siteOperational/);
  assert.match(shell,/href === '\/entreprises'/);
 });
+
+test('personal dashboard uses only authorized enterprise finance data and clear KPI semantics',()=>{
+ const page=source('src/app/mon-compte/page.tsx');
+ const finance=source('src/components/personal-finance-overview.tsx');
+ assert.match(page,/PersonalFinanceOverview/);
+ assert.match(finance,/financeRoles\.has\(company\.role\)/);
+ assert.match(finance,/\.eq\('company_id', company\.id\)/);
+ assert.match(finance,/\.eq\('status', 'succeeded'\)/);
+ assert.match(finance,/\.gte\('confirmed_at', start\.toISOString\(\)\)/);
+ assert.match(finance,/count > 1000/);
+ assert.match(finance,/financeCompanyId/);
+ assert.match(finance,/monthlyByCurrency/);
+ assert.match(finance,/amountsByCompany/);
+ assert.match(finance,/Aucune finance privée/);
+ assert.doesNotMatch(finance,/Mes finances personnelles|Solde de trésorerie disponible/);
+});
