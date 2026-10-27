@@ -3,7 +3,7 @@ import { ZarayIcon } from '@/components/ui/zaray-icon';
 import BrandLogo from '@/components/brand-logo';
 import { useEffect, useState } from 'react';
 import WorkspaceBreadcrumb from '@/components/workspace-breadcrumb';
-import { activeSiteId, scopedQuery, selectedCompany, switchCompany } from '@/lib/workspace-url';
+import { activeSiteId, scopedQuery, selectedCompany } from '@/lib/workspace-url';
 import { MotionFeedback } from '@/components/motion';
 type Company = { id: string; legal_name: string; role: string };
 type Order = { id: string; public_reference: string; offer_name: string; customer_name: string; amount: number | string; currency: string; status: string; paid_at: string | null };
@@ -84,9 +84,9 @@ export default function WifiTicketsPage() {
   const paidOrdersWithoutTicket = orders.filter((o) => o.status === 'paid' && !tickets.some((t) => t.subscription_order_id === o.id));
   return <main className="form-shell"><section className="form-card" style={{ maxWidth: 1100, width: 'min(100%,1100px)' }}>
       <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
-    <WorkspaceBreadcrumb companyId={companyId}/><p className="eyebrow">ZARAY · MODULE 8 · ACCÈS WI-FI</p><h1>Tickets Wi-Fi</h1>
+    <WorkspaceBreadcrumb companyId={companyId}/><p><a className="primary-link" href={'/tickets/planches?companyId='+encodeURIComponent(companyId)+(activeSiteId()?'&siteId='+encodeURIComponent(activeSiteId()!):'')}><ZarayIcon name="print" size={18}/> Générer des planches A4 (33 tickets)</a></p><p className="eyebrow">ZARAY · MODULE 8 · ACCÈS WI-FI</p><h1>Tickets Wi-Fi</h1>
     <p>Les codes sont hachés en base et affichés une seule fois. L’émission est refusée tant que la commande n’a pas un paiement confirmé côté serveur. Un ticket émis ne déclenche pas lui-même la connexion réseau.</p>
-    {companies.length > 0 && <label>Entreprise<select value={companyId} onChange={(e) => switchCompany('/tickets',e.target.value)}>{companies.map((c) => <option key={c.id} value={c.id}>{c.legal_name}</option>)}</select></label>}
+    {companies.length > 0 && <p className="muted">Entreprise active : {companies.find(c => c.id === companyId)?.legal_name ?? '—'}</p>}
     {paidOrdersWithoutTicket.length > 0 && <section style={{ marginTop: 24 }}>
       <h2>Émettre un ticket après paiement</h2>
       <label>Commande payée<select value={orderId} onChange={(e) => setOrderId(e.target.value)}><option value="">Choisir une commande…</option>{paidOrdersWithoutTicket.map((o) => <option key={o.id} value={o.id}>{o.public_reference} · {o.customer_name} · {o.offer_name}</option>)}</select></label>

@@ -23,7 +23,7 @@ test('personal welcome uses the signed-in user profile and active memberships',(
 });
 test('personal navigation distinguishes home and enterprise dashboard without a sidebar',()=>{
  const nav=source('src/components/personal-shell.tsx');
- for(const path of ['/mon-compte','/tableau-de-bord','/entreprises','/finance-globale'])
+ for(const path of ['/mon-compte','/entreprises','/finance-globale'])
   assert.ok(nav.includes("href: '"+path+"'"));
  assert.match(nav,/personal-shell personal-no-sidebar/);
  assert.doesNotMatch(nav,/<aside\b|className=\{'personal-drawer'|personal-menu-backdrop/);
@@ -67,7 +67,7 @@ test('topbar menu replaces personal sidebar with outside-click, Escape and reduc
  assert.match(shell,/document\.addEventListener\('pointerdown', closeOutside\)/);
  assert.match(shell,/homeNavRef\.current\?\.contains\(event\.target\)/);
  assert.match(shell,/event\.key !== 'Escape'/);
- for(const label of ['Tableau de bord','Mes entreprises','Finances des entreprises'])
+ for(const label of ['Mes entreprises','Finances des entreprises'])
   assert.ok(shell.includes("label: '"+label+"'"));
  assert.match(css,/\.personal-home-nav-menu\.is-open\{/);
  assert.match(css,/210ms cubic-bezier/);
@@ -77,7 +77,7 @@ test('topbar menu replaces personal sidebar with outside-click, Escape and reduc
 test('company menu uses three named groups, retains routes and excludes public website link',()=>{
  const nav=source('src/components/app-shell.tsx');
  for(const section of ['GESTION','ACTIVITÉ','FINANCE & RÉSEAU'])assert.ok(nav.includes(section));
- for(const path of ['/tableau-de-bord','/entreprises','/sites','/membres','/clients','/offres','/commandes','/tickets','/paiements/verification','/parametres-paiement','/portail'])assert.ok(nav.includes("'"+path+"'"),path);
+ for(const path of ['/tableau-de-bord','/sites','/membres','/clients','/offres','/commandes','/tickets','/paiements/verification','/parametres-paiement','/portail'])assert.ok(nav.includes("'"+path+"'"),path);
  assert.doesNotMatch(nav,/Voir le site public/);
  assert.match(nav,/aria-controls="zaray-app-nav"/);
  assert.match(nav,/Retour au compte personnel/);
@@ -235,7 +235,7 @@ test('home navigation remains usable after the sidebar disappears',()=>{
  assert.match(shell,/aria-controls="personal-home-navigation-links" aria-expanded=\{homeNavOpen\}/);
  assert.match(shell,/homeNavRef\.current\?\.contains\(event\.target\)/);
  assert.match(shell,/className=\{'personal-home-nav-menu'/);
- for (const path of ['/mon-compte','/tableau-de-bord','/entreprises','/finance-globale']) assert.ok(shell.includes("href: '"+path+"'"));
+ for (const path of ['/mon-compte','/entreprises','/finance-globale']) assert.ok(shell.includes("href: '"+path+"'"));
  assert.match(css,/\.personal-home-nav-menu\.is-open/);
  assert.match(css,/position:absolute;top:calc\(100% \+ 10px\)/);
  assert.match(css,/210ms/);
@@ -271,33 +271,16 @@ test('profile sign out says Quitter mon espace with Sidebar icon and preserves e
 });
 
 
-test('Z’Accueil uses the existing daily welcome; the dashboard uses a company-scoped management route',()=>{
+test('company selection only comes from the personal enterprise list',()=>{
  const shell=source('src/components/personal-shell.tsx');
- const home=source('src/app/mon-compte/page.tsx');
- const login=source('src/app/connexion/page.tsx');
+ const workspace=source('src/components/app-shell.tsx');
+ assert.doesNotMatch(shell,/label: 'Tableau de bord'/);
+ assert.match(shell,/label: 'Mes entreprises'/);
+ assert.match(workspace,/Changer d’entreprise/);
+ assert.doesNotMatch(workspace,/aria-label="Entreprise active" value=/);
  const management=source('src/app/tableau-de-bord/page.tsx');
- const enterprises=source('src/app/entreprises/page.tsx');
- const finance=source('src/app/finance-globale/page.tsx');
- const start=shell.indexOf('const links = [');
- const end=shell.indexOf('];',start);
- const menu=shell.slice(start,end);
- assert.ok(menu.indexOf("label: 'Z’Accueil'") < menu.indexOf("label: 'Tableau de bord'"));
- assert.match(menu,/href: '\/mon-compte', label: 'Z’Accueil', icon: 'home'/);
- assert.match(menu,/href: '\/tableau-de-bord', label: 'Tableau de bord', icon: 'dashboard'/);
- assert.match(shell,/const dashboardHref = dashboardCompanyId/);
- assert.match(shell,/encodeURIComponent\(dashboardCompanyId\)/);
- assert.match(shell,/navigationLinks\.map\(link => <Link/g);
- assert.match(shell,/aria-current=\{active === link\.href\.split\('\?'\)\[0\] \? 'page' : undefined\}/);
- assert.match(home,/<DailyInspiration/);
- assert.match(home,/dashboardCompanyId=\{companies\[0\]\?\.id \?\? null\}/);
- assert.match(enterprises,/dashboardCompanyId=\{companies\[0\]\?\.id \?\? null\}/);
- assert.match(finance,/dashboardCompanyId=\{companies\[0\]\?\.id \?\? null\}/);
- assert.match(login,/window\.location\.replace\('\/mon-compte'\)/);
  assert.match(management,/authorizeTenant\(client, companyId\)/);
- assert.match(management,/return <DashboardWorkspace \/>/);
- assert.doesNotMatch(home,/DashboardWorkspace/);
 });
-
 
 test('daily quotations are translated to French before rendering, with an offline-safe French fallback',()=>{
  const route=source('src/app/api/daily-quote/route.ts');

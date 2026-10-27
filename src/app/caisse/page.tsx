@@ -4,7 +4,7 @@ import { ZarayIcon } from '@/components/ui/zaray-icon';
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/app-shell';
 import { MotionFeedback } from '@/components/motion';
-import { activeSiteId,scopedQuery,selectedCompany,switchCompany } from '@/lib/workspace-url';
+import { activeSiteId,scopedQuery,selectedCompany } from '@/lib/workspace-url';
 
 type Company = { id: string; legal_name: string; role: string };
 type Site = { id: string; company_id: string; name: string; status: string };
@@ -138,7 +138,7 @@ export default function CaissePage() {
     <>
       <div className="screen-only">
         <AppShell activePath="/caisse" eyebrow="VENTE RAPIDE · CLIENTS OCCASIONNELS" title="Caisse & tickets" description="Encaissez un client de passage, générez immédiatement son reçu et son ticket Wi-Fi imprimable.">
-          {companies.length > 1 && <label>Entreprise<select value={companyId} onChange={(e) => switchCompany('/caisse',e.target.value)}>{companies.map((company) => <option key={company.id} value={company.id}>{company.legal_name}</option>)}</select></label>}
+          {companies.length > 1 && <span className="muted">Entreprise active : {companies.find(c=>c.id===companyId)?.legal_name ?? '—'}</span>}
 
           <section className="module-grid" style={{ alignItems: 'start' }}>
             <article className="panel">

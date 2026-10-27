@@ -8,7 +8,6 @@ import SignOutButton from '@/components/sign-out-button';
 
 const links = [
   { href: '/mon-compte', label: 'Z’Accueil', icon: 'home' },
-  { href: '/tableau-de-bord', label: 'Tableau de bord', icon: 'dashboard' },
   { href: '/entreprises', label: 'Mes entreprises', icon: 'company' },
   { href: '/finance-globale', label: 'Finances des entreprises', icon: 'finance' },
 ];
