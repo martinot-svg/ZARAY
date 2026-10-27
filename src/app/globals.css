@@ -674,3 +674,34 @@ svg[data-zaray-icon]{display:inline-block;vertical-align:-.22em;flex-shrink:0;co
   .personal-menu-toggle{padding:9px 11px}
   .personal-menu-toggle span{display:none}
 }
+
+
+/* Professional company + finance overview in the personal workspace. */
+.personal-business-finance{margin:22px 0 28px}
+.personal-finance-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.personal-finance-heading h2{display:flex;align-items:center;gap:10px;font-size:clamp(23px,3vw,30px);color:#132219;letter-spacing:-.035em;margin:6px 0 8px}
+.personal-finance-heading .header-link{display:inline-flex;align-items:center;gap:7px}
+.personal-finance-filters{display:flex;flex-wrap:wrap;align-items:end;gap:12px;background:#fff;border:1px solid #dae5d9;padding:16px;border-radius:12px;margin:18px 0}
+.personal-finance-filters label{display:grid;gap:6px;min-width:170px;flex:1;font-size:12px;font-weight:750;color:#344736}
+.personal-finance-filters select{min-height:42px;border:1px solid #b8cbb8;border-radius:8px;padding:9px 12px;color:#17291a;background:#fff;width:100%}
+.personal-finance-filters button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;background:#205c2b;color:#fff;border:1px solid #205c2b;border-radius:8px;padding:9px 15px;font-weight:750;cursor:pointer}
+.personal-finance-filters button:hover,.personal-finance-filters button:focus-visible{background:#16451e}
+.personal-finance-filters select:focus-visible,.personal-finance-filters button:focus-visible{outline:3px solid #80d28b;outline-offset:2px}
+.personal-finance-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:16px 0}
+.personal-finance-kpis .kpi{min-width:0}
+.personal-finance-kpis .kpi-value{overflow-wrap:anywhere}
+.personal-finance-kpis .personal-finance-money{font-size:clamp(17px,2.3vw,23px)}
+.personal-finance-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}
+.personal-finance-charts .panel{margin:0;min-width:0}
+.personal-finance-charts .panel-head{flex-wrap:wrap}
+.personal-bar-list{display:grid;gap:14px}
+.personal-bar-row{display:grid;grid-template-columns:minmax(80px,1fr) minmax(75px,1.6fr);align-items:center;gap:5px 12px;font-size:12px}
+.personal-bar-label{color:#344736;overflow-wrap:anywhere}
+.personal-bar-track{height:13px;background:#e8f1e8;border-radius:999px;overflow:hidden}
+.personal-bar-fill{height:100%;background:#1a8c3a;border-radius:999px;min-width:0}
+.personal-bar-fill-secondary{background:#256a80}
+.personal-bar-value{grid-column:2;color:#1b2b20;font-size:11px;font-weight:700;overflow-wrap:anywhere}
+.personal-finance-footnote{color:#4d6150;font-size:12px;line-height:1.65;margin:14px 0}
+@media(max-width:850px){.personal-finance-charts{grid-template-columns:1fr}}
+@media(max-width:520px){.personal-finance-filters{flex-direction:column;align-items:stretch}.personal-finance-filters label{width:100%;min-width:0}.personal-finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.personal-finance-heading h2{font-size:23px}}
+@media(max-width:360px){.personal-finance-kpis{grid-template-columns:1fr}}
