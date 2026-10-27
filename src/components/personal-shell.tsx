@@ -77,7 +77,7 @@ export default function PersonalShell({
         <nav id="personal-home-navigation-links" aria-label="Navigation du compte personnel"
           className={'personal-home-nav-menu' + (homeNavOpen ? ' is-open' : '')}
           inert={!homeNavOpen} aria-hidden={!homeNavOpen}>
-          {navigationLinks.map(link => <Link key={link.href} href={link.href} prefetch={false}
+          {navigationLinks.map(link => <Link key={link.href} href={link.href}
             aria-current={active === link.href.split('?')[0] ? 'page' : undefined}
             className={'personal-nav-link' + (active === link.href.split('?')[0] ? ' active' : '')}
             onClick={() => setHomeNavOpen(false)}>
