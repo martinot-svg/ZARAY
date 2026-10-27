@@ -1,110 +1,108 @@
 'use client';
-import { ZarayIcon } from '@/components/ui/zaray-icon';
-import BrandLogo from '@/components/brand-logo';
+
 import { useEffect, useState } from 'react';
-import WorkspaceBreadcrumb from '@/components/workspace-breadcrumb';
-import { activeSiteId, scopedQuery, selectedCompany } from '@/lib/workspace-url';
-import { MotionFeedback } from '@/components/motion';
-type Company = { id: string; legal_name: string; role: string };
-type Order = { id: string; public_reference: string; offer_name: string; customer_name: string; amount: number | string; currency: string; status: string; paid_at: string | null };
-type Ticket = { id: string; subscription_order_id: string; code_prefix: string; status: string; duration_minutes: number; max_devices: number; valid_from: string; valid_until: string; created_at: string };
-const statusLabel: Record<string, string> = { issued: 'Émis', redeemed: 'Utilisé', expired: 'Expiré', revoked: 'Révoqué' };
+import AppShell from '@/components/app-shell';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
+import WifiTicketGenerator from '@/components/wifi-ticket-generator';
+import WifiTicketHistory from '@/components/wifi-ticket-history';
+import WifiTicketCustomization from '@/components/wifi-ticket-customization';
+
+type Tab = 'generate' | 'history' | 'customize';
+type Company = { id:string; legal_name:string; role:string };
+type Site = { id:string; company_id:string };
+const isManager = (role:string) => ['owner','admin','site_manager'].includes(role);
+const parseTab = (value:string|null):Tab =>
+  value === 'history' ? 'history' : value === 'customize' ? 'customize' : 'generate';
 
 export default function WifiTicketsPage() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [companyId, setCompanyId] = useState('');
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [orderId, setOrderId] = useState('');
-  const [oneTimeCode, setOneTimeCode] = useState('');
-  const [busy, setBusy] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  const [company,setCompany] = useState<Company|null>(null);
+  const [siteId,setSiteId] = useState('');
+  const [tab,setTab] = useState<Tab>('generate');
+  const [visited,setVisited] = useState<Tab[]>([]);
+  const [loading,setLoading] = useState(true);
+  const [error,setError] = useState('');
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
+  useEffect(()=>{
+    let live=true;
+    (async()=>{
       try {
-        const response = await fetch('/api/sites', { cache: 'no-store' });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Impossible de charger les entreprises.');
-        if (active) { setCompanies(data.companies ?? []); setCompanyId(selectedCompany(data.companies??[],data.sites??[])); }
-      } catch (e) { if (active) setError(e instanceof Error ? e.message : 'Erreur de chargement.'); }
-      finally { if (active) setBusy(false); }
+        const qs=new URLSearchParams(window.location.search);
+        const companyId=qs.get('companyId')??'';
+        if(!companyId){window.location.replace('/entreprises');return;}
+        const response=await fetch('/api/sites',{cache:'no-store'});
+        const data=await response.json();
+        if(!response.ok)throw new Error(data.error||'Contexte entreprise indisponible.');
+        const selected=(data.companies??[]).find((c:Company)=>c.id===companyId) as Company|undefined;
+        if(!selected)throw new Error('Entreprise inaccessible.');
+        const requestedSite=qs.get('siteId')??'';
+        if(requestedSite&&!(data.sites??[]).some((s:Site)=>s.id===requestedSite&&s.company_id===companyId)){
+          throw new Error('Ce site est inaccessible dans cette entreprise.');
+        }
+        const initial=parseTab(qs.get('tab'));
+        const allowed:Tab=isManager(selected.role)?initial:'history';
+        if(live){
+          setCompany(selected);setSiteId(requestedSite);
+          setTab(allowed);setVisited([allowed]);
+        }
+      } catch(e) {
+        if(live)setError(e instanceof Error?e.message:'Impossible de charger le module.');
+      } finally {if(live)setLoading(false);}
     })();
-    return () => { active = false; };
-  }, []);
+    return()=>{live=false};
+  },[]);
 
-  async function reload(company: string) {
-    if (!company) { setOrders([]); setTickets([]); return; }
-    const results = await Promise.all([
-      fetch('/api/subscription-orders?' + scopedQuery(company), { cache: 'no-store' }),
-      fetch('/api/wifi-tickets?' + scopedQuery(company), { cache: 'no-store' }),
-    ]);
-    const data = await Promise.all(results.map((r) => r.json()));
-    if (!results[0].ok) throw new Error(data[0].error || 'Impossible de charger les commandes.');
-    if (!results[1].ok) throw new Error(data[1].error || 'Impossible de charger les tickets.');
-    setOrders(data[0].orders ?? []); setTickets(data[1].tickets ?? []);
+  function switchTab(next:Tab){
+    if(next==='customize'&&!isManager(company?.role??''))return;
+    if(next==='generate'&&!isManager(company?.role??''))return;
+    setTab(next);
+    setVisited(previous=>previous.includes(next)?previous:[...previous,next]);
+    const nextUrl=new URL(window.location.href);
+    nextUrl.searchParams.set('tab',next);
+    window.history.pushState({},'',nextUrl.pathname+nextUrl.search+nextUrl.hash);
   }
+  useEffect(()=>{
+    const listener=()=>{
+      if(!company)return;
+      const selected=parseTab(new URLSearchParams(window.location.search).get('tab'));
+      const allowed=isManager(company.role)?selected:'history';
+      setTab(allowed);setVisited(previous=>previous.includes(allowed)?previous:[...previous,allowed]);
+    };
+    window.addEventListener('popstate',listener);
+    return()=>window.removeEventListener('popstate',listener);
+  },[company]);
 
-  useEffect(() => {
-    if (!companyId) return;
-    let active = true; setBusy(true);
-    (async () => {
-      try { await reload(companyId); }
-      catch (e) { if (active) setError(e instanceof Error ? e.message : 'Erreur de chargement.'); }
-      finally { if (active) setBusy(false); }
-    })();
-    return () => { active = false; };
-  }, [companyId]);
-
-  async function issue() {
-    setError(''); setNotice(''); setOneTimeCode(''); setSaving(true);
-    try {
-      const response = await fetch('/api/wifi-tickets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Émission impossible.');
-      setOneTimeCode(data.code); setNotice('Ticket émis. Copiez le code maintenant : il ne sera plus affiché.');
-      await reload(companyId); setOrderId('');
-    } catch (e) { setError(e instanceof Error ? e.message : 'Émission impossible.'); }
-    finally { setSaving(false); }
-  }
-
-  async function revoke(ticketId: string) {
-    setError(''); setNotice('');
-    try {
-      const response = await fetch('/api/wifi-tickets', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ticketId }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Révocation impossible.');
-      setNotice('Ticket révoqué.'); await reload(companyId);
-    } catch (e) { setError(e instanceof Error ? e.message : 'Révocation impossible.'); }
-  }
-
-  const paidOrdersWithoutTicket = orders.filter((o) => o.status === 'paid' && !tickets.some((t) => t.subscription_order_id === o.id));
-  return <main className="form-shell"><section className="form-card" style={{ maxWidth: 1100, width: 'min(100%,1100px)' }}>
-      <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
-    <WorkspaceBreadcrumb companyId={companyId}/><p><a className="primary-link" href={'/tickets/planches?companyId='+encodeURIComponent(companyId)+(activeSiteId()?'&siteId='+encodeURIComponent(activeSiteId()!):'')}><ZarayIcon name="print" size={18}/> Générer des planches A4 (33 tickets)</a></p><p className="eyebrow">ZARAY · MODULE 8 · ACCÈS WI-FI</p><h1>Tickets Wi-Fi</h1>
-    <p>Les codes sont hachés en base et affichés une seule fois. L’émission est refusée tant que la commande n’a pas un paiement confirmé côté serveur. Un ticket émis ne déclenche pas lui-même la connexion réseau.</p>
-    {companies.length > 0 && <p className="muted">Entreprise active : {companies.find(c => c.id === companyId)?.legal_name ?? '—'}</p>}
-    {paidOrdersWithoutTicket.length > 0 && <section style={{ marginTop: 24 }}>
-      <h2>Émettre un ticket après paiement</h2>
-      <label>Commande payée<select value={orderId} onChange={(e) => setOrderId(e.target.value)}><option value="">Choisir une commande…</option>{paidOrdersWithoutTicket.map((o) => <option key={o.id} value={o.id}>{o.public_reference} · {o.customer_name} · {o.offer_name}</option>)}</select></label>
-      <button className="primary-link" type="button" style={{ marginTop: 14 }} disabled={saving || !orderId} onClick={issue}><ZarayIcon name="ticket" size={18} /> {saving ? 'Émission…' : 'Générer un ticket Wi-Fi'}</button>
-    </section>}
-    {oneTimeCode && <section className="module" style={{ marginTop: 22, minHeight: 0 }}>
-      <span className="module-number">CODE AFFICHÉ UNE SEULE FOIS</span><h2 style={{ overflowWrap: 'anywhere' }}>{oneTimeCode}</h2>
-      <p>Conservez ce code dans un endroit sûr. ZARAY ne stocke que son empreinte cryptographique.</p>
-      <button type="button" onClick={() => { void navigator.clipboard?.writeText(oneTimeCode); setNotice('Code copié si le navigateur autorise le presse-papiers.'); }}><ZarayIcon name="copy" size={18} /> Copier le code</button>
-    </section>}
-    {busy ? null : tickets.length ? <><h2 style={{ marginTop: 32 }}>Tickets existants</h2><div className="module-grid">
-      {tickets.map((t) => <article className="module" key={t.id}>
-        <span className="module-number">{statusLabel[t.status] ?? t.status}</span><h3>{t.code_prefix}••••</h3>
-        <p>{t.duration_minutes} minutes · {t.max_devices} appareil(s)</p><p>Valide du {new Date(t.valid_from).toLocaleString('fr-FR')}</p><p>Jusqu’au {new Date(t.valid_until).toLocaleString('fr-FR')}</p>
-        {t.status === 'issued' && new Date(t.valid_until).getTime() > Date.now() && <button type="button" style={{ marginTop: 16 }} onClick={() => revoke(t.id)}><ZarayIcon name="delete" size={18} /> Révoquer le ticket</button>}
-      </article>)}
-    </div></> : !busy ? <p>Aucun ticket émis. Les commandes en attente de paiement ne peuvent pas générer de ticket.</p> : null}
-    <MotionFeedback message={error || notice} kind={error ? 'error' : 'success'}/>
-    <p style={{ marginTop: 28 }}><a href="/commandes"><ZarayIcon name="orders" size={18} /> Commandes →</a> · <a href="/tableau-de-bord"><ZarayIcon name="next" size={18} /> Tableau de bord</a></p>
+  if(loading)return <main className="form-shell"><p role="status">Chargement des tickets Wi-Fi…</p></main>;
+  if(error||!company)return <main className="form-shell"><section className="form-card">
+    <h1>Tickets Wi-Fi indisponibles</h1><p role="alert">{error||'Entreprise inaccessible.'}</p>
+    <a href="/entreprises">Revenir à mes entreprises</a>
   </section></main>;
+
+  const manager=isManager(company.role);
+  return <AppShell activePath="/tickets" companyId={company.id} siteId={siteId||undefined}
+    eyebrow="ACTIVITÉ · WI-FI" title="Tickets Wi-Fi"
+    description="Générez, imprimez, suivez et personnalisez les tickets depuis un seul module.">
+    <nav className="panel" aria-label="Onglets du module Tickets Wi-Fi"
+      style={{padding:10,display:'flex',gap:8,flexWrap:'wrap',marginBottom:18}}>
+      {([['generate','Générer','ticket'],['history','Historique','clipboard-list'],['customize','Personnalisation','settings']] as const)
+        .filter(([key])=>key==='history'||manager)
+        .map(([key,label,icon])=>
+          <button type="button" key={key} aria-current={tab===key?'page':undefined}
+            className={tab===key?'primary-link':'header-link'}
+            style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 14px',borderRadius:8}}
+            onClick={()=>switchTab(key)}>
+            <ZarayIcon name={icon==='clipboard-list'?'orders':icon} size={17}/>{label}
+          </button>)}
+    </nav>
+    {visited.includes('generate')&&manager&&<section aria-label="Génération des tickets" hidden={tab!=='generate'}>
+      <h2>Génération et impression</h2>
+      <p className="muted">L'impression A4 (3 colonnes × 11 lignes) est une option de génération, pas un module distinct.</p>
+      <WifiTicketGenerator />
+    </section>}
+    {visited.includes('history')&&<section aria-label="Historique des tickets" hidden={tab!=='history'}>
+      <WifiTicketHistory />
+    </section>}
+    {visited.includes('customize')&&manager&&<section aria-label="Personnalisation des tickets" hidden={tab!=='customize'}>
+      <WifiTicketCustomization />
+    </section>}
+  </AppShell>;
 }
