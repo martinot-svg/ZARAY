@@ -603,16 +603,35 @@ svg[data-zaray-icon]{display:inline-block;vertical-align:-.22em;flex-shrink:0;co
 
 
 /* Personal workspace: a permanent sidebar on desktop and a drawer on smaller screens. */
-.personal-space-toggle{
-  display:flex;align-items:center;gap:11px;width:100%;min-height:46px;
-  padding:12px 14px;margin:2px 0 7px;text-align:left;
+.personal-shell .personal-drawer-head{margin-bottom:0}
+.personal-drawer-head .personal-space-toggle{
+  display:inline-flex;align-items:center;gap:11px;flex:1 1 auto;width:auto;min-width:0;min-height:44px;
+  padding:10px 12px;margin:0;text-align:left;
   border:1px solid #344738;border-radius:10px;background:#162019;
   color:#fff;font-size:14px;font-weight:750;cursor:pointer;
 }
-.personal-space-toggle:hover,.personal-space-toggle:focus-visible{background:#243829;color:#fff}
-.personal-space-toggle svg{flex-shrink:0}
-.personal-space-links{display:grid;gap:7px}
-.personal-space-links[hidden]{display:none!important}
+.personal-drawer-head .personal-space-toggle:hover,
+.personal-drawer-head .personal-space-toggle:focus-visible{background:#243829;color:#fff}
+.personal-drawer-head .personal-space-toggle svg{flex-shrink:0}
+.personal-space-reveal{
+  display:grid;grid-template-rows:0fr;min-height:0;
+  opacity:0;transform:translateY(-8px);visibility:hidden;pointer-events:none;
+  transition:grid-template-rows 210ms cubic-bezier(.22,.75,.25,1),
+             transform 210ms cubic-bezier(.22,.75,.25,1),
+             opacity 210ms ease,visibility 210ms;
+}
+.personal-space-reveal.is-open{
+  grid-template-rows:1fr;opacity:1;transform:translateY(0);visibility:visible;pointer-events:auto;
+}
+.personal-space-reveal-inner{min-height:0;overflow:hidden}
+.personal-space-links{
+  display:grid;gap:5px;padding:8px;margin:0;
+  border:1px solid #304735;border-radius:10px;background:#122018;
+}
+.personal-space-links .personal-nav-link{min-height:41px}
+@media(prefers-reduced-motion:reduce){
+  .personal-space-reveal{transition:none!important;transform:none!important}
+}
 .personal-topbar-profile{
   display:flex;align-items:center;gap:10px;min-width:0;
   margin-left:auto;padding:7px 12px;border:1px solid #344738;
@@ -640,8 +659,8 @@ svg[data-zaray-icon]{display:inline-block;vertical-align:-.22em;flex-shrink:0;co
   .personal-shell .personal-topbar{grid-column:2;grid-row:1;min-width:0}
   .personal-shell .personal-content{grid-column:2;grid-row:2;width:100%;min-width:0}
   .personal-shell .personal-menu-toggle,.personal-shell .personal-menu-backdrop{display:none!important}
-  .personal-shell .personal-drawer-head button{display:none}
-  .personal-shell .personal-drawer-head{margin-bottom:12px}
+  .personal-shell .personal-drawer-head .personal-drawer-close{display:none}
+  .personal-shell .personal-drawer-head{margin-bottom:0}
 }
 @media(max-width:900px){
   .personal-shell .personal-drawer{overflow-y:auto}
