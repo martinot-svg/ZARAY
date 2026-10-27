@@ -76,7 +76,7 @@ export default function DashboardWorkspace({ companyId, siteId }: { companyId:st
       <div className="panel-head"><div><div className="panel-title">Sites de {company.legal_name}</div><div className="muted">Sélectionnez un site pour afficher ses opérations.</div></div></div>
       {sites.length?<div className="data-list">{sites.map(s=><Link className="data-row" key={s.id} href={'/sites/'+encodeURIComponent(s.id)+'?companyId='+encodeURIComponent(company.id)}><ZarayIcon name="site" size={18} /> 
         <strong><ZarayIcon name="site" size={18} /> {s.name}</strong><span className="status-pill">{statuses[s.status]??s.status}</span>
-      </Link>)}</div>:<div className="empty-state"><strong>Entreprise créée.</strong><p>Vous pouvez maintenant créer votre premier site.</p><a className="primary-link" href={contextual('/sites')}><ZarayIcon name="add" size={18} /> Créer un site</Link></div>}
+      </Link>)}</div>:<div className="empty-state"><strong>Entreprise créée.</strong><p>Vous pouvez maintenant créer votre premier site.</p><Link className="primary-link" href={contextual('/sites')}><ZarayIcon name="add" size={18} /> Créer un site</Link></div>}
     </section>}
     <div className="module-grid">
       <section className="panel"><div className="panel-head"><div className="panel-title">Activité récente</div></div>
@@ -88,11 +88,11 @@ export default function DashboardWorkspace({ companyId, siteId }: { companyId:st
       <section className="panel"><div className="panel-head"><div className="panel-title">Opérations</div></div>
         <div className="quick-grid">
           <Link className="quick-action" href={contextual('/clients')}><ZarayIcon name="customers" size={20} /> Clients</Link>
-          <a className="quick-action" href={contextual('/commandes')}><ZarayIcon name="orders" size={20} /> Commandes</Link>
-          <a className="quick-action" href={contextual('/paiements/verification')}><ZarayIcon name="payment" size={20} /> Paiements</Link>
-          <a className="quick-action" href={contextual('/tickets')}><ZarayIcon name="wifi" size={20} /> Tickets Wi-Fi</Link>
-          <a className="quick-action" href={contextual('/caisse')}><ZarayIcon name="cash" size={20} /> Caisse</Link>
-          <a className="quick-action" href={contextual('/offres')}><ZarayIcon name="wifi" size={20} /> Offres de l’entreprise</Link>
+          <Link className="quick-action" href={contextual('/commandes')}><ZarayIcon name="orders" size={20} /> Commandes</Link>
+          <Link className="quick-action" href={contextual('/paiements/verification')}><ZarayIcon name="payment" size={20} /> Paiements</Link>
+          <Link className="quick-action" href={contextual('/tickets')}><ZarayIcon name="wifi" size={20} /> Tickets Wi-Fi</Link>
+          <Link className="quick-action" href={contextual('/caisse')}><ZarayIcon name="cash" size={20} /> Caisse</Link>
+          <Link className="quick-action" href={contextual('/offres')}><ZarayIcon name="wifi" size={20} /> Offres de l’entreprise</Link>
         </div>
       </section>
     </div>
