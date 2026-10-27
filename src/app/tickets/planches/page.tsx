@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/app-shell';
+import VoucherCanvas from '@/components/voucher-canvas';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import { generateA4Pdf, voucherPages, type PrintableVoucher, type TicketVisual } from '@/lib/ticket-pdf';
 type Site={id:string;company_id:string;name:string;status:string};
@@ -68,7 +69,7 @@ export default function TicketSheets(){
    <p className="muted">Chaque ticket possède un identifiant et un mot de passe différents. Il reste « disponible », sans accès Internet, tant qu'il n'a pas été vendu et provisionné sur le réseau.</p>
    <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
     <button type="button" className="primary-link" disabled={!companyId||!siteId||!offerId||busy||chosen?.status!=='active'} onClick={create}><ZarayIcon name="ticket" size={16}/>{busy?'Génération…':'Générer un lot unique'}</button>
-    <a href={'/personnalisation-tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)}>Personnaliser l'apparence</a>
+    <a href={'/personnalisation-tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)+'&offerId='+encodeURIComponent(offerId)}>Personnaliser l'apparence</a>
    </div>
    {error&&<p className="alert alert-error" role="alert">{error}</p>}
   </section>
@@ -84,29 +85,23 @@ export default function TicketSheets(){
    <div style={{overflowX:'auto'}}>
     <div id="zaray-print-area">
      {voucherPages(tickets).map((page,index)=><div className="zaray-a4-sheet" key={index}>
-      {page.map(ticket=><div className="zaray-small-voucher" key={ticket.id} style={{background:design.secondary_color,color:design.title_color,borderColor:design.border_color,fontFamily:design.font_family}}>
-       <div className="zaray-voucher-edge" style={{background:design.primary_color}}/>
-       {design.logo_data_uri&&<img src={design.logo_data_uri} alt="" className="zaray-voucher-logo"/>}
-       <div className="zaray-voucher-detail">
-        <strong style={{color:design.primary_color}}>{chosen?.name}</strong>
-        <span>{ticket.offer_name}</span>
-        <span>Utilisateur : <b>{ticket.username}</b></span>
-        <span>Mot de passe : <b>{ticket.password}</b></span>
-        <small>{ticket.duration_minutes} min · {ticket.price_amount} {ticket.currency} · Non activé</small>
-       </div>
+      {page.map(ticket=><div className="zaray-small-voucher" key={ticket.id}>
+        <VoucherCanvas ticket={ticket} design={design} siteName={chosen?.name??''}/>
+       </div>)}
       </div>)}
      </div>)}
     </div>
    </div>
    <style jsx global>{`
     .zaray-a4-sheet{box-sizing:border-box;width:210mm;height:297mm;padding:21mm 10mm;display:grid;grid-template-columns:repeat(3,60mm);grid-template-rows:repeat(11,20mm);column-gap:5mm;row-gap:3.5mm;background:white;margin:0 auto 16px;box-shadow:0 0 4px #999;page-break-after:always;break-after:page}
-    .zaray-small-voucher{box-sizing:border-box;width:60mm;height:20mm;border:0.25mm solid;display:flex;overflow:hidden;position:relative;padding:1mm;gap:1mm}
+    .zaray-small-voucher{box-sizing:border-box;width:60mm;height:20mm;display:block;overflow:hidden;position:relative;padding:0}
     .zaray-voucher-edge{position:absolute;left:0;top:0;bottom:0;width:0.6mm}
     .zaray-voucher-logo{width:11mm;height:16mm;object-fit:contain;align-self:center}
     .zaray-voucher-detail{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;font-size:5.7pt;line-height:1.16;overflow:hidden}
     .zaray-voucher-detail strong,.zaray-voucher-detail span{white-space:nowrap;overflow:hidden;text-overflow:clip}
     .zaray-voucher-detail small{font-size:5pt;white-space:nowrap}.zaray-voucher-detail span:nth-of-type(3){white-space:normal;overflow-wrap:anywhere;font-size:5pt;line-height:1.05}
     @page{size:A4 portrait;margin:0}
+    .zaray-voucher-print-canvas{width:60mm!important;height:20mm!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
     @media print{html,body{margin:0!important;padding:0!important;background:white!important}body *{visibility:hidden!important}#zaray-print-area,#zaray-print-area *{visibility:visible!important}#zaray-print-area{position:absolute!important;top:0!important;left:0!important;width:210mm!important} .zaray-a4-sheet{margin:0!important;box-shadow:none!important} }
    `}</style>
   </>}
