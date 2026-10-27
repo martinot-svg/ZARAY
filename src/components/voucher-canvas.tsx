@@ -12,15 +12,22 @@ export default function VoucherCanvas({ticket,design,siteName,preview=false}:{
  const element=useRef<HTMLCanvasElement>(null);
  useEffect(()=>{
    let alive=true;
-   (async()=>{
-     const logo=await loadVoucherLogo(design.logo_data_uri);
-     if(!alive||!element.current)return;
-     const canvas=element.current;
+   const canvas=element.current;
+   if(canvas){
      canvas.width=TICKET_PIXEL_WIDTH;canvas.height=TICKET_PIXEL_HEIGHT;
-     const ctx=canvas.getContext('2d');if(!ctx)return;
-     ctx.clearRect(0,0,canvas.width,canvas.height);
-     paintVoucher(ctx,0,0,ticket,design,siteName,logo);
-   })();
+     const ctx=canvas.getContext('2d');
+     if(ctx){
+       // Draw the readable core immediately, even while a logo is decoding.
+       paintVoucher(ctx,0,0,ticket,design,siteName,null);
+       if(design.logo_data_uri){
+         void loadVoucherLogo(design.logo_data_uri).then(logo=>{
+           if(!alive||!logo)return;
+           ctx.clearRect(0,0,canvas.width,canvas.height);
+           paintVoucher(ctx,0,0,ticket,design,siteName,logo);
+         });
+       }
+     }
+   }
    return()=>{alive=false};
  },[ticket,design,siteName]);
  return <canvas ref={element} width={TICKET_PIXEL_WIDTH} height={TICKET_PIXEL_HEIGHT}
