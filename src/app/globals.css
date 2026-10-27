@@ -600,3 +600,53 @@ svg[data-zaray-icon]{display:inline-block;vertical-align:-.22em;flex-shrink:0;co
 :where(.landing-feature h3,.kpi-label,.panel-title):has(>svg[data-zaray-icon]){display:flex;align-items:center;gap:9px}
 :where(button,a)[aria-disabled="true"] svg[data-zaray-icon],button:disabled svg[data-zaray-icon]{opacity:.55}
 @media(max-width:600px){svg[data-zaray-icon]{width:18px;height:18px}}
+
+
+/* Personal workspace: a permanent sidebar on desktop and a drawer on smaller screens. */
+.personal-topbar-identity{
+  display:flex;flex-direction:column;align-items:flex-end;justify-content:center;
+  gap:3px;margin-left:auto;min-width:0;text-align:right;line-height:1.3;
+}
+.personal-topbar-name{
+  display:block;max-width:min(34vw,300px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:#fff;font-size:14px;font-weight:800;
+}
+.personal-topbar-identity > span{color:#c3d7c6;font-size:12px;font-weight:400}
+.personal-drawer .personal-profile{
+  display:flex;align-items:center;gap:12px;padding:16px 12px;margin:2px 0 14px;
+  border:1px solid #344738;border-radius:12px;background:#162019;min-width:0;
+}
+.personal-profile-avatar{
+  display:grid;place-items:center;flex:0 0 43px;width:43px;height:43px;
+  border-radius:50%;background:#304635;color:#eaf8e9;
+}
+.personal-profile-copy{display:flex;flex-direction:column;gap:4px;min-width:0}
+.personal-profile-copy strong{
+  color:#fff;font-size:14px;font-weight:800;line-height:1.35;overflow-wrap:anywhere;
+}
+.personal-profile-copy span{color:#c5d9c8;font-size:12px;font-weight:400;line-height:1.4}
+.personal-drawer .personal-nav-link{display:flex;align-items:center;gap:11px}
+.personal-drawer .personal-nav-link svg{flex-shrink:0}
+@media(min-width:901px){
+  .personal-shell{display:grid;grid-template-columns:280px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .personal-shell .personal-drawer{
+    position:sticky;inset:auto;grid-column:1;grid-row:1 / span 2;
+    width:280px;height:100dvh;min-height:0;overflow-y:auto;overflow-x:hidden;
+    transform:none;visibility:visible;pointer-events:auto;box-shadow:none;z-index:1;
+  }
+  .personal-shell .personal-topbar{grid-column:2;grid-row:1;min-width:0}
+  .personal-shell .personal-content{grid-column:2;grid-row:2;width:100%;min-width:0}
+  .personal-shell .personal-menu-toggle,.personal-shell .personal-menu-backdrop{display:none!important}
+  .personal-shell .personal-drawer-head button{display:none}
+  .personal-shell .personal-drawer-head{margin-bottom:12px}
+}
+@media(max-width:900px){
+  .personal-shell .personal-drawer{overflow-y:auto}
+}
+@media(max-width:480px){
+  .personal-topbar{padding-inline:12px;gap:8px}
+  .personal-topbar-name{max-width:112px;font-size:12px}
+  .personal-topbar-identity > span{font-size:10px}
+  .personal-menu-toggle{padding:9px 11px}
+  .personal-menu-toggle span{display:none}
+}
