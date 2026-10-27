@@ -953,16 +953,7 @@ svg[data-zaray-icon]{display:inline-block;vertical-align:-.22em;flex-shrink:0;co
 @media(prefers-reduced-motion:no-preference){.zalliance-close,.zalliance-actions button{transition:background-color 180ms ease,border-color 180ms ease}}
 
 
-/* Personal area: authentic user-supplied green starfield, not a recreated gradient.
-   Only the content surface below ZARAY's existing dark navigation is changed.
-   A local asset must be present at public/brand/zaray-reference-texture.avif. */
-.personal-shell.personal-no-sidebar{
-  background-color:#061106;
-  background-image:url('/brand/zaray-reference-texture.avif');
-  background-repeat:no-repeat;
-  background-size:100% 100%;
-  background-position:center center;
-}
+/* Personal typography on the living galaxy; existing light business cards stay legible. */
 .personal-no-sidebar .personal-content{
   color:#ffffff;
 }
