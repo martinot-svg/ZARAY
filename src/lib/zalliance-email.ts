@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 
 export type IssuedInvitation = {
   id: string; token: string; email: string; company_id: string;
-  role: string; expires_at: string;
+  role: string; expires_at: string; personal_message?: string | null;
 };
 
 export function mailReadiness() {
@@ -54,6 +54,7 @@ export async function deliverInvitation(invitation: IssuedInvitation, companyNam
     'Vous avez été invité à rejoindre un espace de travail sur ZARAY' + (companyName ? ' (' + companyName + ')' : '') + '.',
     'Pour consulter votre invitation et rejoindre cet espace, utilisez le lien ci-dessous.',
     url,
+    ...(invitation.personal_message ? ['', 'Message personnel :', invitation.personal_message] : []),
     'Cette invitation est personnelle, limitée dans le temps et utilisable une seule fois.',
     'Si vous ne reconnaissez pas cette invitation, ignorez ce message.',
     '',
