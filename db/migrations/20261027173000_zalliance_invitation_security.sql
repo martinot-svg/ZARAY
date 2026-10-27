@@ -207,30 +207,3 @@ grant execute on function public.zalliance_resend_invitation(uuid) to authentica
 grant execute on function public.zalliance_accept_invitation(text) to authenticated;
 grant execute on function public.zalliance_revoke_invitation(uuid) to authenticated;
 grant execute on function public.zalliance_mark_delivery(uuid,text,boolean) to service_role;
- then
-  raise exception 'invitation_invalid' using errcode='42501'; end if;
- select * into v_inv from public.company_invitations
- where token_hash=pg_catalog.encode(extensions.digest(p_token,'sha256'),'hex');
- if not found or v_inv.email<>v_email or v_inv.status<>'pending' or
-  v_inv.expires_at<=now() or v_inv.delivery_status<>'sent' then
-  raise exception 'invitation_invalid' using errcode='42501'; end if;
- select legal_name into v_company_name from public.companies where id=v_inv.company_id;
- return pg_catalog.jsonb_build_object('company_name',v_company_name,
-  'role',v_inv.role,'expires_at',v_inv.expires_at);
-end; $;
-
-revoke all on function public.zalliance_preview_invitation(text) from public,anon,authenticated;
-grant execute on function public.zalliance_preview_invitation(text) to authenticated;
-
-revoke all on function public.zalliance_issue_invitation(uuid,text,text,text) from public,anon,authenticated;
-revoke all on function public.zalliance_list_invitations(uuid) from public,anon,authenticated;
-revoke all on function public.zalliance_resend_invitation(uuid) from public,anon,authenticated;
-revoke all on function public.zalliance_mark_delivery(uuid,text,boolean) from public,anon,authenticated;
-revoke all on function public.zalliance_accept_invitation(text) from public,anon,authenticated;
-revoke all on function public.zalliance_revoke_invitation(uuid) from public,anon,authenticated;
-grant execute on function public.zalliance_issue_invitation(uuid,text,text,text) to authenticated;
-grant execute on function public.zalliance_list_invitations(uuid) to authenticated;
-grant execute on function public.zalliance_resend_invitation(uuid) to authenticated;
-grant execute on function public.zalliance_accept_invitation(text) to authenticated;
-grant execute on function public.zalliance_revoke_invitation(uuid) to authenticated;
-grant execute on function public.zalliance_mark_delivery(uuid,text,boolean) to service_role;
