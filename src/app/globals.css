@@ -904,3 +904,50 @@ svg[data-zaray-icon]{display:inline-block;vertical-align:-.22em;flex-shrink:0;co
 @media(prefers-reduced-motion:reduce){
   .app-no-sidebar .app-nav-dropdown{transition:none!important;transform:none!important}
 }
+
+
+/* Z’Alliance · professional and accessible account collaboration screen. */
+.personal-home-shell .personal-content:has(.zalliance){justify-content:flex-start;padding-block:clamp(22px,4vw,46px)}
+.zalliance{width:min(1120px,100%);margin:0 auto;color:var(--text,#1b2b20)}
+.zalliance-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:22px}
+.zalliance-heading h1{display:flex;align-items:center;gap:12px;font-size:clamp(30px,4vw,43px);line-height:1.15;letter-spacing:-.045em;margin:6px 0 10px}
+.zalliance-heading p:not(.eyebrow){margin:0;color:#455b49;font-size:15px;line-height:1.55}
+.zalliance-close{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;padding:10px 12px;border:1px solid #d3dfd2;background:#fff;border-radius:9px;font-size:13px;font-weight:750}
+.zalliance-close:hover,.zalliance-close:focus-visible{background:#edf5ed;border-color:#a6c3aa}
+.zalliance-info{display:flex;align-items:flex-start;gap:10px;margin:0 0 22px;border:1px solid #b7d4bd;border-radius:12px;padding:14px;background:#f0f7f0;color:#24492c;font-size:13px;line-height:1.5}
+.zalliance-info svg{flex-shrink:0}
+.zalliance-company{display:grid;gap:7px;max-width:480px;font-size:13px;font-weight:750;margin-bottom:18px}
+.zalliance-company select{padding:12px;min-height:44px;background:#fff;color:#17291a;border:1px solid #b7c9ba;border-radius:9px;width:100%}
+.zalliance-sections{display:grid;grid-template-columns:minmax(270px,0.9fr) minmax(0,1.1fr);gap:16px;align-items:start}
+.zalliance-sections .panel{min-width:0;margin:0;padding:clamp(17px,2vw,25px)}
+.zalliance-sections h2{display:flex;align-items:center;gap:9px;font-size:18px;margin:0 0 12px}
+.zalliance-sections .muted{line-height:1.6;font-size:12px}
+.zalliance-invite .form-stack{margin-top:16px}
+.zalliance-invite .form-stack label{font-size:13px}
+.zalliance-invite .form-stack input,.zalliance-invite .form-stack select{min-height:44px}
+.zalliance-role-description{font-size:12px;color:#48614d;margin:0;line-height:1.5}
+.zalliance-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.zalliance-actions button{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.zalliance-actions button:disabled{cursor:not-allowed}
+.zalliance-actions button.primary-link{background:#236e2f;color:#fff;border-color:#236e2f}
+.zalliance-actions button.primary-link:hover:not(:disabled){background:#175522}
+.zalliance-lists{display:grid;gap:16px}
+.zalliance-items{list-style:none;padding:0;margin:12px 0 0}
+.zalliance-items li{display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid #e4ebe3;padding:13px 0}
+.zalliance-items li strong{display:block;font-size:13px;overflow-wrap:anywhere}
+.zalliance-items li small{display:block;font-size:11px;color:#566c5b;line-height:1.5;margin-top:4px;overflow-wrap:anywhere}
+.zalliance-items li .status-pill{flex-shrink:0}
+.zalliance-external-link{display:inline-flex;align-items:center;gap:7px;margin-top:15px}
+.zalliance-footer{border-top:1px solid #dae6db;padding-top:16px;margin:24px 0;max-width:900px}
+.zalliance-footer a{display:inline-flex;align-items:center;gap:7px}
+.zalliance-footer .muted{line-height:1.6}
+.zalliance :where(input,select,button,a):focus-visible{outline:3px solid #63bd78;outline-offset:2px}
+@media(max-width:850px){.zalliance-sections{grid-template-columns:1fr}}
+@media(max-width:500px){
+ .zalliance-heading{align-items:flex-start;gap:12px}
+ .zalliance-heading h1{font-size:28px}
+ .zalliance-close span{display:none}
+ .zalliance-close{padding:10px;min-width:44px;min-height:44px;justify-content:center}
+ .zalliance-items li{align-items:flex-start;flex-wrap:wrap}
+}
+@media(prefers-reduced-motion:no-preference){.zalliance-close,.zalliance-actions button{transition:background-color 180ms ease,border-color 180ms ease}}
