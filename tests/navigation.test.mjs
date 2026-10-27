@@ -16,7 +16,7 @@ test('personal welcome uses the signed-in user profile and active memberships',(
  assert.match(account,/\.eq\('status', 'active'\)/);
  assert.match(account,/email_confirmed_at/);
  const page=source('src/app/mon-compte/page.tsx');
- assert.match(page,/Bonjour, \$\{identity\.name\}/);
+ assert.match(page,/identity\.name \? 'Bonjour, ' \+ identity\.name/);
  assert.doesNotMatch(page,/Martinot|Maleka|1 248|12 450 000/);
 });
 test('personal navigation has exactly the requested three primary destinations',()=>{
@@ -140,7 +140,9 @@ test('site filtering is limited to operational pages and company-wide site direc
 test('personal dashboard uses only authorized enterprise finance data and clear KPI semantics',()=>{
  const page=source('src/app/mon-compte/page.tsx');
  const finance=source('src/components/personal-finance-overview.tsx');
- assert.match(page,/PersonalFinanceOverview/);
+ assert.doesNotMatch(page,/PersonalFinanceOverview/);
+ const financePage=source('src/app/finance-globale/page.tsx');
+ assert.match(financePage,/PersonalFinanceOverview/);
  assert.match(finance,/financeRoles\.has\(company\.role\)/);
  assert.match(finance,/\.eq\('company_id', company\.id\)/);
  assert.match(finance,/\.eq\('status', 'succeeded'\)/);
@@ -151,4 +153,80 @@ test('personal dashboard uses only authorized enterprise finance data and clear 
  assert.match(finance,/amountsByCompany/);
  assert.match(finance,/Aucune finance privée/);
  assert.doesNotMatch(finance,/Mes finances personnelles|Solde de trésorerie disponible/);
+});
+
+test('personal home removes sidebar and business cards without deleting any business data',()=>{
+ const page=source('src/app/mon-compte/page.tsx');
+ const shell=source('src/components/personal-shell.tsx');
+ const css=source('src/app/globals.css');
+ assert.match(page,/<PersonalShell home/);
+ assert.match(page,/<DailyInspiration/);
+ assert.match(page,/identity\.name \? 'Bonjour, ' \+ identity\.name/);
+ for(const forbidden of ['MON COMPTE ZARAY','Votre accueil personnel','Voir toutes mes entreprises','personal-business-list','personal-quick-actions','PersonalFinanceOverview','personal-email']){
+   assert.doesNotMatch(page,new RegExp(forbidden));
+ }
+ assert.match(shell,/\{!home && <>/);
+ assert.match(shell,/\{!home && email &&/);
+ assert.match(css,/\.personal-shell\.personal-home-shell\{/);
+ assert.match(css,/\.personal-home-shell \.personal-content\{/);
+ assert.match(css,/max-width:none/);
+ assert.match(css,/min-height:calc\(100dvh - 76px\)/);
+});
+test('daily inspiration is locally date-stable, originals-only and accessible with reduced motion',()=>{
+ const quote=source('src/components/daily-inspiration.tsx');
+ const match=quote.match(/dailyInspirationQuotes = (\[[\s\S]*?\]) as const;/);
+ assert.ok(match,'the original quote collection must exist');
+ const quotes=JSON.parse(match[1]);
+ assert.ok(quotes.length >= 50);
+ assert.equal(new Set(quotes).size,quotes.length);
+ assert.match(quote,/Date\.UTC\(now\.getFullYear\(\), now\.getMonth\(\), now\.getDate\(\)\)/);
+ assert.match(quote,/calendarDay % dailyInspirationQuotes\.length/);
+ assert.match(quote,/visibilitychange/);
+ assert.match(quote,/Pensée originale/);
+ assert.doesNotMatch(quote,/Math\.random/);
+ const css=source('src/app/globals.css');
+ assert.match(css,/@keyframes zaray-home-rise/);
+ assert.match(css,/prefers-reduced-motion:reduce/);
+});
+test('profile menu uses real invitation permissions and existing sign out workflow',()=>{
+ const shell=source('src/components/personal-shell.tsx');
+ const page=source('src/app/mon-compte/page.tsx');
+ const members=source('src/app/membres/page.tsx');
+ assert.match(shell,/aria-controls="personal-profile-actions" aria-expanded=\{profileOpen\}/);
+ assert.match(shell,/className=\{'personal-profile-dropdown'/);
+ assert.match(shell,/Inviter un collaborateur/);
+ assert.match(shell,/\/membres\?companyId=/);
+ assert.match(shell,/inviteCompanyId \?/);
+ assert.match(shell,/aria-disabled="true"/);
+ assert.match(shell,/<SignOutButton \/>/);
+ assert.match(shell,/setProfileOpen\(false\)/);
+ assert.match(shell,/profileRef\.current\?\.contains\(event\.target\)/);
+ assert.match(page,/company\.role === 'owner' \|\| company\.role === 'admin'/);
+ assert.match(members,/currentRole==='owner'\|\|currentRole==='admin'/);
+ assert.match(members,/fetch\('\/api\/company-members',\{method:'POST'/);
+ const signout=source('src/components/sign-out-button.tsx');
+ assert.match(signout,/auth\.signOut\(\)/);
+ assert.match(signout,/window\.location\.replace\('\/connexion'\)/);
+});
+test('home navigation remains usable after the sidebar disappears',()=>{
+ const shell=source('src/components/personal-shell.tsx');
+ const css=source('src/app/globals.css');
+ assert.match(shell,/className="personal-home-nav-toggle"/);
+ assert.match(shell,/aria-controls="personal-home-navigation-links" aria-expanded=\{homeNavOpen\}/);
+ assert.match(shell,/homeNavRef\.current\?\.contains\(event\.target\)/);
+ assert.match(shell,/className=\{'personal-home-nav-menu'/);
+ for (const path of ['/mon-compte','/entreprises','/finance-globale']) assert.ok(shell.includes("href: '"+path+"'"));
+ assert.match(css,/\.personal-home-nav-menu\.is-open/);
+ assert.match(css,/position:absolute;top:calc\(100% \+ 10px\)/);
+ assert.match(css,/210ms/);
+});
+test('the existing finance overview and its functional filters live on Finance globale',()=>{
+ const financePage=source('src/app/finance-globale/page.tsx');
+ const overview=source('src/components/personal-finance-overview.tsx');
+ assert.match(financePage,/filtersAction="\/finance-globale"/);
+ assert.match(financePage,/requestedCompanyId=\{financeCompanyId\}/);
+ assert.match(financePage,/requestedCurrency=\{currency\}/);
+ assert.match(overview,/action=\{filtersAction\}/);
+ assert.match(overview,/\.eq\('company_id', company\.id\)/);
+ assert.match(overview,/\.eq\('status', 'succeeded'\)/);
 });
