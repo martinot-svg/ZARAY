@@ -53,33 +53,65 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   const firstMenuLink = useRef<HTMLAnchorElement>(null);
+  const menuContainer = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!menuOpen) return;
     firstMenuLink.current?.focus();
     const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') { setMenuOpen(false); menuButton.current?.focus(); } };
+    const closeOutside = (event: PointerEvent) => {
+      if (event.target instanceof Node && !menuContainer.current?.contains(event.target)) setMenuOpen(false);
+    };
     window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
+    document.addEventListener('pointerdown', closeOutside);
+    return () => { window.removeEventListener('keydown', closeOnEscape); document.removeEventListener('pointerdown', closeOutside); };
   }, [menuOpen]);
-  return <div className="app-shell">
-    <button type="button" className={`app-nav-scrim${menuOpen ? ' is-open' : ''}`}
-      aria-label="Fermer la navigation" tabIndex={menuOpen ? 0 : -1} onClick={() => setMenuOpen(false)} />
-    <aside id="zaray-app-nav" className={`app-nav${menuOpen ? ' is-open' : ''}`} aria-label="Navigation de l’entreprise" inert={!menuOpen}>
-      <div className="app-nav-mobile-head"><strong>Gestion de l'entreprise</strong><button type="button" onClick={() => { setMenuOpen(false); menuButton.current?.focus(); }}><ZarayIcon name="close" size={18} /> Fermer</button></div>
-      <a className="app-brand" href="/" aria-label="ZARAY · Accueil"><BrandLogo priority /></a>
-      {activeSite && activeCompany && <div className="app-nav-group"><span className="app-nav-label">SITE ACTIF</span><a className="app-nav-link" href={'/sites/'+encodeURIComponent(activeSite)+'?companyId='+encodeURIComponent(activeCompany)}><ZarayIcon name="dashboard" size={18} /> Tableau de bord du site</a></div>}
-      {sections.map((section) => <div className="app-nav-group" key={section.label}>
-        <span className="app-nav-label">{section.label}</span>
-        {section.items.map(([href, label]) => {
-          const siteOperational = ['/clients','/commandes','/tickets','/paiements/verification'].includes(href);
-          const scoped=href === '/entreprises' ? href : activeCompany ? href+(href.includes('?')?'&':'?')+'companyId='+encodeURIComponent(activeCompany)+(activeSite && siteOperational ? '&siteId='+encodeURIComponent(activeSite) : '') : href;
-          return <Link key={href} ref={href === '/tableau-de-bord' ? firstMenuLink : undefined} className={'app-nav-link' + (activePath === href ? ' active' : '')} href={scoped} prefetch={false} aria-current={activePath === href ? 'page' : undefined} onClick={() => setMenuOpen(false)}><ZarayIcon name={navigationIcons[href as keyof typeof navigationIcons] ?? "next"} size={18} /> {label}</Link>;
-        })}
-      </div>)}
-      <div className="app-nav-footer"><a className="app-nav-link" href="/mon-compte"><ZarayIcon name="back" size={18} /> Retour au compte personnel</a><a className="app-nav-link" href="/entreprises"><ZarayIcon name="company" size={18} /> Mes entreprises</a><SignOutButton /></div>
-    </aside>
+  return <div className="app-shell app-no-sidebar">
     <div className="app-main">
       <header className="app-topbar">
-        <button ref={menuButton} className="app-menu-button" type="button" aria-controls="zaray-app-nav" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}><ZarayIcon name="menu" size={18} /> Menu</button>
+        <div className="app-menu-container" ref={menuContainer}>
+          <button ref={menuButton} className="app-menu-button" type="button"
+            aria-controls="zaray-app-nav" aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(value => !value)}>
+            <ZarayIcon name="menu" size={18} /> Menu
+          </button>
+          <nav id="zaray-app-nav"
+            className={'app-nav-dropdown' + (menuOpen ? ' is-open' : '')}
+            aria-label="Navigation de l’entreprise" inert={!menuOpen} aria-hidden={!menuOpen}>
+            {activeSite && activeCompany && <div className="app-nav-group">
+              <span className="app-nav-label">SITE ACTIF</span>
+              <Link className="app-nav-link" href={'/sites/'+encodeURIComponent(activeSite)+'?companyId='+encodeURIComponent(activeCompany)}
+                prefetch={false} onClick={() => setMenuOpen(false)}>
+                <ZarayIcon name="dashboard" size={18} /> Tableau de bord du site
+              </Link>
+            </div>}
+            {sections.map(section => <div className="app-nav-group" key={section.label}>
+              <span className="app-nav-label">{section.label}</span>
+              {section.items.map(([href, label]) => {
+                const siteOperational = ['/clients','/commandes','/tickets','/paiements/verification'].includes(href);
+                const scoped=href === '/entreprises' ? href : activeCompany
+                  ? href+(href.includes('?')?'&':'?')+'companyId='+encodeURIComponent(activeCompany)+(activeSite && siteOperational ? '&siteId='+encodeURIComponent(activeSite) : '')
+                  : href;
+                return <Link key={href}
+                  ref={href === '/tableau-de-bord' ? firstMenuLink : undefined}
+                  href={scoped} prefetch={false}
+                  className={'app-nav-link' + (activePath === href ? ' active' : '')}
+                  aria-current={activePath === href ? 'page' : undefined}
+                  onClick={() => setMenuOpen(false)}>
+                  <ZarayIcon name={navigationIcons[href as keyof typeof navigationIcons] ?? 'next'} size={18} /> {label}
+                </Link>;
+              })}
+            </div>)}
+            <div className="app-nav-footer">
+              <Link className="app-nav-link" href="/mon-compte" prefetch={false} onClick={() => setMenuOpen(false)}>
+                <ZarayIcon name="back" size={18} /> Retour au compte personnel
+              </Link>
+              <Link className="app-nav-link" href="/entreprises" prefetch={false} onClick={() => setMenuOpen(false)}>
+                <ZarayIcon name="company" size={18} /> Mes entreprises
+              </Link>
+              <SignOutButton />
+            </div>
+          </nav>
+        </div>
         <a className="app-topbar-brand" href="/mon-compte" aria-label="ZARAY · Espace personnel"><BrandLogo /></a>
         <div className="workspace-context">
           <strong>Compte ZARAY</strong><span className="muted"> / </span>
