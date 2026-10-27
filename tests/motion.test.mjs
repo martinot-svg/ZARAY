@@ -55,7 +55,9 @@ test('galaxy is a true continuously rendered GPU animation with independent livi
   "float streamA", "float streamB", "float farDust", "float midStars",
   "float nearStars", "uniform float u_time", "uniform vec2 u_resolution",
  ]) assert.ok(galaxy.includes(feature), 'missing '+feature);
- assert.match(galaxy,/if \(!motionPreference\.matches\) elapsed \+= gap \/ 1000/);
+ assert.match(galaxy,/if \(!motionPreference\.matches\) \{/);
+ assert.match(galaxy,/sharedGalaxyClock = elapsed/);
+ assert.match(galaxy,/let elapsed = sharedGalaxyClock/);
  assert.match(galaxy,/mobile\.matches \? 42 : 60/);
  assert.match(galaxy,/slowFrames > 90/);
  assert.match(galaxy,/Math\.sqrt\(maxPixels \/ \(width \* height\)\)/);
