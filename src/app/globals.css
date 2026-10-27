@@ -1070,3 +1070,33 @@ svg[data-zaray-icon]{display:inline-block;vertical-align:-.22em;flex-shrink:0;co
 @media(max-width:650px){.wifi-template-choices{grid-template-columns:1fr}.wifi-template-preview-wrap{padding:12px 6px;min-height:116px}}
 @media(prefers-reduced-motion:reduce){.wifi-template-choice{transition:none}}
 @media print{.wifi-template-choices,.wifi-template-preview-panel{display:none!important}}
+
+/* Personal workspace header: ZARAY logo → navigation, with the company CTA beside the profile. */
+.personal-topbar-actions{
+  display:flex;align-items:center;gap:clamp(8px,1.2vw,16px);
+  margin-left:auto;min-width:0;
+}
+.personal-topbar-actions .personal-profile-control{margin-left:0}
+.personal-topbar-create{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 14px;font-size:12px;white-space:nowrap;
+  flex:0 1 auto;
+}
+/* Companies listing: retain only the title followed by existing business cards. */
+.personal-no-sidebar .personal-enterprises-heading{
+  border-bottom:0;padding-bottom:0;margin-bottom:12px;
+}
+.personal-no-sidebar .personal-enterprises-heading h1{margin:0}
+.personal-no-sidebar .personal-enterprises-heading + .personal-business-list{margin-top:18px}
+@media(max-width:900px){
+  .personal-topbar:has(.personal-topbar-create){flex-wrap:wrap}
+  .personal-topbar:has(.personal-topbar-create) .personal-topbar-actions{
+    width:100%;justify-content:flex-end;
+  }
+}
+@media(max-width:430px){
+  .personal-topbar-create{
+    font-size:11px;line-height:1.2;padding:9px 10px;
+    white-space:normal;text-align:center;
+  }
+}
