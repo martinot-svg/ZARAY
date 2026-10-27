@@ -18,34 +18,29 @@ test('public page contains structured, factual, user-oriented SaaS content',()=>
  assert.match(home,/configuration effective des équipements/);
  assert.doesNotMatch(home,/1 248|12 450 000|faker|Math\.random|entreprise de démonstration/i);
 });
-test('all identified company and site modules provide real route loading fallbacks',()=>{
+test('all identified company and site modules navigate without route skeleton screens',()=>{
  const modules=[
   'sites','sites/[siteId]','clients','offres','commandes','tickets','paiements',
   'paiements/verification','parametres-paiement','autorisations-paiement',
   'portail','membres','caisse','tableau-de-bord','invitations','entreprises/nouvelle'
  ];
- const component=read('src/components/module-loading.tsx');
  for(const module of modules){
   const path='src/app/'+module+'/loading.tsx';
-  assert.ok(existsSync(new URL('../'+path,import.meta.url)),path);
-  assert.match(read(path),/ModuleLoading/);
+  assert.ok(!existsSync(new URL('../'+path,import.meta.url)),path+' must not interrupt navigation');
  }
- assert.match(component,/aria-busy="true"/);
- assert.match(component,/aria-hidden="true"/);
- assert.match(component,/Récupération des informations autorisées/);
- assert.doesNotMatch(component,/setTimeout|Math\.random|faker/);
+ assert.ok(!existsSync(new URL('../src/components/module-loading.tsx',import.meta.url)));
+ assert.ok(!existsSync(new URL('../src/components/personal-loading.tsx',import.meta.url)));
 });
-test('loading transitions are reduced-motion friendly and errors offer a real retry action',()=>{
+test('reduced-motion accessibility and error retry remain available',()=>{
  const css=read('src/app/globals.css');
  const err=read('src/app/error.tsx');
- assert.match(css,/\.module-loading-screen/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(css,/\.landing-hero-grid/);
  assert.match(css,/\.landing-feature-grid/);
  assert.match(err,/onClick=\{\(\) => reset\(\)\}/);
 });
 
-test('module navigation uses Next.js links so route skeletons work during transitions',()=>{
+test('module navigation uses Next.js links without intermediate loading screens',()=>{
  const shell=read('src/components/app-shell.tsx');
  const personal=read('src/components/personal-shell.tsx');
  assert.match(shell,/import Link from 'next\/link'/);
