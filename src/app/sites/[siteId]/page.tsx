@@ -22,5 +22,5 @@ export default async function SiteDashboard({
     <p role="alert">{permission.error}</p>
     <a className="primary-link" href="/entreprises"><ZarayIcon name="back" size={18} /> Revenir à mes entreprises</a>
   </section></main>;
-  return <DashboardWorkspace siteId={siteId} />;
+  return <DashboardWorkspace companyId={companyId} siteId={siteId} />;
 }

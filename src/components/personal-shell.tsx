@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import BrandLogo from '@/components/brand-logo';
-import GalaxyBackdrop from '@/components/galaxy-backdrop';
 import { ZarayIcon, type ZarayIconName } from '@/components/ui/zaray-icon';
 import Link from 'next/link';
 import SignOutButton from '@/components/sign-out-button';
@@ -67,7 +66,6 @@ export default function PersonalShell({
   }, [homeNavOpen, profileOpen]);
 
   return <div className={'personal-shell personal-no-sidebar' + (home ? ' personal-home-shell' : '')}>
-    <GalaxyBackdrop />
     <header className="personal-topbar">
       <Link href="/mon-compte" className="personal-logo" aria-label="Accueil personnel ZARAY"><BrandLogo priority /></Link>
       <div className="personal-home-nav-control" ref={homeNavRef}>
@@ -79,7 +77,7 @@ export default function PersonalShell({
         <nav id="personal-home-navigation-links" aria-label="Navigation du compte personnel"
           className={'personal-home-nav-menu' + (homeNavOpen ? ' is-open' : '')}
           inert={!homeNavOpen} aria-hidden={!homeNavOpen}>
-          {navigationLinks.map(link => <Link key={link.href} href={link.href} prefetch={false}
+          {navigationLinks.map(link => <Link key={link.href} href={link.href}
             aria-current={active === link.href.split('?')[0] ? 'page' : undefined}
             className={'personal-nav-link' + (active === link.href.split('?')[0] ? ' active' : '')}
             onClick={() => setHomeNavOpen(false)}>

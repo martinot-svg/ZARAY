@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import AppShell from '@/components/app-shell';
 import { ZarayIcon, type ZarayIconName } from '@/components/ui/zaray-icon';
-import { MotionCount } from '@/components/motion';
+
 
 type Company = { id:string; legal_name:string; slug:string; role:string };
 type Site = { id:string; company_id:string; name:string; status:string };
@@ -19,40 +20,41 @@ const metrics: {key:keyof Metrics;label:string}[]=[
 ];
 const statuses: Record<string,string> = { active:'Actif', planned:'Planifié',suspended:'Suspendu',archived:'Archivé',paid:'Payée',pending_payment:'En attente',cancelled:'Annulée' };
 
-export default function DashboardWorkspace({ siteId }: { siteId?:string }) {
+export default function DashboardWorkspace({ companyId, siteId }: { companyId:string; siteId?:string }) {
   const [payload,setPayload]=useState<Payload|null>(null);
   const [busy,setBusy]=useState(true);
   const [error,setError]=useState('');
   useEffect(()=>{
-    let active=true;
-    async function load(){
+    let live=true;
+    // The route already checked the tenant. Fetch its dashboard directly rather than
+    // blocking all content behind a second /api/sites -> /api/dashboard waterfall.
+    setBusy(true);setError('');setPayload(null);
+    const query=new URLSearchParams({companyId});
+    if(siteId)query.set('siteId',siteId);
+    void (async()=>{
       try{
-        const contextResponse=await fetch('/api/sites',{cache:'no-store'});
-        const context=await contextResponse.json();
-        if(!contextResponse.ok) throw new Error(context.error||'Impossible de charger les entreprises.');
-        if(!active)return;
-        const companies:Company[]=context.companies??[];
-        if(!companies.length){window.location.replace('/entreprises');return;}
-        const requested=new URLSearchParams(window.location.search).get('companyId');
-        if(!requested && !siteId){window.location.replace('/entreprises');return;}
-        const matchingSite=siteId ? (context.sites??[]).find((s:Site)=>s.id===siteId) : null;
-        const companyId=requested || matchingSite?.company_id || companies[0].id;
-        if(!companies.some(c=>c.id===companyId))throw new Error('Entreprise inaccessible.');
-        if(siteId && (!matchingSite || matchingSite.company_id!==companyId))throw new Error('Site inaccessible dans cette entreprise.');
-        const params=new URLSearchParams({companyId});
-        if(siteId)params.set('siteId',siteId);
-        const response=await fetch('/api/dashboard?'+params.toString(),{cache:'no-store'});
+        const response=await fetch('/api/dashboard?'+query.toString(),{cache:'no-store'});
         const data=await response.json();
         if(!response.ok)throw new Error(data.error||'Impossible de charger le tableau de bord.');
-        if(active)setPayload(data as Payload);
-      }catch(e){if(active)setError(e instanceof Error?e.message:'Erreur de chargement.');}
-      finally{if(active)setBusy(false);}
-    }
-    void load();
-    return()=>{active=false};
-  },[siteId]);
-  if(busy)return null;
-  if(error||!payload)return <main className="form-shell"><section className="form-card"><h1>Contexte inaccessible</h1><p role="alert">{error||'Aucun contexte disponible.'}</p><a href="/tableau-de-bord"><ZarayIcon name="back" size={18} /> Revenir aux entreprises</a></section></main>;
+        if(live)setPayload(data as Payload);
+      }catch(e){if(live)setError(e instanceof Error?e.message:'Données momentanément indisponibles.');}
+      finally{if(live)setBusy(false);}
+    })();
+    return()=>{live=false};
+  },[companyId,siteId]);
+
+  // Never return null while fetching: keep navigation, background and the active
+  // enterprise scope on screen even on slow connections or failed requests.
+  if(busy||error||!payload)return <AppShell activePath={siteId?'/sites/'+siteId:'/tableau-de-bord'}
+      companyId={companyId} siteId={siteId} eyebrow={siteId?'ENTREPRISE / SITE':'ENTREPRISE · VUE GÉNÉRALE'}
+      title="Tableau de bord" description="Espace de gestion de l’entreprise sélectionnée.">
+      <section className="panel dashboard-availability" aria-busy={busy} aria-live="polite">
+        {error ? <><h2>Les données ne sont pas disponibles</h2><p role="alert">{error}</p>
+          <Link className="header-link" href="/entreprises"><ZarayIcon name="back" size={18}/> Revenir à mes entreprises</Link></>
+          : <><h2>Tableau de bord de votre entreprise</h2>
+          <p>Le contexte entreprise est conservé. Les données autorisées apparaîtront dès qu’elles seront disponibles.</p></>}
+      </section>
+    </AppShell>;
   const {company,site,sites,metrics:values,recentOrders}=payload;
   const companyLink='/tableau-de-bord?companyId='+encodeURIComponent(company.id);
   const params=new URLSearchParams({companyId:company.id});
@@ -62,19 +64,19 @@ export default function DashboardWorkspace({ siteId }: { siteId?:string }) {
     eyebrow={site?'ENTREPRISE / SITE':'ENTREPRISE · VUE GÉNÉRALE'}
     title={site?company.legal_name+' / '+site.name+' — Tableau de bord':company.legal_name+' — Tableau de bord'}
     description={site?company.legal_name+' / '+site.name+' · Données de ce site exclusivement.': 'Vue globale de '+company.legal_name+' · données réelles issues de Supabase.'}
-    actions={site?<a className="primary-link" href={companyLink}><ZarayIcon name="back" size={18} /> Retour à la vue générale</a>:<a className="primary-link" href={contextual('/sites')}><ZarayIcon name="site" size={18} /> Gérer les sites</a>}>
-    <section className="kpi-grid motion-stagger" aria-label="Indicateurs réels">
+    actions={site?<Link className="primary-link" href={companyLink}><ZarayIcon name="back" size={18} /> Retour à la vue générale</Link>:<Link className="primary-link" href={contextual('/sites')}><ZarayIcon name="site" size={18} /> Gérer les sites</Link>}>
+    <section className="kpi-grid" aria-label="Indicateurs réels">
       {metrics.map(({key,label})=><article className="kpi" key={key}>
         <div className="kpi-label"><ZarayIcon name={metricIcons[key] ?? "dashboard"} size={18} /> {label.toUpperCase()}</div>
-        <div className="kpi-value">{values[key]===null?<span className="muted">Indisponible</span>:<MotionCount value={values[key]!}/>}</div>
+        <div className="kpi-value">{values[key]===null?<span className="muted">Indisponible</span>:values[key]!.toLocaleString('fr-FR')}</div>
         <div className="kpi-note">{site?'Pour '+site.name:'Pour '+company.legal_name}</div>
       </article>)}
     </section>
     {!site && <section className="panel" style={{marginBottom:16}}>
       <div className="panel-head"><div><div className="panel-title">Sites de {company.legal_name}</div><div className="muted">Sélectionnez un site pour afficher ses opérations.</div></div></div>
-      {sites.length?<div className="data-list">{sites.map(s=><a className="data-row" key={s.id} href={'/sites/'+encodeURIComponent(s.id)+'?companyId='+encodeURIComponent(company.id)}><ZarayIcon name="site" size={18} /> 
+      {sites.length?<div className="data-list">{sites.map(s=><Link className="data-row" key={s.id} href={'/sites/'+encodeURIComponent(s.id)+'?companyId='+encodeURIComponent(company.id)}><ZarayIcon name="site" size={18} /> 
         <strong><ZarayIcon name="site" size={18} /> {s.name}</strong><span className="status-pill">{statuses[s.status]??s.status}</span>
-      </a>)}</div>:<div className="empty-state"><strong>Entreprise créée.</strong><p>Vous pouvez maintenant créer votre premier site.</p><a className="primary-link" href={contextual('/sites')}><ZarayIcon name="add" size={18} /> Créer un site</a></div>}
+      </Link>)}</div>:<div className="empty-state"><strong>Entreprise créée.</strong><p>Vous pouvez maintenant créer votre premier site.</p><Link className="primary-link" href={contextual('/sites')}><ZarayIcon name="add" size={18} /> Créer un site</Link></div>}
     </section>}
     <div className="module-grid">
       <section className="panel"><div className="panel-head"><div className="panel-title">Activité récente</div></div>
@@ -85,12 +87,12 @@ export default function DashboardWorkspace({ siteId }: { siteId?:string }) {
       </section>
       <section className="panel"><div className="panel-head"><div className="panel-title">Opérations</div></div>
         <div className="quick-grid">
-          <a className="quick-action" href={contextual('/clients')}><ZarayIcon name="customers" size={20} /> Clients</a>
-          <a className="quick-action" href={contextual('/commandes')}><ZarayIcon name="orders" size={20} /> Commandes</a>
-          <a className="quick-action" href={contextual('/paiements/verification')}><ZarayIcon name="payment" size={20} /> Paiements</a>
-          <a className="quick-action" href={contextual('/tickets')}><ZarayIcon name="wifi" size={20} /> Tickets Wi-Fi</a>
-          <a className="quick-action" href={contextual('/caisse')}><ZarayIcon name="cash" size={20} /> Caisse</a>
-          <a className="quick-action" href={contextual('/offres')}><ZarayIcon name="wifi" size={20} /> Offres de l’entreprise</a>
+          <Link className="quick-action" href={contextual('/clients')}><ZarayIcon name="customers" size={20} /> Clients</Link>
+          <Link className="quick-action" href={contextual('/commandes')}><ZarayIcon name="orders" size={20} /> Commandes</Link>
+          <Link className="quick-action" href={contextual('/paiements/verification')}><ZarayIcon name="payment" size={20} /> Paiements</Link>
+          <Link className="quick-action" href={contextual('/tickets')}><ZarayIcon name="wifi" size={20} /> Tickets Wi-Fi</Link>
+          <Link className="quick-action" href={contextual('/caisse')}><ZarayIcon name="cash" size={20} /> Caisse</Link>
+          <Link className="quick-action" href={contextual('/offres')}><ZarayIcon name="wifi" size={20} /> Offres de l’entreprise</Link>
         </div>
       </section>
     </div>

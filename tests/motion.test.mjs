@@ -34,10 +34,11 @@ test('Mobile navigation and disclosure expose accessible controls', () => {
   assert.ok(motion.includes('aria-expanded={open}'));
   assert.ok(motion.includes('inert={!open}'));
 });
-test('Count-up uses the actual data and hides transient visual numbers from assistive technology', () => {
-  assert.ok(dashboard.includes('<MotionCount value={values[key]!}/>'));
+test('Dashboard shows exact KPI values immediately without counting from zero', () => {
+  assert.ok(dashboard.includes("values[key]!.toLocaleString('fr-FR')"));
   assert.ok(dashboard.includes('values[key]===null'));
-  assert.ok(motion.includes('aria-hidden="true"'));
+  assert.doesNotMatch(dashboard,/MotionCount|motion-stagger/);
+  assert.ok(motion.includes('aria-hidden="true"')); // Other modules may retain accessible count-up.
 });
 test('Background movement is limited to the existing login page', () => {
   assert.ok(login.includes('form-shell auth-motion'));

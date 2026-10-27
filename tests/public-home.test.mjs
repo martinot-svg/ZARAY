@@ -45,7 +45,8 @@ test('module navigation uses Next.js links without intermediate loading screens'
  const personal=read('src/components/personal-shell.tsx');
  assert.match(shell,/import Link from 'next\/link'/);
  assert.match(shell,/<Link key=\{href\}/);
- assert.match(shell,/prefetch=\{false\}/);
+ assert.doesNotMatch(shell,/prefetch=\{false\}/);
+ assert.doesNotMatch(personal,/prefetch=\{false\}/);
  assert.match(personal,/import Link from 'next\/link'/);
  assert.match(personal,/<Link key=\{link\.href\}/);
 });
