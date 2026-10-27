@@ -23,6 +23,10 @@ export default function ConnexionPage() {
         password: String(data.get('password')),
       });
       if (signInError) throw new Error('E-mail ou mot de passe incorrect, ou adresse non vérifiée.');
+      if (sessionStorage.getItem('zaray:pending-alliance-invitation')) {
+        window.location.replace('/z-alliance/accepter');
+        return;
+      }
       window.location.replace('/mon-compte');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur de connexion.');
