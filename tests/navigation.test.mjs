@@ -305,3 +305,28 @@ test('Z’Accueil uses the existing daily welcome; the dashboard uses a company-
  assert.match(management,/return <DashboardWorkspace \/>/);
  assert.doesNotMatch(home,/DashboardWorkspace/);
 });
+
+
+test('daily quotations are translated to French before rendering, with an offline-safe French fallback',()=>{
+ const route=source('src/app/api/daily-quote/route.ts');
+ const translation=source('src/lib/french-daily-quote.ts');
+ const page=source('src/components/daily-inspiration.tsx');
+ const fallback=source('src/data/quotations/french-fallbacks.ts');
+ const library=source('src/lib/daily-quote-library.ts');
+ assert.match(route,/await getFrenchDailyQuote\(date\)/);
+ assert.match(route,/quoteLibrary\.length/);
+ assert.match(route,/Date\.UTC\(today\.getUTCFullYear\(\)/);
+ assert.match(translation,/unstable_cache/);
+ assert.match(translation,/langpair: 'en\|fr'/);
+ assert.match(translation,/api\.mymemory\.translated\.net\/get/);
+ assert.match(translation,/responseStatus/);
+ assert.match(translation,/translatedFrom: 'en'/);
+ assert.match(translation,/originalFrenchFallback\(localDate\)/);
+ assert.match(translation,/language: 'fr'/);
+ assert.match(fallback,/La régularité transforme les ambitions en résultats/);
+ assert.match(page,/lang="fr"/);
+ assert.match(page,/Traduction française automatique/);
+ assert.doesNotMatch(page,/lang="en"|Texte en anglais/);
+ assert.match(page,/daily\.quote\.sourceUrl && <a/);
+ assert.match(library,/quoteLibrary: Entry\[\]/);
+});
