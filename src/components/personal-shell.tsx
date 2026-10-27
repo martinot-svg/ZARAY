@@ -65,7 +65,7 @@ export default function PersonalShell({
     return () => window.removeEventListener('keydown', closeEscape);
   }, [homeNavOpen, profileOpen]);
 
-  return <div className={'personal-shell personal-no-sidebar' + (home ? ' personal-home-shell' : '')}>
+  return <div className={'personal-shell personal-no-sidebar' + (home ? ' personal-home-shell' : '') + (['/mon-compte', '/entreprises', '/finance-globale'].includes(active) ? ' personal-sticky-topbar' : '')}>
     <header className="personal-topbar">
       <Link href="/mon-compte" className="personal-logo" aria-label="Accueil personnel ZARAY"><BrandLogo priority /></Link>
       <div className="personal-home-nav-control" ref={homeNavRef}>
@@ -117,7 +117,7 @@ export default function PersonalShell({
       </div>
     </header>
     <main className="personal-content">
-      {!home && email && active !== '/entreprises' && <p className="personal-email">Compte : {email}</p>}
+      {!home && email && active !== '/entreprises' && active !== '/finance-globale' && <p className="personal-email">Compte : {email}</p>}
       {children}
     </main>
   </div>;
