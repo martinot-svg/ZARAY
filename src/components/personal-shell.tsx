@@ -7,7 +7,8 @@ import Link from 'next/link';
 import SignOutButton from '@/components/sign-out-button';
 
 const links = [
-  { href: '/mon-compte', label: 'Tableau de bord', icon: 'dashboard' },
+  { href: '/mon-compte', label: 'Z’Accueil', icon: 'home' },
+  { href: '/tableau-de-bord', label: 'Tableau de bord', icon: 'dashboard' },
   { href: '/entreprises', label: 'Mes entreprises', icon: 'company' },
   { href: '/finance-globale', label: 'Finances des entreprises', icon: 'finance' },
 ];
@@ -19,15 +20,24 @@ type Props = {
   name: string | null;
   home?: boolean;
   inviteCompanyId?: string | null;
+  dashboardCompanyId?: string | null;
 };
 
-export default function PersonalShell({ children, active, email, name, home = false, inviteCompanyId = null }: Props) {
+export default function PersonalShell({ children, active, email, name, home = false, inviteCompanyId = null, dashboardCompanyId = null }: Props) {
   const [open, setOpen] = useState(false);
   const [spaceMenuOpen, setSpaceMenuOpen] = useState(false);
   const [homeNavOpen, setHomeNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [desktop, setDesktop] = useState(false);
   const displayName = name?.trim() || email?.split('@')[0] || 'Utilisateur ZARAY';
+  // The existing management dashboard requires an authorized company context.
+  // Never point its navigation item to the distinct /mon-compte welcome page.
+  const dashboardHref = dashboardCompanyId
+    ? '/tableau-de-bord?companyId=' + encodeURIComponent(dashboardCompanyId)
+    : '/tableau-de-bord';
+  const navigationLinks = links.map(link =>
+    link.href === '/tableau-de-bord' ? { ...link, href: dashboardHref } : link
+  );
 
   const menuButton = useRef<HTMLButtonElement>(null);
   const spaceMenuButton = useRef<HTMLButtonElement>(null);
@@ -95,7 +105,7 @@ export default function PersonalShell({ children, active, email, name, home = fa
           inert={!spaceMenuOpen} aria-hidden={!spaceMenuOpen}>
           <div className="personal-space-reveal-inner">
             <div className="personal-space-links">
-              {links.map(link => <Link key={link.href} href={link.href} prefetch={false}
+              {navigationLinks.map(link => <Link key={link.href} href={link.href} prefetch={false}
                 aria-current={active === link.href ? 'page' : undefined}
                 className={'personal-nav-link' + (active === link.href ? ' active' : '')}
                 onClick={() => { setSpaceMenuOpen(false); setOpen(false); }}>
@@ -117,7 +127,7 @@ export default function PersonalShell({ children, active, email, name, home = fa
         <nav id="personal-home-navigation-links" aria-label="Navigation du compte personnel"
           className={'personal-home-nav-menu' + (homeNavOpen ? ' is-open' : '')}
           inert={!homeNavOpen} aria-hidden={!homeNavOpen}>
-          {links.map(link => <Link key={link.href} href={link.href} prefetch={false}
+          {navigationLinks.map(link => <Link key={link.href} href={link.href} prefetch={false}
             aria-current={active === link.href ? 'page' : undefined}
             className={'personal-nav-link' + (active === link.href ? ' active' : '')}
             onClick={() => setHomeNavOpen(false)}>
