@@ -91,7 +91,7 @@ export function paintVoucher(ctx:CanvasRenderingContext2D,x:number,y:number,tick
    fit(ctx,ticket.offer_name,left,y+40,available,14,ink,font,true);
    fit(ctx,'User: '+ticket.username,left,y+61,available,15,ink,font);
    fit(ctx,'Pass: '+ticket.password,left,y+82,available,15,ink,font);
-   const metadata=[design.show_duration!==false?ticket.duration_minutes+' min':'',design.show_price!==false?String(ticket.price_amount)+' '+ticket.currency:'','Non activé'].filter(Boolean).join(' · ');
+   const metadata=ticket.duration_minutes+' min · '+ticket.price_amount+' '+ticket.currency+' · Non activé';
    fit(ctx,metadata,left,y+103,available,12,ink,font);
  }else{
    const split=x+w*.76,mainX=x+11,mainWidth=split-mainX-8,sideX=split+7,sideWidth=x+w-sideX-9;
@@ -119,14 +119,15 @@ export function paintVoucher(ctx:CanvasRenderingContext2D,x:number,y:number,tick
    fit(ctx,ticket.offer_name,mainX,y+40,mainWidth,15,fg,font,true);
    fit(ctx,'UTILISATEUR  '+ticket.username,mainX,y+62,mainWidth,14,fg,font,true);
    fit(ctx,'MOT DE PASSE  '+ticket.password,mainX,y+85,mainWidth,14,fg,font,true);
-   const footer=design.footer_text?.trim()||design.welcome_message?.trim()||'NON ACTIVÉ';
+   const optionalFooter=design.footer_text?.trim()||design.welcome_message?.trim()||'';
+   const footer='NON ACTIVÉ'+(optionalFooter?' · '+optionalFooter:'');
    fit(ctx,footer,mainX,y+105,mainWidth,11,secondary,font,false);
    const rightInk=kind==='corporate'&&!darkTheme?legibleInk('#ffffff',primary):fg;
    const rightSub=kind==='corporate'&&!darkTheme?rightInk:secondary;
    fit(ctx,'WI-FI',sideX,y+22,sideWidth,17,rightInk,font,true);
    let infoY=y+46;
-   if(design.show_duration!==false){fit(ctx,ticket.duration_minutes+' min',sideX,infoY,sideWidth,13,rightSub,font,true);infoY+=20;}
-   if(design.show_price!==false){fit(ctx,String(ticket.price_amount)+' '+ticket.currency,sideX,infoY,sideWidth,12,rightSub,font);infoY+=18;}
+   fit(ctx,ticket.duration_minutes+' min',sideX,infoY,sideWidth,13,rightSub,font,true);infoY+=20;
+   fit(ctx,String(ticket.price_amount)+' '+ticket.currency,sideX,infoY,sideWidth,12,rightSub,font);infoY+=18;
    const sideNote=design.show_ticket_id===true?'N° '+ticket.id.slice(0,8).toUpperCase():
       design.show_wifi_ssid===true&&design.wifi_ssid?design.wifi_ssid:
       design.phone?.trim()||design.address?.trim()||'';
