@@ -8,7 +8,7 @@ const motion = source('src/components/motion.tsx');
 const shell = source('src/components/app-shell.tsx');
 const dashboard = source('src/components/dashboard-workspace.tsx');
 const login = source('src/app/connexion/page.tsx');
-const tickets = source('src/app/tickets/page.tsx');
+const tickets = source('src/components/wifi-ticket-history.tsx');
 
 test('ZARAY motion durations and easing are centralized', () => {
   for (const token of ['--motion-fast:120ms', '--motion-standard:180ms', '--motion-page:240ms', '--motion-curve:', '--motion-distance:8px']) {

@@ -9,14 +9,14 @@ import Link from 'next/link';
 
 const sections = [
   { label: 'GESTION', items: [['/tableau-de-bord', 'Tableau de bord'], ['/sites', 'Sites'], ['/membres', 'Membres']] },
-  { label: 'ACTIVITÉ', items: [['/clients', 'Clients'], ['/offres', 'Offres Internet'], ['/commandes', 'Commandes'], ['/tickets', 'Tickets Wi-Fi'], ['/tickets/planches', 'Planches A4'], ['/personnalisation-tickets', 'Personnaliser tickets']] },
+  { label: 'ACTIVITÉ', items: [['/clients', 'Clients'], ['/offres', 'Offres Internet'], ['/commandes', 'Commandes'], ['/tickets', 'Tickets Wi-Fi']] },
   { label: 'FINANCE & RÉSEAU', items: [['/paiements/verification', 'Paiements'], ['/parametres-paiement', 'Moyens de paiement'], ['/portail', 'Portail captif']] },
 ];
 
 const navigationIcons = {
   '/tableau-de-bord': 'dashboard', '/entreprises': 'company', '/sites': 'site',
   '/membres': 'members', '/clients': 'customers', '/offres': 'wifi',
-  '/commandes': 'orders', '/tickets': 'ticket', '/tickets/planches': 'print', '/personnalisation-tickets': 'settings', '/paiements/verification': 'payment',
+  '/commandes': 'orders', '/tickets': 'ticket', '/paiements/verification': 'payment',
   '/parametres-paiement': 'finance', '/portail': 'network',
 } as const;
 type WorkspaceCompany = { id:string; legal_name:string; role:string };
