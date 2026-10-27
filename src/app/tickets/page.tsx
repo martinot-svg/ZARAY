@@ -84,7 +84,7 @@ export default function WifiTicketsPage() {
   const paidOrdersWithoutTicket = orders.filter((o) => o.status === 'paid' && !tickets.some((t) => t.subscription_order_id === o.id));
   return <main className="form-shell"><section className="form-card" style={{ maxWidth: 1100, width: 'min(100%,1100px)' }}>
       <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
-    <WorkspaceBreadcrumb companyId={companyId}/><p className="eyebrow">ZARAY · MODULE 8 · ACCÈS WI-FI</p><h1>Tickets Wi-Fi</h1>
+    <WorkspaceBreadcrumb companyId={companyId}/><p><a className="primary-link" href={'/tickets/planches?companyId='+encodeURIComponent(companyId)+(activeSiteId()?'&siteId='+encodeURIComponent(activeSiteId()!):'')}><ZarayIcon name="print" size={18}/> Générer des planches A4 (33 tickets)</a></p><p className="eyebrow">ZARAY · MODULE 8 · ACCÈS WI-FI</p><h1>Tickets Wi-Fi</h1>
     <p>Les codes sont hachés en base et affichés une seule fois. L’émission est refusée tant que la commande n’a pas un paiement confirmé côté serveur. Un ticket émis ne déclenche pas lui-même la connexion réseau.</p>
     {companies.length > 0 && <p className="muted">Entreprise active : {companies.find(c => c.id === companyId)?.legal_name ?? '—'}</p>}}
     {paidOrdersWithoutTicket.length > 0 && <section style={{ marginTop: 24 }}>
