@@ -49,7 +49,7 @@ export default function PersonalShell({ children, active, email, name }: { child
       <div className="personal-drawer-footer"><SignOutButton /></div>
     </nav>
     <header className="personal-topbar">
-      <button ref={menuButton} type="button" className="personal-menu-toggle" aria-controls="personal-navigation" aria-expanded={open} onClick={() => setOpen(v => !v)}><ZarayIcon name="menu" size={20} /><span>Menu</span></button>
+      <button ref={menuButton} type="button" aria-label={open ? "Fermer le menu personnel" : "Ouvrir le menu personnel"} className="personal-menu-toggle" aria-controls="personal-navigation" aria-expanded={open} onClick={() => setOpen(v => !v)}><ZarayIcon name="menu" size={20} /><span>Menu</span></button>
       <a href="/mon-compte" className="personal-logo" aria-label="Accueil personnel ZARAY"><BrandLogo priority /></a>
       <div className="personal-topbar-identity"><strong className="personal-topbar-name" title={displayName}>{displayName}</strong><span>Espace personnel</span></div>
     </header>
