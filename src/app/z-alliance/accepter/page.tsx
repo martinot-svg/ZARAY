@@ -13,6 +13,7 @@ export default function AcceptZAllianceInvitation() {
   const [message,setMessage]=useState('');
   const [loginNeeded,setLoginNeeded]=useState(false);
   const [success,setSuccess]=useState<Membership|null>(null);
+  const [preview,setPreview]=useState<{company_name:string;role:string;expires_at:string}|null>(null);
 
   useEffect(()=>{
     const hash=new URLSearchParams(window.location.hash.replace(/^#/,''));
@@ -22,6 +23,17 @@ export default function AcceptZAllianceInvitation() {
     if (/^[0-9a-f]{64}$/.test(raw)) {
       sessionStorage.setItem(STORAGE,raw);
       setToken(raw);
+      void (async()=>{
+        try {
+          const response=await fetch('/api/z-alliance/preview',{
+            method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:raw})
+          });
+          const data=await response.json();
+          if(response.status===401){setLoginNeeded(true);setMessage('Connectez-vous pour consulter votre invitation.');return;}
+          if(!response.ok)throw new Error(data.error||'Invitation indisponible.');
+          setPreview(data.invitation);
+        }catch(error){setMessage(error instanceof Error?error.message:'Invitation indisponible.');}
+      })();
     } else {
       sessionStorage.removeItem(STORAGE);
       setMessage('Lien d’invitation manquant ou invalide.');
@@ -29,7 +41,7 @@ export default function AcceptZAllianceInvitation() {
   },[]);
 
   async function accept(){
-    if(!token||busy)return;
+    if(!token||!preview||busy)return;
     setBusy(true);setMessage('');setLoginNeeded(false);
     try{
       const response=await fetch('/api/z-alliance/accept',{
@@ -59,7 +71,8 @@ export default function AcceptZAllianceInvitation() {
     </> : <>
       <p>Cette invitation est personnelle. Connectez-vous ou inscrivez-vous avec <strong>l’adresse e-mail qui a reçu l’invitation</strong> pour consulter les droits proposés.</p>
       <p>Une fois connecté et votre adresse confirmée, choisissez « Accepter l’invitation ». Aucun accès n’est accordé avant cette validation.</p>
-      {token && <button type="button" className="primary-link" onClick={()=>void accept()} disabled={busy}>
+      {preview && <div className="panel" style={{margin:'18px 0'}}><p><strong>Entreprise :</strong> {preview.company_name}</p><p><strong>Rôle proposé :</strong> {({admin:'Administrateur',site_manager:'Responsable de site',support:'Support',technician:'Technicien',sales:'Commercial',finance:'Finance'} as Record<string,string>)[preview.role]??preview.role}</p><p><strong>Expiration :</strong> {new Date(preview.expires_at).toLocaleDateString('fr-FR')}</p></div>}
+      {preview && token && <button type="button" className="primary-link" onClick={()=>void accept()} disabled={busy}>
         <ZarayIcon name="confirm" size={18}/> {busy?'Vérification en cours…':'Accepter l’invitation'}
       </button>}
       {message && <div role="alert" className="alert alert-error">{message}</div>}
