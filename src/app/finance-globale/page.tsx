@@ -36,7 +36,7 @@ export default async function GlobalFinancePage() {
   const hasPayments = !error && rows.some(row => row.count > 0);
   const format = (amount: number, currency: string) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(amount) + ' ' + currency;
 
-  return <PersonalShell active="/finance-globale" email={identity.email}>
+  return <PersonalShell active="/finance-globale" email={identity.email} name={identity.name}>
     <header className="personal-page-heading"><p className="eyebrow">COMPTE PERSONNEL · FINANCE</p><h1>Finance globale</h1>
       <p>Consolidation des paiements confirmés du registre uniquement, pour les entreprises auxquelles votre rôle donne accès. Les monnaies restent séparées.</p></header>
     {error ? <div role="alert" className="alert alert-error">{error}</div>
