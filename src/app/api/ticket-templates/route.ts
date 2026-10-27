@@ -10,7 +10,6 @@ const styles = new Set(['classic','event','minimal','corporate']);
 const visualColors=['accent_color'] as const;
 const visualBooleans=['gradient_enabled','decorations_enabled','show_price','show_duration','show_ticket_id','show_wifi_ssid'] as const;
 const visualTexts={brand_name:90,wifi_ssid:64,phone:60,address:160,welcome_message:120,footer_text:100} as const;
-const additionalFields=['template_key',...visualColors,...visualBooleans,...Object.keys(visualTexts)];
 const defaults = {
   primary_color:'#167a46', secondary_color:'#ffffff',title_color:'#10251a',
   border_color:'#a5b9ad',font_family:'Arial',username_length:5,password_length:12,
@@ -40,7 +39,7 @@ export async function GET(request:NextRequest){
   try{
     const {supabase,error}=await authorized(companyId,siteId,offerId);if(error)return error;
     const {data, error:dbError}=await supabase.from('ticket_templates')
-      .select('id,company_id,site_id,offer_id,logo_data_uri,primary_color,secondary_color,title_color,border_color,font_family,username_length,password_length,'+additionalFields.join(','))
+      .select('id,company_id,site_id,offer_id,logo_data_uri,primary_color,secondary_color,title_color,border_color,font_family,username_length,password_length,template_key,accent_color,gradient_enabled,decorations_enabled,brand_name,wifi_ssid,phone,address,welcome_message,footer_text,show_price,show_duration,show_ticket_id,show_wifi_ssid')
       .eq('company_id',companyId).eq('site_id',siteId);
     if(dbError)return fail('Paramètres indisponibles. Vérifiez la migration.',503);
     const base=(data??[]).find(r=>r.offer_id===null) as Row|undefined;
