@@ -433,16 +433,22 @@ test('Z’Alliance secure emails and atomic invitation acceptance are guarded',(
  assert.match(login,/sessionStorage.getItem\('zaray:pending-alliance-invitation'\)/);
 });
 
-test('personal pages use the supplied green starfield and brand-aligned text without layout rebuild',()=>{
+test('galaxy replaces the static reference only as a visual layer, preserving navigation and content',()=>{
  const css=source('src/app/globals.css');
- const image=readFileSync(new URL('../public/brand/zaray-reference-texture.avif',import.meta.url));
- assert.equal(image.toString('ascii',4,12),'ftypavif');
- assert.equal(image.byteLength,8353);
- assert.match(css,/\.personal-shell\.personal-no-sidebar\{/);
- assert.match(css,/background-image:url\('\/brand\/zaray-reference-texture\.avif'\)/);
- assert.match(css,/\.personal-no-sidebar \.personal-page-heading h1/);
- assert.match(css,/\.personal-no-sidebar \.personal-home-quote\{/);
+ const personal=source('src/components/personal-shell.tsx');
+ const company=source('src/components/app-shell.tsx');
+ const galaxy=source('src/components/galaxy-backdrop.tsx');
+ assert.match(css,/\.zaray-galaxy-backdrop\{/);
+ assert.match(css,/position:fixed;inset:0;z-index:0/);
+ assert.match(css,/pointer-events:none/);
+ assert.match(css,/background-image:none/);
+ assert.doesNotMatch(css,/zaray-reference-texture\.avif/);
+ assert.match(personal,/<GalaxyBackdrop \/>/);
+ assert.match(company,/<GalaxyBackdrop \/>/);
+ assert.match(personal,/aria-controls="personal-home-navigation-links"/);
+ assert.match(company,/aria-controls="zaray-app-nav"/);
+ assert.match(galaxy,/aria-hidden="true"/);
  assert.match(css,/\.personal-no-sidebar \.personal-home-quote-author\{/);
- assert.match(css,/color:#2df135/);
- assert.match(css,/color:#ffffff/);
+ assert.match(css,/\.app-no-sidebar \.page-header \.app-title/);
 });
+
