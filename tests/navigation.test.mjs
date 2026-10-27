@@ -21,66 +21,57 @@ test('personal welcome uses the signed-in user profile and active memberships',(
  assert.match(page,/identity\.name \? 'Bonjour, ' \+ identity\.name/);
  assert.doesNotMatch(page,/Martinot|Maleka|1 248|12 450 000/);
 });
-test('personal navigation distinguishes Z’Accueil from the existing management dashboard',()=>{
+test('personal navigation distinguishes home and enterprise dashboard without a sidebar',()=>{
  const nav=source('src/components/personal-shell.tsx');
- for(const path of ['/mon-compte','/tableau-de-bord','/entreprises','/finance-globale'])assert.ok(nav.includes("href: '"+path+"'"));
- assert.match(nav,/aria-expanded=\{open\}/);
+ for(const path of ['/mon-compte','/tableau-de-bord','/entreprises','/finance-globale'])
+  assert.ok(nav.includes("href: '"+path+"'"));
+ assert.match(nav,/personal-shell personal-no-sidebar/);
+ assert.doesNotMatch(nav,/<aside\b|className=\{'personal-drawer'|personal-menu-backdrop/);
+ assert.match(nav,/aria-expanded=\{homeNavOpen\}/);
  assert.match(nav,/event\.key !== 'Escape'/);
- assert.match(nav,/inert=\{!desktop && !open\}/);
+ assert.match(nav,/inert=\{!homeNavOpen\}/);
  assert.match(nav,/name\?\.trim\(\)/);
  assert.match(nav,/personal-profile-copy/);
  assert.match(nav,/Espace personnel/);
  const css=source('src/app/globals.css');
- assert.match(css,/@media\(min-width:901px\)/);
- assert.match(css,/grid-template-columns:280px minmax\(0,1fr\)/);
+ assert.match(css,/\.personal-shell\.personal-no-sidebar\{/);
+ assert.match(css,/display:flex;flex-direction:column;min-height:100dvh;width:100%/);
 });
-test('personal profile card moves to top-right and sidebar menu toggle controls existing links',()=>{
+test('personal profile stays top-right and the navigation works from the topbar on every page',()=>{
  const shell=source('src/components/personal-shell.tsx');
- const sidebar=shell.slice(shell.indexOf('<nav id="personal-navigation"'),shell.indexOf('</nav>'));
  const topbar=shell.slice(shell.indexOf('<header className="personal-topbar">'),shell.indexOf('</header>'));
- assert.match(sidebar,/Mon espace Zaray/);
- assert.match(sidebar,/className="personal-space-toggle"/);
- assert.match(sidebar,/name="menu"/);
- assert.match(sidebar,/aria-controls="personal-space-links" aria-expanded=\{spaceMenuOpen\}/);
- assert.match(sidebar,/inert=\{!spaceMenuOpen\}/);
- assert.match(sidebar,/navigationLinks\.map/);
- assert.doesNotMatch(sidebar,/personal-profile-avatar/);
+ assert.match(topbar,/Mon espace Zaray/);
+ assert.match(topbar,/name="menu"/);
+ assert.match(topbar,/aria-controls="personal-home-navigation-links" aria-expanded=\{homeNavOpen\}/);
+ assert.match(topbar,/inert=\{!homeNavOpen\}/);
+ assert.match(topbar,/navigationLinks\.map/);
  assert.match(topbar,/className="personal-topbar-profile"/);
  assert.match(topbar,/personal-profile-avatar/);
  assert.match(topbar,/\{displayName\}/);
  assert.match(topbar,/Espace personnel/);
- assert.doesNotMatch(topbar,/personal-topbar-identity/);
- assert.match(shell,/setSpaceMenuOpen\(value => !value\)/);
+ assert.match(shell,/setHomeNavOpen\(value => !value\)/);
  assert.doesNotMatch(shell,/Mahasiloke Tinot/);
  const css=source('src/app/globals.css');
- assert.match(css,/\.personal-space-reveal\.is-open\{/);
- assert.match(css,/\.personal-topbar-profile\{/);
- assert.match(css,/@media\(max-width:480px\)/);
+ assert.match(css,/\.personal-home-nav-menu\.is-open\{/);
+ assert.match(css,/\.personal-no-sidebar \.personal-topbar\{/);
 });
 
-test('personal space curtain stays in sidebar header and supports outside click, keyboard and motion',()=>{
+test('topbar menu replaces personal sidebar with outside-click, Escape and reduced-motion support',()=>{
  const shell=source('src/components/personal-shell.tsx');
  const css=source('src/app/globals.css');
- const drawer=shell.slice(shell.indexOf('<nav id="personal-navigation"'),shell.indexOf('</nav>'));
- const header=drawer.slice(drawer.indexOf('<div className="personal-drawer-head">'),drawer.indexOf('</div>'));
- assert.doesNotMatch(drawer,/Mon compte ZARAY/);
- assert.match(header,/className="personal-space-toggle"/);
- assert.match(header,/Mon espace Zaray/);
- assert.equal((drawer.match(/Mon espace Zaray/g)??[]).length,1);
- assert.ok(drawer.indexOf('personal-drawer-head')<drawer.indexOf('personal-space-reveal'));
- assert.match(drawer,/className=\{'personal-space-reveal' \+ \(spaceMenuOpen \? ' is-open' : ''\)\}/);
- assert.match(drawer,/inert=\{!spaceMenuOpen\}/);
- assert.match(shell,/useState\(false\)/);
+ assert.doesNotMatch(shell,/Mon compte ZARAY|personal-drawer-head|<nav id="personal-navigation"/);
+ assert.equal((shell.match(/Mon espace Zaray/g)??[]).length,1);
+ assert.match(shell,/className="personal-home-nav-toggle"/);
+ assert.match(shell,/className=\{'personal-home-nav-menu'/);
+ assert.match(shell,/inert=\{!homeNavOpen\}/);
  assert.match(shell,/document\.addEventListener\('pointerdown', closeOutside\)/);
- assert.match(shell,/spaceMenuButton\.current\?\.contains\(event\.target\)/);
- assert.match(shell,/spaceMenuPanel\.current\?\.contains\(event\.target\)/);
+ assert.match(shell,/homeNavRef\.current\?\.contains\(event\.target\)/);
  assert.match(shell,/event\.key !== 'Escape'/);
- for(const label of ['Tableau de bord','Mes entreprises','Finances des entreprises']) assert.ok(shell.includes("label: '"+label+"'"));
- assert.match(css,/grid-template-rows:0fr/);
- assert.match(css,/grid-template-rows:1fr/);
+ for(const label of ['Tableau de bord','Mes entreprises','Finances des entreprises'])
+  assert.ok(shell.includes("label: '"+label+"'"));
+ assert.match(css,/\.personal-home-nav-menu\.is-open\{/);
  assert.match(css,/210ms cubic-bezier/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
- assert.match(css,/\.personal-shell \.personal-drawer-head \.personal-drawer-close\{display:none\}/);
 });
 
 test('company menu uses three named groups, retains routes and excludes public website link',()=>{
@@ -157,22 +148,21 @@ test('personal dashboard uses only authorized enterprise finance data and clear 
  assert.doesNotMatch(finance,/Mes finances personnelles|Solde de trésorerie disponible/);
 });
 
-test('personal home removes sidebar and business cards without deleting any business data',()=>{
+test('personal home and other personal pages have no sidebar or reserved left column',()=>{
  const page=source('src/app/mon-compte/page.tsx');
  const shell=source('src/components/personal-shell.tsx');
  const css=source('src/app/globals.css');
  assert.match(page,/<PersonalShell home/);
  assert.match(page,/<DailyInspiration/);
  assert.match(page,/identity\.name \? 'Bonjour, ' \+ identity\.name/);
- for(const forbidden of ['MON COMPTE ZARAY','Votre accueil personnel','Voir toutes mes entreprises','personal-business-list','personal-quick-actions','PersonalFinanceOverview','personal-email']){
-   assert.doesNotMatch(page,new RegExp(forbidden));
- }
- assert.match(shell,/\{!home && <>/);
+ for(const forbidden of ['MON COMPTE ZARAY','Votre accueil personnel','Voir toutes mes entreprises','personal-business-list','personal-quick-actions','PersonalFinanceOverview','personal-email'])
+  assert.doesNotMatch(page,new RegExp(forbidden));
+ assert.match(shell,/personal-no-sidebar/);
  assert.match(shell,/\{!home && email &&/);
+ assert.doesNotMatch(shell,/personal-drawer|personal-menu-backdrop/);
  assert.match(css,/\.personal-shell\.personal-home-shell\{/);
- assert.match(css,/\.personal-home-shell \.personal-content\{/);
+ assert.match(css,/\.personal-no-sidebar \.personal-content\{/);
  assert.match(css,/max-width:none/);
- assert.match(css,/min-height:calc\(100dvh - 76px\)/);
 });
 test('daily inspiration uses a sourced library of thousands, not an unsourced rotating list',()=>{
  const quote=source('src/components/daily-inspiration.tsx');
@@ -228,7 +218,7 @@ test('profile menu uses real invitation permissions and existing sign out workfl
  assert.match(shell,/\/membres\?companyId=/);
  assert.match(shell,/inviteCompanyId \?/);
  assert.match(shell,/aria-disabled="true"/);
- assert.match(shell,/<SignOutButton \/>/);
+ assert.match(shell,/<SignOutButton profile \/>/);
  assert.match(shell,/setProfileOpen\(false\)/);
  assert.match(shell,/profileRef\.current\?\.contains\(event\.target\)/);
  assert.match(page,/company\.role === 'owner' \|\| company\.role === 'admin'/);
@@ -297,7 +287,7 @@ test('Z’Accueil uses the existing daily welcome; the dashboard uses a company-
  assert.match(shell,/const dashboardHref = dashboardCompanyId/);
  assert.match(shell,/encodeURIComponent\(dashboardCompanyId\)/);
  assert.match(shell,/navigationLinks\.map\(link => <Link/g);
- assert.match(shell,/aria-current=\{active === link\.href \? 'page' : undefined\}/);
+ assert.match(shell,/aria-current=\{active === link\.href\.split\('\?'\)\[0\] \? 'page' : undefined\}/);
  assert.match(home,/<DailyInspiration/);
  assert.match(home,/dashboardCompanyId=\{companies\[0\]\?\.id \?\? null\}/);
  assert.match(enterprises,/dashboardCompanyId=\{companies\[0\]\?\.id \?\? null\}/);
@@ -355,4 +345,25 @@ test('navigation has no fullscreen loading boundaries or placeholder skeletons',
  assert.doesNotMatch(dashboard,/Chargement du tableau de bord|MotionSkeleton/);
  const shell=source('src/components/app-shell.tsx');
  assert.doesNotMatch(shell,/Chargement du contexte…/);
+});
+
+
+test('ZARAY uses no permanent or off-canvas black sidebars in personal or company pages',()=>{
+ const personal=source('src/components/personal-shell.tsx');
+ const company=source('src/components/app-shell.tsx');
+ const css=source('src/app/globals.css');
+ assert.doesNotMatch(personal,/<aside\b|personal-drawer|personal-menu-backdrop/);
+ assert.doesNotMatch(company,/<aside\b|app-nav-scrim|className=\{\`app-nav/);
+ assert.match(company,/className="app-shell app-no-sidebar"/);
+ assert.match(company,/className="app-menu-container"/);
+ assert.match(company,/className=\{'app-nav-dropdown'/);
+ assert.match(company,/aria-controls="zaray-app-nav" aria-expanded=\{menuOpen\}/);
+ assert.match(company,/inert=\{!menuOpen\} aria-hidden=\{!menuOpen\}/);
+ assert.match(company,/document\.addEventListener\('pointerdown', closeOutside\)/);
+ assert.match(company,/firstMenuLink\.current\?\.focus\(\)/);
+ assert.match(company,/<SignOutButton \/>/);
+ assert.match(css,/\.app-shell\.app-no-sidebar \.app-main\{\s*margin-left:0/);
+ assert.match(css,/\.app-no-sidebar \.app-menu-button\{\s*display:inline-flex/);
+ assert.match(css,/\.app-no-sidebar \.app-nav-dropdown\{/);
+ assert.match(css,/@media\(max-width:700px\)/);
 });
