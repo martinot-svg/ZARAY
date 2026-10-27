@@ -73,7 +73,7 @@ export default async function PersonalFinanceOverview({ client, companies, reque
   }
 
   const currencies = financeError ? [] : [...sums.keys()].sort();
-  const selectedCurrency = currencies.includes(requestedCurrency ?? '') ? requestedCurrency! : currencies[0];
+  const selectedCurrency: string = currencies.includes(requestedCurrency ?? '') ? requestedCurrency! : (currencies[0] ?? '');
   const monthly = selectedCurrency ? monthlyByCurrency.get(selectedCurrency) ?? [] : [];
   const monthMax = Math.max(0, ...monthly);
   const companyRows = scoped.map(company => ({
