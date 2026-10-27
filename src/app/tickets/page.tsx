@@ -86,7 +86,7 @@ export default function WifiTicketsPage() {
       <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
     <WorkspaceBreadcrumb companyId={companyId}/><p><a className="primary-link" href={'/tickets/planches?companyId='+encodeURIComponent(companyId)+(activeSiteId()?'&siteId='+encodeURIComponent(activeSiteId()!):'')}><ZarayIcon name="print" size={18}/> Générer des planches A4 (33 tickets)</a></p><p className="eyebrow">ZARAY · MODULE 8 · ACCÈS WI-FI</p><h1>Tickets Wi-Fi</h1>
     <p>Les codes sont hachés en base et affichés une seule fois. L’émission est refusée tant que la commande n’a pas un paiement confirmé côté serveur. Un ticket émis ne déclenche pas lui-même la connexion réseau.</p>
-    {companies.length > 0 && <p className="muted">Entreprise active : {companies.find(c => c.id === companyId)?.legal_name ?? '—'}</p>}}
+    {companies.length > 0 && <p className="muted">Entreprise active : {companies.find(c => c.id === companyId)?.legal_name ?? '—'}</p>}
     {paidOrdersWithoutTicket.length > 0 && <section style={{ marginTop: 24 }}>
       <h2>Émettre un ticket après paiement</h2>
       <label>Commande payée<select value={orderId} onChange={(e) => setOrderId(e.target.value)}><option value="">Choisir une commande…</option>{paidOrdersWithoutTicket.map((o) => <option key={o.id} value={o.id}>{o.public_reference} · {o.customer_name} · {o.offer_name}</option>)}</select></label>
