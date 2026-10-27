@@ -21,5 +21,5 @@ export default async function TableauDeBord({ searchParams }: { searchParams: Pr
       <a className="primary-link" href="/entreprises"><ZarayIcon name="back" size={18} /> Revenir à mes entreprises</a>
     </section></main>;
   }
-  return <DashboardWorkspace />;
+  return <DashboardWorkspace companyId={companyId} />;
 }
