@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 const source=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 
 test('login starts in personal space, never in an arbitrary company',()=>{
@@ -329,4 +331,28 @@ test('daily quotations are translated to French before rendering, with an offlin
  assert.doesNotMatch(page,/lang="en"|Texte en anglais/);
  assert.match(page,/daily\.quote\.sourceUrl && <a/);
  assert.match(library,/quoteLibrary: Entry\[\]/);
+});
+
+
+test('navigation has no fullscreen loading boundaries or placeholder skeletons',()=>{
+ const appRoot=fileURLToPath(new URL('../src/app/',import.meta.url));
+ const files=[];
+ const visit=(dir)=>{
+   for(const entry of readdirSync(dir)){
+     const full=join(dir,entry);
+     if(statSync(full).isDirectory()) visit(full);
+     else files.push(full);
+   }
+ };
+ visit(appRoot);
+ assert.equal(files.filter(f=>f.endsWith('/loading.tsx')).length,0,'do not insert route loading screens');
+ for(const full of files.filter(f=>f.endsWith('/page.tsx'))){
+   const page=readFileSync(full,'utf8');
+   assert.doesNotMatch(page,/<MotionSkeleton\b|className="skeleton-list"/,full+' should not flash a placeholder');
+ }
+ const dashboard=source('src/components/dashboard-workspace.tsx');
+ assert.match(dashboard,/if\(busy\)return null;/);
+ assert.doesNotMatch(dashboard,/Chargement du tableau de bord|MotionSkeleton/);
+ const shell=source('src/components/app-shell.tsx');
+ assert.doesNotMatch(shell,/Chargement du contexte…/);
 });
