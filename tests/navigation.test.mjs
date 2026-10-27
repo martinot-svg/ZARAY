@@ -23,7 +23,7 @@ test('personal navigation has exactly the requested three primary destinations',
  const nav=source('src/components/personal-shell.tsx');
  for(const path of ['/mon-compte','/entreprises','/finance-globale'])assert.ok(nav.includes("href: '"+path+"'"));
  assert.match(nav,/aria-expanded=\{open\}/);
- assert.match(nav,/event\.key === 'Escape'/);
+ assert.match(nav,/event\.key !== 'Escape'/);
  assert.match(nav,/inert=\{!desktop && !open\}/);
  assert.match(nav,/name\?\.trim\(\)/);
  assert.match(nav,/personal-profile-copy/);
@@ -40,7 +40,7 @@ test('personal profile card moves to top-right and sidebar menu toggle controls 
  assert.match(sidebar,/className="personal-space-toggle"/);
  assert.match(sidebar,/name="menu"/);
  assert.match(sidebar,/aria-controls="personal-space-links" aria-expanded=\{spaceMenuOpen\}/);
- assert.match(sidebar,/hidden=\{!spaceMenuOpen\}/);
+ assert.match(sidebar,/inert=\{!spaceMenuOpen\}/);
  assert.match(sidebar,/links\.map/);
  assert.doesNotMatch(sidebar,/personal-profile-avatar/);
  assert.match(topbar,/className="personal-topbar-profile"/);
@@ -51,9 +51,34 @@ test('personal profile card moves to top-right and sidebar menu toggle controls 
  assert.match(shell,/setSpaceMenuOpen\(value => !value\)/);
  assert.doesNotMatch(shell,/Mahasiloke Tinot/);
  const css=source('src/app/globals.css');
- assert.match(css,/\.personal-space-links\[hidden\]\{display:none!important\}/);
+ assert.match(css,/\.personal-space-reveal\.is-open\{/);
  assert.match(css,/\.personal-topbar-profile\{/);
  assert.match(css,/@media\(max-width:480px\)/);
+});
+
+test('personal space curtain stays in sidebar header and supports outside click, keyboard and motion',()=>{
+ const shell=source('src/components/personal-shell.tsx');
+ const css=source('src/app/globals.css');
+ const drawer=shell.slice(shell.indexOf('<nav id="personal-navigation"'),shell.indexOf('</nav>'));
+ const header=drawer.slice(drawer.indexOf('<div className="personal-drawer-head">'),drawer.indexOf('</div>'));
+ assert.doesNotMatch(drawer,/Mon compte ZARAY/);
+ assert.match(header,/className="personal-space-toggle"/);
+ assert.match(header,/Mon espace Zaray/);
+ assert.equal((drawer.match(/Mon espace Zaray/g)??[]).length,1);
+ assert.ok(drawer.indexOf('personal-drawer-head')<drawer.indexOf('personal-space-reveal'));
+ assert.match(drawer,/className=\{'personal-space-reveal' \+ \(spaceMenuOpen \? ' is-open' : ''\)\}/);
+ assert.match(drawer,/inert=\{!spaceMenuOpen\}/);
+ assert.match(shell,/useState\(false\)/);
+ assert.match(shell,/document\.addEventListener\('pointerdown', closeOnOutsideClick\)/);
+ assert.match(shell,/spaceMenuButton\.current\?\.contains\(target\)/);
+ assert.match(shell,/spaceMenuPanel\.current\?\.contains\(target\)/);
+ assert.match(shell,/event\.key !== 'Escape'/);
+ for(const label of ['Tableau de bord','Mes entreprises','Finances des entreprises']) assert.ok(shell.includes("label: '"+label+"'"));
+ assert.match(css,/grid-template-rows:0fr/);
+ assert.match(css,/grid-template-rows:1fr/);
+ assert.match(css,/210ms cubic-bezier/);
+ assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+ assert.match(css,/\.personal-shell \.personal-drawer-head \.personal-drawer-close\{display:none\}/);
 });
 
 test('company menu uses three named groups, retains routes and excludes public website link',()=>{
