@@ -434,3 +434,39 @@ test('shared living galaxy replaces the bitmap without altering application navi
  assert.match(css,/\.personal-no-sidebar \.personal-home-quote-author\{/);
  assert.match(css,/\.app-no-sidebar \.page-header \.app-title/);
 });
+
+
+test('Wi-Fi premium styles preserve exact 60 × 20 mm 33-per-A4 business geometry',()=>{
+ const pdf=source('src/lib/ticket-pdf.ts');
+ const sheets=source('src/app/tickets/planches/page.tsx');
+ const editor=source('src/app/personnalisation-tickets/page.tsx');
+ const ui=source('src/components/voucher-canvas.tsx');
+ const route=source('src/app/api/ticket-templates/route.ts');
+ const issue=source('src/app/api/wifi-vouchers/route.ts');
+ const migration=source('db/migrations/20261027_wifi_premium_visual_templates.sql');
+ for(const line of [
+   'pageWidthMm:210','pageHeightMm:297','voucherWidthMm:60','voucherHeightMm:20',
+   'columns:3','rows:11','perPage:33','leftMm:10','topMm:21','columnGapMm:5','rowGapMm:3.5','dpi:150'
+ ])assert.ok(pdf.includes(line),'Missing immutable print geometry '+line);
+ assert.match(pdf,/function paintVoucher\(/);
+ assert.match(pdf,/paintVoucher\(ctx,x,y,arr\[i\],sheet\.design,sheet\.siteName,logo\)/);
+ assert.match(ui,/paintVoucher\(ctx,0,0,ticket,design,siteName,logo\)/);
+ assert.match(ui,/width:'60mm',height:'20mm'/);
+ assert.match(sheets,/voucherPages\(tickets\)/);
+ assert.match(sheets,/grid-template-columns:repeat\(3,60mm\)/);
+ assert.match(sheets,/grid-template-rows:repeat\(11,20mm\)/);
+ assert.match(sheets,/@page\{size:A4 portrait;margin:0\}/);
+ assert.match(sheets,/generateA4Pdf\(/);
+ assert.match(editor,/VoucherCanvas preview/);
+ for(const value of ["classic","event","minimal","corporate"])assert.ok(pdf.includes("'"+value+"'"));
+ assert.match(editor,/Enregistrer comme modèle/);
+ assert.match(route,/authorizeTenant\(supabase,companyId,siteId\)/);
+ assert.match(route,/site_manager/);
+ assert.match(migration,/alter table public.ticket_templates/);
+ assert.match(migration,/add column if not exists template_key/);
+ // Existing issuance, payment rules and one-time credential delivery must not be touched.
+ assert.match(issue,/credential_hash:await sha256\(siteId\+':'\+username\+':'\+password\)/);
+ assert.match(issue,/status:'available'/);
+ assert.match(issue,/const batchId=crypto.randomUUID\(\)/);
+ assert.match(issue,/Number\(count\)>99/);
+});
