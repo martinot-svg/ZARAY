@@ -351,8 +351,8 @@ test('Z’Alliance is a real protected workspace with existing Supabase invitati
  assert.match(ui,/fetch\('\/api\/company-members'/);
  assert.match(ui,/fetch\('\/api\/audit-logs/);
  assert.match(ui,/submitting\.current/);
- assert.match(ui,/Aucun e-mail automatique n’est envoyé actuellement/);
- assert.match(ui,/Ce n’est pas un suivi de livraison/);
+ assert.match(ui,/Aucun e-mail n’a été envoyé/);
+ assert.match(ui,/état d’envoi est indiqué séparément/);
  assert.match(ui,/Mes invitations reçues/);
  assert.match(ui,/member\.status === 'active'/);
  assert.match(api,/rpc\('create_company_invitation'/);
@@ -360,4 +360,37 @@ test('Z’Alliance is a real protected workspace with existing Supabase invitati
  assert.match(css,/\.zalliance-sections/);
  assert.match(css,/@media\(max-width:850px\)/);
  assert.match(shell,/<SignOutButton profile \/>/);
+});
+
+
+test('Z’Alliance secure emails and atomic invitation acceptance are guarded',()=>{
+ const sql=source('db/migrations/20261027173000_zalliance_invitation_security.sql');
+ const api=source('src/app/api/z-alliance/route.ts');
+ const email=source('src/lib/zalliance-email.ts');
+ const accept=source('src/app/api/z-alliance/accept/route.ts');
+ const preview=source('src/app/api/z-alliance/preview/route.ts');
+ const welcome=source('src/app/z-alliance/accepter/page.tsx');
+ const login=source('src/app/connexion/page.tsx');
+ assert.match(sql,/extensions.gen_random_bytes\(32\)/);
+ assert.match(sql,/extensions.digest\(p_token,'sha256'\)/);
+ assert.match(sql,/for update/);
+ assert.match(sql,/zalliance_accept_invitation/);
+ assert.match(sql,/zalliance_preview_invitation/);
+ assert.match(sql,/zalliance_revoke_invitation/);
+ assert.match(sql,/zalliance_resend_invitation/);
+ assert.match(sql,/grant execute on function public.zalliance_mark_delivery\(uuid,text,boolean\) to service_role/);
+ assert.match(sql,/v_inv.email<>v_email/);
+ assert.match(api,/mailReadiness\(\).ready/);
+ assert.match(api,/authorizeTenant\(client, companyId\)/);
+ assert.match(api,/markInvitationDelivery\(invitation,true\)/);
+ assert.match(email,/createHash\('sha256'\)/);
+ assert.match(email,/https:\/\/api.resend.com\/emails/);
+ assert.match(email,/\/z-alliance\/accepter#token=/);
+ assert.doesNotMatch(email,/NEXT_PUBLIC_RESEND_API_KEY/);
+ assert.match(accept,/zalliance_accept_invitation/);
+ assert.match(preview,/zalliance_preview_invitation/);
+ assert.match(welcome,/window.history.replaceState/);
+ assert.match(welcome,/sessionStorage.setItem\(STORAGE,raw\)/);
+ assert.match(welcome,/company_name/);
+ assert.match(login,/sessionStorage.getItem\('zaray:pending-alliance-invitation'\)/);
 });
