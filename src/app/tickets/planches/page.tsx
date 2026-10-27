@@ -89,7 +89,6 @@ export default function TicketSheets(){
         <VoucherCanvas ticket={ticket} design={design} siteName={chosen?.name??''}/>
        </div>)}
       </div>)}
-     </div>)}
     </div>
    </div>
    <style jsx global>{`
