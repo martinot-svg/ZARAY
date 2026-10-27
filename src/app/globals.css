@@ -705,3 +705,112 @@ svg[data-zaray-icon]{display:inline-block;vertical-align:-.22em;flex-shrink:0;co
 @media(max-width:850px){.personal-finance-charts{grid-template-columns:1fr}}
 @media(max-width:520px){.personal-finance-filters{flex-direction:column;align-items:stretch}.personal-finance-filters label{width:100%;min-width:0}.personal-finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.personal-finance-heading h2{font-size:23px}}
 @media(max-width:360px){.personal-finance-kpis{grid-template-columns:1fr}}
+
+
+/* Personal home — full-width, distraction-free welcome. Other personal pages keep their sidebar. */
+.personal-shell.personal-home-shell{
+  display:flex;flex-direction:column;min-height:100dvh;width:100%;background:var(--canvas);
+}
+.personal-home-shell .personal-topbar{
+  position:relative;z-index:25;width:100%;flex:0 0 auto;min-height:76px;
+}
+.personal-home-shell .personal-content{
+  display:flex;flex:1 0 auto;flex-direction:column;align-items:stretch;justify-content:center;
+  width:100%;max-width:none;min-height:calc(100dvh - 76px);margin:0;
+  padding:clamp(28px,6vw,80px) clamp(20px,5vw,72px);
+}
+.personal-home-stage{width:100%;min-width:0;display:grid;place-items:center;text-align:center}
+.personal-home-welcome{width:min(100%,890px);min-width:0;margin-inline:auto;animation:zaray-home-rise 390ms cubic-bezier(.2,.7,.25,1) both}
+.personal-home-welcome h1{
+  font-size:clamp(32px,4.8vw,64px);line-height:1.16;letter-spacing:-.045em;
+  color:#0d1c11;font-weight:850;margin:0;overflow-wrap:anywhere;
+  animation:zaray-home-rise 380ms cubic-bezier(.2,.7,.25,1) 100ms both;
+}
+.personal-home-quote-zone{min-height:158px;max-width:760px;margin:27px auto 0}
+.personal-home-inspiration{margin:0}
+.personal-home-quote{
+  max-width:760px;margin:0 auto;color:#465b4c;
+  font-size:clamp(18px,2.1vw,25px);font-weight:450;line-height:1.6;
+  animation:zaray-home-rise 420ms cubic-bezier(.2,.7,.25,1) 220ms both;
+}
+.personal-home-quote-author{
+  color:#176d22;font-size:12px;font-weight:750;letter-spacing:.075em;
+  margin-top:17px;animation:zaray-home-rise 390ms cubic-bezier(.2,.7,.25,1) 350ms both;
+}
+.personal-home-error{color:#a33131;font-size:13px;margin-top:20px}
+@keyframes zaray-home-rise{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* Home navigation is anchored in the dark top bar, never in a sidebar. */
+.personal-home-nav-control{position:relative;flex:0 1 auto;min-width:0}
+.personal-home-nav-toggle{
+  display:inline-flex;align-items:center;gap:10px;min-height:44px;
+  padding:10px 14px;border:1px solid #344738;border-radius:9px;
+  background:#162019;color:#fff;font-size:13px;font-weight:750;white-space:nowrap;cursor:pointer;
+}
+.personal-home-nav-toggle:hover,.personal-home-nav-toggle:focus-visible{background:#263b2a;color:#fff}
+.personal-home-nav-menu{
+  position:absolute;top:calc(100% + 10px);left:0;z-index:75;
+  width:min(300px,calc(100vw - 28px));padding:9px;
+  background:#0f1912;color:#eef7ef;border:1px solid #344738;
+  border-radius:12px;box-shadow:0 18px 42px rgb(0 0 0 / 24%);
+  opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-10px);
+  transition:opacity 210ms ease,transform 210ms cubic-bezier(.22,.75,.25,1),visibility 210ms;
+}
+.personal-home-nav-menu.is-open{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
+.personal-home-nav-menu .personal-nav-link{display:flex;align-items:center;gap:10px;min-height:43px}
+
+/* Profile action dropdown shared across personal pages; no new auth or invite workflow. */
+.personal-profile-control{position:relative;display:flex;flex:0 1 auto;min-width:0;margin-left:auto}
+.personal-profile-control .personal-topbar-profile{
+  display:flex;align-items:center;gap:10px;max-width:min(340px,47vw);
+  min-height:48px;margin-left:0;color:#fff;text-align:left;cursor:pointer;font-family:inherit;
+}
+.personal-profile-control .personal-topbar-profile:hover,
+.personal-profile-control .personal-topbar-profile:focus-visible{background:#243829}
+.personal-profile-dropdown{
+  position:absolute;top:calc(100% + 10px);right:0;z-index:80;
+  width:min(280px,calc(100vw - 28px));padding:8px;border-radius:12px;
+  border:1px solid #344738;background:#121d15;
+  box-shadow:0 18px 42px rgb(0 0 0 / 25%);
+  opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-10px);
+  transition:opacity 210ms ease,transform 210ms cubic-bezier(.22,.75,.25,1),visibility 210ms;
+}
+.personal-profile-dropdown.is-open{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
+.personal-profile-action,
+.personal-profile-dropdown .account-signout button{
+  display:flex;align-items:center;gap:10px;width:100%;min-height:43px;
+  padding:11px 12px;border:0;border-radius:8px;text-align:left;
+  background:transparent;color:#eef7ef;font-weight:650;font-size:13px;text-decoration:none;
+}
+.personal-profile-action:hover,.personal-profile-action:focus-visible,
+.personal-profile-dropdown .account-signout button:hover,
+.personal-profile-dropdown .account-signout button:focus-visible{background:#243929;color:#fff}
+.personal-profile-action.is-disabled{color:#c0cfc3;cursor:not-allowed;opacity:1}
+.personal-profile-dropdown .account-signout{margin:3px 0 0;width:100%}
+.personal-profile-dropdown .account-signout button{cursor:pointer}
+.personal-profile-dropdown .account-signout p{padding:0 12px}
+@media(max-width:700px){
+  .personal-home-shell .personal-topbar{gap:10px;padding:10px 12px}
+  .personal-home-shell .personal-logo{width:clamp(85px,18vw,124px)}
+  .personal-home-nav-toggle{font-size:12px;padding:9px 10px;gap:7px}
+  .personal-home-shell .personal-content{padding:34px 22px}
+  .personal-profile-control .personal-topbar-profile{max-width:39vw;gap:6px;padding:6px}
+  .personal-profile-control .personal-profile-avatar{width:30px;height:30px;flex-basis:30px}
+  .personal-home-quote-zone{min-height:185px}
+}
+@media(max-width:430px){
+  .personal-home-shell .personal-topbar{gap:7px}
+  .personal-home-shell .personal-logo{width:82px}
+  .personal-home-nav-toggle span{max-width:84px;white-space:normal;line-height:1.12}
+  .personal-profile-control .personal-topbar-profile{max-width:124px}
+  .personal-profile-control .personal-profile-copy strong{font-size:10px}
+  .personal-profile-control .personal-profile-copy span{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+  .personal-home-welcome,.personal-home-welcome h1,
+  .personal-home-quote,.personal-home-quote-author{animation:none!important;transform:none!important}
+  .personal-home-nav-menu,.personal-profile-dropdown{transition:none!important;transform:none!important}
+}
