@@ -1,6 +1,7 @@
 'use client';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import BrandLogo from '@/components/brand-logo';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import WorkspaceBreadcrumb from '@/components/workspace-breadcrumb';
 import { activeSiteId, scopedQuery, selectedCompany } from '@/lib/workspace-url';
@@ -92,6 +93,6 @@ export default function OrdersPage() {
       <button type="button" className="primary-link receipt-print-button" style={{marginTop:18}} onClick={() => window.print()}><ZarayIcon name="print" size={18} /> Imprimer le reçu d'abonnement</button>
     </section>}
     
-    <p style={{ marginTop: 28 }}><a href="/tickets"><ZarayIcon name="print" size={18} /> Gestion des tickets Wi-Fi →</a> · <a href="/offres"><ZarayIcon name="print" size={18} /> Offres</a> · <a href="/tableau-de-bord"><ZarayIcon name="print" size={18} /> Tableau de bord</a></p>
+    <p style={{ marginTop: 28 }}><Link href={'/tickets?companyId='+encodeURIComponent(companyId)}><ZarayIcon name="print" size={18} /> Gestion des tickets Wi-Fi →</Link> · <Link href={'/offres?companyId='+encodeURIComponent(companyId)}><ZarayIcon name="print" size={18} /> Offres</Link> · <Link href={'/tableau-de-bord?companyId='+encodeURIComponent(companyId)}><ZarayIcon name="dashboard" size={18} /> Tableau de bord</Link></p>
   </section><style jsx global>{`@media print{body *{visibility:hidden!important}#cash-receipt,#cash-receipt *{visibility:visible!important}#cash-receipt{position:absolute!important;top:0;left:0;width:80mm;max-width:80mm;box-shadow:none;border:0;padding:4mm}.receipt-print-button{display:none!important}@page{size:80mm auto;margin:5mm}}`}</style></main>;
 }
