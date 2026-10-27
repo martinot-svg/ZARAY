@@ -41,7 +41,7 @@ test('personal profile card moves to top-right and sidebar menu toggle controls 
  assert.match(sidebar,/name="menu"/);
  assert.match(sidebar,/aria-controls="personal-space-links" aria-expanded=\{spaceMenuOpen\}/);
  assert.match(sidebar,/inert=\{!spaceMenuOpen\}/);
- assert.match(sidebar,/links\.map/);
+ assert.match(sidebar,/navigationLinks\.map/);
  assert.doesNotMatch(sidebar,/personal-profile-avatar/);
  assert.match(topbar,/className="personal-topbar-profile"/);
  assert.match(topbar,/personal-profile-avatar/);
