@@ -326,7 +326,8 @@ test('navigation has no fullscreen loading boundaries or placeholder skeletons',
    assert.doesNotMatch(page,/<MotionSkeleton\b|className="skeleton-list"/,full+' should not flash a placeholder');
  }
  const dashboard=source('src/components/dashboard-workspace.tsx');
- assert.match(dashboard,/if\(busy\)return null;/);
+ assert.doesNotMatch(dashboard,/if\(busy\)return null;/);
+ assert.match(dashboard,/if\(busy\|\|error\|\|!payload\)return <AppShell/);
  assert.doesNotMatch(dashboard,/Chargement du tableau de bord|MotionSkeleton/);
  const shell=source('src/components/app-shell.tsx');
  assert.doesNotMatch(shell,/Chargement du contexte…/);
