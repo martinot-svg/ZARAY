@@ -105,7 +105,7 @@ export default function TicketSheets(){
     .zaray-voucher-logo{width:11mm;height:16mm;object-fit:contain;align-self:center}
     .zaray-voucher-detail{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;font-size:5.7pt;line-height:1.16;overflow:hidden}
     .zaray-voucher-detail strong,.zaray-voucher-detail span{white-space:nowrap;overflow:hidden;text-overflow:clip}
-    .zaray-voucher-detail small{font-size:5pt;white-space:nowrap}
+    .zaray-voucher-detail small{font-size:5pt;white-space:nowrap}.zaray-voucher-detail span:nth-of-type(3){white-space:normal;overflow-wrap:anywhere;font-size:5pt;line-height:1.05}
     @page{size:A4 portrait;margin:0}
     @media print{html,body{margin:0!important;padding:0!important;background:white!important}body *{visibility:hidden!important}#zaray-print-area,#zaray-print-area *{visibility:visible!important}#zaray-print-area{position:absolute!important;top:0!important;left:0!important;width:210mm!important} .zaray-a4-sheet{margin:0!important;box-shadow:none!important} }
    `}</style>
