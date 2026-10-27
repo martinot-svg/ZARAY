@@ -24,13 +24,13 @@ test('personal navigation has exactly the requested three primary destinations',
  for(const path of ['/mon-compte','/entreprises','/finance-globale'])assert.ok(nav.includes("href: '"+path+"'"));
  assert.match(nav,/aria-expanded=\{open\}/);
  assert.match(nav,/event\.key === 'Escape'/);
- assert.match(nav,/inert=\\{!desktop && !open\\}/);
- assert.match(nav,/name\\?\\.trim\\(\\)/);
+ assert.match(nav,/inert=\{!desktop && !open\}/);
+ assert.match(nav,/name\?\.trim\(\)/);
  assert.match(nav,/personal-profile-copy/);
  assert.match(nav,/Espace personnel/);
  const css=source('src/app/globals.css');
- assert.match(css,/@media\\(min-width:901px\\)/);
- assert.match(css,/grid-template-columns:280px minmax\\(0,1fr\\)/);
+ assert.match(css,/@media\(min-width:901px\)/);
+ assert.match(css,/grid-template-columns:280px minmax\(0,1fr\)/);
 });
 test('company menu uses three named groups, retains routes and excludes public website link',()=>{
  const nav=source('src/components/app-shell.tsx');
