@@ -47,7 +47,7 @@ export default function TicketCustomizationPage(){
   }catch(e){if(active)setError(e instanceof Error?e.message:'Erreur.');}
   finally{if(active)setBusy(false);}
  })();return()=>{active=false};},[companyId,siteId,offerId]);
- const change=<K extends keyof Settings>(key:K,value:Settings[K])=>setForm(s=>({...s,[key]:value}));
+ function change<K extends keyof Settings>(key:K,value:Settings[K]){setForm(s=>({...s,[key]:value}));}
  async function upload(e:ChangeEvent<HTMLInputElement>){
   const f=e.target.files?.[0];if(!f)return;
   if(!['image/png','image/jpeg','image/webp'].includes(f.type)||f.size>130000){setError('PNG, JPEG ou WebP, maximum 130 Ko.');return;}
