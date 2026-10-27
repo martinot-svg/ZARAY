@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function PersonalHomePage() {
   const { identity, companies, error } = await loadPersonalContext();
-  return <PersonalShell active="/mon-compte" email={identity.email}>
+  return <PersonalShell active="/mon-compte" email={identity.email} name={identity.name}>
     <header className="personal-page-heading">
       <p className="eyebrow">MON COMPTE ZARAY</p>
       <h1>{identity.name ? `Bonjour, ${identity.name}` : 'Bonjour'}</h1>

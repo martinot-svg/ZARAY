@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function EnterprisesPage() {
   const { identity, companies, error } = await loadPersonalContext();
-  return <PersonalShell active="/entreprises" email={identity.email}>
+  return <PersonalShell active="/entreprises" email={identity.email} name={identity.name}>
     <div className="personal-page-heading"><p className="eyebrow">ESPACE PERSONNEL</p><h1>Mes entreprises</h1>
       <p>Uniquement les organisations auxquelles votre compte est rattaché.</p>
     </div>
