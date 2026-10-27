@@ -69,6 +69,7 @@ export default function PersonalShell({
   return <div className={'personal-shell personal-no-sidebar' + (home ? ' personal-home-shell' : '')}>
     <GalaxyBackdrop />
     <header className="personal-topbar">
+      <Link href="/mon-compte" className="personal-logo" aria-label="Accueil personnel ZARAY"><BrandLogo priority /></Link>
       <div className="personal-home-nav-control" ref={homeNavRef}>
         <button ref={homeNavButton} type="button" className="personal-home-nav-toggle"
           aria-controls="personal-home-navigation-links" aria-expanded={homeNavOpen}
@@ -86,8 +87,13 @@ export default function PersonalShell({
           </Link>)}
         </nav>
       </div>
-      <Link href="/mon-compte" className="personal-logo" aria-label="Accueil personnel ZARAY"><BrandLogo priority /></Link>
-      <div className="personal-profile-control" ref={profileRef}>
+      <div className="personal-topbar-actions">
+        {active === '/entreprises' && (
+          <Link href="/entreprises/nouvelle" className="primary-link personal-topbar-create">
+            <ZarayIcon name="add" size={18} /> + Créer une entreprise
+          </Link>
+        )}
+        <div className="personal-profile-control" ref={profileRef}>
         <button ref={profileButton} type="button" className="personal-topbar-profile"
           aria-label={'Options du profil de ' + displayName}
           aria-controls="personal-profile-actions" aria-expanded={profileOpen}
@@ -109,10 +115,11 @@ export default function PersonalShell({
             </span>}
           <SignOutButton profile />
         </div>
+        </div>
       </div>
     </header>
     <main className="personal-content">
-      {!home && email && <p className="personal-email">Compte : {email}</p>}
+      {!home && email && active !== '/entreprises' && <p className="personal-email">Compte : {email}</p>}
       {children}
     </main>
   </div>;
