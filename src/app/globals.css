@@ -816,3 +816,25 @@ svg[data-zaray-icon]{display:inline-block;vertical-align:-.22em;flex-shrink:0;co
   .personal-home-quote,.personal-home-quote-author{animation:none!important;transform:none!important}
   .personal-home-nav-menu,.personal-profile-dropdown{transition:none!important;transform:none!important}
 }
+
+
+/* Daily quotations are fetched one at a time; long authors and sources remain readable. */
+.personal-home-quote-author{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+  gap:8px 16px;letter-spacing:normal;line-height:1.55;
+  font-size:clamp(13px,1.25vw,15px);
+}
+.personal-quote-source{
+  display:inline-block;padding:3px 0;color:#196b2c;
+  text-underline-offset:3px;font-size:12px;font-weight:600;
+}
+.personal-quote-source:hover,.personal-quote-source:focus-visible{color:#0d4d1d;text-decoration-thickness:2px}
+.personal-quote-provenance{
+  max-width:680px;margin:10px auto 0;color:#5b6c60;
+  font-size:11px;line-height:1.55;
+}
+.personal-quote-unavailable{color:#566f5a;font-size:13px;line-height:1.6}
+@media(max-width:600px){
+  .personal-home-quote{overflow-wrap:anywhere}
+  .personal-home-quote-zone{min-height:220px}
+}
