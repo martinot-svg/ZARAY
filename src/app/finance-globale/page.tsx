@@ -1,4 +1,5 @@
 import PersonalShell from '@/components/personal-shell';
+import PersonalFinanceOverview from '@/components/personal-finance-overview';
 import { loadPersonalContext } from '@/lib/personal-context';
 
 export const dynamic = 'force-dynamic';
@@ -6,7 +7,8 @@ export const dynamic = 'force-dynamic';
 const financeRoles = new Set(['owner', 'admin', 'finance', 'support', 'sales']);
 type LedgerRow = { amount: number | string; currency: string };
 
-export default async function GlobalFinancePage() {
+export default async function GlobalFinancePage({ searchParams }: { searchParams: Promise<{ financeCompanyId?: string; currency?: string }> }) {
+  const { financeCompanyId, currency } = await searchParams;
   const { client, identity, companies, error: contextError } = await loadPersonalContext();
   const authorized = companies.filter(c => financeRoles.has(c.role));
   let error = contextError;
@@ -36,7 +38,8 @@ export default async function GlobalFinancePage() {
   const hasPayments = !error && rows.some(row => row.count > 0);
   const format = (amount: number, currency: string) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(amount) + ' ' + currency;
 
-  return <PersonalShell active="/finance-globale" email={identity.email} name={identity.name}>
+  return <PersonalShell active="/finance-globale" email={identity.email} name={identity.name}
+    inviteCompanyId={companies.find(company => company.role === 'owner' || company.role === 'admin')?.id ?? null}>
     <header className="personal-page-heading"><p className="eyebrow">COMPTE PERSONNEL · FINANCE</p><h1>Finance globale</h1>
       <p>Consolidation des paiements confirmés du registre uniquement, pour les entreprises auxquelles votre rôle donne accès. Les monnaies restent séparées.</p></header>
     {error ? <div role="alert" className="alert alert-error">{error}</div>
@@ -56,5 +59,7 @@ export default async function GlobalFinancePage() {
           </div>)}</div>
         </section>
       </>}
+    {!error && <PersonalFinanceOverview client={client} companies={companies}
+      requestedCompanyId={financeCompanyId} requestedCurrency={currency} filtersAction="/finance-globale" />}
   </PersonalShell>;
 }
