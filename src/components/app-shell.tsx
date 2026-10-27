@@ -127,7 +127,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
             </select></label>
           </>:<span className="muted">{contextError||null}</span>}
         </div>
-        <div className="app-topbar-links"><Link className="header-link" href="/mon-compte"><ZarayIcon name="profile" size={18} /> Mon compte</Link><a className="header-link" href={activeCompany?'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany):'/entreprises'}><ZarayIcon name="dashboard" size={18} /> Vue générale</Link></div>
+        <div className="app-topbar-links"><Link className="header-link" href="/mon-compte"><ZarayIcon name="profile" size={18} /> Mon compte</Link><Link className="header-link" href={activeCompany?'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany):'/entreprises'}><ZarayIcon name="dashboard" size={18} /> Vue générale</Link></div>
       </header>
       <main className="app-content">
         {(eyebrow || title || description || actions) && <header className="page-header"><div>{eyebrow && <p className="eyebrow">{eyebrow}</p>}{title && <h1 className="app-title">{title}</h1>}{description && <p className="app-subtitle">{description}</p>}</div>{actions && <div className="page-actions">{actions}</div>}</header>}
