@@ -13,10 +13,11 @@ type Props = {
   companies: PersonalCompany[];
   requestedCompanyId?: string;
   requestedCurrency?: string;
+  filtersAction?: '/mon-compte' | '/finance-globale';
 };
 
 /** Professional metrics only. Values are drawn from RLS-authorized, succeeded payments. */
-export default async function PersonalFinanceOverview({ client, companies, requestedCompanyId, requestedCurrency }: Props) {
+export default async function PersonalFinanceOverview({ client, companies, requestedCompanyId, requestedCurrency, filtersAction = '/mon-compte' }: Props) {
   const authorized = companies.filter(company => financeRoles.has(company.role));
   const invalidSelection = !!requestedCompanyId && requestedCompanyId !== 'all' &&
     !authorized.some(company => company.id === requestedCompanyId);
@@ -90,7 +91,7 @@ export default async function PersonalFinanceOverview({ client, companies, reque
       </div>
       <a className="header-link" href="/finance-globale"><ZarayIcon name="next" size={17} /> Finance globale</a>
     </div>
-    <form method="get" action="/mon-compte" className="personal-finance-filters" aria-label="Filtres financiers">
+    <form method="get" action={filtersAction} className="personal-finance-filters" aria-label="Filtres financiers">
       <label>Entreprise
         <select name="financeCompanyId" defaultValue={selectedCompanyId}>
           <option value="all">Toutes les entreprises autorisées</option>
