@@ -60,7 +60,7 @@ begin
    pg_catalog.jsonb_build_object('invitation_id',v_record.id,'role',v_record.role,'email',v_record.email));
  -- Token is returned only to the role-checked caller; the trusted API never relays it to the browser.
  return pg_catalog.jsonb_build_object('id',v_record.id,'token',v_token,'email',v_record.email,
-   'company_id',v_record.company_id,'role',v_record.role,'expires_at',v_record.expires_at);
+   'company_id',v_record.company_id,'role',v_record.role,'expires_at',v_record.expires_at,'personal_message',v_record.personal_message);
 end; $$;
 
 create or replace function public.zalliance_list_invitations(p_company_id uuid)
@@ -107,7 +107,7 @@ begin
  values(v_inv.company_id,v_actor,'zalliance.invitation_reissued',
    pg_catalog.jsonb_build_object('invitation_id',v_inv.id));
  return pg_catalog.jsonb_build_object('id',v_inv.id,'token',v_token,'email',v_inv.email,
-   'company_id',v_inv.company_id,'role',v_inv.role,'expires_at',now()+interval '7 days');
+   'company_id',v_inv.company_id,'role',v_inv.role,'expires_at',now()+interval '7 days','personal_message',v_inv.personal_message);
 end; $$;
 
 -- Delivery is marked by the trusted server only. Comparing token hashes blocks stale race updates.
