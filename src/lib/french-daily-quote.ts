@@ -76,7 +76,7 @@ const cachedFrenchDailyQuote = unstable_cache(async (localDate: string) => {
       content: french,
       language: 'fr' as const,
       translatedFrom: 'en' as const,
-      provenance: 'Traduction française automatique ; attribution selon le recueil cité, sans vérification individuelle de la source première.',
+      provenance: 'Citation traduite en français ; attribution selon le recueil cité, sans vérification individuelle de la source première.',
     };
   } catch (error) {
     console.warn('daily quote: French translation unavailable; using original French fallback', {
