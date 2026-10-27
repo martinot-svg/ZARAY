@@ -457,3 +457,42 @@ test('Wi-Fi tickets has exactly one main navigation entry and three internal vie
  const settings=source('src/app/personnalisation-tickets/page.tsx');
  for(const old of [sheets,settings])assert.match(old,/redirect\('\/tickets\?' \+ qs\.toString\(\)\)/);
 });
+
+
+test('premium Wi-Fi templates use the existing single module and preserve 33 A4 tickets',()=>{
+ const page=source('src/app/tickets/page.tsx');
+ const generator=source('src/components/wifi-ticket-generator.tsx');
+ const customize=source('src/components/wifi-ticket-customization.tsx');
+ const pdf=source('src/lib/ticket-pdf.ts');
+ const canvas=source('src/components/voucher-canvas.tsx');
+ const api=source('src/app/api/ticket-templates/route.ts');
+ const issue=source('src/app/api/wifi-vouchers/route.ts');
+ const migration=source('db/migrations/20261027_wifi_premium_visual_templates.sql');
+ assert.match(page,/WifiTicketGenerator/);
+ assert.match(page,/WifiTicketCustomization/);
+ assert.match(page,/type Tab = 'generate' \| 'history' \| 'customize'/);
+ for(const k of ['pageWidthMm:210','pageHeightMm:297','voucherWidthMm:60','voucherHeightMm:20',
+ 'columns:3','rows:11','perPage:33','leftMm:10','topMm:21','columnGapMm:5','rowGapMm:3.5','dpi:150'])
+  assert.ok(pdf.includes(k),'Print geometry must remain fixed: '+k);
+ assert.match(generator,/voucherPages\(tickets\)/);
+ assert.match(generator,/grid-template-columns:repeat\(3,60mm\)/);
+ assert.match(generator,/grid-template-rows:repeat\(11,20mm\)/);
+ assert.match(generator,/@page\{size:A4 portrait;margin:0\}/);
+ assert.match(generator,/<VoucherCanvas ticket=\{ticket\}/);
+ assert.match(canvas,/paintVoucher\(ctx,0,0,ticket,design,siteName/);
+ assert.match(pdf,/paintVoucher\(ctx,x,y,arr\[i\],sheet\.design/);
+ assert.match(generator,/generateA4Pdf\(/);
+ assert.match(customize,/<VoucherCanvas preview/);
+ for(const style of ["classic","event","minimal","corporate"])assert.ok(customize.includes("key:'"+style+"'"));
+ assert.match(customize,/Enregistrer comme modèle/);
+ assert.match(customize,/Aperçu en direct/);
+ assert.match(api,/authorizeTenant\(supabase,companyId,siteId\)/);
+ assert.match(migration,/alter table public.ticket_templates/);
+ assert.match(pdf,/NON ACTIVÉ/);
+ assert.match(pdf,/ticket.duration_minutes\+' min/);
+ assert.match(pdf,/String\(ticket.price_amount\)/);
+ assert.match(issue,/credential_hash:await sha256\(siteId\+':'\+username\+':'\+password\)/);
+ assert.match(issue,/const batchId=crypto.randomUUID\(\)/);
+ assert.match(issue,/status:'available'/);
+ assert.doesNotMatch(customize,/AppShell/);
+});
