@@ -222,11 +222,11 @@ test('profile menu uses real invitation permissions and existing sign out workfl
  const members=source('src/app/membres/page.tsx');
  assert.match(shell,/aria-controls="personal-profile-actions" aria-expanded=\{profileOpen\}/);
  assert.match(shell,/className=\{'personal-profile-dropdown'/);
- assert.match(shell,/Inviter un collaborateur/);
- assert.match(shell,/\/membres\?companyId=/);
+ assert.match(shell,/Z’Alliance/);
+ assert.match(shell,/href="\/z-alliance"/);
  assert.match(shell,/inviteCompanyId \?/);
  assert.match(shell,/aria-disabled="true"/);
- assert.match(shell,/<SignOutButton \/>/);
+ assert.match(shell,/<SignOutButton profile \/>/);
  assert.match(shell,/setProfileOpen\(false\)/);
  assert.match(shell,/profileRef\.current\?\.contains\(event\.target\)/);
  assert.match(page,/company\.role === 'owner' \|\| company\.role === 'admin'/);
@@ -266,8 +266,8 @@ test('profile sign out says Quitter mon espace with Sidebar icon and preserves e
  const icons=source('src/components/ui/zaray-icon.tsx');
  const css=source('src/app/globals.css');
  assert.match(shell,/<SignOutButton profile \/>/);
- assert.match(shell,/Inviter un collaborateur/);
- assert.match(shell,/\/membres\?companyId=/);
+ assert.match(shell,/Z’Alliance/);
+ assert.match(shell,/href="\/z-alliance"/);
  assert.match(shell,/aria-disabled="true"/);
  assert.match(signout,/profile \? "sidebar" : "logout"/);
  assert.match(signout,/profile \? 'Quitter mon espace' : 'Se déconnecter'/);
@@ -329,4 +329,35 @@ test('daily quotations are translated to French before rendering, with an offlin
  assert.doesNotMatch(page,/lang="en"|Texte en anglais/);
  assert.match(page,/daily\.quote\.sourceUrl && <a/);
  assert.match(library,/quoteLibrary: Entry\[\]/);
+});
+
+
+test('Z’Alliance is a real protected workspace with existing Supabase invitation flow',()=>{
+ const shell=source('src/components/personal-shell.tsx');
+ const route=source('src/app/z-alliance/page.tsx');
+ const ui=source('src/components/z-alliance-workspace.tsx');
+ const api=source('src/app/api/company-members/route.ts');
+ const icon=source('src/components/ui/zaray-icon.tsx');
+ const css=source('src/app/globals.css');
+ assert.match(shell,/href="\/z-alliance"/);
+ assert.match(shell,/Z’Alliance/);
+ assert.doesNotMatch(shell,/Inviter un collaborateur/);
+ assert.match(icon,/alliance: UsersRound/);
+ assert.match(route,/loadPersonalContext\(\)/);
+ assert.match(route,/<PersonalShell home active="\/z-alliance"/);
+ assert.match(ui,/manageable\(company\.role\)/);
+ assert.match(ui,/company\?\.role === 'owner'/);
+ assert.match(ui,/role\.value !== 'admin' && role\.value !== 'finance'/);
+ assert.match(ui,/fetch\('\/api\/company-members'/);
+ assert.match(ui,/fetch\('\/api\/audit-logs/);
+ assert.match(ui,/submitting\.current/);
+ assert.match(ui,/Aucun e-mail automatique n’est envoyé actuellement/);
+ assert.match(ui,/Ce n’est pas un suivi de livraison/);
+ assert.match(ui,/Mes invitations reçues/);
+ assert.match(ui,/member\.status === 'active'/);
+ assert.match(api,/rpc\('create_company_invitation'/);
+ assert.match(api,/rpc\('list_company_members'/);
+ assert.match(css,/\.zalliance-sections/);
+ assert.match(css,/@media\(max-width:850px\)/);
+ assert.match(shell,/<SignOutButton profile \/>/);
 });
