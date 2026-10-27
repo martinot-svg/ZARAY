@@ -32,6 +32,30 @@ test('personal navigation has exactly the requested three primary destinations',
  assert.match(css,/@media\(min-width:901px\)/);
  assert.match(css,/grid-template-columns:280px minmax\(0,1fr\)/);
 });
+test('personal profile card moves to top-right and sidebar menu toggle controls existing links',()=>{
+ const shell=source('src/components/personal-shell.tsx');
+ const sidebar=shell.slice(shell.indexOf('<nav id="personal-navigation"'),shell.indexOf('</nav>'));
+ const topbar=shell.slice(shell.indexOf('<header className="personal-topbar">'),shell.indexOf('</header>'));
+ assert.match(sidebar,/Mon espace Zaray/);
+ assert.match(sidebar,/className="personal-space-toggle"/);
+ assert.match(sidebar,/name="menu"/);
+ assert.match(sidebar,/aria-controls="personal-space-links" aria-expanded=\{spaceMenuOpen\}/);
+ assert.match(sidebar,/hidden=\{!spaceMenuOpen\}/);
+ assert.match(sidebar,/links\.map/);
+ assert.doesNotMatch(sidebar,/personal-profile-avatar/);
+ assert.match(topbar,/className="personal-topbar-profile"/);
+ assert.match(topbar,/personal-profile-avatar/);
+ assert.match(topbar,/\{displayName\}/);
+ assert.match(topbar,/Espace personnel/);
+ assert.doesNotMatch(topbar,/personal-topbar-identity/);
+ assert.match(shell,/setSpaceMenuOpen\(value => !value\)/);
+ assert.doesNotMatch(shell,/Mahasiloke Tinot/);
+ const css=source('src/app/globals.css');
+ assert.match(css,/\.personal-space-links\[hidden\]\{display:none!important\}/);
+ assert.match(css,/\.personal-topbar-profile\{/);
+ assert.match(css,/@media\(max-width:480px\)/);
+});
+
 test('company menu uses three named groups, retains routes and excludes public website link',()=>{
  const nav=source('src/components/app-shell.tsx');
  for(const section of ['GESTION','ACTIVITÉ','FINANCE & RÉSEAU'])assert.ok(nav.includes(section));
