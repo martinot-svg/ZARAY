@@ -429,3 +429,26 @@ test('personal pages use the supplied green starfield and brand-aligned text wit
  assert.match(css,/color:#2df135/);
  assert.match(css,/color:#ffffff/);
 });
+
+
+test('Wi-Fi tickets has exactly one main navigation entry and three internal views',()=>{
+ const app=source('src/components/app-shell.tsx');
+ const menu=app.match(/\{ label: 'ACTIVITÉ', items: \[(.+?)\] \}/)?.[1]??'';
+ assert.equal((menu.match(/'\/tickets', 'Tickets Wi-Fi'/g)??[]).length,1);
+ assert.doesNotMatch(menu,/Planches A4|Personnaliser tickets|\/tickets\/planches|\/personnalisation-tickets/);
+ const page=source('src/app/tickets/page.tsx');
+ assert.match(page,/WifiTicketGenerator/);
+ assert.match(page,/WifiTicketHistory/);
+ assert.match(page,/WifiTicketCustomization/);
+ for(const name of ['Générer','Historique','Personnalisation'])assert.ok(page.includes(name));
+ assert.match(page,/isManager\(company\.role\)/);
+ assert.match(page,/setVisited/);
+ assert.match(page,/aria-label="Onglets du module Tickets Wi-Fi"/);
+ for(const filename of ['wifi-ticket-generator.tsx','wifi-ticket-history.tsx','wifi-ticket-customization.tsx']){
+  const view=source('src/components/'+filename);
+  assert.doesNotMatch(view,/<AppShell\b/);
+ }
+ const sheets=source('src/app/tickets/planches/page.tsx');
+ const settings=source('src/app/personnalisation-tickets/page.tsx');
+ for(const old of [sheets,settings])assert.match(old,/redirect\('\/tickets\?' \+ qs\.toString\(\)\)/);
+});
