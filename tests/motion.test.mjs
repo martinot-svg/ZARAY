@@ -45,3 +45,36 @@ test('Background movement is limited to the existing login page', () => {
 });
 
 test('Company and site dashboards use validated tenant context',()=>{const api=source('src/app/api/dashboard/route.ts');const auth=source('src/lib/tenant-context.ts');assert.ok(api.includes('authorizeTenant'));assert.ok(api.includes("count:'exact'"));assert.ok(api.includes("subscription_orders.site_id"));assert.ok(auth.includes(".eq('company_id',companyId)"));});
+
+
+test('galaxy is a true continuously rendered GPU animation with independent living layers',()=>{
+ const galaxy=source('src/components/galaxy-backdrop.tsx');
+ for(const feature of [
+  "getContext('webgl2'", "requestAnimationFrame(draw)", "gl.drawArrays(gl.TRIANGLES, 0, 3)",
+  "float fbm(vec2 p)", "float stars(vec2 p", "float vaporA", "float vaporB",
+  "float streamA", "float streamB", "float farDust", "float midStars",
+  "float nearStars", "uniform float u_time", "uniform vec2 u_resolution",
+ ]) assert.ok(galaxy.includes(feature), 'missing '+feature);
+ assert.match(galaxy,/if \(!motionPreference\.matches\) elapsed \+= gap \/ 1000/);
+ assert.match(galaxy,/mobile\.matches \? 42 : 60/);
+ assert.match(galaxy,/slowFrames > 90/);
+ assert.match(galaxy,/Math\.sqrt\(maxPixels \/ \(width \* height\)\)/);
+ assert.doesNotMatch(galaxy,/setInterval\(|setTimeout\(|Math\.random\(/);
+});
+test('galaxy pauses responsibly, cleans up GPU resources and respects reduced motion',()=>{
+ const galaxy=source('src/components/galaxy-backdrop.tsx');
+ assert.match(galaxy,/matchMedia\('\(prefers-reduced-motion: reduce\)'\)/);
+ assert.match(galaxy,/document\.hidden/);
+ assert.match(galaxy,/document\.addEventListener\('visibilitychange', visibility\)/);
+ assert.match(galaxy,/document\.removeEventListener\('visibilitychange', visibility\)/);
+ assert.match(galaxy,/webglcontextlost/);
+ assert.match(galaxy,/webglcontextrestored/);
+ assert.match(galaxy,/cancelAnimationFrame\(frame\)/);
+ assert.match(galaxy,/gl\.deleteProgram\(program\)/);
+ assert.match(galaxy,/gl\.deleteVertexArray\(vao\)/);
+ assert.match(galaxy,/motionPreference\.removeEventListener\('change', preferenceChanged\)/);
+ assert.match(galaxy,/return <div className="zaray-galaxy-backdrop" aria-hidden="true">/);
+ assert.match(css,/\.zaray-galaxy-backdrop\{/);
+ assert.match(css,/pointer-events:none/);
+ assert.match(css,/prefers-reduced-motion:reduce/);
+});
