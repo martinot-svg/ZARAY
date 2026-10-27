@@ -317,7 +317,9 @@ test('daily quotations are translated to French before rendering, with an offlin
  assert.match(translation,/language: 'fr'/);
  assert.match(fallback,/La régularité transforme les ambitions en résultats/);
  assert.match(page,/lang="fr"/);
- assert.match(page,/Traduction française automatique/);
+ assert.doesNotMatch(page,/Traduction française automatique/);
+ assert.doesNotMatch(translation,/Traduction française automatique/);
+ assert.match(page,/Source :/);
  assert.doesNotMatch(page,/lang="en"|Texte en anglais/);
  assert.match(page,/daily\.quote\.sourceUrl && <a/);
  assert.match(library,/quoteLibrary: Entry\[\]/);
@@ -429,4 +431,18 @@ test('Z’Alliance secure emails and atomic invitation acceptance are guarded',(
  assert.match(welcome,/sessionStorage.setItem\(STORAGE,raw\)/);
  assert.match(welcome,/company_name/);
  assert.match(login,/sessionStorage.getItem\('zaray:pending-alliance-invitation'\)/);
+});
+
+test('personal pages use the supplied green starfield and brand-aligned text without layout rebuild',()=>{
+ const css=source('src/app/globals.css');
+ const image=readFileSync(new URL('../public/brand/zaray-reference-texture.avif',import.meta.url));
+ assert.equal(image.toString('ascii',4,12),'ftypavif');
+ assert.equal(image.byteLength,8353);
+ assert.match(css,/\.personal-shell\.personal-no-sidebar\{/);
+ assert.match(css,/background-image:url\('\/brand\/zaray-reference-texture\.avif'\)/);
+ assert.match(css,/\.personal-no-sidebar \.personal-page-heading h1/);
+ assert.match(css,/\.personal-no-sidebar \.personal-home-quote\{/);
+ assert.match(css,/\.personal-no-sidebar \.personal-home-quote-author\{/);
+ assert.match(css,/color:#2df135/);
+ assert.match(css,/color:#ffffff/);
 });
