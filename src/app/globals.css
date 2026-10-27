@@ -1047,3 +1047,27 @@ svg[data-zaray-icon]{display:inline-block;vertical-align:-.22em;flex-shrink:0;co
   /* Canvas draws one still galaxy frame; CSS fallback also remains still. */
   .zaray-galaxy-canvas{animation:none!important;transition:none!important}
 }
+
+
+/* Wi-Fi ticket studio — existing A4 3×11 print geometry remains in tickets/planches. */
+.wifi-template-editor{min-width:0}
+.wifi-template-editor h2{font-size:18px;line-height:1.3;margin:20px 0 12px}
+.wifi-template-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.wifi-template-choice{display:grid;gap:5px;min-height:82px;align-content:center;text-align:left;
+ background:#f7fbf7;border:1px solid #d7e5d9;border-radius:10px;padding:12px;
+ color:#1d3926;cursor:pointer;transition:border-color .18s ease,background-color .18s ease}
+.wifi-template-choice:hover,.wifi-template-choice:focus-visible{background:#eef7ed;border-color:#448b54}
+.wifi-template-choice.is-selected{background:#e6f5e9;border-color:#21833a;box-shadow:inset 0 0 0 1px #21833a}
+.wifi-template-choice strong{font-size:13px}
+.wifi-template-choice small{font-size:11px;font-weight:450;line-height:1.45;color:#4a6851}
+.wifi-template-check{display:flex;align-items:center;gap:9px;min-height:37px;font-size:12px;font-weight:600}
+.wifi-template-check input{accent-color:#208541;width:16px;height:16px;flex-shrink:0}
+.wifi-template-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:18px}
+.wifi-template-preview-panel{min-width:0}
+.wifi-template-preview-wrap{display:grid;place-items:center;padding:22px 10px;border:1px solid #dce7dd;
+ border-radius:12px;background:repeating-conic-gradient(#f0f3f0 0% 25%,#fff 0% 50%) 50%/18px 18px;
+ overflow:hidden;min-height:155px}
+.wifi-voucher-print-canvas,.zaray-voucher-print-canvas{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+@media(max-width:650px){.wifi-template-choices{grid-template-columns:1fr}.wifi-template-preview-wrap{padding:12px 6px;min-height:116px}}
+@media(prefers-reduced-motion:reduce){.wifi-template-choice{transition:none}}
+@media print{.wifi-template-choices,.wifi-template-preview-panel{display:none!important}}
