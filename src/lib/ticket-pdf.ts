@@ -53,9 +53,13 @@ function logoPaint(ctx:CanvasRenderingContext2D,img:HTMLImageElement|null,x:numb
  const iw=img.naturalWidth*scale,ih=img.naturalHeight*scale;
  ctx.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);return true;
 }
+const imageCache=new Map<string,Promise<HTMLImageElement|null>>();
 export async function loadVoucherLogo(uri:string|null):Promise<HTMLImageElement|null>{
  if(!uri || !/^data:image\/(png|jpeg|webp);base64,/.test(uri))return null;
- return new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=uri;});
+ const cached=imageCache.get(uri);if(cached)return cached;
+ const promise=new Promise<HTMLImageElement|null>(resolve=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=uri;});
+ if(imageCache.size>=6)imageCache.clear();
+ imageCache.set(uri,promise);return promise;
 }
 export function voucherPages(tickets:PrintableVoucher[]){
  const pages:PrintableVoucher[][]=[];
