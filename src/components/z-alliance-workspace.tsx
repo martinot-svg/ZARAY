@@ -6,6 +6,7 @@ import { ZarayIcon } from '@/components/ui/zaray-icon';
 import type { PersonalCompany } from '@/lib/personal-context';
 
 type Member = { user_id: string; email: string; role: string; status: string; created_at: string };
+type Invitation = { id:string;email:string;role:string;status:string;delivery_status:string;created_at:string;expires_at:string;sent_at:string|null;accepted_at:string|null;send_attempts:number };
 type AuditEvent = {
   id: number; event: string; actor_email: string | null;
   metadata: { invitation_id?: string; email?: string; role?: string };
@@ -41,6 +42,9 @@ export default function ZAllianceWorkspace({ companies, actorEmail, contextError
   const [email, setEmail] = useState('');
   const [members, setMembers] = useState<Member[]>([]);
   const [events, setEvents] = useState<AuditEvent[]>([]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [emailConfigured,setEmailConfigured] = useState(false);
+  const [message,setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState('');
@@ -53,16 +57,21 @@ export default function ZAllianceWorkspace({ companies, actorEmail, contextError
     let cancelled = false;
     async function load() {
       setLoading(true); setError(''); setAuditNotice('');
-      setMembers([]); setEvents([]);
+      setMembers([]); setEvents([]); setInvitations([]);
       try {
-        const [memberResult, auditResult] = await Promise.all([
+        const [memberResult, auditResult, invitationResult] = await Promise.all([
           fetch('/api/company-members?companyId=' + encodeURIComponent(companyId), { cache: 'no-store' }),
-          fetch('/api/audit-logs?companyId=' + encodeURIComponent(companyId), { cache: 'no-store' })
+          fetch('/api/audit-logs?companyId=' + encodeURIComponent(companyId), { cache: 'no-store' }),
+          fetch('/api/z-alliance?companyId=' + encodeURIComponent(companyId), { cache: 'no-store' })
         ]);
         const membersData = await memberResult.json();
         if (!memberResult.ok) throw new Error(membersData.error || 'Impossible de consulter les membres.');
         if (cancelled) return;
         setMembers(Array.isArray(membersData.members) ? membersData.members : []);
+        if(invitationResult.ok){
+          const info=await invitationResult.json();
+          if(!cancelled){setInvitations(Array.isArray(info.invitations)?info.invitations:[]);setEmailConfigured(info.emailConfigured===true);}
+        }else if(!cancelled){setAuditNotice('Le service de suivi des invitations n’est pas accessible.');}
         if (auditResult.ok) {
           const auditData = await auditResult.json();
           if (!cancelled) setEvents(Array.isArray(auditData.events) ? auditData.events : []);
@@ -79,11 +88,7 @@ export default function ZAllianceWorkspace({ companies, actorEmail, contextError
     return () => { cancelled = true; };
   }, [companyId]);
 
-  const invitations = events.filter(event => event.event === 'member.invitation_created'
-    && event.actor_email?.toLowerCase() === actorEmail?.toLowerCase());
-  // The audit log contains creation events, not actual delivery or current invitation status.
-  const uniqueInvitations = invitations.filter((event, index, all) =>
-    all.findIndex(item => (item.metadata?.invitation_id ?? item.id) === (event.metadata?.invitation_id ?? event.id)) === index);
+  const uniqueInvitations=invitations;
   const activeMembers = members.filter(member => member.status === 'active');
   const normalizedEmail = email.trim().toLowerCase();
   const isValid = Boolean(company && allowedRoles.some(option => option.value === role) && emailValid(normalizedEmail));
@@ -94,19 +99,21 @@ export default function ZAllianceWorkspace({ companies, actorEmail, contextError
     submitting.current = true;
     setBusy(true); setError(''); setNotice('');
     try {
-      const response = await fetch('/api/company-members', {
+      const response = await fetch(emailConfigured ? '/api/z-alliance' : '/api/company-members', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ companyId, email: normalizedEmail, role })
+        body: JSON.stringify({ companyId, email: normalizedEmail, role, message })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Impossible de créer l’invitation.');
       if (!data.invitation?.id) throw new Error('Confirmation de création indisponible.');
-      setEmail('');
-      setNotice('Invitation enregistrée pour ' + normalizedEmail +
-        '. Aucun e-mail automatique n’est envoyé actuellement. Le destinataire peut créer ou confirmer son compte puis consulter « Mes invitations » avec cette adresse.');
-      const [memberResult, auditResult] = await Promise.all([
+      setEmail('');setMessage('');
+      setNotice(emailConfigured
+        ? 'Le fournisseur a accepté l’envoi de l’invitation pour ' + normalizedEmail + '.'
+        : 'Invitation enregistrée pour ' + normalizedEmail + '. Aucun e-mail n’a été envoyé. Le destinataire doit se connecter à « Mes invitations ».');
+      const [memberResult, auditResult, invitationResult] = await Promise.all([
         fetch('/api/company-members?companyId=' + encodeURIComponent(companyId), { cache: 'no-store' }),
-        fetch('/api/audit-logs?companyId=' + encodeURIComponent(companyId), { cache: 'no-store' })
+        fetch('/api/audit-logs?companyId=' + encodeURIComponent(companyId), { cache: 'no-store' }),
+        fetch('/api/z-alliance?companyId=' + encodeURIComponent(companyId), { cache: 'no-store' })
       ]);
       if (memberResult.ok) {
         const body = await memberResult.json();
@@ -116,11 +123,30 @@ export default function ZAllianceWorkspace({ companies, actorEmail, contextError
         const body = await auditResult.json();
         setEvents(Array.isArray(body.events) ? body.events : []);
       }
+      if(invitationResult.ok){const body=await invitationResult.json();setInvitations(Array.isArray(body.invitations)?body.invitations:[]);}
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Invitation impossible.');
     } finally {
       submitting.current = false; setBusy(false);
     }
+  }
+
+  async function manageInvitation(id:string,action:'resend'|'revoke'){
+    if(busy)return;
+    if(action==='revoke'&&!window.confirm('Révoquer cette invitation ? Ce lien ne pourra plus être utilisé.'))return;
+    setBusy(true);setNotice('');setError('');
+    try{
+      const response=await fetch('/api/z-alliance',{
+        method:'PATCH',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({companyId,invitationId:id,action})
+      });
+      const result=await response.json();
+      if(!response.ok)throw new Error(result.error||'Action impossible.');
+      setNotice(action==='revoke'?'Invitation révoquée.':'Le fournisseur a accepté le renvoi.');
+      const list=await fetch('/api/z-alliance?companyId='+encodeURIComponent(companyId),{cache:'no-store'});
+      if(list.ok){const body=await list.json();setInvitations(body.invitations??[]);}
+    }catch(cause){setError(cause instanceof Error?cause.message:'Action indisponible.');}
+    finally{setBusy(false);}
   }
 
   return <section className="zalliance" aria-labelledby="zalliance-heading">
@@ -133,7 +159,7 @@ export default function ZAllianceWorkspace({ companies, actorEmail, contextError
       <Link href="/mon-compte" className="zalliance-close" aria-label="Fermer Z’Alliance et revenir à l’accueil"><ZarayIcon name="close" size={20}/><span>Fermer</span></Link>
     </div>
     <p className="zalliance-info"><ZarayIcon name="help" size={20} />
-      Z’Alliance utilise actuellement les invitations enregistrées dans Supabase. L’envoi d’e-mails, les liens secrets, le renvoi et la révocation ne sont pas encore disponibles. Aucun message d’envoi n’est simulé.</p>
+      Z’Alliance vérifie les droits et les invitations directement dans Supabase. L’envoi d’e-mails est activé uniquement si le fournisseur transactionnel est configuré ; en son absence, seules des invitations sans e-mail peuvent être enregistrées.</p>
     {error && <div className="alert alert-error" role="alert">{error}</div>}
     {notice && <div className="alert alert-success" role="status">{notice}</div>}
     {authorized.length ? <>
@@ -157,26 +183,33 @@ export default function ZAllianceWorkspace({ companies, actorEmail, contextError
               </select>
             </label>
             <p className="zalliance-role-description">{allowedRoles.find(option => option.value === role)?.description ?? ''}</p>
+            {emailConfigured && <label>Message personnalisé (facultatif)<textarea maxLength={500} rows={3} value={message} onChange={event=>setMessage(event.target.value)} /></label>}
             <div className="zalliance-actions">
               <button type="submit" className="primary-link" disabled={!isValid || busy || loading}>
-                <ZarayIcon name="add" size={18}/> {busy ? 'Création en cours…' : 'Créer l’invitation'}
+                <ZarayIcon name="add" size={18}/> {busy ? 'Traitement…' : emailConfigured ? 'Envoyer l’invitation' : 'Créer sans e-mail'}
               </button>
-              <button type="button" disabled={busy} onClick={() => { setEmail(''); setRole('support'); setError(''); }}>Annuler</button>
+              <button type="button" disabled={busy} onClick={() => { setEmail('');setMessage(''); setRole('support'); setError(''); }}>Annuler</button>
             </div>
           </form>
-          <p className="muted">Le message personnel et le bouton « Envoyer l’invitation » seront activés uniquement après intégration d’un service d’envoi testé.</p>
+          <p className="muted">Les rôles et les entreprises sont vérifiés côté serveur. Si l’envoi est indisponible, le bouton crée uniquement une invitation dans Supabase, sans prétendre envoyer d’e-mail.</p>
         </section>
         <div className="zalliance-lists">
           <section className="panel" aria-labelledby="zalliance-history-heading">
-            <h2 id="zalliance-history-heading"><ZarayIcon name="document" size={20}/> Invitations enregistrées</h2>
-            <p className="muted">Extraits du journal d’audit des créations effectuées par votre compte, limités à l’historique accessible. Ce n’est pas un suivi de livraison.</p>
+            <h2 id="zalliance-history-heading"><ZarayIcon name="document" size={20}/> Invitations envoyées et enregistrées</h2>
+            <p className="muted">État réel des invitations de cette entreprise : en attente, acceptées, expirées ou révoquées. L’état d’envoi est indiqué séparément.</p>
             {loading ? <p className="muted">Chargement des invitations…</p>
               : auditNotice ? <p className="muted">{auditNotice}</p>
               : uniqueInvitations.length ? <ul className="zalliance-items">
                 {uniqueInvitations.map(item => <li key={item.id}>
-                  <span><strong>{item.metadata?.email ?? 'Destinataire masqué'}</strong>
-                  <small>{names[item.metadata?.role ?? ''] ?? item.metadata?.role ?? 'Rôle non renseigné'} · {displayDate(item.created_at)}</small></span>
-                  <span className="status-pill">Enregistrée</span>
+                  <span><strong>{item.email}</strong>
+                  <small>{names[item.role] ?? item.role} · {displayDate(item.created_at)} · Expire le {displayDate(item.expires_at)}</small>
+                  <small>État : {({pending:'En attente',accepted:'Acceptée',expired:'Expirée',revoked:'Révoquée'} as Record<string,string>)[item.status]??item.status}
+                    {' · '}E-mail : {({sent:'Accepté par le fournisseur',failed:'Échec d’envoi',not_sent:'Non envoyé'} as Record<string,string>)[item.delivery_status]??'Non envoyé'}</small>
+                  {item.status==='pending' && <span className="zalliance-invitation-actions">
+                    <button type="button" disabled={busy||!emailConfigured||item.send_attempts>=5} onClick={()=>void manageInvitation(item.id,'resend')}>Renvoyer</button>
+                    <button type="button" disabled={busy} onClick={()=>void manageInvitation(item.id,'revoke')}>Révoquer</button>
+                  </span>}
+                  </span><span className="status-pill">{item.status==='pending'?'En attente':item.status}</span>
                 </li>)}
               </ul> : <p className="muted">Aucune création d’invitation dans le journal accessible.</p>}
           </section>
