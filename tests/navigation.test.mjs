@@ -69,9 +69,9 @@ test('personal space curtain stays in sidebar header and supports outside click,
  assert.match(drawer,/className=\{'personal-space-reveal' \+ \(spaceMenuOpen \? ' is-open' : ''\)\}/);
  assert.match(drawer,/inert=\{!spaceMenuOpen\}/);
  assert.match(shell,/useState\(false\)/);
- assert.match(shell,/document\.addEventListener\('pointerdown', closeOnOutsideClick\)/);
- assert.match(shell,/spaceMenuButton\.current\?\.contains\(target\)/);
- assert.match(shell,/spaceMenuPanel\.current\?\.contains\(target\)/);
+ assert.match(shell,/document\.addEventListener\('pointerdown', closeOutside\)/);
+ assert.match(shell,/spaceMenuButton\.current\?\.contains\(event\.target\)/);
+ assert.match(shell,/spaceMenuPanel\.current\?\.contains\(event\.target\)/);
  assert.match(shell,/event\.key !== 'Escape'/);
  for(const label of ['Tableau de bord','Mes entreprises','Finances des entreprises']) assert.ok(shell.includes("label: '"+label+"'"));
  assert.match(css,/grid-template-rows:0fr/);
