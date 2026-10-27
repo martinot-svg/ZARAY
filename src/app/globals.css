@@ -838,3 +838,69 @@ svg[data-zaray-icon]{display:inline-block;vertical-align:-.22em;flex-shrink:0;co
   .personal-home-quote{overflow-wrap:anywhere}
   .personal-home-quote-zone{min-height:220px}
 }
+
+
+/* ZARAY navigation: eliminate permanent sidebars in every personal and company module.
+   Navigation remains available in anchored, keyboard-accessible topbar menus. */
+.personal-shell.personal-no-sidebar{
+  display:flex;flex-direction:column;min-height:100dvh;width:100%;
+  grid-template-columns:none;
+}
+.personal-no-sidebar .personal-topbar{
+  position:relative;z-index:25;grid-column:auto;grid-row:auto;width:100%;min-width:0;flex:0 0 auto;
+}
+.personal-no-sidebar .personal-content{
+  grid-column:auto;grid-row:auto;width:100%;min-width:0;flex:1 0 auto;
+}
+.personal-no-sidebar .personal-home-nav-menu{
+  max-height:min(70dvh,500px);overflow-y:auto;overscroll-behavior:contain;
+}
+.app-shell.app-no-sidebar .app-main{
+  margin-left:0;width:100%;min-width:0;
+}
+.app-no-sidebar .app-topbar{
+  gap:14px;min-width:0;z-index:50;
+}
+.app-no-sidebar .app-menu-container{
+  position:relative;display:flex;align-items:center;flex:0 0 auto;
+}
+.app-no-sidebar .app-menu-button{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:42px;padding:9px 13px;border:1px solid #c9d6c9;
+  border-radius:9px;background:#fff;color:#152018;font-size:13px;font-weight:750;cursor:pointer;
+}
+.app-no-sidebar .app-menu-button:hover,.app-no-sidebar .app-menu-button:focus-visible{
+  background:#f0f8ef;border-color:#86ab8c;
+}
+.app-no-sidebar .app-nav-dropdown{
+  position:absolute;left:0;top:calc(100% + 12px);z-index:80;
+  display:block;width:min(314px,calc(100vw - 28px));max-height:min(76dvh,650px);
+  padding:12px;overflow-y:auto;overscroll-behavior:contain;
+  border:1px solid #344738;border-radius:12px;background:#101a13;color:#e1ebe0;
+  box-shadow:0 18px 46px rgb(0 0 0 / 22%);
+  opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-9px);
+  transition:opacity 210ms ease,transform 210ms cubic-bezier(.22,.75,.25,1),visibility 210ms;
+}
+.app-no-sidebar .app-nav-dropdown.is-open{
+  opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);
+}
+.app-no-sidebar .app-nav-dropdown .app-nav-group{display:grid;gap:4px}
+.app-no-sidebar .app-nav-dropdown .app-nav-label{display:block;padding:13px 11px 6px}
+.app-no-sidebar .app-nav-dropdown .app-nav-link{
+  display:flex;white-space:normal;align-items:center;gap:8px;
+  min-height:39px;padding:9px 11px;
+}
+.app-no-sidebar .app-nav-dropdown .app-nav-footer{
+  display:block;margin-top:11px;padding-top:10px;
+}
+.app-no-sidebar .app-nav-dropdown .account-signout{margin-top:5px}
+@media(max-width:700px){
+  .app-no-sidebar .app-topbar{
+    height:auto;min-height:68px;padding:12px 16px;gap:9px;flex-wrap:wrap;
+  }
+  .app-no-sidebar .app-nav-dropdown{max-height:min(70dvh,560px)}
+  .personal-no-sidebar .personal-topbar{min-height:66px}
+}
+@media(prefers-reduced-motion:reduce){
+  .app-no-sidebar .app-nav-dropdown{transition:none!important;transform:none!important}
+}
