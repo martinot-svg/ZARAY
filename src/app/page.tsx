@@ -1,6 +1,7 @@
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import BrandLogo from '@/components/brand-logo';
 import PremiumExperience from '@/components/premium-experience';
+import ThemeSwitch from '@/components/theme-switch';
 
 const features = [
   { tag: 'ORGANISATION', number: '01', icon: 'company', title: 'Entreprises et sites', description: 'Retrouvez vos entreprises dans votre compte personnel et consultez les opérations de chacun de leurs sites.' },
@@ -28,6 +29,7 @@ export default function HomePage() {
           <a href="#avantages"><ZarayIcon name="confirm" size={18} /> Avantages</a>
         </nav>
         <div className="landing-header-actions">
+          <ThemeSwitch />
           <a href="/connexion" className="landing-header-login"><ZarayIcon name="login" size={18} /> Se connecter</a>
           <a href="/inscription" className="landing-button landing-button-primary landing-header-signup"><ZarayIcon name="signup" size={18} /> Créer un compte</a>
         </div>
@@ -38,7 +40,7 @@ export default function HomePage() {
         <div className="landing-container landing-hero-grid">
           <div className="landing-hero-copy">
             <p className="landing-kicker"><span aria-hidden="true" className="landing-kicker-dot"/> ZARAY · THE FUTURE OF BUSINESS EXPERIENCE</p>
-            <h1 id="landing-title">Pilotez votre activité Wi-Fi. <span>Entrez dans une nouvelle dimension.</span></h1>
+            <h1 id="landing-title">Pilotez votre activité Wi-Fi. <span data-contrast-ignore>Entrez dans une nouvelle dimension.</span></h1>
             <p className="landing-hero-description">Un espace de pilotage vivant pour vos entreprises, vos sites, vos clients, vos offres Internet, vos commandes, vos tickets Wi-Fi et vos paiements. Une expérience avancée, ancrée dans vos opérations réelles.</p>
             <div className="landing-hero-actions">
               <a href="/inscription" className="landing-button landing-button-primary"><ZarayIcon name="signup" size={18} /> Créer un compte</a>

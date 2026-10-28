@@ -2,8 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import './premium-foundation.css';
 import './premium-experience.css';
+import './zaray-total-redesign.css';
 import { ContrastGuardian } from '@/components/contrast-guardian';
 import WorkspaceBackdrop from '@/components/workspace-backdrop';
+import ThemeSwitch from '@/components/theme-switch';
 
 export const viewport: Viewport = { themeColor: '#0a0d0b' };
 
@@ -26,5 +28,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="fr"><body><ContrastGuardian /><WorkspaceBackdrop />{children}</body></html>;
+  return <html lang="fr" data-zaray-theme="dark"><body><ContrastGuardian /><WorkspaceBackdrop /><div className="global-auth-theme"><ThemeSwitch /></div>{children}</body></html>;
 }

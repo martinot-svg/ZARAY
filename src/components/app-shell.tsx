@@ -4,6 +4,7 @@ import { ZarayIcon } from '@/components/ui/zaray-icon';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import SignOutButton from '@/components/sign-out-button';
 import BrandLogo from '@/components/brand-logo';
+import ThemeSwitch from '@/components/theme-switch';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -134,10 +135,10 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
             </select></label>
           </>:<span className="muted">{contextError||null}</span>}
         </div>
-        <div className="app-topbar-links"><Link className="header-link" href="/mon-compte"><ZarayIcon name="profile" size={18} /> Mon compte</Link><Link className="header-link" href={activeCompany?'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany):'/entreprises'}><ZarayIcon name="dashboard" size={18} /> Vue générale</Link></div>
+        <div className="app-topbar-links"><ThemeSwitch /><Link className="header-link" href="/mon-compte"><ZarayIcon name="profile" size={18} /> Mon compte</Link><Link className="header-link" href={activeCompany?'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany):'/entreprises'}><ZarayIcon name="dashboard" size={18} /> Vue générale</Link></div>
       </header>
       <main className="app-content">
-        {(eyebrow || title || description || actions) && <header className="page-header"><div>{eyebrow && <p className="eyebrow">{eyebrow}</p>}{title && <h1 className="app-title">{title}</h1>}{description && <p className="app-subtitle">{description}</p>}</div>{actions && <div className="page-actions">{actions}</div>}</header>}
+        {(eyebrow || title || description || actions) && <header className="page-header"><div>{eyebrow && <p className="eyebrow">{eyebrow}</p>}{title && <h1 className="app-title">{title}</h1>}{description && <p className="app-subtitle">{description}</p>}<span className="workspace-hero-release"><ZarayIcon name="permissions" size={14} /> ZARAY EXPERIENCE · 2026</span></div>{actions && <div className="page-actions">{actions}</div>}</header>}
         {children}
       </main>
     </div>

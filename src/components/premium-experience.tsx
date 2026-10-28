@@ -39,7 +39,7 @@ export default function PremiumExperience() {
     <div className="experience-scene-tabs" role="group" aria-label="Explorer les modules">
       {scenes.map(item => <button type="button" key={item.id}
         className={'experience-scene-tab' + (scene === item.id ? ' is-active' : '')}
-        aria-pressed={scene === item.id} onClick={() => setScene(item.id)}>
+        aria-label={item.label} aria-pressed={scene === item.id} onClick={() => setScene(item.id)}>
         <ZarayIcon name={item.icon} size={16} /><span>{item.label}</span>
       </button>)}
     </div>
