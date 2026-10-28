@@ -20,5 +20,6 @@ jobs:
       - run: node --test tests/total-redesign.test.mjs
       - run: node --test tests/compact-forms.test.mjs
       - run: node --test tests/password-visibility.test.mjs
+      - run: node --test tests/daily-inspiration-curation.test.mjs
       - run: npm run typecheck
       - run: npm run build
