@@ -134,6 +134,31 @@ try {
     await password.fill('');
    }
    if(path==='/connexion') {
+    const emailField=card.locator('input[name="email"]');
+    const passwordField=card.locator('input[name="password"]');
+    const checkEmailStyle=async()=>{
+      return emailField.evaluate(el=>{
+        const style=getComputedStyle(el);
+        return {
+          background:style.backgroundColor,
+          color:style.color,
+          textFill:style.webkitTextFillColor,
+          caret:style.caretColor,
+          value:el.value
+        };
+      });
+    };
+    await emailField.fill('test@zaray.example');
+    const darkEmail=await checkEmailStyle();
+    const passwordSurface=await passwordField.evaluate(el=>getComputedStyle(el).backgroundColor);
+    assert.equal(darkEmail.background,'rgb(240, 255, 245)',size.name+' email field dark-mode pale surface');
+    assert.equal(darkEmail.background,passwordSurface,size.name+' email matches password surface');
+    assert.equal(darkEmail.color,'rgb(0, 0, 0)',size.name+' email typed text black');
+    assert.equal(darkEmail.textFill,'rgb(0, 0, 0)',size.name+' email webkit text fill black');
+    assert.equal(darkEmail.caret,'rgb(0, 0, 0)',size.name+' email caret black');
+    assert.equal(darkEmail.value,'test@zaray.example');
+    await emailField.blur();
+    await emailField.fill('');
     const logo = page.locator('.login-shell > .login-brand .brand-logo');
     await logo.waitFor({state:'visible'});
     assert.equal(await card.locator('.brand-logo').count(),0,'logo must be outside login card');
@@ -242,6 +267,9 @@ try {
     await page.screenshot({path:output+'/'+size.name+'-dark.png',animations:'disabled',fullPage:false,timeout:18000});
     await page.getByRole('button',{name:'Activer le thème clair'}).click();
     assert.equal(await page.locator('html').getAttribute('data-zaray-theme'),'light');
+    const lightEmail=await checkEmailStyle();
+    assert.equal(lightEmail.background,'rgb(255, 255, 255)',size.name+' light theme retains white email field');
+    assert.equal(lightEmail.color,'rgb(16, 43, 33)',size.name+' light theme retains its original typed-text color');
     await inspectEye('light');
     await inspectEye('light',true);
     await page.mouse.move(1,1);
