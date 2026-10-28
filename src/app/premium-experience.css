@@ -112,3 +112,64 @@
  .experience-device-frame,.experience-workspace,.experience-device,.experience-scene-tab{animation:none!important;transition:none!important}
 }
 @media print{.experience-root{display:none!important}}
+
+
+/* True touch-first mobile navigation: dedicated composition, no API duplication. */
+.workspace-mobile-dock,.personal-mobile-dock{display:none}
+@media(max-width:700px){
+ .app-no-sidebar .app-content{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
+ .personal-no-sidebar .personal-content{padding-bottom:calc(118px + env(safe-area-inset-bottom,0px))}
+ .workspace-mobile-dock,.personal-mobile-dock{
+   display:grid;position:fixed;bottom:10px;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));
+   z-index:75;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+   align-items:center;gap:4px;min-height:66px;padding:7px;
+   background:rgba(9,24,15,.94);border:1px solid rgba(91,221,125,.38);
+   border-radius:22px;box-shadow:0 18px 60px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.08);
+   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+ }
+ .workspace-mobile-dock-link,.personal-mobile-dock-link{
+   min-width:0;min-height:56px;display:flex;flex-direction:column;gap:4px;
+   align-items:center;justify-content:center;border-radius:15px;
+   color:#b4cbbb;background:transparent;font-size:10px;font-weight:760;
+   text-align:center;line-height:1.2;
+   transition:background-color var(--z-lux-motion-quick),color var(--z-lux-motion-quick),transform var(--z-lux-motion-quick);
+ }
+ .workspace-mobile-dock-link span,.personal-mobile-dock-link span{
+   display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+ }
+ .workspace-mobile-dock-link.is-active,.personal-mobile-dock-link.is-active{
+   background:linear-gradient(155deg,rgba(35,242,81,.25),rgba(25,122,51,.23));
+   color:#66ff90;box-shadow:inset 0 0 0 1px rgba(57,242,106,.23);
+ }
+ .workspace-mobile-dock-link:active,.personal-mobile-dock-link:active{transform:scale(.96)}
+ .workspace-mobile-dock-link:focus-visible,.personal-mobile-dock-link:focus-visible{
+   outline:2px solid #56ff88;outline-offset:-2px;color:#fff
+ }
+}
+@media(max-width:380px){
+ .workspace-mobile-dock,.personal-mobile-dock{padding:5px;gap:2px;bottom:6px}
+ .workspace-mobile-dock-link,.personal-mobile-dock-link{font-size:9px}
+}
+/* Spatial continuity without hiding app content during route prefetch. */
+@media(prefers-reduced-motion:no-preference){
+ .app-no-sidebar :is(.panel,.kpi,.quick-action,.status-pill) :where(svg[data-zaray-icon]){
+   transition:transform var(--z-lux-motion) var(--z-lux-ease),color var(--z-lux-motion-quick)
+ }
+ .app-no-sidebar :is(.quick-action,.panel button,.primary-link):hover :where(svg[data-zaray-icon]){
+   transform:translateY(-1px) rotate(-4deg)
+ }
+ .app-no-sidebar :where(.alert-success,.alert-error,.empty-state){
+   animation:z-lux-feedback .32s var(--z-lux-ease) both
+ }
+ .personal-no-sidebar :where(.personal-business-card,.personal-business-item){
+   transition:transform var(--z-lux-motion) var(--z-lux-ease),box-shadow var(--z-lux-motion) var(--z-lux-ease)
+ }
+}
+@keyframes z-lux-feedback{
+ from{transform:translateY(7px);filter:brightness(.93)}
+ to{transform:translateY(0);filter:brightness(1)}
+}
+@media(prefers-reduced-motion:reduce){
+ .workspace-mobile-dock-link,.personal-mobile-dock-link,.app-no-sidebar .alert-success,.app-no-sidebar .alert-error{animation:none!important;transition:none!important;transform:none!important}
+}
+@media print{.workspace-mobile-dock,.personal-mobile-dock{display:none!important}}
