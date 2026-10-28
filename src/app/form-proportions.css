@@ -479,3 +479,72 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
 .form-shell.login-shell .login-card button.primary-link svg{
  color:currentColor!important;
 }
+
+
+/* Shared password visibility control: works on login, signup and recovery. */
+.form-shell .form-stack .zaray-password-field{
+ display:grid;
+ gap:5px;
+ min-width:0;
+}
+.form-shell .form-stack .zaray-password-field > label{
+ display:block;
+ font-size:12px!important;
+ font-weight:750;
+ color:var(--zf-text)!important;
+ line-height:1.4;
+}
+.form-shell .form-stack .zaray-password-control{
+ position:relative;
+ min-width:0;
+ width:100%;
+}
+.form-shell .form-stack .zaray-password-control input{
+ padding-right:57px!important;
+}
+.form-shell .form-stack .zaray-password-control button.zaray-password-toggle{
+ position:absolute;
+ right:3px;
+ top:50%;
+ transform:translateY(-50%);
+ display:grid;
+ place-items:center;
+ width:44px;
+ min-width:44px;
+ height:40px;
+ min-height:40px;
+ margin:0;
+ padding:0!important;
+ border:0!important;
+ border-radius:10px!important;
+ background:transparent!important;
+ box-shadow:none!important;
+ color:#d5f4df!important;
+ opacity:1;
+ cursor:pointer;
+ z-index:1;
+ transition:color 150ms ease,background-color 150ms ease;
+}
+.form-shell .form-stack .zaray-password-control button.zaray-password-toggle svg{
+ color:currentColor!important;
+ pointer-events:none;
+}
+.form-shell .form-stack .zaray-password-control button.zaray-password-toggle:is(:hover,:focus-visible){
+ color:#76fbaa!important;
+ background:rgba(49,199,120,.12)!important;
+}
+.form-shell .form-stack .zaray-password-control button.zaray-password-toggle:active{
+ transform:translateY(-50%);
+}
+[data-zaray-theme="light"] .form-shell .form-stack .zaray-password-control button.zaray-password-toggle{
+ color:#254d37!important;
+}
+[data-zaray-theme="light"] .form-shell .form-stack .zaray-password-control button.zaray-password-toggle:is(:hover,:focus-visible){
+ color:#0d713d!important;
+ background:rgba(22,123,76,.10)!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .form-shell .form-stack .zaray-password-control button.zaray-password-toggle{
+  transition:none!important;
+ }
+}

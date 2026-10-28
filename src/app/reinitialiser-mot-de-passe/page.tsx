@@ -2,6 +2,7 @@
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import BrandLogo from '@/components/brand-logo';
+import PasswordField from '@/components/ui/password-field';
 
 import { useEffect, useState, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -79,8 +80,8 @@ export default function ReinitialiserMotDePassePage() {
     <h1>Créer un nouveau mot de passe</h1>
     {!ready && !error && <p>Vérification du lien sécurisé…</p>}
     {ready && !message && <form className="form-stack" onSubmit={submit}>
-      <label>Nouveau mot de passe<input name="password" type="password" autoComplete="new-password" minLength={12} required /></label>
-      <label>Confirmer le mot de passe<input name="confirmation" type="password" autoComplete="new-password" minLength={12} required /></label>
+      <PasswordField label="Nouveau mot de passe" name="password" autoComplete="new-password" minLength={12} required />
+      <PasswordField label="Confirmer le mot de passe" name="confirmation" autoComplete="new-password" minLength={12} required />
       <p>Utilisez au moins 12 caractères.</p>
       <button type="submit" disabled={busy} className="primary-link"><ZarayIcon name="save" size={18} /> {busy ? 'Mise à jour…' : 'Mettre à jour le mot de passe'}</button>
     </form>}
