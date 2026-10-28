@@ -33,9 +33,11 @@ body:has(.form-shell){overflow-x:clip}
  align-content:center;
  justify-items:center;
  padding:clamp(15px,3vh,28px) clamp(14px,3vw,24px)!important;
- overflow-x:clip;
- overflow-y:visible;
+ overflow:clip;
 }
+/* Decorative atmosphere must stay INSIDE its section, otherwise the original
+   -15% pseudo-element increases document height by ~100px on short desktops. */
+.form-shell.auth-motion::before{inset:0!important}
 .form-shell > .form-card,
 .form-shell.auth-motion > .form-card{
  box-sizing:border-box;
