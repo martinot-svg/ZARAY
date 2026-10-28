@@ -473,8 +473,8 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
 .form-shell.login-shell .login-card button.primary-link:focus-visible,
 .form-shell.login-shell .login-card button.primary-link:active,
 .form-shell.login-shell .login-card button.primary-link:disabled{
- color:#071b10!important;
- -webkit-text-fill-color:#071b10!important;
+ color:#000000!important;
+ -webkit-text-fill-color:#000000!important;
 }
 .form-shell.login-shell .login-card button.primary-link svg{
  color:currentColor!important;
