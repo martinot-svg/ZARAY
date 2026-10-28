@@ -286,7 +286,7 @@ export default function GalaxyBackdrop() {
     };
   }, []);
 
-  return <div className="zaray-galaxy-backdrop" data-zaray-galaxy-renderer="fallback" aria-hidden="true">
+  return <div className="zaray-galaxy-backdrop" aria-hidden="true">
     <canvas ref={canvasRef} className="zaray-galaxy-canvas" />
   </div>;
 }
