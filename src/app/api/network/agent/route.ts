@@ -46,7 +46,7 @@ export async function POST(request:NextRequest){
     mac_address:/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(mac)?mac:null,
     active:o.active===true,observed_at:now};
   }).filter((v):v is NonNullable<typeof v>=>v!==null);
-  if(observations.length!==b.observations.length)return json({error:'Observations invalides.'},400);
+  if(observations.length!==b!.observations.length)return json({error:'Observations invalides.'},400);
   if(observations.length){
    const {error}=await service.from('network_observations').upsert(observations,{onConflict:'router_id,observed_kind,identity_key'});
    if(error)return json({error:'Impossible de synchroniser les appareils.'},503);
