@@ -481,7 +481,8 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
 }
 
 
-/* Shared password visibility control: works on login, signup and recovery. */
+/* Password toggle visibility: contrast-verified surfaces for both themes.
+   This icon is independent from the top-right theme switch. */
 .form-shell .form-stack .zaray-password-field{
  display:grid;
  gap:5px;
@@ -496,52 +497,77 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
 }
 .form-shell .form-stack .zaray-password-control{
  position:relative;
+ isolation:isolate;
  min-width:0;
  width:100%;
 }
 .form-shell .form-stack .zaray-password-control input{
- padding-right:57px!important;
+ padding-right:64px!important;
 }
 .form-shell .form-stack .zaray-password-control button.zaray-password-toggle{
  position:absolute;
- right:3px;
+ right:4px;
  top:50%;
  transform:translateY(-50%);
- display:grid;
- place-items:center;
- width:44px;
- min-width:44px;
- height:40px;
- min-height:40px;
- margin:0;
+ display:flex!important;
+ align-items:center;
+ justify-content:center;
+ width:48px!important;
+ min-width:48px!important;
+ height:42px!important;
+ min-height:42px!important;
+ margin:0!important;
  padding:0!important;
- border:0!important;
- border-radius:10px!important;
- background:transparent!important;
- box-shadow:none!important;
- color:#d5f4df!important;
- opacity:1;
+ border:1px solid #4da679!important;
+ border-radius:11px!important;
+ background:#174a34!important;
+ box-shadow:inset 0 1px rgba(255,255,255,.08)!important;
+ color:#a6ffd0!important;
+ -webkit-text-fill-color:#a6ffd0!important;
+ opacity:1!important;
+ visibility:visible!important;
  cursor:pointer;
- z-index:1;
- transition:color 150ms ease,background-color 150ms ease;
+ z-index:2;
+ transition:background-color 150ms ease,color 150ms ease,border-color 150ms ease;
 }
 .form-shell .form-stack .zaray-password-control button.zaray-password-toggle svg{
- color:currentColor!important;
+ display:block!important;
+ width:23px!important;
+ height:23px!important;
+ min-width:23px!important;
+ min-height:23px!important;
+ color:inherit!important;
+ stroke:currentColor!important;
+ stroke-width:2.5px;
+ opacity:1!important;
+ visibility:visible!important;
  pointer-events:none;
 }
 .form-shell .form-stack .zaray-password-control button.zaray-password-toggle:is(:hover,:focus-visible){
- color:#76fbaa!important;
- background:rgba(49,199,120,.12)!important;
+ background:#246745!important;
+ border-color:#91ffc0!important;
+ color:#ffffff!important;
+ -webkit-text-fill-color:#ffffff!important;
+}
+.form-shell .form-stack .zaray-password-control button.zaray-password-toggle:focus-visible{
+ outline:3px solid #6cffa8!important;
+ outline-offset:2px!important;
 }
 .form-shell .form-stack .zaray-password-control button.zaray-password-toggle:active{
  transform:translateY(-50%);
 }
 [data-zaray-theme="light"] .form-shell .form-stack .zaray-password-control button.zaray-password-toggle{
- color:#254d37!important;
+ color:#0b623a!important;
+ -webkit-text-fill-color:#0b623a!important;
+ background:#e8faee!important;
+ border-color:#74bc94!important;
+ box-shadow:none!important;
 }
 [data-zaray-theme="light"] .form-shell .form-stack .zaray-password-control button.zaray-password-toggle:is(:hover,:focus-visible){
- color:#0d713d!important;
- background:rgba(22,123,76,.10)!important;
+ color:#074628!important;
+ -webkit-text-fill-color:#074628!important;
+ background:#d3f4df!important;
+ border-color:#168453!important;
 }
 @media(prefers-reduced-motion:reduce){
  .form-shell .form-stack .zaray-password-control button.zaray-password-toggle{
