@@ -1,6 +1,7 @@
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import BrandLogo from '@/components/brand-logo';
 import PremiumExperience from '@/components/premium-experience';
+import ThemeSwitch from '@/components/theme-switch';
 
 const features = [
   { tag: 'ORGANISATION', number: '01', icon: 'company', title: 'Entreprises et sites', description: 'Retrouvez vos entreprises dans votre compte personnel et consultez les opérations de chacun de leurs sites.' },
@@ -28,6 +29,7 @@ export default function HomePage() {
           <a href="#avantages"><ZarayIcon name="confirm" size={18} /> Avantages</a>
         </nav>
         <div className="landing-header-actions">
+          <ThemeSwitch />
           <a href="/connexion" className="landing-header-login"><ZarayIcon name="login" size={18} /> Se connecter</a>
           <a href="/inscription" className="landing-button landing-button-primary landing-header-signup"><ZarayIcon name="signup" size={18} /> Créer un compte</a>
         </div>
