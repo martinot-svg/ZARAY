@@ -32,11 +32,11 @@ export async function POST(request:NextRequest){
   .select('id,company_id,site_id,control_enabled').eq('id',routerId).maybeSingle();
  if(routerError||!router)return json({error:'Routeur introuvable.'},404);
  if(action==='sync'){
-  if(!Array.isArray(b?.observations)||b.observations.length>500||!Array.isArray(b?.kinds))return json({error:'Inventaire invalide.'},400);
-  const completed=[...new Set((b.kinds as unknown[]).filter(x=>typeof x==='string'&&kinds.includes(x)))];
+  if(!Array.isArray(b?.observations)||b!.observations.length>500||!Array.isArray(b?.kinds))return json({error:'Inventaire invalide.'},400);
+  const completed=[...new Set((b!.kinds as unknown[]).filter(x=>typeof x==='string'&&kinds.includes(x)))];
   if(!completed.length)return json({error:'Aucune source de découverte valide.'},400);
   const now=new Date().toISOString();
-  const observations=b.observations.map(v=>{
+  const observations=b!.observations.map(v=>{
    if(!v||typeof v!=='object')return null;
    const o=v as Record<string,unknown>, kind=clean(o.kind,32),key=clean(o.key,255);
    if(!completed.includes(kind)||!key)return null;
