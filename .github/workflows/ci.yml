@@ -18,5 +18,6 @@ jobs:
       - run: npm run test:public
       - run: node --test tests/premium-experience.test.mjs
       - run: node --test tests/total-redesign.test.mjs
+      - run: node --test tests/compact-forms.test.mjs
       - run: npm run typecheck
       - run: npm run build
