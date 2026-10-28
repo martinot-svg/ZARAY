@@ -131,8 +131,8 @@ try {
           exception:el.hasAttribute('data-contrast-ignore'),
         };
       });
-      assert.equal(ink.color,'rgb(7, 27, 16)',state+' text must remain black');
-      assert.equal(ink.fill,'rgb(7, 27, 16)',state+' text fill must remain black');
+      assert.equal(ink.color,'rgb(0, 0, 0)',state+' text must remain black');
+      assert.equal(ink.fill,'rgb(0, 0, 0)',state+' text fill must remain black');
       assert.equal(ink.iconColor,ink.color,state+' icon follows the black text');
       assert.equal(ink.exception,true,'CTA must opt out of gradient-blind contrast observer');
     }
