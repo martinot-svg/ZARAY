@@ -7,6 +7,7 @@ on:
       - 'src/components/contrast-guardian.tsx'
       - 'src/app/globals.css'
       - 'src/app/zaray-total-redesign.css'
+      - 'src/app/form-proportions.css'
       - 'src/app/premium-experience.css'
       - 'src/app/premium-foundation.css'
       - 'src/components/theme-switch.tsx'
