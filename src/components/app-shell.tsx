@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 const sections = [
   { label: 'GESTION', items: [['/tableau-de-bord', 'Tableau de bord'], ['/sites', 'Sites'], ['/membres', 'Membres']] },
   { label: 'ACTIVITÉ', items: [['/clients', 'Clients'], ['/offres', 'Offres Internet'], ['/commandes', 'Commandes'], ['/tickets', 'Tickets Wi-Fi']] },
-  { label: 'FINANCE & RÉSEAU', items: [['/paiements/verification', 'Paiements'], ['/parametres-paiement', 'Moyens de paiement'], ['/portail', 'Portail captif']] },
+  { label: 'FINANCE & RÉSEAU', items: [['/paiements/verification', 'Paiements'], ['/parametres-paiement', 'Moyens de paiement'], ['/portail', 'Portail captif'], ['/gestion-reseau', 'Gestion réseau']] },
 ];
 
 const mobileDockItems = [
@@ -25,7 +25,7 @@ const navigationIcons = {
   '/tableau-de-bord': 'dashboard', '/entreprises': 'company', '/sites': 'site',
   '/membres': 'members', '/clients': 'customers', '/offres': 'wifi',
   '/commandes': 'orders', '/tickets': 'ticket', '/paiements/verification': 'payment',
-  '/parametres-paiement': 'finance', '/portail': 'network',
+  '/parametres-paiement': 'finance', '/portail': 'network', '/gestion-reseau': 'network',
 } as const;
 type WorkspaceCompany = { id:string; legal_name:string; role:string };
 type WorkspaceSite = { id:string; company_id:string; name:string };
