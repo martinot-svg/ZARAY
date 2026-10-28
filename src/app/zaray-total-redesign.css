@@ -797,3 +797,14 @@ body:has(.landing),body:has(.app-no-sidebar),body:has(.personal-no-sidebar){
   background:transparent!important;box-shadow:none!important;
  }
 }
+
+/* Authentication screens retain their own visible theme choice. */
+.global-auth-theme{display:none}
+body:has(.form-shell) .global-auth-theme{
+ display:block;position:fixed;top:18px;right:clamp(16px,3vw,45px);z-index:120;
+}
+@media(max-width:700px){
+ body:has(.form-shell) .global-auth-theme{top:12px;right:12px}
+ body:has(.form-shell) .form-shell{padding-top:80px}
+}
+@media print{.global-auth-theme{display:none!important}}
