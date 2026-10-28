@@ -155,7 +155,7 @@ export default function GalaxyBackdrop() {
     const mobile = window.matchMedia('(max-width: 760px)');
     const connection = navigator as Navigator & { connection?: { saveData?: boolean } };
     const dataSaver = Boolean(connection.connection?.saveData);
-    const fps = dataSaver ? 24 : mobile.matches ? 42 : 60;
+    const fps = dataSaver ? 1 : mobile.matches ? 24 : (navigator.hardwareConcurrency || 4) <= 4 ? 24 : 35;
     const maxPixels = mobile.matches ? 440_000 : 950_000;
 
     let gl: WebGL2RenderingContext | null = null;
@@ -198,7 +198,7 @@ export default function GalaxyBackdrop() {
       }
       const gap = then ? Math.min(now - then, 55) : 0;
       then = now;
-      if (!motionPreference.matches) {
+      if (!motionPreference.matches && !dataSaver) {
         elapsed += gap / 1000;
         sharedGalaxyClock = elapsed;
       }
@@ -218,7 +218,7 @@ export default function GalaxyBackdrop() {
         slowFrames = 0;
         resize();
       }
-      if (!motionPreference.matches) frame = window.requestAnimationFrame(draw);
+      if (!motionPreference.matches && !dataSaver) frame = window.requestAnimationFrame(draw);
     };
     const start = () => {
       stop();

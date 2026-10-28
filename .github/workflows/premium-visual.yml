@@ -52,6 +52,10 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:3000
         run: node tests/daily-inspiration-api-visual.mjs
+      - name: Verify shared galaxy and radio signals on all public route types
+        env:
+          BASE_URL: http://127.0.0.1:3000
+        run: node tests/galactic-global-visual.mjs
       - name: Preserve visual evidence
         if: always()
         uses: actions/upload-artifact@v4

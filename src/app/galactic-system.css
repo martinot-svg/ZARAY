@@ -1,0 +1,176 @@
+/*
+ * ZARAY · Unified Galaxy Design System
+ *
+ * One shared renderer in the root layout. This CSS only exposes the backdrop
+ * through existing page surfaces; cards, tables, charts, forms, branding,
+ * navigation and print layouts keep their established contrast and semantics.
+ */
+:root {
+ --zaray-galaxy-night:#020805;
+ --zaray-galaxy-day:#f1f9f4;
+ --zaray-galaxy-wave:rgba(112,255,165,.31);
+}
+body {
+ background-color:var(--zaray-galaxy-night);
+}
+body > .zaray-galaxy-backdrop {
+ position:fixed;
+ inset:0;
+ z-index:0;
+ width:100vw;
+ height:100dvh;
+ opacity:1!important;
+ pointer-events:none;
+ overflow:hidden;
+ contain:strict;
+ background:
+  radial-gradient(ellipse at 12% 23%,rgba(23,115,54,.23),transparent 45%),
+  radial-gradient(ellipse at 78% 83%,rgba(18,113,79,.15),transparent 48%),
+  var(--zaray-galaxy-night);
+}
+body > .zaray-galaxy-backdrop .zaray-galaxy-canvas {
+ width:100%;
+ height:100%;
+ opacity:1;
+ display:block;
+ pointer-events:none;
+}
+/* Pages remain above the galaxy; this includes future main-based routes. */
+body > main,
+body > .landing,
+body > .form-shell,
+body > .app-shell,
+body > .personal-shell {
+ position:relative;
+ z-index:1;
+}
+/* Existing workspace galaxy remains untouched; public and auth shells now
+   expose the same persistent background rather than hiding it with opaque
+   full-page paints. */
+body > .landing,
+body > .form-shell {
+ background-color:transparent!important;
+}
+.landing {
+ background:transparent!important;
+}
+.landing .landing-hero {
+ background:
+  radial-gradient(ellipse at 80% 15%,rgba(29,181,124,.21),transparent 36%),
+  radial-gradient(ellipse at 24% 102%,rgba(46,130,227,.13),transparent 40%),
+  linear-gradient(125deg,rgba(2,12,11,.79),rgba(7,27,20,.48) 58%,rgba(3,12,12,.78))!important;
+}
+.landing .landing-section {
+ background:rgba(4,17,13,.86)!important;
+}
+.landing .landing-section-soft {
+ background:rgba(11,31,24,.87)!important;
+}
+.landing .landing-summary {
+ background:linear-gradient(95deg,rgba(6,27,21,.88),rgba(11,48,37,.82),rgba(10,27,34,.89))!important;
+}
+.form-shell {
+ background:
+  radial-gradient(ellipse at 10% 12%,rgba(25,205,118,.12),transparent 36%),
+  radial-gradient(ellipse at 90% 85%,rgba(64,166,202,.09),transparent 42%)!important;
+}
+/* Buttons only: send restrained Wi-Fi-style radio pulses from the *existing*
+   Sun/Moon icon, never from login password eyes or other controls. */
+.zaray-theme-switch {
+ position:relative;
+ isolation:isolate;
+}
+.zaray-theme-icon {
+ position:relative;
+ z-index:1;
+ display:inline-grid;
+ place-items:center;
+ width:18px;
+ height:18px;
+ flex:0 0 auto;
+}
+.zaray-theme-icon > svg,
+.zaray-theme-switch > .zaray-theme-switch-label {
+ position:relative;
+ z-index:1;
+}
+.zaray-theme-radio-waves {
+ position:absolute;
+ inset:0;
+ z-index:0;
+ display:grid;
+ place-items:center;
+ pointer-events:none;
+ overflow:visible;
+}
+.zaray-theme-radio-wave {
+ position:absolute;
+ width:24px;
+ height:24px;
+ border:1px solid var(--zaray-galaxy-wave);
+ border-radius:50%;
+ opacity:0;
+ transform:scale(.55);
+ animation:zaray-theme-signal 4.2s ease-out infinite;
+ will-change:opacity,transform;
+}
+.zaray-theme-radio-wave:nth-child(2) {
+ width:32px;
+ height:32px;
+ animation-delay:1.1s;
+}
+.zaray-theme-radio-wave:nth-child(3) {
+ width:40px;
+ height:40px;
+ animation-delay:2.2s;
+}
+@keyframes zaray-theme-signal {
+ 0%,8% {opacity:0;transform:scale(.55)}
+ 28% {opacity:.26}
+ 74%,100% {opacity:0;transform:scale(1.27)}
+}
+/* Light mode keeps pale surfaces and dark ink, while the dark WebGL
+   stardust becomes a very delicate translucent tint, not a black panel. */
+[data-zaray-theme="light"] {
+ --zaray-galaxy-wave:rgba(19,113,72,.26);
+}
+[data-zaray-theme="light"] body {
+ background-color:var(--zaray-galaxy-day)!important;
+}
+[data-zaray-theme="light"] body > .zaray-galaxy-backdrop {
+ opacity:1!important;
+ background:
+  radial-gradient(ellipse at 15% 20%,rgba(49,187,112,.10),transparent 46%),
+  radial-gradient(ellipse at 80% 80%,rgba(40,158,123,.08),transparent 49%),
+  var(--zaray-galaxy-day);
+}
+[data-zaray-theme="light"] body > .zaray-galaxy-backdrop .zaray-galaxy-canvas {
+ opacity:.09!important;
+}
+[data-zaray-theme="light"] .landing .landing-section {
+ background:rgba(246,252,248,.91)!important;
+}
+[data-zaray-theme="light"] .landing .landing-section-soft {
+ background:rgba(236,249,242,.93)!important;
+}
+[data-zaray-theme="light"] .form-shell {
+ background:
+  radial-gradient(ellipse at 10% 12%,rgba(25,205,118,.09),transparent 36%),
+  radial-gradient(ellipse at 90% 85%,rgba(64,166,202,.07),transparent 42%)!important;
+}
+@media(max-width:700px) {
+ /* Conserve touch targets; do not let decorative rings intercept taps. */
+ .zaray-theme-radio-wave:nth-child(3){width:34px;height:34px}
+}
+@media(prefers-reduced-motion:reduce) {
+ .zaray-theme-radio-wave {
+  animation:none!important;
+  opacity:0!important;
+  will-change:auto;
+ }
+}
+@media print {
+ body > .zaray-galaxy-backdrop,
+ .zaray-theme-radio-waves {display:none!important}
+ body,.landing,.form-shell{background:#fff!important}
+}
