@@ -46,7 +46,7 @@ export default function ConnexionPage() {
       <form className="form-stack" onSubmit={submit}>
         <label>E-mail<input name="email" type="email" autoComplete="email" required /></label>
         <label>Mot de passe<input name="password" type="password" autoComplete="current-password" required /></label>
-        <button type="submit" disabled={busy} className="primary-link"><ZarayIcon name="login" size={18} /> {busy ? 'Connexion…' : 'Se connecter'}</button>
+        <button type="submit" disabled={busy} className="primary-link" data-contrast-ignore><ZarayIcon name="login" size={18} /> {busy ? 'Connexion…' : 'Se connecter'}</button>
       </form>
       <MotionFeedback message={error} kind="error" />
       <nav className="login-footer-links" aria-label="Navigation du compte">
