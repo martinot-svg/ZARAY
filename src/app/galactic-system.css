@@ -17,7 +17,7 @@ body > .zaray-galaxy-backdrop {
  position:fixed;
  inset:0;
  z-index:0;
- width:100%;
+ width:100vw;
  height:100dvh;
  opacity:1!important;
  pointer-events:none;
