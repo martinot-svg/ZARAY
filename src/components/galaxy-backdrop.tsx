@@ -170,6 +170,8 @@ export default function GalaxyBackdrop() {
     let slowFrames = 0;
     let disposed = false;
     let lost = false;
+    const showFallback = () => canvas.parentElement?.setAttribute('data-zaray-galaxy-renderer','fallback');
+    const showWebGL = () => canvas.parentElement?.setAttribute('data-zaray-galaxy-renderer','webgl');
 
     const stop = () => {
       if (frame) window.cancelAnimationFrame(frame);
@@ -209,6 +211,7 @@ export default function GalaxyBackdrop() {
       gl.uniform1f(time, elapsed);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       gl.bindVertexArray(null);
+      showWebGL();
 
       // Decrease fill rate only after sustained slow frames; never allocate in the loop.
       if (gap > (1000 / fps) * 1.6) slowFrames += 1;
@@ -228,6 +231,7 @@ export default function GalaxyBackdrop() {
     };
     const initialize = () => {
       if (disposed) return;
+      showFallback();
       try {
         gl = canvas.getContext('webgl2', {
           alpha: false, antialias: false, depth: false, stencil: false,
@@ -253,7 +257,7 @@ export default function GalaxyBackdrop() {
       elapsed = motionPreference.matches ? 0 : sharedGalaxyClock;
       start();
     };
-    const contextLost = (event: Event) => { event.preventDefault(); lost = true; stop(); };
+    const contextLost = (event: Event) => { event.preventDefault(); lost = true; stop(); showFallback(); };
     const contextRestored = () => { lost = false; program = null; vao = null; initialize(); };
 
     initialize();
@@ -282,7 +286,7 @@ export default function GalaxyBackdrop() {
     };
   }, []);
 
-  return <div className="zaray-galaxy-backdrop" aria-hidden="true">
+  return <div className="zaray-galaxy-backdrop" data-zaray-galaxy-renderer="fallback" aria-hidden="true">
     <canvas ref={canvasRef} className="zaray-galaxy-canvas" />
   </div>;
 }
