@@ -10,7 +10,7 @@ export async function GET(req:NextRequest){
  const permission=await authorizeTenant(supabase,companyId);
  if(!permission.ok)return fail(permission.error,permission.status);
  const [routers,observations]=await Promise.all([
- supabase.from('network_routers').select('id,company_id,site_id,name,host,model,routeros_version,connection_mode,status,last_seen_at,created_at').eq('company_id',companyId).order('created_at',{ascending:false}),
+ supabase.from('network_routers').select('id,company_id,site_id,name,host,model,routeros_version,connection_mode,status,control_enabled,last_seen_at,created_at').eq('company_id',companyId).order('created_at',{ascending:false}),
  supabase.from('network_observations').select('id,router_id,observed_kind,identity_key,ip_address,mac_address,client_label,active,observed_at').eq('company_id',companyId).order('observed_at',{ascending:false}).limit(500)
  ]);
  if(routers.error||observations.error)return fail('Inventaire indisponible.',503);
