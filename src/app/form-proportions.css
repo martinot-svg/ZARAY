@@ -435,6 +435,7 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
  text-decoration-line:none!important;
 }
 [data-zaray-theme="light"] .login-shell > .login-card .login-footer-links a,
+[data-zaray-theme="light"] .login-shell > .login-card .login-footer-links a:first-child,
 [data-zaray-theme="light"] .login-shell > .login-card .login-footer-links a:last-child{
  color:#137349!important;
 }
