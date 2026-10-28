@@ -250,3 +250,140 @@ body:has(.form-shell){overflow-x:clip}
   width:auto;max-width:none;animation:none!important;transition:none!important;
  }
 }
+
+
+/* LOGIN — approved design: standalone transparent centered mark and compact card.
+   The recovery and signup links share one row, LEFT and RIGHT respectively. */
+.form-shell.auth-motion.login-shell{
+ row-gap:clamp(13px,2.7vh,22px);
+ align-content:center;
+ justify-items:center;
+}
+.login-shell .login-brand{
+ position:relative;
+ z-index:1;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ width:100%;
+ min-width:0;
+ padding:0;
+ margin:0;
+ background:transparent!important;
+ border:0!important;
+ box-shadow:none!important;
+}
+.login-shell .login-brand a{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ width:clamp(165px,19vw,202px);
+ max-width:80%;
+ background:transparent!important;
+ border:0!important;
+ box-shadow:none!important;
+}
+.login-shell .login-brand .brand-logo{
+ display:block;
+ width:100%;
+ height:auto;
+ object-fit:contain;
+ background:transparent!important;
+ border:0!important;
+ box-shadow:none!important;
+ filter:none!important;
+}
+[data-zaray-theme="light"] .login-shell .login-brand img.brand-logo{
+ content:url("/brand/zaray-logo-on-light.svg");
+}
+.login-shell > .login-card{position:relative;z-index:1}
+.form-shell.auth-motion.login-shell .login-card > h1{
+ font-size:clamp(17px,1.65vw,23px)!important;
+ letter-spacing:-.04em!important;
+ line-height:1.25!important;
+ font-weight:850!important;
+ white-space:nowrap;
+ text-wrap:nowrap;
+ overflow-wrap:normal;
+ margin:0 0 6px!important;
+}
+.form-shell.auth-motion.login-shell .login-card > .login-subtitle{
+ margin:0 0 14px!important;
+ color:var(--zf-text)!important;
+ font-size:13px!important;
+ line-height:1.5;
+}
+.login-shell .login-card .form-stack{margin-top:12px!important}
+.login-shell .login-card .form-stack > button{margin-top:2px}
+.login-shell .login-footer-links{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ flex-wrap:nowrap;
+ min-width:0;
+ gap:10px;
+ margin-top:15px;
+ font-size:12px;
+ line-height:1.5;
+ font-weight:740;
+ white-space:nowrap;
+}
+.login-shell .login-footer-links > a{
+ display:inline-flex;
+ align-items:center;
+ min-height:32px;
+ color:#adf6ce!important;
+ text-decoration:none;
+ text-underline-offset:4px;
+}
+.login-shell .login-footer-links > a:first-child{text-align:left}
+.login-shell .login-footer-links > a:last-child{text-align:right;margin-left:auto}
+.login-shell .login-footer-links > a:hover,
+.login-shell .login-footer-links > a:focus-visible{
+ color:#fff!important;
+ text-decoration:underline;
+}
+[data-zaray-theme="light"] .login-shell .login-footer-links > a{color:#136b43!important}
+[data-zaray-theme="light"] .login-shell .login-footer-links > a:hover,
+[data-zaray-theme="light"] .login-shell .login-footer-links > a:focus-visible{color:#06351f!important}
+/* Only the login theme control is icon-only, transparent and unframed.
+   Accessible text remains available as the button's aria-label/title. */
+body:has(.login-shell) .global-auth-theme .zaray-theme-switch{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ width:44px;
+ height:44px;
+ min-width:44px;
+ min-height:44px;
+ padding:0!important;
+ border:0!important;
+ border-radius:0!important;
+ background:transparent!important;
+ background-image:none!important;
+ box-shadow:none!important;
+ color:#b7fcd3!important;
+}
+body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover,
+body:has(.login-shell) .global-auth-theme .zaray-theme-switch:active{
+ background:transparent!important;
+ box-shadow:none!important;
+}
+body:has(.login-shell) .global-auth-theme .zaray-theme-switch-label{display:none!important}
+body:has(.login-shell) .global-auth-theme .zaray-theme-switch svg{color:inherit!important}
+[data-zaray-theme="light"] body:has(.login-shell) .global-auth-theme .zaray-theme-switch{
+ color:#115b3d!important;
+}
+@media(max-width:700px){
+ .form-shell.auth-motion.login-shell{padding-top:clamp(20px,4svh,40px)!important}
+ .login-shell .login-brand a{width:clamp(154px,45vw,182px)}
+ .form-shell.auth-motion.login-shell .login-card > h1{
+  font-size:clamp(14px,4vw,17px)!important;
+  letter-spacing:-.035em!important;
+ }
+ .login-shell .login-footer-links{font-size:11px;gap:8px}
+}
+@media(max-width:360px){
+ .form-shell.auth-motion.login-shell .login-card > h1{font-size:14px!important}
+ .login-shell .login-footer-links{font-size:10.5px;gap:5px}
+}

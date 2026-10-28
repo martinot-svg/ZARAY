@@ -46,6 +46,28 @@ try {
     assert.ok(metrics.scrollHeight <= metrics.innerHeight+2,'desktop login should not create a needless vertical scrollbar: '+JSON.stringify(metrics));
    }
    if(path==='/connexion') {
+    const logo = await page.locator('.login-brand').boundingBox();
+    const heading = page.locator('.login-card h1');
+    const titleFits = await heading.evaluate(el => el.scrollWidth <= el.clientWidth + 2);
+    const forgotten = await page.getByRole('link',{name:'Mot de passe oublié ?'}).boundingBox();
+    const signup = await page.getByRole('link',{name:'Créer un compte'}).boundingBox();
+    assert.ok(logo && logo.y + logo.height < box.y + 3, size.name+' logo must be above card');
+    assert.ok(titleFits,size.name+' login heading must stay in one line');
+    assert.ok(forgotten && signup && forgotten.x < signup.x, size.name+' recovery link must be left');
+    assert.ok(Math.abs(forgotten.y - signup.y) < 5,size.name+' footer links must align in one row');
+    assert.match(await page.locator('.login-subtitle').innerText(), /Votre univers ZARAY vous attend/);
+    const iconOnly = await page.getByRole('button',{name:'Activer le thème clair'}).evaluate(el => {
+      const style = getComputedStyle(el);
+      const label = el.querySelector('.zaray-theme-switch-label');
+      return { background:style.backgroundColor,image:style.backgroundImage,
+        border:style.borderTopWidth, label:label ? getComputedStyle(label).display : null };
+    });
+    assert.equal(iconOnly.background,'rgba(0, 0, 0, 0)',size.name+' theme button background');
+    assert.equal(iconOnly.image,'none',size.name+' theme button gradient');
+    assert.equal(iconOnly.border,'0px',size.name+' theme button border');
+    assert.equal(iconOnly.label,'none',size.name+' theme text must be hidden');
+   }
+   if(path==='/connexion') {
     await page.screenshot({path:output+'/'+size.name+'-dark.png',animations:'disabled',fullPage:false,timeout:18000});
     await page.getByRole('button',{name:'Activer le thème clair'}).click();
     assert.equal(await page.locator('html').getAttribute('data-zaray-theme'),'light');

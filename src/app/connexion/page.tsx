@@ -35,17 +35,23 @@ export default function ConnexionPage() {
     }
   }
 
-  return <main className="form-shell auth-motion"><section className="form-card">
-    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority surface="light" /></a></div>
-    <p className="eyebrow">ZARAY · ACCÈS SÉCURISÉ</p>
-    <h1>Connexion à mon compte ZARAY</h1>
-    <form className="form-stack" onSubmit={submit}>
-      <label>E-mail<input name="email" type="email" autoComplete="email" required /></label>
-      <label>Mot de passe<input name="password" type="password" autoComplete="current-password" required /></label>
-      <p><a href="/mot-de-passe-oublie"><ZarayIcon name="login" size={18} /> Mot de passe oublié ?</a></p>
-      <button type="submit" disabled={busy} className="primary-link"><ZarayIcon name="login" size={18} /> {busy ? 'Connexion…' : 'Se connecter'}</button>
-    </form>
-    <MotionFeedback message={error} kind="error" />
-    <p><a href="/inscription"><ZarayIcon name="signup" size={18} /> Créer un compte</a></p>
-  </section></main>;
+  return <main className="form-shell auth-motion login-shell">
+    <div className="login-brand">
+      <a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority surface="dark" /></a>
+    </div>
+    <section className="form-card login-card">
+      <h1>Connexion à mon compte ZARAY</h1>
+      <p className="login-subtitle">Votre univers ZARAY vous attend</p>
+      <form className="form-stack" onSubmit={submit}>
+        <label>E-mail<input name="email" type="email" autoComplete="email" required /></label>
+        <label>Mot de passe<input name="password" type="password" autoComplete="current-password" required /></label>
+        <button type="submit" disabled={busy} className="primary-link"><ZarayIcon name="login" size={18} /> {busy ? 'Connexion…' : 'Se connecter'}</button>
+      </form>
+      <MotionFeedback message={error} kind="error" />
+      <nav className="login-footer-links" aria-label="Options de connexion">
+        <a href="/mot-de-passe-oublie">Mot de passe oublié ?</a>
+        <a href="/inscription">Créer un compte</a>
+      </nav>
+    </section>
+  </main>;
 }
