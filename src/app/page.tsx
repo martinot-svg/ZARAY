@@ -1,5 +1,6 @@
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import BrandLogo from '@/components/brand-logo';
+import PremiumExperience from '@/components/premium-experience';
 
 const features = [
   { tag: 'ORGANISATION', number: '01', icon: 'company', title: 'Entreprises et sites', description: 'Retrouvez vos entreprises dans votre compte personnel et consultez les opérations de chacun de leurs sites.' },
@@ -45,18 +46,7 @@ export default function HomePage() {
             </div>
             <p className="landing-hero-note">Un compte personnel pour accéder aux entreprises auxquelles vous êtes autorisé.</p>
           </div>
-          <div className="landing-structure" aria-label="Organisation des espaces ZARAY">
-            <div className="landing-structure-top"><span className="landing-live-mark" aria-hidden="true"/> UNE ORGANISATION LISIBLE <span className="landing-structure-id">ZARAY</span></div>
-            <div className="landing-structure-body">
-              <div className="landing-structure-level landing-structure-level-account"><span className="landing-structure-symbol">01</span><div><strong>Compte personnel ZARAY</strong><small>Identité et accès à vos entreprises</small></div></div>
-              <div className="landing-structure-connector" aria-hidden="true"/>
-              <div className="landing-structure-level"><span className="landing-structure-symbol">02</span><div><strong>Entreprise</strong><small>Vue générale, membres et opérations</small></div></div>
-              <div className="landing-structure-connector" aria-hidden="true"/>
-              <div className="landing-structure-level landing-structure-level-site"><span className="landing-structure-symbol">03</span><div><strong>Sites</strong><small>Une vue adaptée à chaque implantation</small></div></div>
-              <div className="landing-structure-bottom"><span>Clients</span><span>Offres</span><span>Commandes</span><span>Paiements</span></div>
-            </div>
-            <div className="landing-structure-footer"><span>Compte → Entreprise → Site</span><span>Un contexte toujours identifiable</span></div>
-          </div>
+          <PremiumExperience />
         </div>
       </section>
       <section className="landing-summary" aria-label="Les principes de ZARAY">
