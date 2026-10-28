@@ -67,7 +67,9 @@ try {
         const svgStyle=svg && getComputedStyle(svg);
         const target=document.elementFromPoint(b.x+b.width/2,b.y+b.height/2);
         return {
-          color:style.color,background:style.backgroundColor,border:style.borderTopWidth,
+          color:style.color,background:style.backgroundColor,backgroundImage:style.backgroundImage,
+          border:style.borderTopWidth,shadow:style.boxShadow,
+          inputBackground:input?getComputedStyle(input).backgroundColor:null,
           opacity:style.opacity,visibility:style.visibility,display:style.display,
           svgColor:svgStyle?.color,svgStroke:svgStyle?.stroke,svgOpacity:svgStyle?.opacity,
           svgWidth:svg?.getBoundingClientRect().width,svgHeight:svg?.getBoundingClientRect().height,
@@ -76,11 +78,14 @@ try {
           hittable:el===target||el.contains(target),
         };
       });
-      const colors=mode==='dark'
-        ? (hover ? ['rgb(255, 255, 255)','rgb(36, 103, 69)'] : ['rgb(166, 255, 208)','rgb(23, 74, 52)'])
-        : (hover ? ['rgb(7, 70, 40)','rgb(211, 244, 223)'] : ['rgb(11, 98, 58)','rgb(232, 250, 238)']);
-      assert.equal(view.color,colors[0],path+'/'+size.name+'/'+mode+' eye color');
-      assert.equal(view.background,colors[1],path+'/'+size.name+'/'+mode+' eye background');
+      const ink=mode==='dark'
+        ? (hover ? 'rgb(255, 255, 255)' : 'rgb(166, 255, 208)')
+        : (hover ? 'rgb(7, 70, 40)' : 'rgb(11, 98, 58)');
+      assert.equal(view.color,ink,path+'/'+size.name+'/'+mode+' eye color');
+      assert.equal(view.background,'rgba(0, 0, 0, 0)',path+'/'+size.name+'/'+mode+' eye must have NO background');
+      assert.equal(view.backgroundImage,'none',path+'/'+size.name+'/'+mode+' eye must have NO gradient');
+      assert.equal(view.border,'0px',path+'/'+size.name+'/'+mode+' eye must have NO border');
+      assert.equal(view.shadow,'none',path+'/'+size.name+'/'+mode+' eye must have NO shadow');
       assert.equal(view.svgColor,view.color,path+'/'+size.name+'/'+mode+' eye SVG inherits contrast color');
       assert.equal(view.svgStroke,view.color,path+'/'+size.name+'/'+mode+' eye stroke is visible');
       assert.equal(view.svgOpacity,'1');
@@ -97,7 +102,11 @@ try {
         const x=rgb(v).map(n=>{const p=n/255;return p<=.04045?p/12.92:Math.pow((p+.055)/1.055,2.4)});
         return .2126*x[0]+.7152*x[1]+.0722*x[2];
       };
-      const a=luminance(view.color),b=luminance(view.background);
+      // The button is transparent: measure icon contrast against its actual
+      // input field, not an invented badge background.
+      assert.ok(view.inputBackground && !view.inputBackground.endsWith(', 0)'),
+        path+'/'+size.name+' input must have a real surface');
+      const a=luminance(view.color),b=luminance(view.inputBackground);
       const ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
       assert.ok(ratio>=4.5,path+'/'+size.name+'/'+mode+' eye contrast '+ratio);
       console.log(JSON.stringify({eyeVisible:true,path,device:size.name,mode,hover,contrast:ratio.toFixed(2)}));
