@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useState, type InputHTMLAttributes } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 type PasswordFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'id' | 'name' | 'children'> & {
   label: string;
@@ -33,7 +33,7 @@ export default function PasswordField({ label, name, ...inputProps }: PasswordFi
           title={toggleLabel}
           onClick={() => setVisible(value => !value)}
         >
-          {visible ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
+          <ZarayIcon name={visible ? 'hide' : 'show'} size={23} strokeWidth={2.5} aria-hidden={true} />
         </button>
       </div>
     </div>
