@@ -40,7 +40,7 @@ test('Dashboard shows exact KPI values immediately without counting from zero', 
   assert.doesNotMatch(dashboard,/MotionCount|motion-stagger/);
   assert.ok(motion.includes('aria-hidden="true"')); // Other modules may retain accessible count-up.
 });
-test('Background movement is limited to the existing login page', () => {
+test('Login retains its local ambient motion while the global galaxy is shared', () => {
   assert.ok(login.includes('form-shell auth-motion'));
   assert.ok(css.includes('.auth-motion::before'));
 });
@@ -56,10 +56,12 @@ test('galaxy is a true continuously rendered GPU animation with independent livi
   "float streamA", "float streamB", "float farDust", "float midStars",
   "float nearStars", "uniform float u_time", "uniform vec2 u_resolution",
  ]) assert.ok(galaxy.includes(feature), 'missing '+feature);
- assert.match(galaxy,/if \(!motionPreference\.matches\) \{/);
+ assert.match(galaxy,/if \(!motionPreference\.matches && !dataSaver\) \{/);
  assert.match(galaxy,/sharedGalaxyClock = elapsed/);
  assert.match(galaxy,/let elapsed = sharedGalaxyClock/);
- assert.match(galaxy,/mobile\.matches \? 42 : 60/);
+ assert.match(galaxy,/mobile\.matches \? 24/);
+ assert.match(galaxy,/dataSaver \? 1/);
+ assert.match(galaxy,/!motionPreference\.matches && !dataSaver/);
  assert.match(galaxy,/slowFrames > 90/);
  assert.match(galaxy,/Math\.sqrt\(maxPixels \/ \(width \* height\)\)/);
  assert.doesNotMatch(galaxy,/setInterval\(|setTimeout\(|Math\.random\(/);
