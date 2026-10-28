@@ -16,5 +16,6 @@ jobs:
       - run: npm run test:navigation
       - run: npm run test:brand
       - run: npm run test:public
+      - run: node --test tests/premium-experience.test.mjs
       - run: npm run typecheck
       - run: npm run build
