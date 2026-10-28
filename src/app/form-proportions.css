@@ -481,8 +481,8 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
 }
 
 
-/* Password eye: ONLY the eye graphic, without a badge, panel, border or
-   background. Retain a large invisible hit area and accessible focus ring. */
+/* Password eye: thin BLACK line icon with NO separate background, border or badge.
+   Light password input surface gives black ink actual contrast in both themes. */
 .form-shell .form-stack .zaray-password-field{
  display:grid;
  gap:5px;
@@ -503,6 +503,9 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
 }
 .form-shell .form-stack .zaray-password-control input{
  padding-right:64px!important;
+ background:#f0fff5!important;
+ color:#0b1c13!important;
+ caret-color:#0b1c13!important;
 }
 .form-shell .form-stack .zaray-password-control button.zaray-password-toggle{
  position:absolute;
@@ -525,8 +528,8 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
  box-shadow:none!important;
  filter:none!important;
  backdrop-filter:none!important;
- color:#a6ffd0!important;
- -webkit-text-fill-color:#a6ffd0!important;
+ color:#000000!important;
+ -webkit-text-fill-color:#000000!important;
  opacity:1!important;
  visibility:visible!important;
  cursor:pointer;
@@ -535,13 +538,13 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
 }
 .form-shell .form-stack .zaray-password-control button.zaray-password-toggle svg{
  display:block!important;
- width:23px!important;
- height:23px!important;
- min-width:23px!important;
- min-height:23px!important;
+ width:22px!important;
+ height:22px!important;
+ min-width:22px!important;
+ min-height:22px!important;
  color:inherit!important;
  stroke:currentColor!important;
- stroke-width:2.5px;
+ stroke-width:1.5px!important;
  opacity:1!important;
  visibility:visible!important;
  pointer-events:none;
@@ -551,8 +554,8 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
  background-image:none!important;
  border:0!important;
  box-shadow:none!important;
- color:#ffffff!important;
- -webkit-text-fill-color:#ffffff!important;
+ color:#000000!important;
+ -webkit-text-fill-color:#000000!important;
 }
 .form-shell .form-stack .zaray-password-control button.zaray-password-toggle:focus-visible{
  outline:2px solid #6cffa8!important;
@@ -564,15 +567,15 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
  box-shadow:none!important;
 }
 [data-zaray-theme="light"] .form-shell .form-stack .zaray-password-control button.zaray-password-toggle{
- color:#0b623a!important;
- -webkit-text-fill-color:#0b623a!important;
+ color:#000000!important;
+ -webkit-text-fill-color:#000000!important;
  background:transparent!important;
  border:0!important;
  box-shadow:none!important;
 }
 [data-zaray-theme="light"] .form-shell .form-stack .zaray-password-control button.zaray-password-toggle:is(:hover,:focus-visible){
- color:#074628!important;
- -webkit-text-fill-color:#074628!important;
+ color:#000000!important;
+ -webkit-text-fill-color:#000000!important;
  background:transparent!important;
  border:0!important;
  box-shadow:none!important;

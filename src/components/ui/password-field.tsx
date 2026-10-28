@@ -33,7 +33,7 @@ export default function PasswordField({ label, name, ...inputProps }: PasswordFi
           title={toggleLabel}
           onClick={() => setVisible(value => !value)}
         >
-          <ZarayIcon name={visible ? 'hide' : 'show'} size={23} strokeWidth={2.5} aria-hidden={true} />
+          <ZarayIcon name={visible ? 'hide' : 'show'} size={22} strokeWidth={1.5} aria-hidden={true} />
         </button>
       </div>
     </div>

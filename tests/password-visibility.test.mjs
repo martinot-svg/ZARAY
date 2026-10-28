@@ -17,7 +17,7 @@ test('password visibility is accessible and cannot submit a form', () => {
   assert.match(component, /label htmlFor=\{id\}/);
   assert.match(component, /useId\(\)/);
   assert.match(component, /ZarayIcon name=\{visible \? 'hide' : 'show'\}/);
-  assert.match(component, /strokeWidth=\{2\.5\}/);
+  assert.match(component, /strokeWidth=\{1\.5\}/);
   assert.doesNotMatch(component, /localStorage|sessionStorage|fetch\(|console\.log|setTimeout/);
 });
 
@@ -45,8 +45,10 @@ test('icon fits inside the field without hiding typing and has light/dark suppor
   assert.match(styles, /\.zaray-password-control button\.zaray-password-toggle\{[\s\S]*?position:absolute/);
   assert.match(styles, /width:48px/);
   assert.match(styles, /\[data-zaray-theme="light"\].*\.zaray-password-toggle/);
-  assert.match(styles, /color:#a6ffd0!important/);
-  assert.match(styles, /color:#0b623a!important/);
+  assert.match(styles, /background:#f0fff5!important/);
+  assert.match(styles, /color:#0b1c13!important/);
+  assert.match(styles, /color:#000000!important/);
+  assert.match(styles, /stroke-width:1\.5px!important/);
   assert.match(styles, /background:transparent!important/);
   assert.match(styles, /border:0!important/);
   assert.match(styles, /box-shadow:none!important/);
