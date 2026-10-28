@@ -40,6 +40,10 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:3000
         run: node tests/premium-visual-audit.mjs
+      - name: Verify compact forms on desktop, tablet and mobile
+        env:
+          BASE_URL: http://127.0.0.1:3000
+        run: node tests/compact-forms-visual.mjs
       - name: Preserve visual evidence
         if: always()
         uses: actions/upload-artifact@v4
