@@ -56,3 +56,15 @@ test('ZARAY login exposes a logo outside form and a single left/right footer row
  assert.match(style,/\.login-footer-links a:last-child\{[\s\S]*?font-weight:400!important/);
  assert.match(style,/\.login-footer-links a:last-child:focus-visible\{[\s\S]*?text-decoration-line:none!important/);
 });
+
+
+test('login green submit button always uses black text and opts out of gradient-blind contrast repair',()=>{
+ const login=read('src/app/connexion/page.tsx');
+ assert.match(login,/className="primary-link" data-contrast-ignore/);
+ assert.match(style,/\.login-card button\.primary-link:focus-visible/);
+ assert.match(style,/\.login-card button\.primary-link:active/);
+ assert.match(style,/\.login-card button\.primary-link:disabled/);
+ assert.match(style,/color:#071b10!important/);
+ assert.match(style,/-webkit-text-fill-color:#071b10!important/);
+ assert.match(read('src/components/contrast-guardian.tsx'),/closest\('\[data-contrast-ignore\]/);
+});
