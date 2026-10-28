@@ -170,8 +170,17 @@ export default function GalaxyBackdrop() {
     let slowFrames = 0;
     let disposed = false;
     let lost = false;
-    const showFallback = () => canvas.parentElement?.setAttribute('data-zaray-galaxy-renderer','fallback');
-    const showWebGL = () => canvas.parentElement?.setAttribute('data-zaray-galaxy-renderer','webgl');
+    let rendererLive = false;
+    const showFallback = () => {
+      rendererLive = false;
+      canvas.parentElement?.setAttribute('data-zaray-galaxy-renderer','fallback');
+    };
+    const showWebGL = () => {
+      // Switching modes changes the DOM only once, not 24–35 times per second.
+      if (rendererLive) return;
+      rendererLive = true;
+      canvas.parentElement?.setAttribute('data-zaray-galaxy-renderer','webgl');
+    };
 
     const stop = () => {
       if (frame) window.cancelAnimationFrame(frame);
