@@ -31,3 +31,22 @@ test('authentication, enterprise creation, forms retain existing business logic'
  ])assert.ok(read(path).includes(marker),path);
  assert.match(style,/@media print/);
 });
+
+
+test('ZARAY login exposes a logo outside form and a single left/right footer row',()=>{
+ const login=read('src/app/connexion/page.tsx');
+ const logoPosition=login.indexOf('<div className="login-brand">');
+ const cardPosition=login.indexOf('<section className="form-card login-card"');
+ const left=login.indexOf('<a href="/mot-de-passe-oublie">Mot de passe oublié ?</a>');
+ const right=login.indexOf('<a href="/inscription">Créer un compte</a>');
+ assert.ok(logoPosition>=0 && cardPosition>logoPosition,'logo must be outside the card');
+ assert.ok(left>cardPosition && right>left,'forgotten password left, account creation right');
+ assert.ok(login.includes('Votre univers ZARAY vous attend'));
+ assert.ok(login.includes('Connexion à mon compte ZARAY'));
+ assert.ok(!login.includes('ZARAY · ACCÈS SÉCURISÉ'));
+ assert.match(style,/\.login-shell > \.login-card #login-title/);
+ assert.match(style,/white-space:nowrap/);
+ assert.match(style,/\.login-footer-links\{[\s\S]*?justify-content:space-between/);
+ assert.match(style,/\.global-auth-theme \.zaray-theme-switch \.zaray-theme-switch-label\{[\s\S]*?display:none!important/);
+ assert.match(style,/\.login-brand \.brand-logo/);
+});

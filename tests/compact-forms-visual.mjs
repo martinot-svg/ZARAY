@@ -46,6 +46,38 @@ try {
     assert.ok(metrics.scrollHeight <= metrics.innerHeight+2,'desktop login should not create a needless vertical scrollbar: '+JSON.stringify(metrics));
    }
    if(path==='/connexion') {
+    const logo = page.locator('.login-shell > .login-brand .brand-logo');
+    await logo.waitFor({state:'visible'});
+    assert.equal(await card.locator('.brand-logo').count(),0,'logo must be outside login card');
+    assert.equal(await page.getByText('Votre univers ZARAY vous attend',{exact:true}).count(),1);
+    assert.equal(await page.getByText('ZARAY · ACCÈS SÉCURISÉ').count(),0);
+
+    const heading = page.locator('#login-title');
+    const headingMetrics = await heading.evaluate(el=>{
+      const style = getComputedStyle(el);
+      return {height:el.getBoundingClientRect().height,lineHeight:parseFloat(style.lineHeight),scrollWidth:el.scrollWidth,clientWidth:el.clientWidth};
+    });
+    assert.ok(headingMetrics.height <= headingMetrics.lineHeight+2,
+      'login title must fit on one line: '+JSON.stringify(headingMetrics));
+    assert.ok(headingMetrics.scrollWidth <= headingMetrics.clientWidth+2,
+      'login title must not overflow horizontally');
+
+    const left = card.getByRole('link',{name:'Mot de passe oublié ?'});
+    const right = card.getByRole('link',{name:'Créer un compte'});
+    const leftBox = await left.boundingBox(),rightBox = await right.boundingBox();
+    assert.ok(leftBox && rightBox,'both footer links must be visible');
+    assert.ok(leftBox.x + leftBox.width < rightBox.x,
+      'forgotten password must be to the left of account creation');
+    assert.ok(Math.abs(leftBox.y-rightBox.y)<6,
+      'both account links must be aligned on the same row');
+    const button = page.getByRole('button',{name:'Activer le thème clair'});
+    const decoration = await button.evaluate(el=>{
+      const css=getComputedStyle(el);
+      return {background:css.backgroundColor,border:css.borderTopWidth,display:getComputedStyle(el.querySelector('.zaray-theme-switch-label')).display};
+    });
+    assert.equal(decoration.background,'rgba(0, 0, 0, 0)','icon-only theme button has no background');
+    assert.equal(decoration.border,'0px','theme button must not have a visible border');
+    assert.equal(decoration.display,'none','theme button label must not be visible');
     await page.screenshot({path:output+'/'+size.name+'-dark.png',animations:'disabled',fullPage:false,timeout:18000});
     await page.getByRole('button',{name:'Activer le thème clair'}).click();
     assert.equal(await page.locator('html').getAttribute('data-zaray-theme'),'light');

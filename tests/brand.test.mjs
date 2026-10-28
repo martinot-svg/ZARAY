@@ -78,11 +78,17 @@ test('light auth card contains black/green transparent logo without an artificia
  assert.match(light,/fill="#111914"/);
  assert.match(light,/fill="#21f728"/);
  assert.match(svg,/fill="#fff"/);
- for (const path of ['src/app/connexion/page.tsx','src/app/inscription/page.tsx',
+ // Auth cards other than login retain the correct dark wordmark on light cards.
+ for (const path of ['src/app/inscription/page.tsx',
  'src/app/mot-de-passe-oublie/page.tsx','src/app/reinitialiser-mot-de-passe/page.tsx',
  'src/app/entreprises/nouvelle/page.tsx']) {
   assert.match(read(path),/BrandLogo priority surface="light"/,path);
  }
+ // Login places the official logo OUTSIDE the card and swaps assets with the theme.
+ assert.match(read('src/app/connexion/page.tsx'),/BrandLogo priority surface="dark"/);
+ const loginCss=read('src/app/form-proportions.css');
+ assert.match(loginCss,/\[data-zaray-theme="light"\] \.login-shell > \.login-brand \.brand-logo/);
+ assert.match(loginCss,/content:url\("\/brand\/zaray-logo-on-light\.svg"\)/);
  assert.match(css,/\.form-shell\.auth-motion \.form-card \.auth-brand\{/);
  assert.match(css,/background:transparent!important;border:0!important/);
 });

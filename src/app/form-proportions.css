@@ -250,3 +250,150 @@ body:has(.form-shell){overflow-x:clip}
   width:auto;max-width:none;animation:none!important;transition:none!important;
  }
 }
+
+
+/* Login layout — logo outside the card, no badge behind the official mark. */
+.login-shell{
+ row-gap:clamp(13px,2.6vh,23px);
+}
+.login-shell > .login-brand{
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ width:100%;
+ margin:0;
+ padding:0;
+ background:none!important;
+ border:0!important;
+ box-shadow:none!important;
+}
+.login-shell > .login-brand a{
+ display:block;
+ width:clamp(150px,15vw,180px);
+ max-width:60%;
+ background:transparent!important;
+ border:0!important;
+ outline-offset:5px;
+ box-shadow:none!important;
+}
+.login-shell > .login-brand .brand-logo{
+ display:block;
+ width:100%;
+ height:auto;
+ object-fit:contain;
+ background:transparent!important;
+ border:0!important;
+ box-shadow:none!important;
+}
+[data-zaray-theme="light"] .login-shell > .login-brand .brand-logo{
+ content:url("/brand/zaray-logo-on-light.svg");
+}
+[data-zaray-theme="dark"] .login-shell > .login-brand .brand-logo{
+ content:url("/brand/zaray-logo.svg");
+}
+.login-shell > .login-card{max-width:468px!important}
+.login-shell > .login-card #login-title{
+ font-size:clamp(15px,1.6vw,20px)!important;
+ font-weight:850;
+ line-height:1.3!important;
+ letter-spacing:-.035em!important;
+ white-space:nowrap;
+ overflow-wrap:normal;
+ margin:0 0 4px!important;
+}
+.login-shell > .login-card .login-subtitle{
+ margin:0 0 17px!important;
+ font-size:13px!important;
+ line-height:1.5;
+ color:var(--zf-text)!important;
+}
+.login-shell > .login-card .form-stack{
+ margin-top:0!important;
+}
+.login-shell > .login-card .form-stack button[type="submit"]{
+ margin-top:4px;
+ width:100%;
+}
+.login-shell > .login-card .login-footer-links{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:12px;
+ margin-top:12px;
+}
+.login-shell > .login-card .login-footer-links a{
+ display:inline-flex;
+ min-height:40px;
+ align-items:center;
+ padding:7px 0;
+ font-size:12px;
+ font-weight:740;
+ line-height:1.35;
+ text-decoration:none!important;
+ white-space:nowrap;
+ color:var(--zf-mint)!important;
+}
+.login-shell > .login-card .login-footer-links a:last-child{
+ color:var(--zf-ink)!important;
+ text-align:right;
+ margin-left:auto;
+}
+.login-shell > .login-card .login-footer-links a:hover,
+.login-shell > .login-card .login-footer-links a:focus-visible{
+ text-decoration:underline!important;
+ text-underline-offset:3px;
+}
+[data-zaray-theme="light"] .login-shell > .login-card .login-footer-links a:first-child{
+ color:#17643f!important;
+}
+
+/* Login-only theme toggle: one accessible icon, no capsule or visible label. */
+body:has(.login-shell) .global-auth-theme .zaray-theme-switch{
+ display:grid;
+ place-items:center;
+ box-sizing:border-box;
+ width:44px;
+ min-width:44px;
+ height:44px;
+ min-height:44px;
+ padding:10px!important;
+ border:0!important;
+ border-radius:50%!important;
+ background:transparent!important;
+ box-shadow:none!important;
+ color:#c8ffdc!important;
+}
+body:has(.login-shell) .global-auth-theme .zaray-theme-switch .zaray-theme-switch-label{
+ display:none!important;
+}
+body:has(.login-shell) .global-auth-theme .zaray-theme-switch svg{
+ color:currentColor!important;
+}
+body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
+ background:transparent!important;
+ box-shadow:none!important;
+ color:#ffffff!important;
+}
+[data-zaray-theme="light"] body:has(.login-shell) .global-auth-theme .zaray-theme-switch{
+ color:#164e35!important;
+}
+[data-zaray-theme="light"] body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
+ color:#0b3322!important;
+}
+@media(max-width:700px){
+ .login-shell{row-gap:13px;padding-top:clamp(55px,9vh,74px)!important}
+ .login-shell > .login-brand a{width:clamp(140px,38vw,170px)}
+ .login-shell > .login-card #login-title{
+  font-size:clamp(14px,3.9vw,17px)!important;
+  letter-spacing:-.045em!important;
+ }
+ .login-shell > .login-card .login-subtitle{margin-bottom:13px!important}
+ .login-shell > .login-card .login-footer-links{gap:8px}
+ .login-shell > .login-card .login-footer-links a{font-size:clamp(10.5px,2.85vw,12px)}
+}
+@media(max-width:330px){
+ .login-shell > .login-card #login-title{font-size:13.5px!important}
+}
+@media print{
+ body:has(.login-shell) .global-auth-theme{display:none!important}
+}
