@@ -352,15 +352,22 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   opacity: 0;
   transform-origin: 50% 87.5%;
   transform: translate(-50%, -87.5%) rotate(-135deg) scale(.04);
-  animation: zaray-wifi-background-broadcast 26s linear infinite;
+  animation: zaray-wifi-background-broadcast 30s linear infinite;
   will-change: transform, opacity;
 }
 .zaray-original-backdrop .zaray-wifi-global-pulse > path {
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.45px;
+  /* Subpixel hairline: grows from 0.05 px to 0.07 px during a 30s emission.
+     Browsers may rasterize strokes this thin as barely visible. */
+  stroke-width: 0.05px;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
+  animation: zaray-wifi-stroke-growth 30s linear infinite;
+}
+@keyframes zaray-wifi-stroke-growth {
+  from { stroke-width: 0.05px; }
+  to { stroke-width: 0.07px; }
 }
 /* The visible Sun/Moon remains the emission point, not a large animated dot. */
 .zaray-original-backdrop .zaray-wifi-global-pulse .zaray-wifi-glyph-dot {
