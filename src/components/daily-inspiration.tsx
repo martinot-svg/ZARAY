@@ -71,18 +71,18 @@ export default function DailyInspiration() {
   return <div className="personal-home-quote-zone" aria-live="polite">
     {daily && <figure className="personal-home-inspiration" key={daily.date}>
       <blockquote className="personal-home-quote" lang="fr">« {daily.quote.content} »</blockquote>
-      <figcaption className="personal-home-quote-author">
-        — {daily.quote.author}
+      <figcaption className="personal-home-quote-author">— {daily.quote.author}</figcaption>
+      <div className="personal-home-quote-footer">
+        <p className="personal-quote-provenance">
+          {daily.quote.translatedFrom === 'en'
+            ? 'Source : ' + daily.quote.sourceTitle
+            : 'Pensée originale · ZARAY'}
+        </p>
         {daily.quote.sourceUrl && <a className="personal-quote-source" href={daily.quote.sourceUrl}
           target="_blank" rel="noopener noreferrer" title={daily.quote.provenance}>
           Consulter le recueil
         </a>}
-      </figcaption>
-      <p className="personal-quote-provenance">
-        {daily.quote.translatedFrom === 'en'
-          ? 'Source : ' + daily.quote.sourceTitle
-          : 'Pensée originale · ZARAY'}
-      </p>
+      </div>
     </figure>}
     {!daily && error && <p role="status" className="personal-quote-unavailable">{error}</p>}
   </div>;

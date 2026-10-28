@@ -34,7 +34,7 @@ test('a real toggle is available in the public, personal and company headers', (
 test('new visual language extends to all shared primitives, not only landing', () => {
   for (const selector of ['.app-no-sidebar .page-header','.app-no-sidebar .kpi-grid',
     '.app-no-sidebar .data-table td','.app-no-sidebar .module-grid',
-    '.app-no-sidebar .quick-action','.personal-home-commandline',
+    '.app-no-sidebar .quick-action','.personal-no-sidebar.personal-home-shell .personal-home-stage',
     '.personal-no-sidebar .personal-business-card','.form-shell .form-card']) {
     assert.ok(css.includes(selector), selector);
   }
@@ -54,8 +54,27 @@ test('mobile, tablet, desktop, reduced motion and printable output are all addre
     '.receipt-preview','.workspace-mobile-dock','.personal-mobile-dock']) {
     assert.ok(css.includes(marker) || read('src/app/premium-experience.css').includes(marker), marker);
   }
-  assert.ok(home.includes('companies.length.toLocaleString'));
+  assert.ok(home.includes('<DailyInspiration />'));
+  assert.ok(!home.includes('personal-home-commandline'));
+  assert.ok(!home.includes('personal-command-card'));
+  assert.ok(css.includes('text-align:justify!important'));
+  assert.ok(css.includes('.personal-home-quote-footer'));
   assert.ok(ticket.includes("type Tab = 'generate' | 'history' | 'customize'"));
   assert.ok(app.includes('encodeURIComponent(activeCompany)'));
   assert.ok(!theme.includes('supabase'));
+});
+
+test('personal welcome remains centered while daily quote attribution and source retain separate alignment', () => {
+  const daily = read('src/components/daily-inspiration.tsx');
+  assert.ok(home.includes('personal-welcome-title'));
+  assert.ok(home.includes('companyForInvitations'));
+  assert.ok(personal.includes("href: '/entreprises'"));
+  assert.ok(personal.includes("href: '/finance-globale'"));
+  assert.ok(personal.includes('Z’Alliance'));
+  assert.ok(daily.includes('className="personal-home-quote-author"'));
+  assert.ok(daily.includes('className="personal-home-quote-footer"'));
+  assert.ok(daily.includes('Consulter le recueil'));
+  assert.ok(daily.includes('daily.quote.sourceTitle'));
+  assert.ok(css.includes('text-align:right!important'));
+  assert.ok(css.includes('text-align:center!important'));
 });
