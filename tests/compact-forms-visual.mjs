@@ -92,7 +92,7 @@ try {
       assert.ok(view.inputBounds && view.bounds.left>=view.inputBounds.left &&
         view.bounds.right<=view.inputBounds.right+2,path+'/'+size.name+' eye must fit input');
       assert.ok(view.bounds.width>=44 && view.bounds.height>=40,path+'/'+size.name+' eye touch target');
-      const rgb=s=>s.match(/\\d+/g).slice(0,3).map(Number);
+      const rgb=s=>s.match(/\d+/g).slice(0,3).map(Number);
       const luminance=v=>{
         const x=rgb(v).map(n=>{const p=n/255;return p<=.04045?p/12.92:Math.pow((p+.055)/1.055,2.4)});
         return .2126*x[0]+.7152*x[1]+.0722*x[2];
