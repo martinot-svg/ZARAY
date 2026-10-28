@@ -63,7 +63,7 @@ export async function POST(request:NextRequest){
  await service.from('network_connector_credentials').update({last_poll_at:new Date().toISOString()}).eq('router_id',routerId);
  if(action==='poll'){
   if(!router.control_enabled)return json({commands:[],controlEnabled:false});
-  const {data,error}=await service.from('network_commands').select('id,account_id,action,protocol,username,session_id,expires_at')
+  const {data,error}=await service.from('network_commands').select('id,account_id,action,protocol,username,session_id,mac_address,expires_at')
     .eq('router_id',routerId).eq('status','queued').gt('expires_at',new Date().toISOString())
     .order('created_at').limit(10);
   if(error)return json({error:'Commandes indisponibles.'},503);
@@ -78,7 +78,7 @@ export async function POST(request:NextRequest){
    }
    const {data:claimed}=await service.from('network_commands').update({status:'dispatched',dispatched_at:new Date().toISOString()})
     .eq('id',cmd.id).eq('status','queued').select('id').maybeSingle();
-   if(claimed)commands.push({id:cmd.id,action:cmd.action,protocol:cmd.protocol,username:cmd.username,sessionId:cmd.session_id});
+   if(claimed)commands.push({id:cmd.id,action:cmd.action,protocol:cmd.protocol,username:cmd.username,sessionId:cmd.session_id,macAddress:cmd.mac_address});
   }
   return json({commands,controlEnabled:true});
  }
@@ -88,12 +88,17 @@ export async function POST(request:NextRequest){
  const {data:command,error}=await service.from('network_commands').update({
   status:ok?'success':'failed',outcome:clean(b.outcome,600)||null,completed_at:new Date().toISOString()
  }).eq('id',commandId).eq('router_id',routerId).eq('status','dispatched')
- .select('id,account_id,action').maybeSingle();
+ .select('id,account_id,action,mac_address').maybeSingle();
  if(error||!command)return json({error:'Commande déjà clôturée ou inconnue.'},409);
  if(ok&&command.account_id&&['suspend_account','resume_account'].includes(command.action)){
   const applied=command.action==='resume_account'?'active':'suspended';
   await service.from('network_access_accounts').update({applied_state:applied,last_sync_at:new Date().toISOString()})
    .eq('id',command.account_id).eq('desired_state',applied);
+ }
+ if(ok&&command.mac_address&&['block_hotspot_mac','unblock_hotspot_mac'].includes(command.action)){
+  const applied=command.action==='block_hotspot_mac'?'blocked':'unblocked';
+  await service.from('network_device_blocks').update({applied_state:applied,updated_at:new Date().toISOString()})
+   .eq('router_id',routerId).eq('mac_address',command.mac_address);
  }
  return json({recorded:true});
 }
