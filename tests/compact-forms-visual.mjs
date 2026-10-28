@@ -115,9 +115,50 @@ try {
     assert.equal(decoration.background,'rgba(0, 0, 0, 0)','icon-only theme button has no background');
     assert.equal(decoration.border,'0px','theme button must not have a visible border');
     assert.equal(decoration.display,'none','theme button label must not be visible');
+
+    // Hover and focus trigger the global ContrastGuardian. The gradient CTA
+    // must retain black ink instead of flipping between black and white.
+    const submitButton=card.getByRole('button',{name:'Se connecter'});
+    async function verifySubmitInk(state) {
+      await page.waitForTimeout(80); // wait for two requestAnimationFrame audits
+      const ink=await submitButton.evaluate(el=>{
+        const computed=getComputedStyle(el);
+        const icon=el.querySelector('svg');
+        return {
+          color:computed.color,
+          fill:computed.webkitTextFillColor,
+          iconColor:icon?getComputedStyle(icon).color:null,
+          exception:el.hasAttribute('data-contrast-ignore'),
+        };
+      });
+      assert.equal(ink.color,'rgb(0, 0, 0)',state+' text must remain black');
+      assert.equal(ink.fill,'rgb(0, 0, 0)',state+' text fill must remain black');
+      assert.equal(ink.iconColor,ink.color,state+' icon follows the black text');
+      assert.equal(ink.exception,true,'CTA must opt out of gradient-blind contrast observer');
+    }
+    await verifySubmitInk(size.name+'/dark idle');
+    for (let i=0;i<3;i++){
+      await submitButton.hover();
+      await verifySubmitInk(size.name+'/dark hover '+i);
+      await page.mouse.move(3,3);
+      await verifySubmitInk(size.name+'/dark pointer-out '+i);
+    }
+    await submitButton.focus();
+    await verifySubmitInk(size.name+'/dark focus');
+    await submitButton.hover();
+    await page.mouse.down();
+    await verifySubmitInk(size.name+'/dark active');
+    await page.mouse.move(3,3);
+    await page.mouse.up();
+    await verifySubmitInk(size.name+'/dark release');
     await page.screenshot({path:output+'/'+size.name+'-dark.png',animations:'disabled',fullPage:false,timeout:18000});
     await page.getByRole('button',{name:'Activer le thème clair'}).click();
     assert.equal(await page.locator('html').getAttribute('data-zaray-theme'),'light');
+    await verifySubmitInk(size.name+'/light idle');
+    await submitButton.hover();
+    await verifySubmitInk(size.name+'/light hover');
+    await page.mouse.move(3,3);
+    await verifySubmitInk(size.name+'/light pointer-out');
     const lightLinkColor = await inspectLinks();
     assert.equal(lightLinkColor,'rgb(19, 115, 73)','light theme links are contrast-safe green');
     await page.screenshot({path:output+'/'+size.name+'-light.png',animations:'disabled',fullPage:false,timeout:18000});
