@@ -47,6 +47,6 @@ test('ZARAY login exposes a logo outside form and a single left/right footer row
  assert.match(style,/\.login-shell > \.login-card #login-title/);
  assert.match(style,/white-space:nowrap/);
  assert.match(style,/\.login-footer-links\{[\s\S]*?justify-content:space-between/);
- assert.match(style,/\.global-auth-theme \.zaray-theme-switch-label\{[\s\S]*?display:none!important/);
+ assert.match(style,/\.global-auth-theme \.zaray-theme-switch \.zaray-theme-switch-label\{[\s\S]*?display:none!important/);
  assert.match(style,/\.login-brand \.brand-logo/);
 });
