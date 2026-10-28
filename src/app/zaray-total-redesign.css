@@ -832,3 +832,93 @@ body:has(.form-shell) .global-auth-theme{
 [data-zaray-theme="light"] .app-no-sidebar .app-content a.header-link:hover{
  color:#06351f!important;
 }
+
+/* Z’Accueil: centered editorial greeting, justified daily quote, source at page foot.
+   No dashboard shortcuts on this page: existing actions live in the account menu. */
+.personal-no-sidebar.personal-home-shell > .personal-content{
+  display:flex;flex-direction:column;justify-content:stretch!important;
+  min-height:calc(100dvh - 76px);
+  padding:clamp(20px,3vw,44px) clamp(20px,5vw,72px) clamp(20px,3vw,36px)!important;
+}
+.personal-no-sidebar.personal-home-shell .personal-home-stage{
+  display:flex;flex:1 1 auto;justify-content:center;align-items:stretch;
+  width:100%;min-height:calc(100dvh - 76px - 2 * clamp(20px,3vw,44px));
+  text-align:center;
+}
+.personal-no-sidebar.personal-home-shell .personal-home-welcome{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:1 1 auto;width:min(100%,1050px)!important;
+  box-sizing:border-box;min-height:inherit;min-width:0;
+  margin:0 auto!important;padding:clamp(25px,3.7vw,62px) 0 clamp(108px,10vw,140px);
+  position:relative;text-align:center!important;
+}
+.personal-no-sidebar.personal-home-shell .personal-home-welcome > h1{
+  width:100%;max-width:100%;margin-inline:auto!important;
+  font-size:clamp(36px,5vw,80px)!important;
+  text-align:center!important;text-wrap:balance;overflow-wrap:anywhere;
+}
+.personal-no-sidebar.personal-home-shell .personal-home-quote-zone{
+  width:min(100%,850px);max-width:850px!important;min-height:0;
+  margin:clamp(24px,3vw,39px) auto 0!important;text-align:justify!important;
+}
+.personal-no-sidebar.personal-home-shell .personal-home-inspiration{margin:0;position:static}
+.personal-no-sidebar.personal-home-shell .personal-home-quote{
+  width:100%;max-width:100%!important;margin:0 auto!important;
+  font-size:clamp(18px,1.75vw,24px);line-height:1.65;
+  text-align:justify!important;text-align-last:left;hyphens:auto;overflow-wrap:break-word;
+}
+.personal-no-sidebar.personal-home-shell .personal-home-quote-author{
+  display:flex;justify-content:flex-end!important;align-items:center;
+  width:100%;margin:18px 0 0!important;gap:0!important;
+  text-align:right!important;line-height:1.5;
+}
+.personal-no-sidebar.personal-home-shell .personal-home-quote-footer{
+  position:absolute;bottom:clamp(12px,1.8vw,25px);left:0;right:0;
+  display:flex;justify-content:center;align-items:center;flex-wrap:wrap;
+  gap:4px 16px;text-align:center!important;
+}
+.personal-no-sidebar.personal-home-shell .personal-quote-provenance{
+  flex:0 1 auto;max-width:100%;margin:0!important;
+  font-size:clamp(11px,1vw,13px);line-height:1.55;text-align:center!important;
+}
+.personal-no-sidebar.personal-home-shell .personal-quote-source{
+  flex:0 0 auto;font-size:clamp(11px,1vw,13px);
+  padding:4px 0;text-align:center!important;
+}
+.personal-no-sidebar.personal-home-shell .personal-home-error{
+  max-width:850px;margin:24px auto 0;text-align:center;
+}
+@media(max-width:700px){
+  .personal-no-sidebar.personal-home-shell > .personal-content{
+    min-height:calc(100dvh - 76px);
+    padding:22px 18px calc(116px + env(safe-area-inset-bottom,0px))!important;
+  }
+  .personal-no-sidebar.personal-home-shell .personal-home-stage{
+    min-height:calc(100dvh - 76px - 44px - 116px - env(safe-area-inset-bottom,0px));
+  }
+  .personal-no-sidebar.personal-home-shell .personal-home-welcome{
+    padding:28px 0 110px;
+  }
+  .personal-no-sidebar.personal-home-shell .personal-home-welcome > h1{
+    font-size:clamp(33px,8.4vw,56px)!important;
+  }
+  .personal-no-sidebar.personal-home-shell .personal-home-quote{
+    font-size:clamp(16px,4.2vw,20px);line-height:1.65;
+  }
+  .personal-no-sidebar.personal-home-shell .personal-home-quote-footer{
+    bottom:13px;gap:1px 10px;
+  }
+}
+@media(max-width:420px){
+  .personal-no-sidebar.personal-home-shell .personal-home-welcome{
+    padding-bottom:128px;
+  }
+  .personal-no-sidebar.personal-home-shell .personal-home-quote-footer{
+    flex-direction:column;gap:3px;
+  }
+}
+@media(max-height:540px) and (min-width:701px){
+  .personal-no-sidebar.personal-home-shell .personal-home-welcome{
+    min-height:420px;padding-bottom:88px;
+  }
+}
