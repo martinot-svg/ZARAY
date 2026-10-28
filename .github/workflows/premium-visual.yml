@@ -48,6 +48,10 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:3000
         run: node tests/mobile-login-keyboard-visual.mjs
+      - name: Verify sourced French inspirations through live API
+        env:
+          BASE_URL: http://127.0.0.1:3000
+        run: node tests/daily-inspiration-api-visual.mjs
       - name: Preserve visual evidence
         if: always()
         uses: actions/upload-artifact@v4
