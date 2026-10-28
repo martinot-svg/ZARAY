@@ -93,3 +93,17 @@ test('mobile login keyboard glide is restricted to mobile VisualViewport changes
  // Desktop/tablet transform rules must not be placed outside mobile media.
  assert.ok(style.lastIndexOf('/* Mobile-only login keyboard choreography') > style.indexOf('/* Login visual refinement'));
 });
+
+
+test('login e-mail input matches password pale surface with black typed text only in dark mode',()=>{
+ const login=read('src/app/connexion/page.tsx');
+ assert.match(login,/<label>E-mail<input name="email" type="email" autoComplete="email" required/);
+ assert.match(style,/\[data-zaray-theme="dark"\] \.form-shell\.login-shell \.login-card \.form-stack input\[name="email"\]\{/);
+ assert.match(style,/background:#f0fff5!important/);
+ assert.match(style,/background-color:#f0fff5!important/);
+ assert.match(style,/-webkit-text-fill-color:#000000!important/);
+ assert.match(style,/caret-color:#000000!important/);
+ assert.match(style,/input\[name="email"\]:-webkit-autofill/);
+ assert.match(style,/-webkit-box-shadow:0 0 0 1000px #f0fff5 inset!important/);
+ assert.match(style,/input\[name="email"\]::selection/);
+});

@@ -612,3 +612,32 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
   will-change:auto;
  }
 }
+
+
+/* LOGIN ONLY — the E-mail field must match the pale password field in dark
+   mode, including its black typed text, caret and browser autofill.
+   Other routes and light-mode fields keep their existing design. */
+[data-zaray-theme="dark"] .form-shell.login-shell .login-card .form-stack input[name="email"]{
+ background:#f0fff5!important;
+ background-color:#f0fff5!important;
+ color:#000000!important;
+ -webkit-text-fill-color:#000000!important;
+ caret-color:#000000!important;
+ color-scheme:light;
+}
+[data-zaray-theme="dark"] .form-shell.login-shell .login-card .form-stack input[name="email"]::placeholder{
+ color:#395247!important;
+ opacity:1;
+}
+[data-zaray-theme="dark"] .form-shell.login-shell .login-card .form-stack input[name="email"]:-webkit-autofill,
+[data-zaray-theme="dark"] .form-shell.login-shell .login-card .form-stack input[name="email"]:-webkit-autofill:hover,
+[data-zaray-theme="dark"] .form-shell.login-shell .login-card .form-stack input[name="email"]:-webkit-autofill:focus{
+ -webkit-box-shadow:0 0 0 1000px #f0fff5 inset!important;
+ box-shadow:0 0 0 1000px #f0fff5 inset!important;
+ -webkit-text-fill-color:#000000!important;
+ caret-color:#000000!important;
+}
+[data-zaray-theme="dark"] .form-shell.login-shell .login-card .form-stack input[name="email"]::selection{
+ background:#9bdfb8;
+ color:#000000;
+}
