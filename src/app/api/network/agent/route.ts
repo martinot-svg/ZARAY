@@ -69,6 +69,11 @@ export async function POST(request:NextRequest){
   if(error)return json({error:'Commandes indisponibles.'},503);
   const commands=[];
   for(const cmd of data||[]){
+   if(['block_hotspot_mac','unblock_hotspot_mac'].includes(cmd.action)){
+    const {data:block}=await service.from('network_device_blocks').select('active').eq('router_id',routerId).eq('mac_address',cmd.mac_address).maybeSingle();
+    const expected=cmd.action==='block_hotspot_mac';
+    if(!block||block.active!==expected){await service.from('network_commands').update({status:'cancelled',outcome:'Restriction obsolète',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('status','queued');continue;}
+   }
    if(cmd.account_id){
     const {data:account}=await service.from('network_access_accounts').select('desired_state').eq('id',cmd.account_id).eq('router_id',routerId).maybeSingle();
     if(!account||((cmd.action==='resume_account')!==(account.desired_state==='active'))){
