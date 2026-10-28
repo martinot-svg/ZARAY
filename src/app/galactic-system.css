@@ -80,7 +80,16 @@ body > .form-shell {
  position:relative;
  isolation:isolate;
 }
-.zaray-theme-switch > svg,
+.zaray-theme-icon {
+ position:relative;
+ z-index:1;
+ display:inline-grid;
+ place-items:center;
+ width:18px;
+ height:18px;
+ flex:0 0 auto;
+}
+.zaray-theme-icon > svg,
 .zaray-theme-switch > .zaray-theme-switch-label {
  position:relative;
  z-index:1;
