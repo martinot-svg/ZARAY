@@ -352,29 +352,37 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   opacity: 0;
   transform-origin: 50% 87.5%;
   transform: translate(-50%, -87.5%) rotate(-135deg) scale(.04);
-  animation: zaray-wifi-background-broadcast 2s linear infinite;
+  animation: zaray-wifi-background-broadcast 30s linear infinite;
   will-change: transform, opacity;
 }
 .zaray-original-backdrop .zaray-wifi-global-pulse > path {
   fill: none;
   stroke: currentColor;
-  /* Subpixel hairline: grows from 0.05 px to 0.07 px during a 2s emission.
+  /* Subpixel hairline: grows from 0.05 px to 0.07 px during a 30s emission.
      Browsers may rasterize strokes this thin as barely visible. */
   stroke-width: 0.05px;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
-  animation: zaray-wifi-stroke-growth 2s linear infinite;
+  animation: zaray-wifi-stroke-growth 30s linear infinite;
 }
 @keyframes zaray-wifi-stroke-growth {
   from { stroke-width: 0.05px; }
   to { stroke-width: 0.07px; }
+}
+/* Emit a new wave every 15 seconds while each wave lasts 30 seconds.
+   Staggered infinite timelines ensure radio signals never pause. */
+.zaray-original-backdrop .zaray-wifi-global-pulse:nth-child(2) {
+  animation-delay: -15s;
+}
+.zaray-original-backdrop .zaray-wifi-global-pulse:nth-child(2) > path {
+  animation-delay: -15s;
 }
 /* The visible Sun/Moon remains the emission point, not a large animated dot. */
 .zaray-original-backdrop .zaray-wifi-global-pulse .zaray-wifi-glyph-dot {
   display: none;
 }
 /* The shape always expands in the SAME down-left diagonal direction.
-   There is only one broadcaster: no crossing waves or stacked repetitions. */
+   There is only one transmitter; two consecutive waves follow the same trajectory. */
 @keyframes zaray-wifi-background-broadcast {
   0% {
     opacity: 0;
