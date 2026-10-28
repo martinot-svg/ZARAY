@@ -842,7 +842,7 @@ body:has(.form-shell) .global-auth-theme{
 }
 .personal-no-sidebar.personal-home-shell .personal-home-stage{
   display:flex;flex:1 1 auto;justify-content:center;align-items:stretch;
-  width:100%;min-height:calc(100dvh - 76px - 2 * clamp(20px,3vw,44px));
+  width:100%;min-height:calc(100dvh - 76px - clamp(20px,3vw,44px) - clamp(20px,3vw,44px));
   text-align:center;
 }
 .personal-no-sidebar.personal-home-shell .personal-home-welcome{
