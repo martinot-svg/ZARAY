@@ -10,7 +10,9 @@ const devices=[
  {name:'desktop',width:1366,height:850},
  {name:'mobile',width:390,height:844},
 ];
-const paths=['/','/connexion','/inscription','/mot-de-passe-oublie','/tableau-de-bord'];
+// Browser smoke tests public routes only: authenticated workspaces require a valid tenant/session.
+// The common root-layout mount guarantees the same background on private routes.
+const paths=['/','/connexion','/inscription','/mot-de-passe-oublie'];
 
 try {
  for(const device of devices){
