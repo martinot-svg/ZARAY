@@ -45,6 +45,25 @@ try {
    if(path==='/connexion' && size.name==='desktop-short'){
     assert.ok(metrics.scrollHeight <= metrics.innerHeight+2,'desktop login should not create a needless vertical scrollbar: '+JSON.stringify(metrics));
    }
+   if(path==='/connexion' || path==='/inscription') {
+    const password = page.locator('input[name="password"]');
+    const reveal = page.getByRole('button',{name:'Afficher le mot de passe'});
+    await password.waitFor({state:'visible'});
+    assert.equal(await password.getAttribute('type'),'password',path+' initially hidden');
+    await password.fill('TestZaray123!Secret');
+    assert.equal(await reveal.getAttribute('type'),'button',path+' reveal does not submit form');
+    assert.equal(await reveal.getAttribute('aria-pressed'),'false');
+    await reveal.click();
+    assert.equal(await password.getAttribute('type'),'text',path+' visible after eye click');
+    assert.equal(await password.inputValue(),'TestZaray123!Secret',path+' value preserved on reveal');
+    const hide = page.getByRole('button',{name:'Masquer le mot de passe'});
+    assert.equal(await hide.getAttribute('aria-pressed'),'true');
+    await hide.focus();
+    await page.keyboard.press('Enter');
+    assert.equal(await password.getAttribute('type'),'password',path+' masked after keyboard Enter');
+    assert.equal(await password.inputValue(),'TestZaray123!Secret',path+' value preserved on masking');
+    await password.fill('');
+   }
    if(path==='/connexion') {
     const logo = page.locator('.login-shell > .login-brand .brand-logo');
     await logo.waitFor({state:'visible'});
