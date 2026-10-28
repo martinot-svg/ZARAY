@@ -95,6 +95,7 @@ export default function GalaxyBackdrop() {
     </div>
     <div className="zaray-wifi-wavefield" ref={waveFieldRef} data-active="false">
       <WifiSignalGlyph className="zaray-wifi-global-pulse" />
+      <WifiSignalGlyph className="zaray-wifi-global-pulse" />
     </div>
   </div>;
 }
