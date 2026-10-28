@@ -4,6 +4,7 @@ import './premium-foundation.css';
 import './premium-experience.css';
 import './zaray-total-redesign.css';
 import './form-proportions.css';
+import './galactic-system.css';
 import { ContrastGuardian } from '@/components/contrast-guardian';
 import WorkspaceBackdrop from '@/components/workspace-backdrop';
 import ThemeSwitch from '@/components/theme-switch';
