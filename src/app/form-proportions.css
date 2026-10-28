@@ -1,0 +1,250 @@
+/* ZARAY 2026 — Compact form geometry across all application surfaces.
+   Visual dimensions only: never change validation, forms, data or printed receipts. */
+:root{
+ --zf-form-standalone-width:468px;
+ --zf-form-workspace-width:440px;
+ --zf-form-spacing:12px;
+ --zf-form-pad:clamp(20px,2.3vw,28px);
+ --zf-form-radius:21px;
+}
+
+/* The previous global scrollbar-gutter:stable caused a permanent empty stripe
+   next to standalone auth forms. Permit natural vertical scrolling as needed. */
+html:has(.form-shell){
+ scrollbar-gutter:auto;
+ overflow-x:clip;
+}
+body:has(.form-shell){overflow-x:clip}
+
+/* Center natural-height forms; avoid unnecessary full-height white cards.
+   Short screens and mobile keyboards can scroll normally without clipping. */
+.form-shell{
+ width:100%;
+ min-width:0;
+ min-height:100svh;
+ height:auto;
+ padding:clamp(16px,3vh,28px) clamp(14px,3vw,24px);
+}
+.form-shell.auth-motion{
+ min-height:100svh!important;
+ height:auto!important;
+ display:grid;
+ grid-template-columns:minmax(0,1fr);
+ align-content:center;
+ justify-items:center;
+ padding:clamp(15px,3vh,28px) clamp(14px,3vw,24px)!important;
+ overflow-x:clip;
+ overflow-y:visible;
+}
+.form-shell > .form-card,
+.form-shell.auth-motion > .form-card{
+ box-sizing:border-box;
+ width:min(100%,var(--zf-form-standalone-width))!important;
+ max-width:var(--zf-form-standalone-width)!important;
+ min-width:0!important;
+ min-height:0!important;
+ height:auto!important;
+ margin-inline:auto!important;
+ padding:var(--zf-form-pad)!important;
+ border-radius:var(--zf-form-radius)!important;
+ overflow:visible;
+ align-self:center;
+}
+
+/* Reduce redundant vertical blank space while keeping text legible. */
+.form-shell .form-card .auth-brand{
+ margin:0 0 14px!important;
+ min-height:0!important;
+ padding:0!important;
+}
+.form-shell.auth-motion .form-card .auth-brand a{
+ width:clamp(136px,15vw,156px)!important;
+ max-width:100%;
+}
+.form-shell .form-card > .eyebrow{
+ font-size:10px!important;
+ line-height:1.4;
+ margin:0 0 8px!important;
+ letter-spacing:.12em!important;
+}
+.form-shell .form-card > h1{
+ font-size:clamp(25px,2.4vw,32px)!important;
+ line-height:1.14!important;
+ letter-spacing:-.047em!important;
+ margin:0 0 12px!important;
+ text-wrap:balance;
+ overflow-wrap:anywhere;
+}
+.form-shell .form-card > h2{
+ margin-block:10px 8px!important;
+ font-size:clamp(20px,2vw,26px);
+}
+.form-shell .form-card > p:not(.eyebrow){
+ margin:10px 0!important;
+ font-size:13px;
+ line-height:1.52;
+}
+.form-shell .form-card > p:last-child{
+ margin-bottom:0!important;
+}
+.form-shell .form-card .form-stack{
+ display:grid;
+ gap:var(--zf-form-spacing)!important;
+ margin-top:14px!important;
+ min-width:0;
+}
+.form-shell .form-stack > label,
+.form-shell .form-card > label{
+ display:grid;
+ gap:5px!important;
+ font-size:12px!important;
+ line-height:1.4;
+ min-width:0;
+}
+.form-shell .form-stack :is(input,select,textarea){
+ display:block;
+ box-sizing:border-box;
+ min-width:0;
+ width:100%;
+ min-height:44px;
+ padding:10px 12px!important;
+ border-radius:11px!important;
+ line-height:1.4;
+}
+.form-shell .form-stack :is(input,select){
+ height:44px;
+}
+.form-shell .form-stack textarea{height:auto;resize:vertical}
+.form-shell .form-stack > p{
+ margin:0!important;
+ font-size:12.5px;
+ line-height:1.5;
+}
+.form-shell .form-stack > button,
+.form-shell .form-stack > .primary-link{
+ min-height:44px;
+ padding:10px 15px!important;
+ border-radius:11px!important;
+ line-height:1.35;
+}
+.form-shell .form-card :is(a,button){
+ max-width:100%;
+}
+.form-shell .form-card [role="alert"],
+.form-shell .form-card [role="status"]{
+ overflow-wrap:anywhere;
+}
+
+/* Form-bearing workspace panels: keep result tables wide but let the actual
+   editing surface remain deliberately compact and content-height driven. */
+:where(.app-no-sidebar,.personal-no-sidebar) .panel:has(> form),
+:where(.app-no-sidebar,.personal-no-sidebar) .panel:has(> .form-stack){
+ min-width:0;
+ min-height:0!important;
+ height:auto!important;
+ padding:clamp(17px,1.7vw,24px)!important;
+}
+.app-no-sidebar .workspace-grid{
+ align-items:start;
+}
+.app-no-sidebar .workspace-grid > .panel:has(form){
+ width:min(100%,var(--zf-form-workspace-width));
+ max-width:var(--zf-form-workspace-width);
+ min-width:0;
+}
+:where(.app-no-sidebar,.personal-no-sidebar) .panel:not(.toolbar) > form{
+ max-width:min(100%,560px);
+}
+:where(.app-no-sidebar,.personal-no-sidebar) .panel .form-stack{
+ gap:12px!important;
+ margin-top:12px!important;
+ min-width:0;
+}
+:where(.app-no-sidebar,.personal-no-sidebar) .panel .form-stack label{
+ gap:5px!important;
+ line-height:1.45;
+}
+:where(.app-no-sidebar,.personal-no-sidebar) .panel .form-stack :is(input,select,textarea){
+ min-height:44px;
+ padding:10px 12px;
+ max-width:100%;
+}
+:where(.app-no-sidebar,.personal-no-sidebar) .panel .form-stack :is(button,.primary-link){
+ min-height:44px;
+ padding:10px 15px;
+}
+:where(.app-no-sidebar,.personal-no-sidebar) .panel .field-grid{
+ gap:10px;
+}
+:where(.app-no-sidebar,.personal-no-sidebar) .panel:has(> form) .panel-head{
+ margin-bottom:13px!important;
+}
+:where(.app-no-sidebar,.personal-no-sidebar) .panel form :is(p,.muted){
+ line-height:1.5;
+}
+
+/* Modal/dialog forms have a compact default, but long forms remain scrollable.
+   Avoid a fixed height that would hide submit or cancel controls. */
+:where(.app-shell,.personal-shell) :is(dialog,[role="dialog"],.modal):has(form){
+ box-sizing:border-box;
+ width:min(100% - 24px,510px);
+ max-width:calc(100vw - 24px);
+ max-height:calc(100dvh - 32px);
+ height:auto;
+ overflow-y:auto;
+ overscroll-behavior:contain;
+}
+
+/* Three intentional layouts rather than scaled desktop with clipped content. */
+@media(min-width:1100px){
+ .app-no-sidebar .workspace-grid:has(> .panel form){
+  grid-template-columns:minmax(0,400px) minmax(0,1fr)!important;
+ }
+}
+@media(min-width:701px) and (max-width:1099px){
+ .form-shell > .form-card{width:min(100%,475px)!important}
+ .app-no-sidebar .workspace-grid:has(> .panel form){
+  grid-template-columns:1fr!important;
+ }
+ .app-no-sidebar .workspace-grid > .panel:has(form){
+  width:min(100%,500px);max-width:500px;
+ }
+}
+@media(max-width:700px){
+ .form-shell{padding:17px 14px}
+ .form-shell.auth-motion{
+  padding:clamp(16px,3svh,23px) 14px!important;
+ }
+ .form-shell > .form-card,
+ .form-shell.auth-motion > .form-card{
+  width:100%!important;
+  max-width:min(100%,468px)!important;
+  padding:20px 18px!important;
+  border-radius:19px!important;
+ }
+ .form-shell .form-card > h1{font-size:clamp(24px,7vw,30px)!important}
+ .form-shell .form-card .auth-brand{margin-bottom:13px!important}
+ .form-shell.auth-motion .form-card .auth-brand a{width:140px!important}
+ .form-shell .form-card .form-stack{gap:11px!important;margin-top:12px!important}
+ .app-no-sidebar .workspace-grid > .panel:has(form){max-width:100%;width:100%}
+ :where(.app-no-sidebar,.personal-no-sidebar) .panel:has(> form){
+  padding:17px!important;
+ }
+ :where(.app-no-sidebar,.personal-no-sidebar) .panel .field-grid{
+  grid-template-columns:1fr;
+ }
+}
+@media(max-height:650px) and (min-width:701px){
+ .form-shell.auth-motion{padding-block:13px!important}
+ .form-shell.auth-motion > .form-card{padding:20px 24px!important}
+ .form-shell .form-card .auth-brand{margin-bottom:9px!important}
+ .form-shell .form-card > h1{margin-bottom:8px!important}
+ .form-shell .form-card .form-stack{gap:10px!important;margin-top:10px!important}
+}
+@media print{
+ .form-shell,.form-shell.auth-motion{min-height:0!important;height:auto!important}
+ .form-shell .form-card{box-shadow:none!important}
+ .zaray-a4-sheet,.zaray-small-voucher,.receipt-preview{
+  width:auto;max-width:none;animation:none!important;transition:none!important;
+ }
+}
