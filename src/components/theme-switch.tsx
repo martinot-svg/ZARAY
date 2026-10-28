@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
+import WifiSignalGlyph from '@/components/wifi-signal-glyph';
 
 type Theme = 'dark' | 'light';
 const KEY = 'zaray-interface-theme';
@@ -34,9 +35,9 @@ export default function ThemeSwitch({ className = '' }: { className?: string }) 
     aria-pressed={theme === 'light'}>
     <span className="zaray-theme-icon">
       <span className="zaray-theme-radio-waves" aria-hidden="true">
-        <span className="zaray-theme-radio-wave" />
-        <span className="zaray-theme-radio-wave" />
-        <span className="zaray-theme-radio-wave" />
+        <WifiSignalGlyph className="zaray-theme-radio-wave" />
+        <WifiSignalGlyph className="zaray-theme-radio-wave" />
+        <WifiSignalGlyph className="zaray-theme-radio-wave" />
       </span>
       {theme === 'dark' ? <Sun size={18} aria-hidden="true"/> : <Moon size={18} aria-hidden="true"/>}
     </span>
