@@ -16,8 +16,8 @@ test('password visibility is accessible and cannot submit a form', () => {
   assert.match(component, /aria-controls=\{id\}/);
   assert.match(component, /label htmlFor=\{id\}/);
   assert.match(component, /useId\(\)/);
-  assert.match(component, /EyeOff/);
-  assert.match(component, /Eye/);
+  assert.match(component, /ZarayIcon name=\{visible \? 'hide' : 'show'\}/);
+  assert.match(component, /strokeWidth=\{2\.5\}/);
   assert.doesNotMatch(component, /localStorage|sessionStorage|fetch\(|console\.log|setTimeout/);
 });
 
@@ -41,9 +41,14 @@ test('reset offers independent toggles while keeping confirmation checking', () 
 });
 
 test('icon fits inside the field without hiding typing and has light/dark support', () => {
-  assert.match(styles, /\.zaray-password-control input\{[\s\S]*?padding-right:57px!important/);
+  assert.match(styles, /\.zaray-password-control input\{[\s\S]*?padding-right:64px!important/);
   assert.match(styles, /\.zaray-password-control button\.zaray-password-toggle\{[\s\S]*?position:absolute/);
-  assert.match(styles, /width:44px/);
+  assert.match(styles, /width:48px/);
   assert.match(styles, /\[data-zaray-theme="light"\].*\.zaray-password-toggle/);
+  assert.match(styles, /background:#174a34!important/);
+  assert.match(styles, /color:#a6ffd0!important/);
+  assert.match(styles, /background:#e8faee!important/);
+  assert.match(styles, /color:#0b623a!important/);
+  assert.match(styles, /stroke:currentColor!important/);
   assert.match(styles, /prefers-reduced-motion:reduce/);
 });
