@@ -808,3 +808,27 @@ body:has(.form-shell) .global-auth-theme{
  body:has(.form-shell) .form-shell{padding-top:80px}
 }
 @media print{.global-auth-theme{display:none!important}}
+
+
+/* Verified WCAG AA fix: operational text links outside panels were inheriting
+   legacy dark-green ink over the new space-black workspace background. */
+.app-no-sidebar .app-content a.header-link{
+ color:#baffd2!important;
+ text-decoration:underline;
+ text-decoration-color:rgba(139,255,188,.42);
+ text-underline-offset:4px;
+ font-weight:760;
+}
+.app-no-sidebar .app-content a.header-link :where(svg){
+ color:inherit!important;
+}
+.app-no-sidebar .app-content a.header-link:hover,
+.app-no-sidebar .app-content a.header-link:focus-visible{
+ color:#ecfff2!important;text-decoration-color:currentColor;
+}
+[data-zaray-theme="light"] .app-no-sidebar .app-content a.header-link{
+ color:#115d3d!important;text-decoration-color:rgba(18,109,67,.42);
+}
+[data-zaray-theme="light"] .app-no-sidebar .app-content a.header-link:hover{
+ color:#06351f!important;
+}
