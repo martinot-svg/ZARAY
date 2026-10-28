@@ -37,9 +37,9 @@ export default function HomePage() {
       <section className="landing-hero" aria-labelledby="landing-title">
         <div className="landing-container landing-hero-grid">
           <div className="landing-hero-copy">
-            <p className="landing-kicker"><span aria-hidden="true" className="landing-kicker-dot"/> PLATEFORME SAAS POUR OPÉRATEURS WI-FI</p>
-            <h1 id="landing-title">Votre activité Wi-Fi mérite <span>une gestion plus claire.</span></h1>
-            <p className="landing-hero-description">Entreprises, sites, clients, offres Internet, commandes et paiements : regroupez l’essentiel de votre activité dans un logiciel pensé pour les opérateurs Wi-Fi.</p>
+            <p className="landing-kicker"><span aria-hidden="true" className="landing-kicker-dot"/> ZARAY · THE FUTURE OF BUSINESS EXPERIENCE</p>
+            <h1 id="landing-title">Pilotez votre activité Wi-Fi. <span>Entrez dans une nouvelle dimension.</span></h1>
+            <p className="landing-hero-description">Un espace de pilotage vivant pour vos entreprises, vos sites, vos clients, vos offres Internet, vos commandes, vos tickets Wi-Fi et vos paiements. Une expérience avancée, ancrée dans vos opérations réelles.</p>
             <div className="landing-hero-actions">
               <a href="/inscription" className="landing-button landing-button-primary"><ZarayIcon name="signup" size={18} /> Créer un compte</a>
               <a href="/connexion" className="landing-button landing-button-outline"><ZarayIcon name="login" size={18} /> Se connecter</a>
