@@ -225,3 +225,99 @@ body > .zaray-galaxy-backdrop:not([data-zaray-galaxy-renderer="webgl"])::before{
  .zaray-theme-radio-waves {display:none!important}
  body,.landing,.form-shell{background:#fff!important}
 }
+
+/* 2026-10-28 — Original ZARAY identity, decoration only.
+   No WebGL nebulae, ambient replacement paint, or layout changes. */
+body > .zaray-galaxy-backdrop.zaray-original-backdrop {
+  background: transparent !important;
+  opacity: 1 !important;
+  overflow: hidden;
+}
+.zaray-original-backdrop .zaray-starfield {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.zaray-original-backdrop .zaray-twinkle-star {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background: #ecfff4;
+  box-shadow: 0 0 4px 1px rgba(191,255,213,.24);
+  animation: zaray-twinkle-drift ease-in-out infinite alternate;
+}
+@keyframes zaray-twinkle-drift {
+  0% { opacity: .07; transform: translate3d(-9px, 6px, 0) scale(.75); }
+  48% { opacity: .58; }
+  100% { opacity: .17; transform: translate3d(11px, -8px, 0) scale(1.15); }
+}
+.zaray-original-backdrop .zaray-shooting-star {
+  position: absolute;
+  display: block;
+  width: clamp(50px, 8vw, 105px);
+  height: 1px;
+  transform: rotate(-32deg) translate3d(0,0,0);
+  transform-origin: right center;
+  border-radius: 100%;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(208,255,225,.95));
+  filter: drop-shadow(0 0 3px rgba(155,255,197,.6));
+  animation: zaray-shooting-flight linear infinite;
+}
+@keyframes zaray-shooting-flight {
+  0%, 89%, 100% { opacity: 0; transform: rotate(-32deg) translate3d(0,0,0); }
+  90% { opacity: 0; }
+  91% { opacity: .9; }
+  94% { opacity: 0; transform: rotate(-32deg) translate3d(-210px,0,0); }
+}
+/* On the login page, restore the simple black/emerald gradient of screenshot 1.
+   Preserve all existing card sizes, typography, buttons and branding. */
+body:has(.login-shell) {
+  background:
+    radial-gradient(ellipse at 2% 8%, rgba(9,67,29,.62), transparent 43%),
+    radial-gradient(ellipse at 96% 95%, rgba(14,63,52,.36), transparent 46%),
+    #030e0a !important;
+}
+body:has(.login-shell) > .form-shell.login-shell {
+  background: transparent !important;
+}
+body:has(.login-shell) .login-shell.auth-motion::before {
+  background: none !important;
+  animation: none !important;
+}
+/* Existing theme button keeps its size and Sun/Moon icon. Only decorative
+   radio rings become slightly clearer against the original dark background. */
+body:has(.login-shell) .zaray-theme-radio-wave {
+  border-color: rgba(132,255,177,.49);
+}
+body:has(.login-shell) .zaray-theme-radio-wave:nth-child(1) { width: 26px; height: 26px; }
+body:has(.login-shell) .zaray-theme-radio-wave:nth-child(2) { width: 36px; height: 36px; }
+body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; height: 44px; }
+@keyframes zaray-theme-signal {
+  0%, 8% { opacity: 0; transform: scale(.55); }
+  28% { opacity: .48; }
+  74%, 100% { opacity: 0; transform: scale(1.27); }
+}
+[data-zaray-theme="light"] body:has(.login-shell) {
+  background:
+    radial-gradient(ellipse at 4% 6%, rgba(141,229,169,.21), transparent 43%),
+    radial-gradient(ellipse at 96% 92%, rgba(135,220,202,.16), transparent 46%),
+    #f1f9f4 !important;
+}
+[data-zaray-theme="light"] body:has(.login-shell) .zaray-theme-radio-wave {
+  border-color: rgba(22,107,66,.38);
+}
+[data-zaray-theme="light"] .zaray-original-backdrop .zaray-twinkle-star {
+  background: #288a53;
+}
+@media (prefers-reduced-motion: reduce) {
+  .zaray-original-backdrop .zaray-twinkle-star,
+  .zaray-original-backdrop .zaray-shooting-star {
+    animation: none !important;
+  }
+  .zaray-original-backdrop .zaray-shooting-star { display: none; }
+}
+@media print {
+  .zaray-original-backdrop { display: none !important; }
+}
