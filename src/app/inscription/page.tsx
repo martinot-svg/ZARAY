@@ -2,6 +2,7 @@
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import BrandLogo from '@/components/brand-logo';
+import PasswordField from '@/components/ui/password-field';
 
 import { useState, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -101,7 +102,7 @@ export default function InscriptionPage() {
     {!registeredEmail && !verified && <form onSubmit={register} className="form-stack">
       <label>Nom complet<input name="name" autoComplete="name" required minLength={2} maxLength={120} /></label>
       <label>Adresse e-mail<input name="email" type="email" autoComplete="email" required /></label>
-      <label>Mot de passe<input name="password" type="password" autoComplete="new-password" required minLength={12} /></label>
+      <PasswordField label="Mot de passe" name="password" autoComplete="new-password" required minLength={12} />
       <button disabled={busy} className="primary-link" type="submit"><ZarayIcon name="confirm" size={18} /> {busy ? 'Création…' : 'Créer mon compte'}</button>
     </form>}
 
