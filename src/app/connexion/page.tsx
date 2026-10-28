@@ -42,8 +42,7 @@ export default function ConnexionPage() {
       </a>
     </div>
     <section className="form-card login-card" aria-labelledby="login-title">
-      <h1 id="login-title">Connexion à mon compte ZARAY</h1>
-      <p className="login-subtitle">Votre univers ZARAY vous attend</p>
+      <h1 id="login-title">Votre univers vous attend</h1>
       <form className="form-stack" onSubmit={submit}>
         <label>E-mail<input name="email" type="email" autoComplete="email" required /></label>
         <label>Mot de passe<input name="password" type="password" autoComplete="current-password" required /></label>
