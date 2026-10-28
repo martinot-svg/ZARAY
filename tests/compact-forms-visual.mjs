@@ -72,15 +72,14 @@ try {
           inputBackground:input?getComputedStyle(input).backgroundColor:null,
           opacity:style.opacity,visibility:style.visibility,display:style.display,
           svgColor:svgStyle?.color,svgStroke:svgStyle?.stroke,svgOpacity:svgStyle?.opacity,
+          svgStrokeWidth:svgStyle?.strokeWidth,
           svgWidth:svg?.getBoundingClientRect().width,svgHeight:svg?.getBoundingClientRect().height,
           bounds:{left:b.left,right:b.right,width:b.width,height:b.height},
           inputBounds:ir ? {left:ir.left,right:ir.right}:null,
           hittable:el===target||el.contains(target),
         };
       });
-      const ink=mode==='dark'
-        ? (hover ? 'rgb(255, 255, 255)' : 'rgb(166, 255, 208)')
-        : (hover ? 'rgb(7, 70, 40)' : 'rgb(11, 98, 58)');
+      const ink='rgb(0, 0, 0)';
       assert.equal(view.color,ink,path+'/'+size.name+'/'+mode+' eye color');
       assert.equal(view.background,'rgba(0, 0, 0, 0)',path+'/'+size.name+'/'+mode+' eye must have NO background');
       assert.equal(view.backgroundImage,'none',path+'/'+size.name+'/'+mode+' eye must have NO gradient');
@@ -89,6 +88,8 @@ try {
       assert.equal(view.svgColor,view.color,path+'/'+size.name+'/'+mode+' eye SVG inherits contrast color');
       assert.equal(view.svgStroke,view.color,path+'/'+size.name+'/'+mode+' eye stroke is visible');
       assert.equal(view.svgOpacity,'1');
+      assert.equal(view.svgStrokeWidth,'1.5px',path+'/'+size.name+' eye must be thin, not bold');
+      assert.equal(view.inputBackground,'rgb(240, 255, 245)',path+'/'+size.name+' light password field must make black visible');
       assert.ok(view.svgWidth>=22&&view.svgHeight>=22,path+'/'+size.name+' eye shape size');
       assert.equal(view.visibility,'visible');
       assert.notEqual(view.display,'none');
