@@ -89,8 +89,32 @@ async function disconnect(protocol,username,sessionId){
  for(const row of sessions){await ros(path+'/'+row['.id'],'DELETE');}
  return sessions.length;
 }
+async function hotspotMacRestriction(mac,block){
+ if(!/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(mac))throw Error('Adresse MAC invalide');
+ const path='ip/hotspot/ip-binding',tag='zaray:device:'+mac.toLowerCase();
+ const rows=await ros(path);
+ if(!Array.isArray(rows))throw Error('Liste des règles Hotspot indisponible');
+ const matching=rows.filter(row=>String(row['mac-address']||'').toLowerCase()===mac.toLowerCase());
+ if(block){
+  if(matching.some(row=>row.comment!==tag))throw Error('Règle existante non gérée par ZARAY : intervention manuelle nécessaire');
+  if(!matching.some(row=>row.comment===tag))await ros(path,'PUT',{'mac-address':mac,type:'blocked',comment:tag});
+  const active=await ros('ip/hotspot/active');
+  for(const session of Array.isArray(active)?active:[]){
+   if(String(session['mac-address']||'').toLowerCase()===mac.toLowerCase())await ros('ip/hotspot/active/'+session['.id'],'DELETE');
+  }
+ }else{
+  for(const row of matching.filter(row=>row.comment===tag)){
+   await ros(path+'/'+row['.id'],'DELETE');
+  }
+ }
+ const after=await ros(path);
+ const existing=Array.isArray(after)&&after.some(row=>String(row['mac-address']||'').toLowerCase()===mac.toLowerCase()&&row.comment===tag&&row.type==='blocked');
+ if(existing!==block)throw Error('Etat du blocage non confirmé par RouterOS');
+ return block?'Appareil bloqué sur Hotspot':'Restriction ZARAY retirée';
+}
 async function execute(command){
- const {action,protocol,username,sessionId}=command;
+ const {action,protocol,username,sessionId,macAddress}=command;
+ if(action==='block_hotspot_mac'||action==='unblock_hotspot_mac')return hotspotMacRestriction(macAddress,action==='block_hotspot_mac');
  if(!['hotspot','pppoe'].includes(protocol)||!username||username.length>128)throw Error('Cible invalide');
  if(action==='disconnect_hotspot'&&protocol==='hotspot'||action==='disconnect_ppp'&&protocol==='pppoe'){
   const count=await disconnect(protocol,username,sessionId);
@@ -99,6 +123,8 @@ async function execute(command){
  if(action==='suspend_account'||action==='resume_account'){
   const target=await findAccount(protocol,username);
   await ros(target.path+'/'+target.id,'PATCH',{disabled:action==='suspend_account'?'true':'false'});
+  const current=await ros(target.path+'/'+target.id);
+  if(String(current.disabled)!==(action==='suspend_account'?'true':'false'))throw Error('Etat du compte non confirmé');
   if(action==='suspend_account'){
    const count=await disconnect(protocol,username);
    return 'Compte désactivé, sessions terminées : '+count;
