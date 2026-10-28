@@ -64,7 +64,7 @@ test('login green submit button always uses black text and opts out of gradient-
  assert.match(style,/\.login-card button\.primary-link:focus-visible/);
  assert.match(style,/\.login-card button\.primary-link:active/);
  assert.match(style,/\.login-card button\.primary-link:disabled/);
- assert.match(style,/color:#071b10!important/);
- assert.match(style,/-webkit-text-fill-color:#071b10!important/);
+ assert.match(style,/color:#000000!important/);
+ assert.match(style,/-webkit-text-fill-color:#000000!important/);
  assert.match(read('src/components/contrast-guardian.tsx'),/closest\('\[data-contrast-ignore\]/);
 });
