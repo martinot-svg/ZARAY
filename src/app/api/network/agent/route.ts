@@ -88,10 +88,10 @@ export async function POST(request:NextRequest){
   return json({commands,controlEnabled:true});
  }
  // Results are accepted only for commands that were actually dispatched to this connector.
- const commandId=clean(b.commandId,36),ok=b.ok===true;
- if(!uuid.test(commandId)||typeof b.ok!=='boolean')return json({error:'Résultat invalide.'},400);
+ const commandId=clean(b?.commandId,36),ok=b?.ok===true;
+ if(!uuid.test(commandId)||typeof b?.ok!=='boolean')return json({error:'Résultat invalide.'},400);
  const {data:command,error}=await service.from('network_commands').update({
-  status:ok?'success':'failed',outcome:clean(b.outcome,600)||null,completed_at:new Date().toISOString()
+  status:ok?'success':'failed',outcome:clean(b?.outcome,600)||null,completed_at:new Date().toISOString()
  }).eq('id',commandId).eq('router_id',routerId).eq('status','dispatched')
  .select('id,account_id,action,mac_address').maybeSingle();
  if(error||!command)return json({error:'Commande déjà clôturée ou inconnue.'},409);
