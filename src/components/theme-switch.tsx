@@ -32,6 +32,11 @@ export default function ThemeSwitch({ className = '' }: { className?: string }) 
     onClick={toggle} aria-label={theme === 'dark' ? 'Activer le thème clair' : 'Activer le thème sombre'}
     title={theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
     aria-pressed={theme === 'light'}>
+    <span className="zaray-theme-radio-waves" aria-hidden="true">
+      <span className="zaray-theme-radio-wave" />
+      <span className="zaray-theme-radio-wave" />
+      <span className="zaray-theme-radio-wave" />
+    </span>
     {theme === 'dark' ? <Sun size={18} aria-hidden="true"/> : <Moon size={18} aria-hidden="true"/>}
     <span className="zaray-theme-switch-label">{theme === 'dark' ? 'Mode clair' : 'Mode sombre'}</span>
   </button>;
