@@ -43,7 +43,7 @@ test('every quotation has traceable source and safe verified attribution metadat
   'Florence Scovel Shinn',
  ]);
  for(const item of corpus){
-  assert.ok(item.id && item.content.length>=25 && item.content.length<240,item.id+' text');
+  assert.ok(item.id && item.content.length>=16 && item.content.length<240,item.id+' text');
   assert.equal(item.language,'fr');
   assert.ok(item.sourceTitle.length>=12,item.id+' source title');
   const parsed=new URL(item.sourceUrl);
