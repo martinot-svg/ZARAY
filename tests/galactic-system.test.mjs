@@ -53,3 +53,15 @@ test('galaxy pauses on saveData and reduced motion, and keeps dynamic resolution
  assert.match(galaxy,/visibilitychange/);
  assert.match(galaxy,/webglcontextlost/);
 });
+
+
+test('starry fallback survives missing WebGL and context loss without covering controls',()=>{
+ assert.match(galaxy,/showFallback\(\)/);
+ assert.match(galaxy,/showWebGL\(\)/);
+ assert.match(galaxy,/webglcontextlost/);
+ assert.match(css,/body > \.zaray-galaxy-backdrop:not\(\[data-zaray-galaxy-renderer="webgl"\]\)::before/);
+ assert.match(css,/animation:zaray-galaxy-fallback-drift/);
+ assert.match(css,/pointer-events:none/);
+ assert.match(css,/prefers-reduced-motion:reduce/);
+ assert.match(css,/body > \.screen-only:has\(> \.app-shell\)/);
+});

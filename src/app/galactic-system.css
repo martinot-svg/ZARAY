@@ -169,6 +169,57 @@ body > .form-shell {
   will-change:auto;
  }
 }
+
+/* A genuine starry fallback for devices without WebGL2, failed shaders, or
+   restored contexts. Once the first GPU frame is drawn, the CSS stars go away:
+   never paint two animated starfields on top of one another. */
+body > .zaray-galaxy-backdrop:not([data-zaray-galaxy-renderer="webgl"])::before{
+ content:"";
+ position:absolute;
+ inset:-2%;
+ z-index:1;
+ pointer-events:none;
+ opacity:.8;
+ background-image:
+   radial-gradient(circle at 7% 14%,rgba(225,255,234,.87) 0 1px,transparent 1.8px),
+   radial-gradient(circle at 21% 34%,rgba(179,245,197,.6) 0 .8px,transparent 1.6px),
+   radial-gradient(circle at 31% 77%,rgba(229,255,236,.7) 0 .8px,transparent 1.7px),
+   radial-gradient(circle at 46% 18%,rgba(194,251,213,.65) 0 .9px,transparent 1.7px),
+   radial-gradient(circle at 58% 53%,rgba(222,255,230,.75) 0 .8px,transparent 1.6px),
+   radial-gradient(circle at 72% 29%,rgba(217,255,225,.75) 0 1px,transparent 1.8px),
+   radial-gradient(circle at 87% 68%,rgba(176,240,192,.56) 0 .8px,transparent 1.5px),
+   radial-gradient(circle at 93% 12%,rgba(230,255,240,.73) 0 .9px,transparent 1.8px),
+   radial-gradient(circle at 12% 86%,rgba(205,254,217,.63) 0 .8px,transparent 1.7px),
+   radial-gradient(circle at 64% 89%,rgba(209,253,226,.69) 0 1px,transparent 1.8px);
+ background-repeat:no-repeat;
+ animation:zaray-galaxy-fallback-drift 82s ease-in-out infinite alternate;
+}
+@keyframes zaray-galaxy-fallback-drift{
+ 0%{transform:translate3d(-.6%,.4%,0);opacity:.63}
+ 50%{opacity:.83}
+ 100%{transform:translate3d(.6%,-.5%,0);opacity:.68}
+}
+/* The cashier's receipt/print host is an extra route-level wrapper. It must
+   still sit over the shared canvas, without changing the receipt print rules. */
+@media screen{
+ body > .screen-only:has(> .app-shell){
+  position:relative;
+  z-index:1;
+  background:transparent;
+ }
+}
+[data-zaray-theme="light"] body > .zaray-galaxy-backdrop:not([data-zaray-galaxy-renderer="webgl"])::before{
+ opacity:.5;
+ filter:brightness(.65) sepia(.7) hue-rotate(88deg);
+}
+@media(prefers-reduced-motion:reduce){
+ body > .zaray-galaxy-backdrop::before{
+  animation:none!important;
+  transform:none!important;
+  opacity:.58;
+ }
+}
+
 @media print {
  body > .zaray-galaxy-backdrop,
  .zaray-theme-radio-waves {display:none!important}
