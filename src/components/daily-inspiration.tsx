@@ -5,7 +5,12 @@ import { useEffect, useState } from 'react';
 type DailyQuote = {
   content: string;
   author: string;
-  language: string;
+  language: 'fr';
+  category: 'entrepreneuriat' | 'sagesse-africaine' | 'attraction-etat-esprit' | 'discipline-reussite';
+  kind: 'citation' | 'proverb';
+  country: string | null;
+  culture: string | null;
+  principle: string | null;
   sourceTitle: string;
   sourceUrl: string;
   provenance: string;
@@ -68,20 +73,43 @@ export default function DailyInspiration() {
     };
   }, []);
 
+  const categoryLabels: Record<DailyQuote['category'], string> = {
+    'entrepreneuriat': 'Entrepreneuriat & création de valeur',
+    'sagesse-africaine': 'Sagesse & proverbes africains',
+    'attraction-etat-esprit': 'Loi de l’attraction & état d’esprit',
+    'discipline-reussite': 'Discipline & réussite personnelle',
+  };
+
   return <div className="personal-home-quote-zone" aria-live="polite">
     {daily && <figure className="personal-home-inspiration" key={daily.date}>
+      <div className="personal-inspiration-category">{categoryLabels[daily.quote.category]}</div>
       <blockquote className="personal-home-quote" lang="fr">« {daily.quote.content} »</blockquote>
-      <figcaption className="personal-home-quote-author">— {daily.quote.author}</figcaption>
-      <div className="personal-home-quote-footer">
-        <p className="personal-quote-provenance">
-          {daily.quote.translatedFrom === 'en'
-            ? 'Source : ' + daily.quote.sourceTitle
-            : 'Pensée originale · ZARAY'}
-        </p>
-        {daily.quote.sourceUrl && <a className="personal-quote-source" href={daily.quote.sourceUrl}
-          target="_blank" rel="noopener noreferrer" title={daily.quote.provenance}>
-          Consulter le recueil
-        </a>}
+      <figcaption className="personal-home-quote-author">
+        — {daily.quote.kind === 'proverb' ? daily.quote.author : 'D’après ' + daily.quote.author}
+      </figcaption>
+      <div className="personal-inspiration-details">
+        {daily.quote.kind === 'proverb' && daily.quote.country && (
+          <p className="personal-inspiration-origin">
+            <strong>Pays :</strong> {daily.quote.country}
+            {daily.quote.culture && <> <span aria-hidden="true">·</span> <strong>Culture :</strong> {daily.quote.culture}</>}
+          </p>
+        )}
+        {daily.quote.principle && <p className="personal-inspiration-principle">
+          <strong>Principe :</strong> {daily.quote.principle}
+        </p>}
+        <div className="personal-home-quote-footer">
+          <p className="personal-quote-provenance">
+            <strong>Source :</strong> {daily.quote.sourceTitle}
+            <span className="personal-inspiration-translation"> · {daily.quote.kind === 'proverb' ? 'Tradition orale documentée' : 'Adaptation française d’un texte original'}</span>
+          </p>
+          <a className="personal-quote-source" href={daily.quote.sourceUrl}
+             target="_blank" rel="noopener noreferrer" title={daily.quote.provenance}>
+            Vérifier la source
+          </a>
+        </div>
+        {daily.quote.category === 'attraction-etat-esprit' && <p className="personal-inspiration-disclaimer">
+          Pensée philosophique ou spirituelle ; elle ne constitue pas une loi scientifique démontrée.
+        </p>}
       </div>
     </figure>}
     {!daily && error && <p role="status" className="personal-quote-unavailable">{error}</p>}
