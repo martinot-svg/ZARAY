@@ -323,7 +323,7 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
 }
 
 
-/* Thin, slow, ONE-direction Wi-Fi broadcast (2026-10-28).
+/* Ultra-fine, single-direction Wi-Fi broadcast (2026-10-28).
    Keep the original ZARAY backdrop, stars, forms and theme icon unchanged.
    Each signal consists of three lightweight curved lines, not filled bands.
    The SVG paths use non-scaling strokes so they remain fine while growing. */
@@ -352,18 +352,18 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   opacity: 0;
   transform-origin: 50% 87.5%;
   transform: translate(-50%, -87.5%) rotate(-135deg) scale(.04);
-  animation: zaray-wifi-background-broadcast 30s linear infinite;
+  animation: zaray-wifi-background-broadcast 2s linear infinite;
   will-change: transform, opacity;
 }
 .zaray-original-backdrop .zaray-wifi-global-pulse > path {
   fill: none;
   stroke: currentColor;
-  /* Subpixel hairline: grows from 0.05 px to 0.07 px during a 30s emission.
+  /* Subpixel hairline: grows from 0.05 px to 0.07 px during a 2s emission.
      Browsers may rasterize strokes this thin as barely visible. */
   stroke-width: 0.05px;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
-  animation: zaray-wifi-stroke-growth 30s linear infinite;
+  animation: zaray-wifi-stroke-growth 2s linear infinite;
 }
 @keyframes zaray-wifi-stroke-growth {
   from { stroke-width: 0.05px; }
