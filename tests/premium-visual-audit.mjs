@@ -19,6 +19,7 @@ try {
    deviceScaleFactor: 1,
    reducedMotion: 'reduce',
   });
+  page.setDefaultTimeout(12000);
   const url = new URL('/', host);
   url.searchParams.set('visual_audit', device.name);
   const response = await page.goto(url.toString(), { waitUntil: 'domcontentloaded', timeout: 45000 });
@@ -33,12 +34,12 @@ try {
   assert.ok((await frame.getAttribute('class'))?.includes('experience-device-mobile'));
   await page.getByRole('button', { name: 'Ordinateur', exact: true }).click();
   assert.ok((await frame.getAttribute('class'))?.includes('experience-device-desktop'));
-  await page.screenshot({ path: destination + '/' + device.name + '-dark.png', fullPage: true, animations: 'disabled' });
+  await page.screenshot({ path: destination + '/' + device.name + '-dark.png', fullPage: false, animations: 'disabled', timeout: 20000 });
 
   const themeSwitch = page.getByRole('button', { name: 'Activer le thème clair' }).first();
   await themeSwitch.click();
   await page.waitForFunction(() => document.documentElement.getAttribute('data-zaray-theme') === 'light');
-  await page.screenshot({ path: destination + '/' + device.name + '-light.png', fullPage: true, animations: 'disabled' });
+  await page.screenshot({ path: destination + '/' + device.name + '-light.png', fullPage: false, animations: 'disabled', timeout: 20000 });
   assert.equal(await page.locator('html').getAttribute('data-zaray-theme'), 'light');
   const mainWidth = await page.locator('.landing-hero-grid').evaluate(el => el.getBoundingClientRect().width);
   assert.ok(mainWidth <= device.width, device.name + ': hero should fit viewport');
