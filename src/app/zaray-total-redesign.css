@@ -660,3 +660,34 @@ body:has(.landing),body:has(.app-no-sidebar),body:has(.personal-no-sidebar){
   animation:none!important;transition:none!important;filter:none!important;transform:none!important;
  }
 }
+
+
+/* ContrastGuardian reads computed backgroundColor: every gradient also gets
+   an opaque, theme-correct solid color for accurate contrast measurement. */
+.landing-hero,.landing-header,.landing-final,
+.app-no-sidebar .page-header,.app-no-sidebar .app-topbar,.personal-no-sidebar .personal-topbar{
+ background-color:#091e18!important;
+}
+.landing-summary{background-color:#08271d!important}
+.landing .experience-root,.landing .experience-device-frame{background-color:#071c14}
+.landing-feature,.landing-step-grid article,
+:where(.app-no-sidebar,.personal-no-sidebar) :is(.panel,.kpi,.module,.quick-action,.form-card,.personal-business-item,.personal-business-card,.personal-command-card),
+.form-shell .form-card{background-color:var(--zf-surface)!important}
+.app-no-sidebar .app-nav-dropdown,.personal-no-sidebar .personal-home-nav-menu,
+.personal-no-sidebar .personal-profile-dropdown{background-color:#0b201a!important}
+.personal-no-sidebar .personal-business-card :is(.status-pill,.eyebrow){color:var(--zf-mint)}
+/* Both official logos remain untouched; select the correct file by surface. */
+[data-zaray-theme="dark"] .form-shell .auth-brand img.brand-logo{
+ content:url("/brand/zaray-logo.svg");
+}
+[data-zaray-theme="light"] .form-shell .auth-brand img.brand-logo{
+ content:url("/brand/zaray-logo-on-light.svg");
+}
+[data-zaray-theme="light"] .personal-no-sidebar .personal-home-quote-author{color:#176d45!important}
+[data-zaray-theme="light"] .landing .landing-feature-top{color:#12764c!important}
+[data-zaray-theme="light"] .landing .landing-feature h3 svg{color:#0e9964!important}
+@media print{
+ .form-shell .form-card,.app-no-sidebar .panel,.personal-no-sidebar .panel{
+  background-image:none!important;box-shadow:none!important;
+ }
+}
