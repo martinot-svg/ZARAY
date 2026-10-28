@@ -922,3 +922,123 @@ body:has(.form-shell) .global-auth-theme{
     min-height:420px;padding-bottom:88px;
   }
 }
+
+
+/* Provenance-first daily inspirations: country, authentic author and thought
+   principle remain readable on dark/light, desktop/tablet/mobile. */
+.personal-no-sidebar.personal-home-shell .personal-home-welcome{
+ padding-bottom:clamp(28px,4vw,58px)!important;
+}
+.personal-no-sidebar.personal-home-shell .personal-home-inspiration{
+ width:100%;
+ max-width:850px;
+ margin:0 auto;
+}
+.personal-no-sidebar.personal-home-shell .personal-inspiration-category{
+ width:max-content;
+ max-width:100%;
+ margin:0 0 13px;
+ padding:7px 12px;
+ border:1px solid rgba(117,242,161,.35);
+ border-radius:999px;
+ background:rgba(13,86,54,.32);
+ color:#a7f8c4;
+ font-size:clamp(10px,1.1vw,12px);
+ font-weight:750;
+ letter-spacing:.04em;
+ text-align:left;
+}
+.personal-no-sidebar.personal-home-shell .personal-inspiration-details{
+ display:flex;
+ flex-direction:column;
+ align-items:flex-start;
+ width:100%;
+ margin:12px 0 0;
+ gap:6px;
+ text-align:left;
+}
+.personal-no-sidebar.personal-home-shell .personal-inspiration-origin,
+.personal-no-sidebar.personal-home-shell .personal-inspiration-principle,
+.personal-no-sidebar.personal-home-shell .personal-inspiration-disclaimer{
+ margin:0;
+ max-width:100%;
+ color:#e1f8e9;
+ font-size:clamp(11px,1.2vw,14px);
+ line-height:1.55;
+ overflow-wrap:anywhere;
+}
+.personal-no-sidebar.personal-home-shell .personal-inspiration-origin strong,
+.personal-no-sidebar.personal-home-shell .personal-inspiration-principle strong{
+ color:#acffc9;
+ font-weight:700;
+}
+.personal-no-sidebar.personal-home-shell .personal-home-quote-footer{
+ position:static!important;
+ inset:auto!important;
+ display:flex!important;
+ align-items:baseline;
+ justify-content:flex-start!important;
+ flex-wrap:wrap;
+ gap:4px 14px!important;
+ width:100%;
+ margin:4px 0 0!important;
+ text-align:left!important;
+}
+.personal-no-sidebar.personal-home-shell .personal-home-quote-footer .personal-quote-provenance{
+ flex:0 1 auto;
+ max-width:100%;
+ text-align:left!important;
+ color:#dcebe3!important;
+ text-shadow:none!important;
+ font-size:clamp(11px,1vw,13px);
+}
+.personal-no-sidebar.personal-home-shell .personal-quote-source{
+ font-size:clamp(11px,1vw,13px)!important;
+ text-align:left!important;
+ color:#a8ffc5!important;
+ font-weight:600;
+ text-decoration:underline;
+ text-underline-offset:3px;
+}
+.personal-no-sidebar.personal-home-shell .personal-inspiration-disclaimer{
+ opacity:.85;
+ font-size:clamp(10px,1vw,12px);
+}
+[data-zaray-theme="light"] .personal-no-sidebar.personal-home-shell .personal-inspiration-category{
+ background:#e4f8e9;
+ color:#16653f;
+ border-color:#93c6a6;
+}
+[data-zaray-theme="light"] .personal-no-sidebar.personal-home-shell :is(
+ .personal-inspiration-origin,.personal-inspiration-principle,
+ .personal-inspiration-disclaimer,.personal-home-quote-footer .personal-quote-provenance
+){
+ color:#365447!important;
+ text-shadow:none!important;
+}
+[data-zaray-theme="light"] .personal-no-sidebar.personal-home-shell :is(
+ .personal-inspiration-origin strong,.personal-inspiration-principle strong
+){color:#155d3c!important}
+[data-zaray-theme="light"] .personal-no-sidebar.personal-home-shell .personal-quote-source{
+ color:#156440!important;
+}
+@media(max-width:700px){
+ .personal-no-sidebar.personal-home-shell .personal-home-welcome{
+  padding-bottom:28px!important;
+ }
+ .personal-no-sidebar.personal-home-shell .personal-home-quote-zone{
+  margin-top:clamp(17px,4.5vw,28px)!important;
+ }
+ .personal-no-sidebar.personal-home-shell .personal-home-quote-author{
+  margin-top:12px!important;
+ }
+ .personal-no-sidebar.personal-home-shell .personal-inspiration-details{
+  margin-top:10px;
+  gap:7px;
+ }
+ .personal-no-sidebar.personal-home-shell .personal-home-quote-footer{
+  flex-direction:column!important;
+  align-items:flex-start;
+  gap:3px!important;
+ }
+}
