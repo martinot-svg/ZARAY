@@ -321,3 +321,124 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
 @media print {
   .zaray-original-backdrop { display: none !important; }
 }
+
+
+/* Reference-accurate Wi-Fi waves (three solid curved bands + the dot).
+   The ORIGINAL black/green backdrop, stars, login card and logo remain unchanged.
+   The toggle's Sun/Moon is the transmitter; arcs project diagonally into the
+   viewport instead of escaping off the top/right of the screen. */
+
+/* Replace the old circular radio borders, not the existing theme switch. */
+.zaray-theme-switch .zaray-theme-radio-waves {
+  overflow: visible;
+  isolation: isolate;
+}
+.zaray-theme-switch .zaray-theme-radio-wave,
+body:has(.login-shell) .zaray-theme-switch .zaray-theme-radio-wave {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: block;
+  width: 28px !important;
+  height: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  transform-origin: 50% 87.5%;
+  transform: translate(-50%, -87.5%) scale(.25);
+  color: #a4ffd0;
+  opacity: 0;
+  animation: zaray-wifi-icon-pulse 5.4s ease-out infinite;
+  will-change: transform, opacity;
+}
+.zaray-theme-switch .zaray-theme-radio-wave:nth-child(2),
+body:has(.login-shell) .zaray-theme-switch .zaray-theme-radio-wave:nth-child(2) {
+  width: 36px !important;
+  animation-delay: -1.8s;
+}
+.zaray-theme-switch .zaray-theme-radio-wave:nth-child(3),
+body:has(.login-shell) .zaray-theme-switch .zaray-theme-radio-wave:nth-child(3) {
+  width: 46px !important;
+  animation-delay: -3.6s;
+}
+@keyframes zaray-wifi-icon-pulse {
+  0% {opacity:0; transform:translate(-50%,-87.5%) scale(.23)}
+  16% {opacity:.55}
+  55% {opacity:.22}
+  100% {opacity:0; transform:translate(-50%,-87.5%) scale(1.33)}
+}
+
+/* Three complete Wi-Fi-shaped broadcasts, staggered for continuous movement.
+   Position is measured from the visible theme-icon rectangle, not guessed.
+   Crucially: NO full-circle pulse, nebula or new background fill. */
+.zaray-original-backdrop .zaray-wifi-wavefield {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+}
+.zaray-original-backdrop .zaray-wifi-wavefield[data-active="true"] {
+  opacity: 1;
+}
+.zaray-original-backdrop .zaray-wifi-global-pulse {
+  position: absolute;
+  display: block;
+  left: var(--zaray-wifi-x, calc(100% - 40px));
+  top: var(--zaray-wifi-y, 35px);
+  width: 220px;
+  height: auto;
+  color: rgba(145, 255, 178, .8);
+  opacity: 0;
+  transform-origin: 50% 87.5%;
+  transform: translate(-50%, -87.5%) rotate(-135deg) scale(.08);
+  animation: zaray-wifi-background-broadcast 13.5s linear infinite;
+  will-change: transform, opacity;
+}
+.zaray-original-backdrop .zaray-wifi-global-pulse:nth-child(2) {
+  animation-delay: -4.5s;
+}
+.zaray-original-backdrop .zaray-wifi-global-pulse:nth-child(3) {
+  animation-delay: -9s;
+}
+/* Dot remains the theme icon itself, avoiding a huge opaque disc as the
+   symbol scales through the screen. The three arc silhouettes stay exact. */
+.zaray-original-backdrop .zaray-wifi-global-pulse .zaray-wifi-glyph-dot {
+  display: none;
+}
+@keyframes zaray-wifi-background-broadcast {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -87.5%) rotate(-135deg) scale(.08);
+  }
+  12% { opacity: .24; }
+  42% { opacity: .15; }
+  70% { opacity: .08; }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -87.5%) rotate(-135deg) scale(var(--zaray-wifi-scale, 13));
+  }
+}
+/* The same Wi-Fi geometry works on bright backgrounds, with darker ink. */
+[data-zaray-theme="light"] .zaray-theme-switch .zaray-theme-radio-wave {
+  color: #126f49 !important;
+}
+[data-zaray-theme="light"] .zaray-original-backdrop .zaray-wifi-global-pulse {
+  color: rgba(15, 115, 66, .72);
+}
+@media (max-width: 700px) {
+  .zaray-original-backdrop .zaray-wifi-global-pulse { width: 175px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zaray-original-backdrop .zaray-wifi-global-pulse,
+  .zaray-theme-switch .zaray-theme-radio-wave {
+    animation: none !important;
+    opacity: 0 !important;
+    will-change: auto;
+  }
+}
+@media print {
+  .zaray-original-backdrop .zaray-wifi-wavefield { display: none !important; }
+}
