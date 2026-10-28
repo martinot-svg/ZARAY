@@ -164,45 +164,31 @@ test('personal home and other personal pages have no sidebar or reserved left co
  assert.match(css,/\.personal-no-sidebar \.personal-content\{/);
  assert.match(css,/max-width:none/);
 });
-test('daily inspiration uses a sourced library of thousands, not an unsourced rotating list',()=>{
+test('daily inspiration uses sourced four-topic curated library and preserves local day',()=>{
  const quote=source('src/components/daily-inspiration.tsx');
  const library=source('src/lib/daily-quote-library.ts');
+ const curated=source('src/data/quotations/curated.ts');
  const route=source('src/app/api/daily-quote/route.ts');
- let count=0;
- const unique=new Set();
- const authors=new Set();
- for(let n=1;n<=5;n++){
-  const rows=JSON.parse(source('src/data/quotations/collection-'+n+'.json'));
-  for(const row of rows){
-   assert.equal(row.length,3);
-   assert.equal(typeof row[0],'string');
-   assert.equal(typeof row[1],'string');
-   assert.ok(row[0].length>=30);
-   assert.ok(row[1].length>=4);
-   assert.ok([0,1].includes(row[2]));
-   const key=row[0].toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');
-   assert.ok(!unique.has(key),'duplicated quote: '+row[0]);
-   unique.add(key);
-   authors.add(row[1]);
-  }
-  count+=rows.length;
- }
- assert.ok(count>=7500,'library too small: '+count);
- assert.ok(authors.size>=100,'authors too few: '+authors.size);
+ assert.match(curated,/export const curatedQuotes/);
+ assert.match(curated,/sagesse-africaine/);
+ assert.match(curated,/attraction-etat-esprit/);
+ assert.match(curated,/discipline-reussite/);
+ assert.match(curated,/entrepreneuriat/);
  assert.match(library,/Date\.UTC\(year, month - 1, day\)/);
- assert.match(library,/dayNumber % quoteLibrary\.length/);
- assert.match(library,/gutenberg\.org\/ebooks\/48105/);
- assert.match(library,/gutenberg\.org\/ebooks\/16732/);
- assert.match(library,/source première non vérifiée individuellement/);
+ assert.match(library,/categoryIndex =/);
+ assert.match(library,/inCategory\.length/);
+ assert.doesNotMatch(library,/collection-[1-5]\.json/);
  assert.match(route,/getDailyQuote\(date\)/);
  assert.match(route,/Cache-Control': 'no-store'/);
  assert.match(quote,/getFullYear\(\)/);
  assert.match(quote,/getMonth\(\)/);
  assert.match(quote,/getDate\(\)/);
  assert.match(quote,/visibilitychange/);
- assert.match(quote,/Consulter le recueil/);
+ assert.match(quote,/Vérifier la source/);
  assert.match(quote,/daily\.quote\.author/);
  assert.match(quote,/daily\.quote\.sourceTitle/);
+ assert.match(quote,/daily\.quote\.country/);
+ assert.match(quote,/daily\.quote\.principle/);
  assert.doesNotMatch(quote,/Math\.random|dailyInspirationQuotes/);
  const css=source('src/app/globals.css');
  assert.match(css,/@keyframes zaray-home-rise/);
@@ -282,32 +268,27 @@ test('company selection only comes from the personal enterprise list',()=>{
  assert.match(management,/authorizeTenant\(client, companyId\)/);
 });
 
-test('daily quotations are translated to French before rendering, with an offline-safe French fallback',()=>{
+test('daily inspirations are curated in French with original verifiable sources',()=>{
  const route=source('src/app/api/daily-quote/route.ts');
  const translation=source('src/lib/french-daily-quote.ts');
  const page=source('src/components/daily-inspiration.tsx');
- const fallback=source('src/data/quotations/french-fallbacks.ts');
  const library=source('src/lib/daily-quote-library.ts');
+ const curated=source('src/data/quotations/curated.ts');
  assert.match(route,/await getFrenchDailyQuote\(date\)/);
  assert.match(route,/quoteLibrary\.length/);
  assert.match(route,/Date\.UTC\(today\.getUTCFullYear\(\)/);
- assert.match(translation,/unstable_cache/);
- assert.match(translation,/langpair: 'en\|fr'/);
- assert.match(translation,/api\.mymemory\.translated\.net\/get/);
- assert.match(translation,/responseStatus/);
- assert.match(translation,/translatedFrom: 'en'/);
- assert.match(translation,/originalFrenchFallback\(localDate\)/);
- assert.match(translation,/language: 'fr'/);
- assert.match(fallback,/La régularité transforme les ambitions en résultats/);
+ assert.match(translation,/return getDailyQuote\(localDate\)/);
+ assert.doesNotMatch(translation,/mymemory|TRANSLATION_ENDPOINT|originalFrenchFallback/);
+ assert.match(curated,/language: 'fr'/);
  assert.match(page,/lang="fr"/);
- assert.doesNotMatch(page,/Traduction française automatique/);
- assert.doesNotMatch(translation,/Traduction française automatique/);
- assert.match(page,/Source :/);
+ assert.match(page,/Adaptation française d’un texte original/);
+ assert.match(page,/daily\.quote\.sourceUrl/);
+ assert.match(page,/Vérifier la source/);
+ assert.match(page,/daily\.quote\.country/);
+ assert.match(page,/daily\.quote\.principle/);
  assert.doesNotMatch(page,/lang="en"|Texte en anglais/);
- assert.match(page,/daily\.quote\.sourceUrl && <a/);
- assert.match(library,/quoteLibrary: Entry\[\]/);
+ assert.match(library,/quoteLibrary: CuratedQuote\[\]/);
 });
-
 
 test('navigation has no fullscreen loading boundaries or placeholder skeletons',()=>{
  const appRoot=fileURLToPath(new URL('../src/app/',import.meta.url));

@@ -1,51 +1,32 @@
 import 'server-only';
 
-import group1 from '@/data/quotations/collection-1.json';
-import group2 from '@/data/quotations/collection-2.json';
-import group3 from '@/data/quotations/collection-3.json';
-import group4 from '@/data/quotations/collection-4.json';
-import group5 from '@/data/quotations/collection-5.json';
+import { curatedQuotes, quoteCategories, type CuratedQuote } from '@/data/quotations/curated';
 
-type Entry = [content: string, author: string, sourceId: number];
-export const quoteLibrary: Entry[] = [
-  ...(group1 as Entry[]),
-  ...(group2 as Entry[]),
-  ...(group3 as Entry[]),
-  ...(group4 as Entry[]),
-  ...(group5 as Entry[]),
-];
+/** Only the four user-approved, source-checked editorial universes are active.
+ * The previous generic historic collection is no longer part of daily rotation.
+ */
+export const quoteLibrary: CuratedQuote[] = curatedQuotes;
 
-const sourceReferences = [
-  {
-    sourceTitle: 'Dictionary of Quotations — James Wood (1893)',
-    sourceUrl: 'https://www.gutenberg.org/ebooks/48105',
-  },
-  {
-    sourceTitle: 'Familiar Quotations — John Bartlett',
-    sourceUrl: 'https://www.gutenberg.org/ebooks/16732',
-  },
-] as const;
-
-export function getDailyQuote(localDate: string) {
+export function getDailyQuote(localDate: string): CuratedQuote | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(localDate)) return null;
   const [year, month, day] = localDate.split('-').map(Number);
   if (year < 2000 || year > 3000) return null;
+
   const stamp = Date.UTC(year, month - 1, day);
   const check = new Date(stamp);
   if (!Number.isFinite(stamp) ||
       check.getUTCFullYear() !== year ||
       check.getUTCMonth() !== month - 1 ||
       check.getUTCDate() !== day) return null;
-  if (!quoteLibrary.length) return null;
 
+  // Daily, balanced rotation across all four universes, honoring each
+  // visitor's local date (submitted by the client).
   const dayNumber = Math.floor(stamp / 86_400_000);
-  const index = ((dayNumber % quoteLibrary.length) + quoteLibrary.length) % quoteLibrary.length;
-  const [content, author, sourceId] = quoteLibrary[index];
-  const source = sourceReferences[sourceId];
-  if (!source) return null;
-  return {
-    content, author, language: 'en',
-    ...source,
-    provenance: 'Attribution figurant dans un recueil historique ; source première non vérifiée individuellement.',
-  };
+  const categoryIndex = ((dayNumber % quoteCategories.length) + quoteCategories.length) % quoteCategories.length;
+  const category = quoteCategories[categoryIndex];
+  const inCategory = quoteLibrary.filter(quote => quote.category === category);
+  if (inCategory.length === 0) return null;
+  const cycle = Math.floor(dayNumber / quoteCategories.length);
+  const itemIndex = ((cycle % inCategory.length) + inCategory.length) % inCategory.length;
+  return inCategory[itemIndex];
 }

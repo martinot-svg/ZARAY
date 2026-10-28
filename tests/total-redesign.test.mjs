@@ -73,7 +73,9 @@ test('personal welcome remains centered while daily quote attribution and source
   assert.ok(personal.includes('Z’Alliance'));
   assert.ok(daily.includes('className="personal-home-quote-author"'));
   assert.ok(daily.includes('className="personal-home-quote-footer"'));
-  assert.ok(daily.includes('Consulter le recueil'));
+  assert.ok(daily.includes('Vérifier la source'));
+  assert.ok(daily.includes('daily.quote.country'));
+  assert.ok(daily.includes('daily.quote.principle'));
   assert.ok(daily.includes('daily.quote.sourceTitle'));
   assert.ok(css.includes('text-align:right!important'));
   assert.ok(css.includes('text-align:center!important'));
