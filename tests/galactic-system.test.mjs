@@ -31,7 +31,9 @@ test('galactic visual styles are global yet keep legible cards/tables and existi
 });
 
 test('existing theme switch emits passive three-wave WiFi signals in both themes',()=>{
+ assert.match(theme,/className="zaray-theme-icon"/);
  assert.match(theme,/className="zaray-theme-radio-waves" aria-hidden="true"/);
+ assert.match(css,/\.zaray-theme-icon\s*\{[\s\S]*?position:relative/);
  assert.equal((theme.match(/className="zaray-theme-radio-wave"\s*\/>/g)||[]).length,3);
  assert.match(theme,/aria-pressed=\{theme === 'light'\}/);
  assert.match(theme,/onClick=\{toggle\}/);
