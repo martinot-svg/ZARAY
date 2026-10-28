@@ -342,7 +342,8 @@ body:has(.landing),body:has(.app-no-sidebar),body:has(.personal-no-sidebar){
 :where(.app-no-sidebar,.personal-no-sidebar) :is(.panel,.kpi,.module,.quick-action,.personal-business-card){
  position:relative;
 }
-.app-no-sidebar :is(.panel,.kpi,.module,.quick-action),.personal-no-sidebar :is(.panel,.personal-business-card,.personal-business-item){
+/* Content panels must NOT clip dropdown menus or autocomplete popovers. */
+.app-no-sidebar :is(.kpi,.quick-action),.personal-no-sidebar .personal-business-card{
  overflow:clip;
 }
 .app-no-sidebar .panel,.personal-no-sidebar .panel{padding:clamp(21px,2vw,33px)!important}
