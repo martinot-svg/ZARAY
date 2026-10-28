@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import BrandLogo from '@/components/brand-logo';
+import ThemeSwitch from '@/components/theme-switch';
 import { ZarayIcon, type ZarayIconName } from '@/components/ui/zaray-icon';
 import Link from 'next/link';
 import SignOutButton from '@/components/sign-out-button';
@@ -86,6 +87,7 @@ export default function PersonalShell({
         </nav>
       </div>
       <div className="personal-topbar-actions">
+        <ThemeSwitch />
         {active === '/entreprises' && (
           <Link href="/entreprises/nouvelle" className="primary-link personal-topbar-create">
             <ZarayIcon name="add" size={18} /> + Créer une entreprise
