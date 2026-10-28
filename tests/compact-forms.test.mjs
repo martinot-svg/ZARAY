@@ -68,3 +68,28 @@ test('login green submit button always uses black text and opts out of gradient-
  assert.match(style,/-webkit-text-fill-color:#000000!important/);
  assert.match(read('src/components/contrast-guardian.tsx'),/closest\('\[data-contrast-ignore\]/);
 });
+
+
+test('mobile login keyboard glide is restricted to mobile VisualViewport changes',()=>{
+ const login=read('src/app/connexion/page.tsx');
+ const hook=read('src/components/use-mobile-login-keyboard-glide.ts');
+ assert.match(login,/useMobileLoginKeyboardGlide\(\)/);
+ assert.match(login,/ref=\{mobileLoginRef\} className="form-shell auth-motion login-shell"/);
+ assert.match(hook,/window\.matchMedia\('\(max-width: 700px\)'\)/);
+ assert.match(hook,/window\.visualViewport/);
+ assert.match(hook,/viewport\?\.addEventListener\('resize', schedule\)/);
+ assert.match(hook,/viewport\?\.addEventListener\('scroll', schedule\)/);
+ assert.match(hook,/card\.contains\(focused\)/);
+ assert.match(hook,/largestVisibleHeight - height < 130/);
+ assert.match(hook,/getComputedStyle\(card\)\.transform/);
+ assert.match(hook,/new DOMMatrixReadOnly\(cssTransform\)\.m42/);
+ assert.match(hook,/--login-keyboard-lift/);
+ assert.match(hook,/login-keyboard-open/);
+ assert.match(hook,/shell\.classList\.remove\('login-keyboard-open'\)/);
+ assert.match(hook,/viewport\?\.removeEventListener\('resize', schedule\)/);
+ assert.match(style,/@media\(max-width:700px\)\{[\s\S]*?\.form-shell\.auth-motion\.login-shell/);
+ assert.match(style,/520ms cubic-bezier\(\.16,1,\.3,1\)/);
+ assert.match(style,/@media\(max-width:700px\) and \(prefers-reduced-motion:reduce\)/);
+ // Desktop/tablet transform rules must not be placed outside mobile media.
+ assert.ok(style.lastIndexOf('/* Mobile-only login keyboard choreography') > style.indexOf('/* Login visual refinement'));
+});

@@ -44,6 +44,10 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:3000
         run: node tests/compact-forms-visual.mjs
+      - name: Simulate mobile keyboard and verify fluid login glide
+        env:
+          BASE_URL: http://127.0.0.1:3000
+        run: node tests/mobile-login-keyboard-visual.mjs
       - name: Preserve visual evidence
         if: always()
         uses: actions/upload-artifact@v4

@@ -585,3 +585,30 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
   transition:none!important;
  }
 }
+
+
+/* Mobile-only login keyboard choreography: the logo and form float upwards
+   together as VisualViewport becomes occluded by the virtual keyboard.
+   Desktop/tablet geometry and all other auth pages remain unchanged. */
+@media(max-width:700px){
+ .form-shell.auth-motion.login-shell{
+  overflow:visible!important;
+ }
+ .form-shell.auth-motion.login-shell > .login-brand,
+ .form-shell.auth-motion.login-shell > .login-card{
+  transform:translate3d(0,var(--login-keyboard-lift,0px),0)!important;
+  transition:transform 520ms cubic-bezier(.16,1,.3,1)!important;
+ }
+ .form-shell.auth-motion.login-shell:focus-within > .login-brand,
+ .form-shell.auth-motion.login-shell:focus-within > .login-card{
+  will-change:transform;
+ }
+}
+/* Animation is never a prerequisite for reaching fields and submit controls. */
+@media(max-width:700px) and (prefers-reduced-motion:reduce){
+ .form-shell.auth-motion.login-shell > .login-brand,
+ .form-shell.auth-motion.login-shell > .login-card{
+  transition:none!important;
+  will-change:auto;
+ }
+}

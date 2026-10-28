@@ -3,6 +3,7 @@ import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import BrandLogo from '@/components/brand-logo';
 import PasswordField from '@/components/ui/password-field';
+import { useMobileLoginKeyboardGlide } from '@/components/use-mobile-login-keyboard-glide';
 
 import { useState, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -11,6 +12,7 @@ import { MotionFeedback } from '@/components/motion';
 export default function ConnexionPage() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const mobileLoginRef = useMobileLoginKeyboardGlide();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,7 +38,7 @@ export default function ConnexionPage() {
     }
   }
 
-  return <main className="form-shell auth-motion login-shell">
+  return <main ref={mobileLoginRef} className="form-shell auth-motion login-shell">
     <div className="login-brand">
       <a href="/" aria-label="ZARAY · Accueil">
         <BrandLogo priority surface="dark" />
