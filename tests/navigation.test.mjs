@@ -410,7 +410,8 @@ test('shared living galaxy replaces the bitmap without altering application navi
  assert.doesNotMatch(css,/zaray-reference-texture\.avif/);
  const backdrop=source('src/components/workspace-backdrop.tsx');
  const root=source('src/app/layout.tsx');
- assert.match(backdrop,/return workspace\?<GalaxyBackdrop\/>:null/);
+ assert.match(backdrop,/return <GalaxyBackdrop\s*\/>;/);
+ assert.doesNotMatch(backdrop,/usePathname|const prefixes/);
  assert.match(root,/<WorkspaceBackdrop \/>/);
  assert.doesNotMatch(personal,/<GalaxyBackdrop \/>/);
  assert.doesNotMatch(company,/<GalaxyBackdrop \/>/);
