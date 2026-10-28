@@ -46,6 +46,60 @@ try {
     assert.ok(metrics.scrollHeight <= metrics.innerHeight+2,'desktop login should not create a needless vertical scrollbar: '+JSON.stringify(metrics));
    }
    if(path==='/connexion' || path==='/inscription') {
+    // Physical visibility, not merely existence: the original eye icon had
+    // too little separation from its dark field and passed toggle-only tests.
+    await page.mouse.move(1,1);
+    const inspectEye = async (mode,hover=false) => {
+      const eye=page.getByRole('button',{name:'Afficher le mot de passe'});
+      if(hover) await eye.hover();
+      else await page.mouse.move(1,1);
+      const view=await eye.evaluate(el=>{
+        const svg=el.querySelector('svg');
+        const b=el.getBoundingClientRect();
+        const input=el.parentElement?.querySelector('input');
+        const ir=input?.getBoundingClientRect();
+        const style=getComputedStyle(el);
+        const svgStyle=svg && getComputedStyle(svg);
+        const target=document.elementFromPoint(b.x+b.width/2,b.y+b.height/2);
+        return {
+          color:style.color,background:style.backgroundColor,border:style.borderTopWidth,
+          opacity:style.opacity,visibility:style.visibility,display:style.display,
+          svgColor:svgStyle?.color,svgStroke:svgStyle?.stroke,svgOpacity:svgStyle?.opacity,
+          svgWidth:svg?.getBoundingClientRect().width,svgHeight:svg?.getBoundingClientRect().height,
+          bounds:{left:b.left,right:b.right,width:b.width,height:b.height},
+          inputBounds:ir ? {left:ir.left,right:ir.right}:null,
+          hittable:el===target||el.contains(target),
+        };
+      });
+      const colors=mode==='dark'
+        ? (hover ? ['rgb(255, 255, 255)','rgb(36, 103, 69)'] : ['rgb(166, 255, 208)','rgb(23, 74, 52)'])
+        : (hover ? ['rgb(7, 70, 40)','rgb(211, 244, 223)'] : ['rgb(11, 98, 58)','rgb(232, 250, 238)']);
+      assert.equal(view.color,colors[0],path+'/'+size.name+'/'+mode+' eye color');
+      assert.equal(view.background,colors[1],path+'/'+size.name+'/'+mode+' eye background');
+      assert.equal(view.svgColor,view.color,path+'/'+size.name+'/'+mode+' eye SVG inherits contrast color');
+      assert.equal(view.svgStroke,view.color,path+'/'+size.name+'/'+mode+' eye stroke is visible');
+      assert.equal(view.svgOpacity,'1');
+      assert.ok(view.svgWidth>=22&&view.svgHeight>=22,path+'/'+size.name+' eye shape size');
+      assert.equal(view.visibility,'visible');
+      assert.notEqual(view.display,'none');
+      assert.equal(view.opacity,'1');
+      assert.ok(view.hittable,path+'/'+size.name+' eye must be above its input');
+      assert.ok(view.inputBounds && view.bounds.left>=view.inputBounds.left &&
+        view.bounds.right<=view.inputBounds.right+2,path+'/'+size.name+' eye must fit input');
+      assert.ok(view.bounds.width>=44 && view.bounds.height>=40,path+'/'+size.name+' eye touch target');
+      const rgb=s=>s.match(/\\d+/g).slice(0,3).map(Number);
+      const luminance=v=>{
+        const x=rgb(v).map(n=>{const p=n/255;return p<=.04045?p/12.92:Math.pow((p+.055)/1.055,2.4)});
+        return .2126*x[0]+.7152*x[1]+.0722*x[2];
+      };
+      const a=luminance(view.color),b=luminance(view.background);
+      const ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+      assert.ok(ratio>=4.5,path+'/'+size.name+'/'+mode+' eye contrast '+ratio);
+      console.log(JSON.stringify({eyeVisible:true,path,device:size.name,mode,hover,contrast:ratio.toFixed(2)}));
+    };
+    await inspectEye('dark');
+    await inspectEye('dark',true);
+    await page.mouse.move(1,1);
     const password = page.locator('input[name="password"]');
     const reveal = page.getByRole('button',{name:'Afficher le mot de passe'});
     await password.waitFor({state:'visible'});
@@ -173,6 +227,9 @@ try {
     await page.screenshot({path:output+'/'+size.name+'-dark.png',animations:'disabled',fullPage:false,timeout:18000});
     await page.getByRole('button',{name:'Activer le thème clair'}).click();
     assert.equal(await page.locator('html').getAttribute('data-zaray-theme'),'light');
+    await inspectEye('light');
+    await inspectEye('light',true);
+    await page.mouse.move(1,1);
     await verifySubmitInk(size.name+'/light idle');
     await submitButton.hover();
     await verifySubmitInk(size.name+'/light hover');
