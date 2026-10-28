@@ -50,6 +50,19 @@ try {
    await toggle.waitFor({state:'visible'});
    assert.equal(await toggle.locator('.zaray-theme-radio-wave').count(),3,
      device.name+'/'+path+' three decorative Wi-Fi waves');
+   const icon=toggle.locator('.zaray-theme-icon');
+   assert.equal(await icon.count(),1,device.name+'/'+path+' waves anchor to Sun/Moon icon');
+   const wavesCenter=await page.evaluate(button=>{
+     const source=button.querySelector('.zaray-theme-icon svg').getBoundingClientRect();
+     const signal=button.querySelector('.zaray-theme-radio-waves').getBoundingClientRect();
+     return {
+       gap:Math.hypot((source.left+source.width/2)-(signal.left+signal.width/2),
+                      (source.top+source.height/2)-(signal.top+signal.height/2)),
+       isPassive:getComputedStyle(button.querySelector('.zaray-theme-radio-waves')).pointerEvents==='none'
+     };
+   },await toggle.elementHandle());
+   assert.ok(wavesCenter.gap<2,device.name+'/'+path+' pulse waves emanate from theme icon');
+   assert.ok(wavesCenter.isPassive,device.name+'/'+path+' pulse remains click-through');
    const signal=await toggle.locator('.zaray-theme-radio-wave').first().evaluate(el=>({
       pointerEvents:getComputedStyle(el).pointerEvents,
       animation:getComputedStyle(el).animationName,
