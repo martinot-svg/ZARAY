@@ -481,8 +481,8 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
 }
 
 
-/* Password toggle visibility: contrast-verified surfaces for both themes.
-   This icon is independent from the top-right theme switch. */
+/* Password eye: ONLY the eye graphic, without a badge, panel, border or
+   background. Retain a large invisible hit area and accessible focus ring. */
 .form-shell .form-stack .zaray-password-field{
  display:grid;
  gap:5px;
@@ -518,17 +518,20 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
  min-height:42px!important;
  margin:0!important;
  padding:0!important;
- border:1px solid #4da679!important;
- border-radius:11px!important;
- background:#174a34!important;
- box-shadow:inset 0 1px rgba(255,255,255,.08)!important;
+ border:0!important;
+ border-radius:0!important;
+ background:transparent!important;
+ background-image:none!important;
+ box-shadow:none!important;
+ filter:none!important;
+ backdrop-filter:none!important;
  color:#a6ffd0!important;
  -webkit-text-fill-color:#a6ffd0!important;
  opacity:1!important;
  visibility:visible!important;
  cursor:pointer;
  z-index:2;
- transition:background-color 150ms ease,color 150ms ease,border-color 150ms ease;
+ transition:color 150ms ease;
 }
 .form-shell .form-stack .zaray-password-control button.zaray-password-toggle svg{
  display:block!important;
@@ -544,30 +547,35 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
  pointer-events:none;
 }
 .form-shell .form-stack .zaray-password-control button.zaray-password-toggle:is(:hover,:focus-visible){
- background:#246745!important;
- border-color:#91ffc0!important;
+ background:transparent!important;
+ background-image:none!important;
+ border:0!important;
+ box-shadow:none!important;
  color:#ffffff!important;
  -webkit-text-fill-color:#ffffff!important;
 }
 .form-shell .form-stack .zaray-password-control button.zaray-password-toggle:focus-visible{
- outline:3px solid #6cffa8!important;
- outline-offset:2px!important;
+ outline:2px solid #6cffa8!important;
+ outline-offset:0!important;
 }
 .form-shell .form-stack .zaray-password-control button.zaray-password-toggle:active{
  transform:translateY(-50%);
+ background:transparent!important;
+ box-shadow:none!important;
 }
 [data-zaray-theme="light"] .form-shell .form-stack .zaray-password-control button.zaray-password-toggle{
  color:#0b623a!important;
  -webkit-text-fill-color:#0b623a!important;
- background:#e8faee!important;
- border-color:#74bc94!important;
+ background:transparent!important;
+ border:0!important;
  box-shadow:none!important;
 }
 [data-zaray-theme="light"] .form-shell .form-stack .zaray-password-control button.zaray-password-toggle:is(:hover,:focus-visible){
  color:#074628!important;
  -webkit-text-fill-color:#074628!important;
- background:#d3f4df!important;
- border-color:#168453!important;
+ background:transparent!important;
+ border:0!important;
+ box-shadow:none!important;
 }
 @media(prefers-reduced-motion:reduce){
  .form-shell .form-stack .zaray-password-control button.zaray-password-toggle{
