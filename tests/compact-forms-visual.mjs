@@ -49,7 +49,12 @@ try {
     const logo = page.locator('.login-shell > .login-brand .brand-logo');
     await logo.waitFor({state:'visible'});
     assert.equal(await card.locator('.brand-logo').count(),0,'logo must be outside login card');
-    assert.equal(await page.getByText('Votre univers ZARAY vous attend',{exact:true}).count(),1);
+    assert.equal(await headingTextCount(),1);
+    async function headingTextCount() {
+      return page.getByRole('heading',{level:1,name:'Votre univers vous attend'}).count();
+    }
+    assert.equal(await page.getByText('Votre univers ZARAY vous attend',{exact:true}).count(),0);
+    assert.equal(await page.getByText('Connexion à mon compte ZARAY',{exact:true}).count(),0);
     assert.equal(await page.getByText('ZARAY · ACCÈS SÉCURISÉ').count(),0);
 
     const heading = page.locator('#login-title');
@@ -64,6 +69,38 @@ try {
 
     const left = card.getByRole('link',{name:'Mot de passe oublié ?'});
     const right = card.getByRole('link',{name:'Créer un compte'});
+    const cardCenter = await card.evaluate(el => {
+      const r=el.getBoundingClientRect();
+      return r.left+r.width/2;
+    });
+    assert.ok(Math.abs(cardCenter-size.width/2)<2,
+      'login form must be horizontally centered: '+cardCenter+' vs '+size.width/2);
+    const titleAlign = await heading.evaluate(el=>getComputedStyle(el).textAlign);
+    assert.equal(titleAlign,'center','login heading must be centered');
+    const inspectLinks=async()=>{
+      const regular=await left.evaluate(el=>({
+        weight:getComputedStyle(el).fontWeight,
+        color:getComputedStyle(el).color,
+        decoration:getComputedStyle(el).textDecorationLine
+      }));
+      const other=await right.evaluate(el=>({
+        weight:getComputedStyle(el).fontWeight,
+        color:getComputedStyle(el).color,
+        decoration:getComputedStyle(el).textDecorationLine
+      }));
+      assert.equal(regular.weight,'400','left link should have regular weight');
+      assert.equal(other.weight,'400','right link should have regular weight');
+      assert.equal(regular.color,other.color,'footer links must have identical green color');
+      assert.equal(regular.decoration,'none','left link should not be underlined');
+      assert.equal(other.decoration,'none','right link should not be underlined');
+      await left.hover();
+      assert.equal(await left.evaluate(el=>getComputedStyle(el).textDecorationLine),'none','no underline on forgotten password hover');
+      await right.hover();
+      assert.equal(await right.evaluate(el=>getComputedStyle(el).textDecorationLine),'none','no underline on create account hover');
+      return regular.color;
+    };
+    const darkLinkColor = await inspectLinks();
+    assert.equal(darkLinkColor,'rgb(101, 235, 160)','dark theme links are premium green');
     const leftBox = await left.boundingBox(),rightBox = await right.boundingBox();
     assert.ok(leftBox && rightBox,'both footer links must be visible');
     assert.ok(leftBox.x + leftBox.width < rightBox.x,
@@ -81,6 +118,8 @@ try {
     await page.screenshot({path:output+'/'+size.name+'-dark.png',animations:'disabled',fullPage:false,timeout:18000});
     await page.getByRole('button',{name:'Activer le thème clair'}).click();
     assert.equal(await page.locator('html').getAttribute('data-zaray-theme'),'light');
+    const lightLinkColor = await inspectLinks();
+    assert.equal(lightLinkColor,'rgb(19, 115, 73)','light theme links are contrast-safe green');
     await page.screenshot({path:output+'/'+size.name+'-light.png',animations:'disabled',fullPage:false,timeout:18000});
    }
    console.log(JSON.stringify({route:path,device:size.name,cardWidth:Math.round(metrics.width),
