@@ -2,6 +2,7 @@
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import BrandLogo from '@/components/brand-logo';
+import PasswordField from '@/components/ui/password-field';
 
 import { useState, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -45,7 +46,7 @@ export default function ConnexionPage() {
       <h1 id="login-title">Votre univers vous attend</h1>
       <form className="form-stack" onSubmit={submit}>
         <label>E-mail<input name="email" type="email" autoComplete="email" required /></label>
-        <label>Mot de passe<input name="password" type="password" autoComplete="current-password" required /></label>
+        <PasswordField label="Mot de passe" name="password" autoComplete="current-password" required />
         <button type="submit" disabled={busy} className="primary-link" data-contrast-ignore><ZarayIcon name="login" size={18} /> {busy ? 'Connexion…' : 'Se connecter'}</button>
       </form>
       <MotionFeedback message={error} kind="error" />
