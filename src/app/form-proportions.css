@@ -397,3 +397,67 @@ body:has(.login-shell) .global-auth-theme .zaray-theme-switch:hover{
 @media print{
  body:has(.login-shell) .global-auth-theme{display:none!important}
 }
+
+
+/* Login visual refinement (2026-10-28): center the actual logo-and-card group.
+   This is intentionally scoped to the login route, never all business forms. */
+.form-shell.auth-motion.login-shell{
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ align-items:center;
+ gap:clamp(12px,2.4vh,20px);
+ min-height:100svh!important;
+ width:100%;
+}
+.login-shell > .login-brand,
+.login-shell > .login-card{
+ flex:0 0 auto;
+ align-self:center;
+ margin-inline:auto!important;
+}
+.login-shell > .login-card #login-title{
+ text-align:center!important;
+ font-size:clamp(19px,2.1vw,24px)!important;
+ line-height:1.32!important;
+ letter-spacing:-.035em!important;
+ margin:0 0 19px!important;
+ text-wrap:nowrap;
+ white-space:nowrap;
+}
+/* The same accessible green on both links, with appropriate contrast for each theme.
+   Neutral weight and no underline, including hover and focus (focus outline remains). */
+.login-shell > .login-card .login-footer-links a,
+.login-shell > .login-card .login-footer-links a:last-child{
+ font-weight:400!important;
+ color:#65eba0!important;
+ text-decoration:none!important;
+ text-decoration-line:none!important;
+}
+[data-zaray-theme="light"] .login-shell > .login-card .login-footer-links a,
+[data-zaray-theme="light"] .login-shell > .login-card .login-footer-links a:last-child{
+ color:#137349!important;
+}
+.login-shell > .login-card .login-footer-links a:hover,
+.login-shell > .login-card .login-footer-links a:focus-visible,
+.login-shell > .login-card .login-footer-links a:last-child:hover,
+.login-shell > .login-card .login-footer-links a:last-child:focus-visible{
+ text-decoration:none!important;
+ text-decoration-line:none!important;
+}
+@media(max-width:700px){
+ .form-shell.auth-motion.login-shell{
+  padding-top:clamp(55px,9vh,74px)!important;
+  padding-bottom:clamp(17px,3vh,25px)!important;
+  gap:13px;
+ }
+ .login-shell > .login-card #login-title{
+  font-size:clamp(17px,4.6vw,21px)!important;
+  margin-bottom:15px!important;
+ }
+}
+@media(max-width:330px){
+ .login-shell > .login-card #login-title{
+  font-size:16px!important;
+ }
+}
