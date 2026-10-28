@@ -45,11 +45,16 @@ try {
    if(path==='/connexion' && size.name==='desktop-short'){
     assert.ok(metrics.scrollHeight <= metrics.innerHeight+2,'desktop login should not create a needless vertical scrollbar: '+JSON.stringify(metrics));
    }
+   let inspectEye;
    if(path==='/connexion' || path==='/inscription') {
+    await page.evaluate(() => {
+      localStorage.setItem('zaray-interface-theme','dark');
+      document.documentElement.setAttribute('data-zaray-theme','dark');
+    });
     // Physical visibility, not merely existence: the original eye icon had
     // too little separation from its dark field and passed toggle-only tests.
     await page.mouse.move(1,1);
-    const inspectEye = async (mode,hover=false) => {
+    inspectEye = async (mode,hover=false) => {
       const eye=page.getByRole('button',{name:'Afficher le mot de passe'});
       if(hover) await eye.hover();
       else await page.mouse.move(1,1);
