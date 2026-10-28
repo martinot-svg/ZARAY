@@ -13,6 +13,13 @@ const sections = [
   { label: 'FINANCE & RÉSEAU', items: [['/paiements/verification', 'Paiements'], ['/parametres-paiement', 'Moyens de paiement'], ['/portail', 'Portail captif']] },
 ];
 
+const mobileDockItems = [
+  { href: '/tableau-de-bord', label: 'Accueil', icon: 'dashboard', scoped: false },
+  { href: '/clients', label: 'Clients', icon: 'customers', scoped: true },
+  { href: '/tickets', label: 'Tickets', icon: 'ticket', scoped: true },
+  { href: '/sites', label: 'Sites', icon: 'site', scoped: false },
+] as const;
+
 const navigationIcons = {
   '/tableau-de-bord': 'dashboard', '/entreprises': 'company', '/sites': 'site',
   '/membres': 'members', '/clients': 'customers', '/offres': 'wifi',
@@ -134,5 +141,16 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
         {children}
       </main>
     </div>
+    {activeCompany && <nav className="workspace-mobile-dock" aria-label="Navigation rapide de l’entreprise">
+      {mobileDockItems.map(item => {
+        const href = item.href + '?companyId=' + encodeURIComponent(activeCompany)
+          + (item.scoped && activeSite ? '&siteId=' + encodeURIComponent(activeSite) : '');
+        return <Link key={item.href} href={href}
+          className={'workspace-mobile-dock-link' + (activePath === item.href ? ' is-active' : '')}
+          aria-current={activePath === item.href ? 'page' : undefined}>
+          <ZarayIcon name={item.icon} size={21} /><span>{item.label}</span>
+        </Link>;
+      })}
+    </nav>}
   </div>;
 }

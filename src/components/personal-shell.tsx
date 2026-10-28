@@ -120,5 +120,12 @@ export default function PersonalShell({
       {!home && email && active !== '/entreprises' && active !== '/finance-globale' && <p className="personal-email">Compte : {email}</p>}
       {children}
     </main>
+    <nav className="personal-mobile-dock" aria-label="Navigation rapide du compte personnel">
+      {links.map(item => <Link key={'mobile-' + item.href} href={item.href}
+        className={'personal-mobile-dock-link' + (active === item.href ? ' is-active' : '')}
+        aria-current={active === item.href ? 'page' : undefined}>
+        <ZarayIcon name={item.icon as ZarayIconName} size={21}/><span>{item.label === 'Finances des entreprises' ? 'Finances' : item.label === 'Mes entreprises' ? 'Entreprises' : 'Accueil'}</span>
+      </Link>)}
+    </nav>
   </div>;
 }

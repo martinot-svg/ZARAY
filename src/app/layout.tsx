@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import './premium-foundation.css';
+import './premium-experience.css';
 import { ContrastGuardian } from '@/components/contrast-guardian';
 import WorkspaceBackdrop from '@/components/workspace-backdrop';
 
