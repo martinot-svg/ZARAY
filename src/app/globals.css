@@ -1164,3 +1164,137 @@ body:has(.personal-sticky-topbar)::-webkit-scrollbar{
   margin-bottom:18px;
 }
 .personal-no-sidebar .personal-finance-page-heading h1{margin:0}
+
+
+/* ZARAY 2026 · Premium experience foundation. Shared semantics, specialized layouts.
+   Visual motion never gates navigation, financial state, printing or authentication. */
+:root{
+  --z-lux-green:#21f728;--z-lux-ink:#050e0b;--z-lux-graphite:#101d18;
+  --z-lux-radius:22px;--z-lux-radius-sm:14px;
+  --z-lux-edge:rgba(108,177,130,.25);
+  --z-lux-glow:0 16px 55px rgba(12,88,42,.14);
+  --z-lux-ease:cubic-bezier(.22,1,.36,1);
+  --z-lux-motion-quick:150ms;--z-lux-motion:320ms;--z-lux-motion-scene:650ms;
+}
+.landing{isolation:isolate}
+.landing-hero{position:relative;isolation:isolate;overflow:hidden}
+.landing-hero::before,.landing-hero::after{
+  content:"";position:absolute;pointer-events:none;z-index:-1;border-radius:50%;
+  filter:blur(8px);
+}
+.landing-hero::before{
+  width:min(60vw,860px);height:min(60vw,860px);right:-19%;top:-44%;
+  background:radial-gradient(circle,rgba(33,247,40,.15) 0%,rgba(33,247,40,.045) 36%,transparent 69%);
+}
+.landing-hero::after{
+  width:min(40vw,580px);height:min(40vw,580px);left:-17%;bottom:-55%;
+  background:radial-gradient(circle,rgba(16,180,110,.10),transparent 70%);
+}
+.landing-hero-copy h1{
+  text-wrap:balance;letter-spacing:-.06em;
+}
+.landing-structure{
+  position:relative;isolation:isolate;
+  box-shadow:0 30px 100px rgba(0,0,0,.14),0 0 0 1px rgba(33,247,40,.06);
+}
+.landing-structure::after{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(125deg,rgba(255,255,255,.09),transparent 32%,transparent 70%,rgba(33,247,40,.045));
+}
+.landing-feature,.landing-step-grid article,.landing-benefits-list article{
+  position:relative;transition:transform var(--z-lux-motion) var(--z-lux-ease),box-shadow var(--z-lux-motion) var(--z-lux-ease),border-color var(--z-lux-motion) ease;
+}
+.landing-feature:hover,.landing-feature:focus-within,.landing-step-grid article:hover{
+  transform:translateY(-5px);box-shadow:var(--z-lux-glow);
+}
+.app-no-sidebar .panel,.app-no-sidebar .kpi,
+.personal-no-sidebar .personal-business-card,
+.personal-no-sidebar .personal-business-item{
+  border-radius:var(--z-lux-radius);
+  box-shadow:0 14px 55px rgba(0,0,0,.10),inset 0 1px 0 rgba(255,255,255,.45);
+}
+.app-no-sidebar .panel,.app-no-sidebar .kpi{
+  background-image:linear-gradient(145deg,rgba(255,255,255,.98),rgba(247,252,248,.98));
+}
+.app-no-sidebar .kpi{position:relative;overflow:hidden}
+.app-no-sidebar .kpi::before{
+  content:"";height:3px;position:absolute;top:0;left:18px;right:18px;
+  background:linear-gradient(90deg,transparent,#279d4a,transparent);opacity:.65;
+}
+.app-no-sidebar .app-title,.personal-no-sidebar .personal-page-heading h1{
+  letter-spacing:-.05em;text-wrap:balance;
+}
+:where(.app-no-sidebar,.personal-no-sidebar) :is(.panel,.kpi,.quick-action,.personal-business-card){
+  transition:box-shadow var(--z-lux-motion) var(--z-lux-ease),border-color var(--z-lux-motion) ease,transform var(--z-lux-motion) var(--z-lux-ease);
+}
+@media(hover:hover) and (pointer:fine){
+  .app-no-sidebar :is(.panel,.kpi,.quick-action):hover{
+    box-shadow:0 22px 65px rgba(0,0,0,.15),0 0 0 1px rgba(33,247,40,.13);
+  }
+  .app-no-sidebar .quick-action:hover,.personal-no-sidebar .personal-business-card:hover{transform:translateY(-3px)}
+}
+.app-no-sidebar :is(input,select,textarea),.personal-no-sidebar :is(input,select,textarea){
+  transition:border-color var(--z-lux-motion-quick),box-shadow var(--z-lux-motion-quick),background-color var(--z-lux-motion-quick);
+}
+.app-no-sidebar :is(input,select,textarea):focus-visible,
+.personal-no-sidebar :is(input,select,textarea):focus-visible{
+  outline:2px solid #147c35;outline-offset:2px;box-shadow:0 0 0 5px rgba(33,247,40,.12);
+}
+.app-no-sidebar .data-table tbody tr{transition:background-color var(--z-lux-motion-quick),box-shadow var(--z-lux-motion-quick)}
+.app-no-sidebar .data-table tbody tr:hover{box-shadow:inset 3px 0 #23bd4b}
+.app-no-sidebar .status-pill{font-weight:800;letter-spacing:.02em}
+.app-no-sidebar .app-nav-dropdown{
+  border-radius:var(--z-lux-radius-sm);
+  box-shadow:0 30px 80px rgba(0,0,0,.25);
+}
+@media(min-width:1100px){
+  .app-no-sidebar .app-content{max-width:1540px;padding-inline:clamp(28px,3vw,64px)}
+  .app-no-sidebar .kpi-grid{gap:clamp(14px,1.5vw,25px)}
+  .app-no-sidebar .kpi{padding:clamp(20px,2vw,30px)}
+}
+@media(min-width:701px) and (max-width:1099px){
+  .app-no-sidebar .app-content{padding:26px 24px}
+  .app-no-sidebar .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .app-no-sidebar .workspace-grid{grid-template-columns:1fr}
+  .app-no-sidebar .toolbar-main{flex-wrap:wrap}
+  .landing-hero-grid{align-items:center}
+}
+@media(max-width:700px){
+  .landing-hero{overflow:clip}
+  .landing-hero-copy h1{font-size:clamp(37px,11vw,58px)}
+  .landing-feature:hover,.landing-step-grid article:hover{transform:none}
+  .app-no-sidebar .app-content{padding:20px 14px max(28px,env(safe-area-inset-bottom))}
+  .app-no-sidebar .page-header{gap:12px}
+  .app-no-sidebar .panel{padding:18px}
+  .app-no-sidebar .kpi-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .app-no-sidebar .kpi{padding:15px;border-radius:17px;min-width:0}
+  .app-no-sidebar .kpi-value{font-size:clamp(20px,6vw,29px);overflow-wrap:anywhere}
+  .app-no-sidebar .toolbar-field :is(input,select),
+  .app-no-sidebar .form-stack :is(input,select,textarea){min-height:44px;font-size:16px}
+  .app-no-sidebar :is(.app-menu-button,.app-nav-link,.primary-link){min-height:44px}
+  .app-no-sidebar .app-nav-dropdown{max-width:calc(100vw - 28px)}
+  .app-no-sidebar .data-table{min-width:0}
+  .app-no-sidebar .table-wrap{max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain}
+}
+@media(prefers-reduced-motion:no-preference){
+  .landing-hero::before{animation:z-lux-drift 16s ease-in-out infinite alternate}
+  .landing-hero::after{animation:z-lux-drift 19s ease-in-out infinite alternate-reverse}
+  .landing-structure{animation:z-lux-rise var(--z-lux-motion-scene) var(--z-lux-ease) both}
+  .landing-feature-grid > :nth-child(3n+2){animation-delay:55ms}
+  .landing-feature-grid > :nth-child(3n){animation-delay:110ms}
+  @supports(animation-timeline:view()){
+    .landing-feature,.landing-step-grid article{animation:z-lux-reveal both;animation-timeline:view();animation-range:entry 0% cover 24%}
+  }
+}
+@keyframes z-lux-drift{from{transform:translate3d(-2%,1%,0) scale(1)}to{transform:translate3d(3%,-2%,0) scale(1.08)}}
+@keyframes z-lux-rise{from{opacity:.86;transform:translateY(20px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes z-lux-reveal{from{opacity:.6;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){
+  .landing-hero::before,.landing-hero::after,.landing-structure,.landing-feature,.landing-step-grid article{animation:none!important;transform:none!important}
+  :where(.app-no-sidebar,.personal-no-sidebar) :is(.panel,.kpi,.quick-action,.personal-business-card){transition:none!important}
+}
+/* Print surfaces and ticket geometry remain strictly functional and motion-free. */
+@media print{
+  .landing-hero::before,.landing-hero::after,.landing-structure::after,.app-no-sidebar .kpi::before{display:none!important}
+  .wifi-voucher-print-canvas,.zaray-voucher-print-canvas,.receipt-preview{animation:none!important;transition:none!important;transform:none!important;box-shadow:none!important}
+}
