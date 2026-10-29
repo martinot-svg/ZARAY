@@ -64,6 +64,8 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
   const menuButton = useRef<HTMLButtonElement>(null);
   const firstMenuLink = useRef<HTMLAnchorElement>(null);
   const menuContainer = useRef<HTMLDivElement>(null);
+  const themeButtonRef = useRef<HTMLButtonElement>(null);
+  const hoverMenus = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   useEffect(() => {
     if (!menuOpen) return;
     firstMenuLink.current?.focus();
@@ -78,11 +80,14 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
   return <div className="app-shell app-no-sidebar">
     <div className="app-main">
       <header className="app-topbar">
-        <div className="app-menu-container" ref={menuContainer}>
+        <div className="app-menu-container" ref={menuContainer}
+          onMouseEnter={() => { if (hoverMenus()) setMenuOpen(true); }}
+          onMouseLeave={() => { if (hoverMenus()) setMenuOpen(false); }}>
           <button ref={menuButton} className="app-menu-button" type="button"
             aria-controls="zaray-app-nav" aria-expanded={menuOpen}
+            aria-label="Ouvrir la navigation de l’entreprise" title="Menu de l’entreprise"
             onClick={() => setMenuOpen(value => !value)}>
-            <ZarayIcon name="menu" size={18} /> Menu
+            <ZarayIcon name="menu" size={22} /><span className="topbar-icon-label">Menu</span>
           </button>
           <nav id="zaray-app-nav"
             className={'app-nav-dropdown' + (menuOpen ? ' is-open' : '')}
@@ -135,7 +140,46 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
             </select></label>
           </>:<span className="muted">{contextError||null}</span>}
         </div>
-        <div className="app-topbar-links"><ThemeSwitch /><Link className="header-link" href="/mon-compte"><ZarayIcon name="profile" size={18} /> Mon compte</Link><Link className="header-link" href={activeCompany?'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany):'/entreprises'}><ZarayIcon name="dashboard" size={18} /> Vue générale</Link></div>
+        <div className="app-topbar-links">
+          <div className="topbar-icon-group topbar-theme-control">
+            <ThemeSwitch buttonRef={themeButtonRef} />
+            <div className="topbar-icon-curtain" aria-label="Thème de l'interface">
+              <div className="topbar-icon-curtain-inner">
+                <button type="button" className="topbar-icon-menu-action"
+                  onClick={() => themeButtonRef.current?.click()}>
+                  <ZarayIcon name="settings" size={18} /> Changer le thème
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="topbar-icon-group">
+            <Link className="header-link" href="/mon-compte" aria-label="Mon compte" title="Mon compte">
+              <ZarayIcon name="profile" size={22} /><span className="topbar-icon-label">Mon compte</span>
+            </Link>
+            <div className="topbar-icon-curtain" aria-label="Mon compte">
+              <div className="topbar-icon-curtain-inner">
+                <Link className="topbar-icon-menu-action" href="/mon-compte">
+                  <ZarayIcon name="profile" size={18} /> Retour au compte personnel
+                </Link>
+              </div>
+            </div>
+          </div>
+          <div className="topbar-icon-group">
+            <Link className="header-link"
+              href={activeCompany ? '/tableau-de-bord?companyId=' + encodeURIComponent(activeCompany) : '/entreprises'}
+              aria-label="Vue générale" title="Vue générale">
+              <ZarayIcon name="dashboard" size={22} /><span className="topbar-icon-label">Vue générale</span>
+            </Link>
+            <div className="topbar-icon-curtain" aria-label="Vue générale">
+              <div className="topbar-icon-curtain-inner">
+                <Link className="topbar-icon-menu-action"
+                  href={activeCompany ? '/tableau-de-bord?companyId=' + encodeURIComponent(activeCompany) : '/entreprises'}>
+                  <ZarayIcon name="dashboard" size={18} /> Vue générale
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
       </header>
       <main className="app-content">
         {(eyebrow || title || description || actions) && <header className="page-header"><div>{eyebrow && <p className="eyebrow">{eyebrow}</p>}{title && <h1 className="app-title">{title}</h1>}{description && <p className="app-subtitle">{description}</p>}<span className="workspace-hero-release"><ZarayIcon name="permissions" size={14} /> ZARAY EXPERIENCE · 2026</span></div>{actions && <div className="page-actions">{actions}</div>}</header>}
