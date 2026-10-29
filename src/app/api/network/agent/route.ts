@@ -66,11 +66,28 @@ export async function POST(request:NextRequest){
       .select('id,username,validity_days,status').in('id',links.map(l=>l.voucher_id)).eq('status','paid');
     for(const voucher of vouchers??[]){
      if(!connectedNames.has(voucher.username))continue;
-     const expiresAt=new Date(Date.now()+voucher.validity_days*86400000).toISOString();
-     await service.from('wifi_vouchers').update({status:'active',activated_at:now,expires_at:expiresAt})
+     await service.from('wifi_vouchers').update({status:'active',activated_at:now,expires_at:null})
        .eq('id',voucher.id).eq('status','paid');
     }
    }
+  }
+
+  if(b?.voucherUsage!==undefined){
+   if(!Array.isArray(b.voucherUsage)||b.voucherUsage.length>500)return json({error:'Compteurs Wi-Fi invalides.'},400);
+   const readings=b.voucherUsage.map(item=>{
+    if(!item||typeof item!=='object')return null;
+    const entry=item as Record<string,unknown>;
+    const voucherId=clean(entry.voucherId,36),username=clean(entry.username,128);
+    const uptimeSeconds=entry.uptimeSeconds;
+    if(!uuid.test(voucherId)||!username||typeof uptimeSeconds!=='number'||
+       !Number.isSafeInteger(uptimeSeconds)||uptimeSeconds<0||uptimeSeconds>315360000)return null;
+    return {voucherId,username,uptimeSeconds};
+   });
+   if(readings.some(item=>item===null))return json({error:'Compteurs Wi-Fi invalides.'},400);
+   const {error:usageError}=await service.rpc('record_wifi_voucher_usage',{
+    p_router_id:routerId,p_readings:readings
+   });
+   if(usageError)return json({error:'Impossible de synchroniser le temps cumulé des tickets.'},503);
   }
   const model=clean(b?.model,120),version=clean(b?.version,120);
   const {error}=await service.from('network_routers').update({status:'online',last_seen_at:now,model:model||null,routeros_version:version||null}).eq('id',routerId);

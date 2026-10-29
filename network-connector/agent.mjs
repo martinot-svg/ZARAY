@@ -50,11 +50,43 @@ const sources=[
  {kind:'wifi',path:'interface/wireless/registration-table',key:o=>o['.id']||o['mac-address'],label:o=>o.interface,ip:o=>o['last-ip'],mac:o=>o['mac-address'],active:()=>true},
  {kind:'neighbor',path:'ip/neighbor',key:o=>o['.id']||o['mac-address']||o.address,label:o=>o.identity||o['interface-name'],ip:o=>o.address,mac:o=>o['mac-address'],active:()=>false}
 ];
+
+function routerUptimeSeconds(input){
+ if(typeof input!=='string')return null;
+ const s=input.trim();
+ if(!s)return null;
+ const clock=/^(?:(\d+)w)?(?:(\d+)d)?(\d{1,2}):(\d{2}):(\d{2})$/.exec(s);
+ if(clock)return Number(clock[1]||0)*604800+Number(clock[2]||0)*86400+
+  Number(clock[3])*3600+Number(clock[4])*60+Number(clock[5]);
+ if(!/^(?:(?:\d+)w)?(?:(?:\d+)d)?(?:(?:\d+)h)?(?:(?:\d+)m)?(?:(?:\d+)s)?$/.test(s))return null;
+ if(!/\d/.test(s))return null;
+ const parts=[...s.matchAll(/(\d+)([wdhms])/g)];
+ const multipliers={w:604800,d:86400,h:3600,m:60,s:1};
+ const seconds=parts.reduce((sum,p)=>sum+Number(p[1])*multipliers[p[2]],0);
+ return Number.isSafeInteger(seconds)&&seconds>=0?seconds:null;
+}
+async function voucherUptimeReadings(){
+ const users=await ros('ip/hotspot/user');
+ if(!Array.isArray(users))return [];
+ const readings=[];
+ for(const user of users){
+  const match=/^zaray:voucher:([0-9a-f-]{36})$/i.exec(String(user.comment||''));
+  if(!match)continue;
+  const seconds=routerUptimeSeconds(user.uptime);
+  if(seconds===null)continue;
+  readings.push({voucherId:match[1],username:String(user.name||''),uptimeSeconds:seconds});
+  if(readings.length>=500)break;
+ }
+ return readings;
+}
+
 function normalize(v){return typeof v==='string'?v:'';}
 async function sync(){
  const resource=await ros('system/resource');
  const board=await ros('system/routerboard').catch(()=>null);
  const kinds=new Set(),items=[];
+ let voucherUsage=[];
+ try{voucherUsage=await voucherUptimeReadings();}catch(e){console.warn('[ZARAY] Compteurs Hotspot indisponibles',e.message);}
  for(const source of sources){
   try{
    const response=await ros(source.path);
@@ -70,7 +102,7 @@ async function sync(){
  }
  if(kinds.size){
   const result=await api('sync',{model:board?.['model']||resource?.['board-name']||'',version:resource?.version||'',
-   kinds:[...kinds],observations:items});
+   kinds:[...kinds],observations:items,voucherUsage});
   console.log('[ZARAY] Synchronisées :',result.synced,'observations');
  }
 }
