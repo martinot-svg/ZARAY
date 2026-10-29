@@ -112,9 +112,9 @@ export default function CaptivePortalPage() {
 
   return <main className="form-shell"><section className="form-card" style={{ width: 'min(100%, 760px)' }}>
       <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
-    <p className="eyebrow">ZARAY · PORTAIL CAPTIF</p>
+    <p className="eyebrow">ZARAY · INSCRIPTION CLIENT · ABONNEMENTS</p>
     <h1>{companyName || 'Connexion Wi-Fi'}</h1>
-    <p>Choisissez un forfait, envoyez le paiement sur le numéro indiqué et transmettez le reçu. L’accès ne sera accordé qu’après vérification du paiement.</p>
+    <p>Inscrivez-vous auprès de votre fournisseur, choisissez votre abonnement, puis transmettez le justificatif de paiement. Votre dossier client est créé automatiquement dans ZARAY. L’accès Internet n’est autorisé qu’après validation du paiement et confirmation réseau.</p>
     {busy ? <p role="status">Chargement des offres…</p> : offers.length ? <>
       <h2>Forfaits disponibles</h2>
       <div className="module-grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', margin: '18px 0 28px' }}>
@@ -124,18 +124,20 @@ export default function CaptivePortalPage() {
         </button>)}
       </div>
       {!order && <>
-        <h2>Vos coordonnées</h2>
+        <h2>Inscription du client résidentiel</h2>
+        <p className="muted">Vos coordonnées seront ajoutées au répertoire Clients de votre fournisseur. Si vous avez déjà effectué une demande avec la même adresse, votre fiche sera réutilisée.</p>
         <form className="form-stack" onSubmit={subscribe}>
           <label>Nom complet<input value={customerName} onChange={(e) => setCustomerName(e.target.value)} minLength={2} maxLength={160} required /></label>
           <label>Adresse e-mail<input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} maxLength={254} required /></label>
           <label>Téléphone de contact (facultatif)<input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} maxLength={32} placeholder="0341234567" /></label>
-          <button className="primary-link" type="submit" disabled={submitting || !offerId || !offerPayable}><ZarayIcon name="payment" size={18} /> {submitting ? 'Création de la commande…' : 'Créer la commande et voir les instructions de paiement'}</button>
+          <button className="primary-link" type="submit" disabled={submitting || !offerId || !offerPayable}><ZarayIcon name="payment" size={18} /> {submitting ? 'Inscription en cours…' : 'S’inscrire et consulter les instructions de paiement'}</button>
         </form>
       </>}
     </> : !error ? <p>Aucune offre active n’est disponible sur ce portail pour le moment.</p> : null}
 
     {order && <section className="module" style={{ marginTop: 24, minHeight: 0 }}>
-      <span className="module-number">COMMANDE CRÉÉE</span><h2>Référence : {order.reference}</h2>
+      <span className="module-number">INSCRIPTION ENREGISTRÉE · COMMANDE CRÉÉE</span><h2>Référence : {order.reference}</h2>
+      <p>Votre fiche client est enregistrée pour cette entreprise. Vos coordonnées ne sont pas encore vérifiées et l’abonnement attend le paiement.</p>
       <p>Forfait : {order.offer_name}</p>
       <p>Montant à envoyer : <strong>{Number(order.amount).toLocaleString('fr-FR')} {order.currency}</strong></p>
       <p>État : {submissionState?.status === 'submitted' ? 'justificatif en attente de vérification' : order.status === 'paid' ? 'payée' : 'paiement en attente'}.</p>
