@@ -609,14 +609,16 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
    The REAL RGBA image was cropped from their PNG and baked into GitHub.
    Transparent pixels expose the existing ZARAY stars without any rectangular
    background, photographic substitution, silhouette mask or vector circle.
-   624 × 587 HD source pixels, displayed ~340px wide on a 1366px desktop.
+   624 × 587 native pixels, rendered as transparent 1248 × 1174 WebP.
+   One explicit image URL prevents the browser from choosing the old 195px fallback.
+   Display enlarged gently by about 16%, preserving the original framing.
    Place the image so its bottom is below the screen; only the authentic,
    naturally curved upper limb emerges from the lower-left viewport edge. */
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
   position: fixed;
   left: 0;
-  bottom: clamp(-136px, -8vw, -88px);
-  width: clamp(270px, 25vw, 420px);
+  bottom: clamp(-152px, -9.5vw, -100px);
+  width: clamp(310px, 29vw, 485px);
   height: auto;
   aspect-ratio: 624 / 587;
   z-index: 0;
@@ -625,10 +627,7 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   user-select: none;
   opacity: 1;
   border: 0 !important;
-  background: image-set(
-    url("/brand/zaccueil-earth-from-user-hd.avif") type("image/avif"),
-    url("/brand/zaccueil-earth-from-user.webp") type("image/webp")
-  ) left bottom / contain no-repeat !important;
+  background: url("/brand/zaccueil-earth-render-2x.webp") left bottom / contain no-repeat !important;
   image-rendering: auto;
   box-shadow: none !important;
   clip-path: none !important;
@@ -645,14 +644,14 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
 }
 @media (min-width: 701px) and (max-width: 1100px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    width: clamp(260px, 31vw, 360px);
-    bottom: -9vw;
+    width: clamp(290px, 36vw, 425px);
+    bottom: -10vw;
   }
 }
 @media (max-width: 700px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    width: min(74vw, 310px);
-    bottom: -16vw;
+    width: min(80vw, 345px);
+    bottom: -17vw;
     opacity: .91;
   }
 }
