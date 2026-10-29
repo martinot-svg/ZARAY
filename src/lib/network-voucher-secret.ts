@@ -18,7 +18,7 @@ export function deriveVoucherPassword(voucherId:string,siteId:string,length:numb
  const bytes=createHmac('sha256',Buffer.from(secret,'hex')).update(domain+siteId+':'+voucherId).digest();
  if(scheme==='hmac-numeric-v2'){
   // Keep leading zeroes and represent the PIN as a string, never a number.
-  const pin=BigInt('0x'+bytes.toString('hex'))%(10n**BigInt(length));
+  const pin=BigInt('0x'+bytes.toString('hex'))%(BigInt(10)**BigInt(length));
   return pin.toString().padStart(length,'0');
  }
  if(scheme!=='hmac-v1')throw new Error('Unknown Wi-Fi credential scheme.');
