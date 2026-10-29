@@ -6,7 +6,7 @@ import { generateA4Pdf, voucherPages, type PrintableVoucher, type TicketVisual }
 type Site={id:string;company_id:string;name:string;status:string};
 type Offer={id:string;name:string;status:string};
 type Router={id:string;site_id:string;name:string;control_enabled:boolean;last_seen_at:string|null};
-const defaultVisual:TicketVisual={logo_data_uri:null,primary_color:'#167a46',secondary_color:'#ffffff',title_color:'#10251a',border_color:'#a5b9ad',font_family:'Arial',username_length:5,password_length:12};
+const defaultVisual:TicketVisual={logo_data_uri:null,primary_color:'#167a46',secondary_color:'#ffffff',title_color:'#10251a',border_color:'#a5b9ad',font_family:'Arial',username_length:5,password_length:5};
 export default function WifiTicketGenerator(){
  const [companyId,setCompanyId]=useState(''),[companyName,setCompanyName]=useState('');
  const [sites,setSites]=useState<Site[]>([]),[siteId,setSiteId]=useState('');
