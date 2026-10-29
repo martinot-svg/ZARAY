@@ -82,10 +82,10 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
       <header className="app-topbar">
         <div className="app-menu-container" ref={menuContainer}
           onMouseEnter={() => { if (hoverMenus()) setMenuOpen(true); }}
-          onMouseLeave={() => { if (hoverMenus()) setMenuOpen(false); }}>
+          onMouseLeave={() => { if (hoverMenus() && !menuContainer.current?.contains(document.activeElement)) setMenuOpen(false); }}>
           <button ref={menuButton} className="app-menu-button" type="button"
             aria-controls="zaray-app-nav" aria-expanded={menuOpen}
-            aria-label="Ouvrir la navigation de l’entreprise" title="Menu de l’entreprise"
+            aria-label="Ouvrir la navigation de l’entreprise"
             onClick={() => setMenuOpen(value => !value)}>
             <ZarayIcon name="menu" size={22} /><span className="topbar-icon-label">Menu</span>
           </button>
@@ -142,7 +142,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
         </div>
         <div className="app-topbar-links">
           <div className="topbar-icon-group topbar-theme-control">
-            <ThemeSwitch buttonRef={themeButtonRef} />
+            <ThemeSwitch buttonRef={themeButtonRef} hideNativeTitle />
             <div className="topbar-icon-curtain" aria-label="Thème de l'interface">
               <div className="topbar-icon-curtain-inner">
                 <button type="button" className="topbar-icon-menu-action"
@@ -153,7 +153,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
             </div>
           </div>
           <div className="topbar-icon-group">
-            <Link className="header-link" href="/mon-compte" aria-label="Mon compte" title="Mon compte">
+            <Link className="header-link" href="/mon-compte" aria-label="Mon compte">
               <ZarayIcon name="profile" size={22} /><span className="topbar-icon-label">Mon compte</span>
             </Link>
             <div className="topbar-icon-curtain" aria-label="Mon compte">
@@ -167,7 +167,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
           <div className="topbar-icon-group">
             <Link className="header-link"
               href={activeCompany ? '/tableau-de-bord?companyId=' + encodeURIComponent(activeCompany) : '/entreprises'}
-              aria-label="Vue générale" title="Vue générale">
+              aria-label="Vue générale">
               <ZarayIcon name="dashboard" size={22} /><span className="topbar-icon-label">Vue générale</span>
             </Link>
             <div className="topbar-icon-curtain" aria-label="Vue générale">
