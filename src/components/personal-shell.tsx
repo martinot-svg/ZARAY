@@ -6,6 +6,7 @@ import ThemeSwitch from '@/components/theme-switch';
 import { ZarayIcon, type ZarayIconName } from '@/components/ui/zaray-icon';
 import Link from 'next/link';
 import SignOutButton from '@/components/sign-out-button';
+import RotatingEarthHorizon from '@/components/rotating-earth-horizon';
 
 const links = [
   { href: '/mon-compte', label: 'Z’Accueil', icon: 'home' },
@@ -146,7 +147,7 @@ export default function PersonalShell({
       </div>
     </header>
     {home && (
-      <div className="zaray-earth-horizon" aria-hidden="true" />
+      <RotatingEarthHorizon />
     )}
     <main className="personal-content">
       {!home && email && active !== '/entreprises' && active !== '/finance-globale' && <p className="personal-email">Compte : {email}</p>}
