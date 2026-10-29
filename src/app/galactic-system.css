@@ -625,7 +625,11 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   user-select: none;
   opacity: 1;
   border: 0 !important;
-  background: image-set(\n    url("/brand/zaccueil-earth-from-user-hd.avif") type("image/avif"),\n    url("/brand/zaccueil-earth-from-user.webp") type("image/webp")\n  ) left bottom / contain no-repeat !important;\n  image-rendering: auto;
+  background: image-set(
+    url("/brand/zaccueil-earth-from-user-hd.avif") type("image/avif"),
+    url("/brand/zaccueil-earth-from-user.webp") type("image/webp")
+  ) left bottom / contain no-repeat !important;
+  image-rendering: auto;
   box-shadow: none !important;
   clip-path: none !important;
   mask-image: none !important;
