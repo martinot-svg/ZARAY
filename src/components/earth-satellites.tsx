@@ -63,6 +63,11 @@ export default function EarthSatellites() {
   return <svg className="zaray-earth-satellites" viewBox="0 0 1185 1185"
     preserveAspectRatio="xMidYMid meet" focusable="false"
     aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <g className="zaray-satellites-motionless">
+      <g transform="translate(540 -43) rotate(-7)" opacity="0.88"><Spacecraft scale={0.95} /></g>
+      <g transform="translate(755 -20) rotate(18)" opacity="0.78"><Spacecraft scale={0.82} /></g>
+      <g transform="translate(970 75) rotate(38)" opacity="0.70"><Spacecraft scale={0.70} /></g>
+    </g>
     {satellites.map(satellite => (
       <g key={satellite.id} opacity={satellite.opacity}>
         <g className="zaray-orbiting-spacecraft">
