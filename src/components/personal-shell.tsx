@@ -145,6 +145,9 @@ export default function PersonalShell({
         </div>
       </div>
     </header>
+    {home && (
+      <div className="zaray-earth-horizon" aria-hidden="true" />
+    )}
     <main className="personal-content">
       {!home && email && active !== '/entreprises' && active !== '/finance-globale' && <p className="personal-email">Compte : {email}</p>}
       {children}
