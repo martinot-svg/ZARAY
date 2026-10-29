@@ -82,6 +82,24 @@ export default function WifiTicketCustomization(){
    }catch(e){setError(e instanceof Error?e.message:'Enregistrement impossible.');}
    finally{setSaving(false);}
  }
+
+ async function downloadPortal(){
+  if(!siteId)return;
+  setBusy(true);setError('');setNotice('');
+  try{
+   const response=await fetch('/hotspot/zaray-login.html',{cache:'no-store'});
+   if(!response.ok)throw Error('Modèle de portail indisponible.');
+   const template=await response.text();
+   if(!template.includes('__ZARAY_SITE_ID__'))throw Error('Modèle de portail incomplet.');
+   const customized=template.replaceAll('__ZARAY_SITE_ID__',siteId);
+   const objectUrl=URL.createObjectURL(new Blob([customized],{type:'text/html;charset=utf-8'}));
+   const a=document.createElement('a');a.href=objectUrl;a.download='login.html';
+   document.body.appendChild(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(objectUrl),2000);
+   setNotice('Portail du site téléchargé. Il doit être installé dans les pages Hotspot du MikroTik avec son fichier md5.js et un accès pré-authentification autorisé aux offres ZARAY.');
+  }catch(e){setError(e instanceof Error?e.message:'Téléchargement impossible.');}
+  finally{setBusy(false);}
+ }
  function restore(){
    setForm(old=>({...initial,logo_data_uri:old.logo_data_uri,
        username_length:old.username_length,password_length:old.password_length}));
@@ -176,6 +194,14 @@ export default function WifiTicketCustomization(){
       </div>
       <p className="muted">APERÇU DE DÉMONSTRATION — les identifiants affichés ici ne donnent aucun accès au réseau.</p>
       <p className="muted">A4 portrait · 3 colonnes × 11 lignes · 33 tickets par page. PDF, écran et impression utilisent un moteur graphique commun.</p>
+      <div style={{margin:'20px 0',padding:16,border:'1px solid var(--line, #6c7d8a)',borderRadius:14}}>
+       <h3>Portail captif client · Offres puis connexion</h3>
+       <p className="muted">Le client voit les forfaits du site disposant de tickets prêts à vendre, choisit l'offre correspondante à son ticket papier, puis saisit son identifiant et son mot de passe. Le choix de l'offre n'autorise ni ne modifie son accès : MikroTik valide toujours le ticket réel.</p>
+       <button type="button" disabled={busy||!siteId} onClick={()=>void downloadPortal()}>
+        <ZarayIcon name="download" size={17}/> Télécharger la page MikroTik pour ce site
+       </button>
+       <p className="muted">L'installation sur le Hotspot local et l'autorisation de l'API publique ZARAY avant connexion restent nécessaires. Cette opération n'est pas effectuée depuis Vercel.</p>
+      </div>
       <a className="primary-link" href={'/tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)+'&tab=generate'}>
         <ZarayIcon name="print" size={17}/> Générer une planche A4
       </a>
