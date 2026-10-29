@@ -323,11 +323,9 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
 }
 
 
-/* ZARAY — evenly-spaced single radio wavefronts.
-   Preserve the original dark/green gradient, stars, typography and forms.
-   Each emission is ONE arc; together the successive arcs evoke a Wi-Fi signal.
-   The identical linear 30s trajectories and evenly divided animation phases
-   keep their physical separation constant, without crossing or overlapping. */
+/* The original ZARAY visual identity is untouched. All ultra-thin wavefronts
+   are rendered by one requestAnimationFrame-driven 2D canvas instead of
+   multiple SVG transforms and per-frame CSS stroke-width repaints. */
 .zaray-original-backdrop .zaray-wifi-wavefield {
   position: absolute;
   inset: 0;
@@ -339,75 +337,21 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
 .zaray-original-backdrop .zaray-wifi-wavefield[data-active="true"] {
   opacity: 1;
 }
-.zaray-original-backdrop .zaray-wifi-global-pulse {
+.zaray-original-backdrop .zaray-wifi-wave-canvas {
   position: absolute;
+  inset: 0;
   display: block;
-  left: var(--zaray-wifi-x, calc(100% - 40px));
-  top: var(--zaray-wifi-y, 35px);
-  width: 220px;
-  height: auto;
-  overflow: visible;
-  fill: none;
-  stroke: currentColor;
-  color: #a2ffd0;
-  opacity: 0;
-  transform-origin: 50% 87.5%;
-  transform: translate(-50%, -87.5%) rotate(-135deg) scale(.04);
-  animation: zaray-wifi-background-broadcast 30s linear infinite;
-  animation-delay: var(--zaray-wifi-offset, 0s);
-  will-change: transform, opacity;
-}
-/* Only one contour per wavefront. The other reference-icon contours are
-   supplied by neighbouring emissions, not stacked inside each emission. */
-.zaray-original-backdrop .zaray-wifi-global-pulse > path:not(:first-of-type),
-.zaray-original-backdrop .zaray-wifi-global-pulse .zaray-wifi-glyph-dot {
-  display: none;
-}
-.zaray-original-backdrop .zaray-wifi-global-pulse > path:first-of-type {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 0.07px;
-  stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
-  animation: zaray-wifi-stroke-growth 30s linear infinite;
-  animation-delay: var(--zaray-wifi-offset, 0s);
-}
-@keyframes zaray-wifi-stroke-growth {
-  from { stroke-width: 0.07px; }
-  to { stroke-width: 0.09px; }
-}
-/* One direction, identical velocity, a constant geometric gap.
-   Each wave starts bright near the Sun/Moon and gradually fades as it travels.
-   A new arc enters the field as the older ones advance, without pauses. */
-@keyframes zaray-wifi-background-broadcast {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -87.5%) rotate(-135deg) scale(.04);
-  }
-  3% { opacity: .94; }
-  15% { opacity: .77; }
-  35% { opacity: .53; }
-  60% { opacity: .28; }
-  85% { opacity: .10; }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -87.5%) rotate(-135deg) scale(var(--zaray-wifi-scale, 13));
-  }
-}
-[data-zaray-theme="light"] .zaray-original-backdrop .zaray-wifi-global-pulse {
-  color: #167647;
-}
-@media (max-width: 700px) {
-  .zaray-original-backdrop .zaray-wifi-global-pulse { width: 175px; }
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  .zaray-original-backdrop .zaray-wifi-global-pulse,
-  .zaray-original-backdrop .zaray-wifi-global-pulse > path:first-of-type {
-    animation: none !important;
+  .zaray-original-backdrop .zaray-wifi-wavefield {
     opacity: 0 !important;
-    will-change: auto;
   }
 }
 @media print {
-  .zaray-original-backdrop .zaray-wifi-wavefield { display: none !important; }
+  .zaray-original-backdrop .zaray-wifi-wavefield {
+    display: none !important;
+  }
 }
