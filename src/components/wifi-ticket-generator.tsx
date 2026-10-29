@@ -5,11 +5,13 @@ import VoucherCanvas from '@/components/voucher-canvas';
 import { generateA4Pdf, voucherPages, type PrintableVoucher, type TicketVisual } from '@/lib/ticket-pdf';
 type Site={id:string;company_id:string;name:string;status:string};
 type Offer={id:string;name:string;status:string};
+type Router={id:string;site_id:string;name:string;control_enabled:boolean;last_seen_at:string|null};
 const defaultVisual:TicketVisual={logo_data_uri:null,primary_color:'#167a46',secondary_color:'#ffffff',title_color:'#10251a',border_color:'#a5b9ad',font_family:'Arial',username_length:5,password_length:12};
 export default function WifiTicketGenerator(){
  const [companyId,setCompanyId]=useState(''),[companyName,setCompanyName]=useState('');
  const [sites,setSites]=useState<Site[]>([]),[siteId,setSiteId]=useState('');
  const [offers,setOffers]=useState<Offer[]>([]),[offerId,setOfferId]=useState('');
+ const [routers,setRouters]=useState<Router[]>([]),[routerId,setRouterId]=useState('');
  const [count,setCount]=useState(33),[design,setDesign]=useState<TicketVisual>(defaultVisual);
  const [tickets,setTickets]=useState<PrintableVoucher[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState('');
  useEffect(()=>{let live=true;(async()=>{
@@ -26,6 +28,8 @@ export default function WifiTicketGenerator(){
    const offersResponse=await fetch('/api/offers?companyId='+encodeURIComponent(company),{cache:'no-store'}),offersData=await offersResponse.json();
    if(!offersResponse.ok)throw Error(offersData.error||'Offres indisponibles.');
    if(live){const active=(offersData.offers??[]).filter((o:Offer)=>o.status==='active');setOffers(active);setOfferId(active[0]?.id??'');}
+   const netResponse=await fetch('/api/network?companyId='+encodeURIComponent(company),{cache:'no-store'}),netData=await netResponse.json();
+   if(netResponse.ok&&live)setRouters(netData.routers??[]);
   }catch(e){if(live)setError(e instanceof Error?e.message:'Chargement impossible.');}
  })();return()=>{live=false};},[]);
  useEffect(()=>{if(!companyId||!siteId||!offerId)return;let live=true;(async()=>{
@@ -35,12 +39,12 @@ export default function WifiTicketGenerator(){
    if(live)setDesign(d.settings);
   }catch(e){if(live)setError(e instanceof Error?e.message:'Personnalisation indisponible.');}
  })();return()=>{live=false};},[companyId,siteId,offerId]);
- function changeSite(value:string){setSiteId(value);setTickets([]);setError('');}
+ function changeSite(value:string){setSiteId(value);setRouterId('');setTickets([]);setError('');}
  function changeOffer(value:string){setOfferId(value);setTickets([]);setError('');}
  async function create(){
   setBusy(true);setError('');setTickets([]);
   try{
-   const r=await fetch('/api/wifi-vouchers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,siteId,offerId,count})});
+   const r=await fetch('/api/wifi-vouchers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,siteId,offerId,count,routerId:selectedRouterId})});
    const d=await r.json();if(!r.ok)throw Error(d.error||'Génération refusée.');
    setTickets(d.tickets??[]);
   }catch(e){setError(e instanceof Error?e.message:'Génération impossible.');}
@@ -57,17 +61,24 @@ export default function WifiTicketGenerator(){
   finally{setBusy(false);}
  }
  const chosen=sites.find(s=>s.id===siteId);
+ const availableRouters=routers.filter(r=>r.site_id===siteId&&r.control_enabled&&r.last_seen_at&&Date.now()-new Date(r.last_seen_at).getTime()<180000);
+ const selectedRouterId=availableRouters.some(r=>r.id===routerId)?routerId:(availableRouters[0]?.id??'');
  return <>
   <section className="panel" style={{padding:18,marginBottom:16}}>
    <p>Entreprise active : <strong>{companyName}</strong></p>
    <div className="field-grid">
     <label>Site<select value={siteId} onChange={e=>changeSite(e.target.value)}>{sites.map(s=><option key={s.id} value={s.id}>{s.name} ({s.status})</option>)}</select></label>
     <label>Offre<select value={offerId} onChange={e=>changeOffer(e.target.value)}>{offers.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>
+    <label>MikroTik du site<select value={selectedRouterId} onChange={e=>{setRouterId(e.target.value);setTickets([]);}} required>
+      {availableRouters.length===0&&<option value="">Aucun routeur connecté</option>}
+      {availableRouters.map(r=><option key={r.id} value={r.id}>{r.name}</option>)}
+     </select></label>
     <label>Quantité<select value={count} onChange={e=>{setCount(Number(e.target.value));setTickets([]);}}>{[1,11,33,66,99].map(n=><option key={n} value={n}>{n} ticket{n>1?'s':''}</option>)}</select></label>
    </div>
-   <p className="muted">Chaque ticket possède un identifiant et un mot de passe différents. Il reste « disponible », sans accès Internet, tant qu'il n'a pas été vendu et provisionné sur le réseau.</p>
+   <p className="muted">Chaque ticket possède un identifiant et un mot de passe uniques. Il reste désactivé avant sa vente et son provisionnement confirmé par MikroTik.</p>
+   {!availableRouters.length&&<p className="alert" role="status">Aucun MikroTik autorisé n’est connecté à ce site. <a href={'/gestion-reseau?companyId='+encodeURIComponent(companyId)}>Associer et activer le routeur</a>.</p>}
    <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
-    <button type="button" className="primary-link" disabled={!companyId||!siteId||!offerId||busy||chosen?.status!=='active'} onClick={create}><ZarayIcon name="ticket" size={16}/>{busy?'Génération…':'Générer un lot unique'}</button>
+    <button type="button" className="primary-link" disabled={!companyId||!siteId||!offerId||!selectedRouterId||busy||chosen?.status!=='active'} onClick={create}><ZarayIcon name="ticket" size={16}/>{busy?'Génération…':'Générer un lot unique'}</button>
     <a href={'/tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)+'&tab=customize'}>Personnaliser l'apparence</a>
    </div>
    {error&&<p className="alert alert-error" role="alert">{error}</p>}
@@ -75,7 +86,7 @@ export default function WifiTicketGenerator(){
   {tickets.length>0&&<>
    <div className="panel" style={{padding:18,marginBottom:18}}>
     <h2>Lot créé — {tickets.length} identifiants uniques</h2>
-    <p role="alert">Conservez immédiatement le PDF ou imprimez ces tickets : les mots de passe ne sont jamais récupérables depuis ZARAY après fermeture de cette page. Il s'agit d'un stock non activé.</p>
+    <p role="alert">Conservez immédiatement le PDF ou imprimez ces tickets : les mots de passe ne sont jamais récupérables depuis ZARAY après fermeture de cette page. Le mot de passe pourra être régénéré uniquement par le serveur sécurisé pour le routeur associé après vente. Il s'agit d'un stock non activé.</p>
     <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
      <button className="primary-link" type="button" disabled={busy} onClick={()=>void download()}><ZarayIcon name="download" size={16}/> Télécharger PDF A4</button>
      <button type="button" onClick={()=>window.print()}><ZarayIcon name="print" size={16}/> Imprimer en ligne</button>
