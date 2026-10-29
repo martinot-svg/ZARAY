@@ -82,19 +82,37 @@ try {
     edge[x]=y0+(y1-y0)*ratio;
   }
 
+  // Smooth the horizon boundary across neighboring columns. This removes
+  // tiny one-column steps caused by the photographic edge detector, while
+  // preserving the real overall curvature of the Earth.
+  const edgeSmoothed = new Float32Array(width);
+  for (let x = 0; x < width; x++) {
+    let sum = 0, weight = 0;
+    for (let dx = -30; dx <= 30; dx += 2) {
+      const xx = Math.max(0, Math.min(width - 1, x + dx));
+      const w = 31 - Math.abs(dx);
+      sum += edge[xx] * w;
+      weight += w;
+    }
+    edgeSmoothed[x] = sum / weight;
+  }
+
   const rgba = Buffer.alloc(width*height*4);
   for(let y=0;y<height;y++) for(let x=0;x<width;x++){
     const i=(y*width+x)*3, o=(y*width+x)*4;
     rgba[o]=data[i];rgba[o+1]=data[i+1];rgba[o+2]=data[i+2];
     // Keep the atmospheric halo and all visible surface pixels, with a
     // softly feathered boundary following the real photo, not a drawn curve.
-    const surface=smooth((y-edge[x]+21)/32);
+    const surface=smooth((y-edgeSmoothed[x]+24)/46);
     // Image is mirrored in the layout: fade the source LEFT edge so the
     // visible RIGHT end dissolves without any abrupt vertical cutoff.
     const right=smooth((x/width)/.32);
-    // A tiny feather prevents the source file's outermost row being visible.
-    const bottom=1-smooth((y/height-.965)/.035);
-    rgba[o+3]=Math.round(255*surface*right*bottom);
+    // The prior image occasionally had nonzero alpha at row zero, causing
+    // a straight horizontal seam. Guarantee fully transparent TOP and BOTTOM
+    // rows, with a generous soft transition near the natural atmosphere.
+    const top=smooth((y / 34));
+    const bottom=1-smooth((y/height-.945)/.055);
+    rgba[o+3]=Math.round(255*surface*right*top*bottom);
   }
   await mkdir(join(process.cwd(), 'public', 'brand'), { recursive: true });
   const image = await sharp(rgba, { raw: { width, height, channels: 4 } })
