@@ -56,7 +56,7 @@ try {
   for (let y = 0; y < OUT_SIZE; y++) {
     const ny = 1 - 2 * (y + 0.5) / OUT_SIZE;
     for (let x = 0; x < OUT_SIZE; x++) {
-      const nx = 2 * (x + 0.5) / OUT_SIZE;
+      const nx = 2 * (x + 0.5) / OUT_SIZE - 1;
       const offset = (y * OUT_SIZE + x) * 4;
       const r2 = nx * nx + ny * ny;
       if (r2 >= 1) continue;
