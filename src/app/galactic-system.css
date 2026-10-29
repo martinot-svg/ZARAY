@@ -605,34 +605,46 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   }
 }
 
-/* Z'Accueil — original globe photograph supplied by the user.
-   The REAL RGBA image was cropped from their PNG and baked into GitHub.
-   Transparent pixels expose the existing ZARAY stars without any rectangular
-   background, photographic substitution, silhouette mask or vector circle.
-   624 × 587 native pixels, rendered as transparent 1248 × 1174 WebP.
-   One explicit image URL prevents the browser from choosing the old 195px fallback.
-   Display enlarged gently by about 16%, preserving the original framing.
-   Place the image so its bottom is below the screen; only the authentic,
-   naturally curved upper limb emerges from the lower-left viewport edge. */
+/* Z'Accueil only — real 3D Earth projected from NASA satellite imagery.
+   The sphere is mostly below and left of the viewport, exposing only a
+   natural curved horizon. The ZARAY starfield remains completely untouched.
+   On browsers without WebGL or if the atlas cannot load, the previously
+   approved original user's high-resolution transparent picture stays visible. */
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
   position: fixed;
-  left: 0;
-  bottom: clamp(-152px, -9.5vw, -100px);
-  width: clamp(310px, 29vw, 485px);
+  left: clamp(-300px, -18.5vw, -160px);
+  bottom: clamp(-570px, -36vw, -365px);
+  width: clamp(560px, 51vw, 740px);
   height: auto;
-  aspect-ratio: 624 / 587;
+  aspect-ratio: 1;
   z-index: 0;
-  overflow: visible !important;
   pointer-events: none;
   user-select: none;
+  overflow: visible !important;
   opacity: 1;
   border: 0 !important;
-  background: url("/brand/zaccueil-earth-render-2x.webp") left bottom / contain no-repeat !important;
-  image-rendering: auto;
+  background: url("/brand/zaccueil-earth-render-2x.webp") left bottom / contain no-repeat;
   box-shadow: none !important;
   clip-path: none !important;
   mask-image: none !important;
   -webkit-mask-image: none !important;
+}
+.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon[data-earth-ready="true"] {
+  background-image: none;
+}
+.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-rotating-earth-canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  background: transparent;
+  transition: opacity 500ms ease;
+}
+.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon[data-earth-ready="true"] .zaray-rotating-earth-canvas {
+  opacity: 1;
 }
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::before,
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::after {
@@ -642,21 +654,28 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   position: relative;
   z-index: 1;
 }
-@media (min-width: 701px) and (max-width: 1100px) {
+@media (min-width:701px) and (max-width:1100px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    width: clamp(290px, 36vw, 425px);
-    bottom: -10vw;
+    width: clamp(530px, 60vw, 680px);
+    left: clamp(-270px, -22vw, -150px);
+    bottom: clamp(-510px, -41vw, -350px);
   }
 }
-@media (max-width: 700px) {
+@media (max-width:700px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    width: min(80vw, 345px);
-    bottom: -17vw;
+    width: clamp(360px, 118vw, 510px);
+    left: clamp(-210px, -43vw, -130px);
+    bottom: clamp(-385px, -88vw, -280px);
     opacity: .91;
   }
 }
 [data-zaray-theme="light"] .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-  opacity: .59;
+  opacity: .58;
+}
+@media (prefers-reduced-motion: reduce) {
+  .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-rotating-earth-canvas {
+    transition: none;
+  }
 }
 @media print {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
