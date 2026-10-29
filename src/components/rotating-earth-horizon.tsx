@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import firstFrame from './earth-first-frame.module.css';
 
 /**
  * A true textured 3D globe with a separate, subtly moving cloud layer.
@@ -277,8 +278,15 @@ export default function RotatingEarthHorizon() {
     };
   }, []);
 
-  return <div ref={containerRef} className="zaray-earth-horizon"
+  // The server renders a baked first frame immediately. The CSS module's
+  // tiny inline WebP displays before hydration or ANY image request, while
+  // the priority still loads the matching high-definition frame. The WebGL
+  // canvas transitions on top only after both atlas textures are ready.
+  return <div ref={containerRef} className={'zaray-earth-horizon ' + firstFrame.preview}
     data-earth-ready="false" aria-hidden="true">
+    <img className="zaray-earth-hd-still"
+      src="/brand/zaccueil-earth-instant-still.webp" alt=""
+      fetchPriority="high" loading="eager" decoding="async" draggable={false} />
     <canvas ref={canvasRef} className="zaray-rotating-earth-canvas" />
   </div>;
 }
