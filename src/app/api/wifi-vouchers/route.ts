@@ -67,8 +67,8 @@ export async function POST(request:NextRequest){
     const general=(templates??[]).find(r=>r.offer_id===null);
     const specific=(templates??[]).find(r=>r.offer_id===offerId);
     const usernameLength=specific?.username_length??general?.username_length??5;
-    const passwordLength=specific?.password_length??general?.password_length??12;
-    if(!Number.isInteger(usernameLength)||usernameLength<3||usernameLength>5||!Number.isInteger(passwordLength)||passwordLength<12||passwordLength>32)return fail('Configuration non conforme.',409);
+    const passwordLength=specific?.password_length??general?.password_length??5;
+    if(!Number.isInteger(usernameLength)||usernameLength<3||usernameLength>5||!Number.isInteger(passwordLength)||passwordLength<3||passwordLength>5)return fail('Configuration non conforme.',409);
     const batchId=crypto.randomUUID();
     for(let attempt=0;attempt<4;attempt++){
       const used=new Set<string>();
@@ -79,13 +79,13 @@ export async function POST(request:NextRequest){
         do{username=randomText(usernameLength);}while(used.has(username));
         used.add(username);
         const id=crypto.randomUUID();
-        const password=deriveVoucherPassword(id,siteId,passwordLength);
+        const password=deriveVoucherPassword(id,siteId,passwordLength,'hmac-numeric-v2');
         rows.push({id,company_id:companyId,site_id:siteId,offer_id:offerId,batch_id:batchId,username,credential_hash:await sha256(siteId+':'+username+':'+password),created_by:access.user.id,duration_minutes:offer.duration_minutes,validity_days:offer.validity_days});
         printable.push({id,username,password,offer_name:offer.name,price_amount:offer.price_amount,currency:offer.currency,duration_minutes:offer.duration_minutes,validity_days:offer.validity_days,status:'available'});
       }
       const {error}=await supabase.from('wifi_vouchers').insert(rows);
       if(!error){
-        const networkRows=rows.map(row=>({voucher_id:row.id,company_id:companyId,site_id:siteId,router_id:routerId,password_length:passwordLength,credential_scheme:'hmac-v1',network_state:'not_sold'}));
+        const networkRows=rows.map(row=>({voucher_id:row.id,company_id:companyId,site_id:siteId,router_id:routerId,password_length:passwordLength,credential_scheme:'hmac-numeric-v2',network_state:'not_sold'}));
         const {error:linkedError}=await service.from('wifi_voucher_network').insert(networkRows);
         if(linkedError){
           await service.from('wifi_vouchers').delete().in('id',rows.map(row=>row.id)).eq('company_id',companyId).eq('status','available');
