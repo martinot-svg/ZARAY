@@ -56,7 +56,7 @@ export async function POST(request:NextRequest){
       return fail('Connecteur MikroTik indisponible. Associez et activez le routeur avant de générer des tickets utilisables.',409);
 
     const {data:offer,error:offerError}=await supabase.from('offers')
-      .select('id,company_id,name,duration_minutes,validity_days,price_amount,currency,status')
+      .select('id,company_id,name,duration_minutes,validity_days,price_amount,currency,max_devices,status')
       .eq('id',offerId).eq('company_id',companyId).maybeSingle();
     if(offerError||!offer)return fail('Offre introuvable.',404);
     if(offer.status!=='active')return fail('Seules les offres actives peuvent être imprimées.',409);
@@ -85,7 +85,7 @@ export async function POST(request:NextRequest){
       }
       const {error}=await supabase.from('wifi_vouchers').insert(rows);
       if(!error){
-        const networkRows=rows.map(row=>({voucher_id:row.id,company_id:companyId,site_id:siteId,router_id:routerId,password_length:passwordLength,credential_scheme:'hmac-numeric-v2',network_state:'queued',unit_price:offer.price_amount,unit_currency:offer.currency}));
+        const networkRows=rows.map(row=>({voucher_id:row.id,company_id:companyId,site_id:siteId,router_id:routerId,password_length:passwordLength,credential_scheme:'hmac-numeric-v2',network_state:'queued',unit_price:offer.price_amount,unit_currency:offer.currency,max_devices:offer.max_devices}));
         const {error:linkedError}=await service.from('wifi_voucher_network').insert(networkRows);
         if(linkedError){
           await service.from('wifi_vouchers').delete().in('id',rows.map(row=>row.id)).eq('company_id',companyId).eq('status','available');
