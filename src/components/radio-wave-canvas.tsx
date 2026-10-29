@@ -3,13 +3,13 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * One lightweight canvas replaces eight independently rasterized, subpixel SVGs.
+ * One lightweight canvas replaces many independently rasterized, subpixel SVGs.
  * A shared, monotonic clock drives all arcs at the same linear speed:
  * fixed radial spacing, no crossings, no separate paint animations.
  * ZARAY's original backdrop, stars, theme button and layouts remain intact.
  */
-const WAVE_DURATION = 30; // seconds per emitted wave
-const WAVE_COUNT = 8;
+const WAVE_DURATION = 15; // seconds per emitted wave; twice the previous speed
+const WAVE_COUNT = 16; // half the previous gap, without overlapping arcs
 const INITIAL_STROKE = 0.07; // CSS pixels, intentionally ultra-fine
 const FINAL_STROKE = 0.09;
 
@@ -90,7 +90,7 @@ export default function RadioWaveCanvas() {
         context.strokeStyle = light ? '#167647' : '#a2ffd0';
         context.lineCap = 'round';
 
-        // Eight wavefronts, one spatial coordinate system and one clock.
+        // Sixteen wavefronts, one spatial coordinate system and one clock.
         // A constant delta in phase gives an exact constant distance between
         // arcs; the last fades away as a new one emerges at the transmitter.
         for (let index = 0; index < WAVE_COUNT; index++) {
