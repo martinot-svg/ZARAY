@@ -355,3 +355,249 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
     display: none !important;
   }
 }
+
+/* Z'Accueil and enterprise workspace — unified icon-only header controls.
+   Only the control surfaces are transparent; dropdown menus remain legible.
+   Desktop menus descend like a curtain, sized to their own content. */
+.personal-no-sidebar .personal-topbar,
+.app-no-sidebar .app-topbar {
+  --zaray-header-icon-size: 46px;
+  overflow: visible;
+}
+.personal-no-sidebar .personal-topbar-actions,
+.app-no-sidebar .app-topbar-links {
+  display: flex;
+  align-items: center;
+  gap: 10px !important;
+  margin-left: auto;
+  width: auto !important;
+  flex: 0 0 auto;
+}
+.personal-no-sidebar .personal-topbar:has(.personal-topbar-create) {
+  flex-wrap: nowrap !important;
+}
+.personal-no-sidebar .personal-home-nav-control,
+.personal-no-sidebar .personal-profile-control,
+.personal-no-sidebar .personal-topbar-actions .topbar-icon-group,
+.app-no-sidebar .app-menu-container,
+.app-no-sidebar .app-topbar-links .topbar-icon-group {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--zaray-header-icon-size);
+  width: var(--zaray-header-icon-size);
+  min-width: 0;
+}
+.personal-no-sidebar .personal-topbar-actions .personal-profile-control {
+  margin-left: 0 !important;
+  flex: 0 0 var(--zaray-header-icon-size);
+}
+.personal-no-sidebar .personal-topbar :is(
+  .personal-home-nav-toggle,
+  .personal-topbar-create,
+  .personal-topbar-profile,
+  .zaray-theme-switch
+),
+.app-no-sidebar .app-topbar :is(
+  .app-menu-button,
+  .app-topbar-links .header-link,
+  .app-topbar-links .zaray-theme-switch
+) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  width: var(--zaray-header-icon-size) !important;
+  min-width: var(--zaray-header-icon-size) !important;
+  max-width: var(--zaray-header-icon-size) !important;
+  height: var(--zaray-header-icon-size) !important;
+  min-height: var(--zaray-header-icon-size) !important;
+  max-height: var(--zaray-header-icon-size) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #ddffe8 !important;
+  text-decoration: none;
+  flex: 0 0 var(--zaray-header-icon-size);
+  cursor: pointer;
+}
+.personal-no-sidebar .personal-topbar :is(
+  .personal-home-nav-toggle,
+  .personal-topbar-create,
+  .personal-topbar-profile,
+  .zaray-theme-switch
+):is(:hover, :focus-visible),
+.app-no-sidebar .app-topbar :is(
+  .app-menu-button,
+  .app-topbar-links .header-link,
+  .app-topbar-links .zaray-theme-switch
+):is(:hover, :focus-visible) {
+  border: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #64ff9a !important;
+}
+.personal-no-sidebar .personal-topbar :is(
+  .personal-home-nav-toggle,
+  .personal-topbar-create,
+  .personal-topbar-profile,
+  .zaray-theme-switch
+) svg,
+.app-no-sidebar .app-topbar :is(
+  .app-menu-button,
+  .app-topbar-links .header-link,
+  .app-topbar-links .zaray-theme-switch
+) svg {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  color: currentColor !important;
+}
+.personal-no-sidebar .personal-topbar .topbar-icon-label,
+.personal-no-sidebar .personal-topbar .personal-profile-copy,
+.personal-no-sidebar .personal-topbar .zaray-theme-switch-label,
+.app-no-sidebar .app-topbar .topbar-icon-label,
+.app-no-sidebar .app-topbar .zaray-theme-switch-label {
+  display: none !important;
+}
+.personal-no-sidebar .personal-topbar .personal-profile-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+.personal-no-sidebar .personal-topbar .personal-logo {
+  flex-shrink: 1;
+  min-width: 90px;
+}
+/* Functional action menus are dark panels, but no individual toolbar icon has
+   a pill, card or highlighted rectangle behind it. */
+.personal-no-sidebar .topbar-icon-curtain,
+.app-no-sidebar .topbar-icon-curtain {
+  position: absolute;
+  z-index: 110;
+  top: 100%;
+  right: 0;
+  width: max-content;
+  max-width: min(300px, calc(100vw - 20px));
+  padding-top: 9px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
+  clip-path: inset(0 0 100% 0);
+  transition:
+    clip-path 360ms cubic-bezier(.2,.8,.2,1),
+    opacity 200ms ease,
+    transform 360ms cubic-bezier(.2,.8,.2,1),
+    visibility 360ms;
+}
+.personal-no-sidebar .topbar-icon-curtain-inner,
+.app-no-sidebar .topbar-icon-curtain-inner {
+  min-width: 205px;
+  padding: 7px;
+  border: 1px solid rgba(117, 255, 167, .3);
+  border-radius: 13px;
+  background: linear-gradient(155deg,rgba(11,33,26,.98),rgba(7,27,29,.98));
+  box-shadow: 0 20px 50px rgba(0,0,0,.36);
+}
+.personal-no-sidebar .topbar-icon-menu-action,
+.app-no-sidebar .topbar-icon-menu-action {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #e7fff0;
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+  font: 650 13px/1.35 inherit;
+  cursor: pointer;
+}
+.personal-no-sidebar .topbar-icon-menu-action:hover,
+.personal-no-sidebar .topbar-icon-menu-action:focus-visible,
+.app-no-sidebar .topbar-icon-menu-action:hover,
+.app-no-sidebar .topbar-icon-menu-action:focus-visible {
+  color: #78ffad;
+  background: rgba(81, 255, 146, .1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .personal-no-sidebar .topbar-icon-group:hover .topbar-icon-curtain,
+  .personal-no-sidebar .topbar-icon-group:focus-within .topbar-icon-curtain,
+  .app-no-sidebar .topbar-icon-group:hover .topbar-icon-curtain,
+  .app-no-sidebar .topbar-icon-group:focus-within .topbar-icon-curtain {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+/* Menus use their natural height. Revealing the lower clip boundary produces
+   a true top-to-bottom curtain rather than a fixed-size slide or jump. */
+.personal-no-sidebar .personal-home-nav-menu,
+.personal-no-sidebar .personal-profile-dropdown,
+.app-no-sidebar .app-nav-dropdown {
+  top: 100% !important;
+  margin-top: 0 !important;
+  clip-path: inset(0 0 100% 0);
+  transform: translateY(-6px);
+  transition:
+    clip-path 360ms cubic-bezier(.2,.8,.2,1),
+    opacity 220ms ease,
+    transform 360ms cubic-bezier(.2,.8,.2,1),
+    visibility 360ms !important;
+}
+.personal-no-sidebar .personal-home-nav-menu.is-open,
+.personal-no-sidebar .personal-profile-dropdown.is-open,
+.app-no-sidebar .app-nav-dropdown.is-open {
+  clip-path: inset(0 0 0 0);
+  transform: translateY(0);
+}
+@media(max-width: 700px) {
+  .personal-no-sidebar .personal-topbar,
+  .app-no-sidebar .app-topbar {
+    --zaray-header-icon-size: 40px;
+  }
+  .personal-no-sidebar .personal-topbar {
+    gap: 6px !important;
+    padding-inline: 10px !important;
+  }
+  .personal-no-sidebar .personal-topbar-actions,
+  .app-no-sidebar .app-topbar-links {
+    gap: 4px !important;
+  }
+  .personal-no-sidebar .topbar-icon-curtain,
+  .app-no-sidebar .topbar-icon-curtain {
+    display: none;
+  }
+  .personal-no-sidebar .personal-topbar .personal-logo {
+    width: clamp(87px, 24vw, 126px);
+  }
+  .personal-no-sidebar .personal-topbar:has(.personal-topbar-create) .personal-topbar-actions {
+    width: auto !important;
+  }
+}
+@media(prefers-reduced-motion: reduce) {
+  .personal-no-sidebar :is(.topbar-icon-curtain,.personal-home-nav-menu,.personal-profile-dropdown),
+  .app-no-sidebar :is(.topbar-icon-curtain,.app-nav-dropdown) {
+    transition: none !important;
+    transform: none !important;
+  }
+}
