@@ -9,7 +9,7 @@
  * photographic detail beyond the source's native 624 x 587 pixels.
  */
 import sharp from 'sharp';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const source = join(process.cwd(), 'public', 'brand', 'zaccueil-earth-from-user-hd.avif');
@@ -33,7 +33,7 @@ try {
     .webp({ quality: 96, alphaQuality: 100, effort: 5 })
     .toBuffer();
 
-  await sharp(output).toFile(destination);
+  await writeFile(destination, output);
   const target = await sharp(output).metadata();
   if (target.width !== 1248 || target.height !== 1174 || !target.hasAlpha) {
     throw new Error('HD export validation failed: dimensions or transparency changed');
