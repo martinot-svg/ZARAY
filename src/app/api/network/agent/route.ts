@@ -1,6 +1,7 @@
 import {createHash,randomBytes} from 'node:crypto';
 import {NextRequest,NextResponse} from 'next/server';
 import {createServiceClient} from '@/lib/supabase/service';
+import {deriveVoucherPassword} from '@/lib/network-voucher-secret';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const uuid=/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i;
@@ -55,7 +56,23 @@ export async function POST(request:NextRequest){
    const {error}=await service.from('network_observations').update({active:false}).eq('router_id',routerId).eq('observed_kind',kind).lt('observed_at',now);
    if(error)return json({error:'Inventaire partiellement mis à jour.'},503);
   }
-  const model=clean(b.model,120),version=clean(b.version,120);
+  // A first authenticated Hotspot session activates the voucher's usage window.
+  const connectedNames=new Set(observations.filter(o=>o.observed_kind==='hotspot'&&o.active&&o.client_label).map(o=>o.client_label));
+  if(completed.includes('hotspot')&&connectedNames.size){
+   const {data:links}=await service.from('wifi_voucher_network')
+     .select('voucher_id').eq('router_id',routerId).eq('network_state','provisioned');
+   if(links?.length){
+    const {data:vouchers}=await service.from('wifi_vouchers')
+      .select('id,username,validity_days,status').in('id',links.map(l=>l.voucher_id)).eq('status','paid');
+    for(const voucher of vouchers??[]){
+     if(!connectedNames.has(voucher.username))continue;
+     const expiresAt=new Date(Date.now()+voucher.validity_days*86400000).toISOString();
+     await service.from('wifi_vouchers').update({status:'active',activated_at:now,expires_at:expiresAt})
+       .eq('id',voucher.id).eq('status','paid');
+    }
+   }
+  }
+  const model=clean(b?.model,120),version=clean(b?.version,120);
   const {error}=await service.from('network_routers').update({status:'online',last_seen_at:now,model:model||null,routeros_version:version||null}).eq('id',routerId);
   if(error)return json({error:'État du routeur indisponible.'},503);
   return json({synced:observations.length,kinds:completed});
@@ -63,12 +80,38 @@ export async function POST(request:NextRequest){
  await service.from('network_connector_credentials').update({last_poll_at:new Date().toISOString()}).eq('router_id',routerId);
  if(action==='poll'){
   if(!router.control_enabled)return json({commands:[],controlEnabled:false});
-  const {data,error}=await service.from('network_commands').select('id,account_id,action,protocol,username,session_id,mac_address,expires_at')
+  const {data,error}=await service.from('network_commands').select('id,account_id,voucher_id,action,protocol,username,session_id,mac_address,expires_at')
     .eq('router_id',routerId).eq('status','queued').gt('expires_at',new Date().toISOString())
     .order('created_at').limit(10);
   if(error)return json({error:'Commandes indisponibles.'},503);
-  const commands=[];
+  const commands:Record<string,unknown>[]=[];
   for(const cmd of data||[]){
+
+   let voucherPayload:Record<string,unknown>={};
+   if(['provision_voucher','expire_voucher'].includes(cmd.action)){
+    if(!cmd.voucher_id){await service.from('network_commands').update({status:'cancelled',outcome:'Ticket manquant'}).eq('id',cmd.id);continue;}
+    const [{data:voucher},{data:net}]=await Promise.all([
+     service.from('wifi_vouchers').select('id,site_id,username,credential_hash,status,paid_at,duration_minutes,validity_days').eq('id',cmd.voucher_id).eq('company_id',router.company_id).maybeSingle(),
+     service.from('wifi_voucher_network').select('router_id,site_id,password_length,credential_scheme,network_state').eq('voucher_id',cmd.voucher_id).eq('router_id',routerId).maybeSingle()
+    ]);
+    const provision=cmd.action==='provision_voucher';
+    const valid=!!voucher&&!!net&&net.site_id===router.site_id&&cmd.username===voucher.username&&(
+      provision?(voucher.status==='paid'&&!!voucher.paid_at&&net.credential_scheme==='hmac-v1'):
+       (voucher.status==='expired'||voucher.status==='cancelled'));
+    if(!valid){
+     await service.from('network_commands').update({status:'cancelled',outcome:'Droit Wi-Fi ou site invalide',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('status','queued');continue;
+    }
+    if(provision){
+      let password='';
+      try{password=deriveVoucherPassword(voucher!.id,voucher!.site_id,net!.password_length);}
+      catch{return json({error:'Clé des tickets Wi-Fi indisponible.'},503);}
+      const expected=digest(voucher!.site_id+':'+voucher!.username+':'+password);
+      if(expected!==voucher!.credential_hash){
+       await service.from('network_commands').update({status:'failed',outcome:'Empreinte du ticket incohérente',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('status','queued');continue;
+      }
+      voucherPayload={voucherId:voucher!.id,password,durationMinutes:voucher!.duration_minutes};
+    }else voucherPayload={voucherId:voucher!.id};
+   }
    if(['block_hotspot_mac','unblock_hotspot_mac'].includes(cmd.action)){
     const {data:block}=await service.from('network_device_blocks').select('active').eq('router_id',routerId).eq('mac_address',cmd.mac_address).maybeSingle();
     const expected=cmd.action==='block_hotspot_mac';
@@ -83,7 +126,7 @@ export async function POST(request:NextRequest){
    }
    const {data:claimed}=await service.from('network_commands').update({status:'dispatched',dispatched_at:new Date().toISOString()})
     .eq('id',cmd.id).eq('status','queued').select('id').maybeSingle();
-   if(claimed)commands.push({id:cmd.id,action:cmd.action,protocol:cmd.protocol,username:cmd.username,sessionId:cmd.session_id,macAddress:cmd.mac_address});
+   if(claimed)commands.push({id:cmd.id,action:cmd.action,protocol:cmd.protocol,username:cmd.username,sessionId:cmd.session_id,macAddress:cmd.mac_address,...voucherPayload});
   }
   return json({commands,controlEnabled:true});
  }
@@ -93,7 +136,7 @@ export async function POST(request:NextRequest){
  const {data:command,error}=await service.from('network_commands').update({
   status:ok?'success':'failed',outcome:clean(b?.outcome,600)||null,completed_at:new Date().toISOString()
  }).eq('id',commandId).eq('router_id',routerId).eq('status','dispatched')
- .select('id,account_id,action,mac_address').maybeSingle();
+ .select('id,account_id,voucher_id,action,mac_address').maybeSingle();
  if(error||!command)return json({error:'Commande déjà clôturée ou inconnue.'},409);
  if(ok&&command.account_id&&['suspend_account','resume_account'].includes(command.action)){
   const applied=command.action==='resume_account'?'active':'suspended';
@@ -104,6 +147,13 @@ export async function POST(request:NextRequest){
   const applied=command.action==='block_hotspot_mac'?'blocked':'unblocked';
   await service.from('network_device_blocks').update({applied_state:applied,updated_at:new Date().toISOString()})
    .eq('router_id',routerId).eq('mac_address',command.mac_address);
+ }
+
+ if(command.voucher_id&&['provision_voucher','expire_voucher'].includes(command.action)){
+  const newState=!ok?'failed':command.action==='provision_voucher'?'provisioned':'expired';
+  const {error:stateError}=await service.from('wifi_voucher_network').update({network_state:newState,last_error:ok?null:clean(b?.outcome,300),updated_at:new Date().toISOString()})
+    .eq('voucher_id',command.voucher_id).eq('router_id',routerId);
+  if(stateError)return json({error:'Résultat enregistré ; état du ticket non synchronisé.'},503);
  }
  return json({recorded:true});
 }
