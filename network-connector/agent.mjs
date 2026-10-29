@@ -145,7 +145,7 @@ async function hotspotMacRestriction(mac,block){
  return block?'Appareil bloqué sur Hotspot':'Restriction ZARAY retirée';
 }
 async function voucherAccount(command){
- const {action,username,voucherId,password,durationMinutes}=command;
+ const {action,username,voucherId,password,durationMinutes,credentialScheme}=command;
  if(!/^[0-9a-f-]{36}$/i.test(String(voucherId||''))||!username||username.length>128)throw Error('Identité du ticket non valide.');
  const table='ip/hotspot/user',comment='zaray:voucher:'+voucherId;
  const list=await ros(table);
@@ -155,7 +155,11 @@ async function voucherAccount(command){
  const existing=matches[0];
  if(existing&&existing.comment!==comment)throw Error('Identifiant existant non géré par ZARAY.');
  if(action==='provision_voucher'){
-  if(typeof password!=='string'||!/^[A-Z0-9]{3,32}$/.test(password)||!Number.isInteger(durationMinutes)||durationMinutes<1||durationMinutes>525600)throw Error('Ticket invalide.');
+  const legacy=credentialScheme==='hmac-v1'||credentialScheme===undefined;
+  const matchesCredential=legacy?/^[A-Z0-9]{3,32}$/.test(password||''):
+   credentialScheme==='hmac-numeric-v2'&&/^[0-9]{3,5}$/.test(password||'');
+  if(typeof password!=='string'||!matchesCredential||!Number.isInteger(durationMinutes)||durationMinutes<1||durationMinutes>525600)
+   throw Error('Ticket invalide.');
   const payload={name:username,password,disabled:'false','limit-uptime':String(durationMinutes)+'m',comment};
   if(existing)await ros(table+'/'+existing['.id'],'PATCH',payload);
   else await ros(table,'PUT',payload);
