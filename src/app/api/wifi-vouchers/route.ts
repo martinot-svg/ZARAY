@@ -27,7 +27,7 @@ export async function GET(request:NextRequest){
     .eq('company_id',companyId).eq('site_id',siteId).order('created_at',{ascending:false}).limit(200);
   if(error)return fail('Inventaire des tickets indisponible.',503);
   const {data:links,error:linkError}=await supabase.from('wifi_voucher_network')
-    .select('voucher_id,router_id,network_state').eq('company_id',companyId).eq('site_id',siteId);
+    .select('voucher_id,router_id,network_state,used_seconds,last_usage_at').eq('company_id',companyId).eq('site_id',siteId);
   if(linkError)return fail('Statuts de provisionnement indisponibles.',503);
   const byId=new Map((links??[]).map(v=>[v.voucher_id,v]));
   return NextResponse.json({vouchers:(data??[]).map(v=>({...v,network:byId.get(v.id)??null}))},{headers});
