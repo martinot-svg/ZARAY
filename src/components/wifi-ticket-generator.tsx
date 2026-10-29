@@ -75,7 +75,7 @@ export default function WifiTicketGenerator(){
      </select></label>
     <label>Quantité<select value={count} onChange={e=>{setCount(Number(e.target.value));setTickets([]);}}>{[1,11,33,66,99].map(n=><option key={n} value={n}>{n} ticket{n>1?'s':''}</option>)}</select></label>
    </div>
-   <p className="muted">Chaque ticket possède un identifiant et un mot de passe uniques. Il reste désactivé avant sa vente et son provisionnement confirmé par MikroTik.</p>
+   <p className="muted">Chaque ticket possède un identifiant et un mot de passe uniques. La durée Internet est cumulée : une déconnexion interrompt le décompte. Le ticket reste désactivé avant sa vente et son provisionnement confirmé par MikroTik.</p>
    {!availableRouters.length&&<p className="alert" role="status">Aucun MikroTik autorisé n’est connecté à ce site. <a href={'/gestion-reseau?companyId='+encodeURIComponent(companyId)}>Associer et activer le routeur</a>.</p>}
    <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
     <button type="button" className="primary-link" disabled={!companyId||!siteId||!offerId||!selectedRouterId||busy||chosen?.status!=='active'} onClick={create}><ZarayIcon name="ticket" size={16}/>{busy?'Génération…':'Générer un lot unique'}</button>
