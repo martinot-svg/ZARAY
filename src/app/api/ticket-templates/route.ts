@@ -12,7 +12,7 @@ const visualBooleans=['gradient_enabled','decorations_enabled','show_price','sho
 const visualTexts={brand_name:90,wifi_ssid:64,phone:60,address:160,welcome_message:120,footer_text:100} as const;
 const defaults = {
   primary_color:'#167a46', secondary_color:'#ffffff',title_color:'#10251a',
-  border_color:'#a5b9ad',font_family:'Arial',username_length:5,password_length:12,
+  border_color:'#a5b9ad',font_family:'Arial',username_length:5,password_length:5,
   template_key:'classic',accent_color:'#0e9f6e',gradient_enabled:false,decorations_enabled:true,
   brand_name:'',wifi_ssid:'',phone:'',address:'',welcome_message:'',footer_text:'',
   show_price:true,show_duration:true,show_ticket_id:false,show_wifi_ssid:false,
@@ -70,7 +70,7 @@ export async function PUT(request:NextRequest){
       const v=body[key];
       if(v===null&&offerId){values[key]=null;continue;}
       const n=Number(v);
-      if(!Number.isInteger(n)||(key==='username_length'?(n<3||n>5):(n<12||n>32)))return fail('Longueur des identifiants invalide.',400);
+      if(!Number.isInteger(n)||(key==='username_length'?(n<3||n>5):(n<3||n>5)))return fail('Longueur des identifiants invalide.',400);
       values[key]=n;
     }
     // Visual preferences never influence credential lengths or Wi-Fi provisioning.
