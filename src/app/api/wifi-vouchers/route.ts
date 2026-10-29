@@ -27,7 +27,7 @@ export async function GET(request:NextRequest){
     .eq('company_id',companyId).eq('site_id',siteId).order('created_at',{ascending:false}).limit(200);
   if(error)return fail('Inventaire des tickets indisponible.',503);
   const {data:links,error:linkError}=await supabase.from('wifi_voucher_network')
-    .select('voucher_id,router_id,network_state,used_seconds,last_usage_at').eq('company_id',companyId).eq('site_id',siteId);
+    .select('voucher_id,router_id,network_state,used_seconds,last_usage_at,unit_price,unit_currency,last_error').eq('company_id',companyId).eq('site_id',siteId);
   if(linkError)return fail('Statuts de provisionnement indisponibles.',503);
   const byId=new Map((links??[]).map(v=>[v.voucher_id,v]));
   return NextResponse.json({vouchers:(data??[]).map(v=>({...v,network:byId.get(v.id)??null}))},{headers});
@@ -85,13 +85,22 @@ export async function POST(request:NextRequest){
       }
       const {error}=await supabase.from('wifi_vouchers').insert(rows);
       if(!error){
-        const networkRows=rows.map(row=>({voucher_id:row.id,company_id:companyId,site_id:siteId,router_id:routerId,password_length:passwordLength,credential_scheme:'hmac-numeric-v2',network_state:'not_sold'}));
+        const networkRows=rows.map(row=>({voucher_id:row.id,company_id:companyId,site_id:siteId,router_id:routerId,password_length:passwordLength,credential_scheme:'hmac-numeric-v2',network_state:'queued',unit_price:offer.price_amount,unit_currency:offer.currency}));
         const {error:linkedError}=await service.from('wifi_voucher_network').insert(networkRows);
         if(linkedError){
           await service.from('wifi_vouchers').delete().in('id',rows.map(row=>row.id)).eq('company_id',companyId).eq('status','available');
           return fail('Association réseau impossible : aucun ticket du lot ne doit être distribué.',503);
         }
-        return NextResponse.json({batchId,tickets:printable,warning:'Tickets en stock, non vendus : accès Internet désactivé jusqu’à l’enregistrement du paiement et la confirmation MikroTik.'},{status:201,headers});
+        const commands=rows.map(row=>({company_id:companyId,router_id:routerId,voucher_id:row.id,
+          protocol:'hotspot',username:row.username,action:'provision_voucher',created_by:access.user.id,
+          reason:'Préparation du ticket avant impression et vente',expires_at:new Date(Date.now()+86400000).toISOString()}));
+        const {error:queuedError}=await service.from('network_commands').insert(commands);
+        if(queuedError){
+          // Never hand out unprovisionable credentials: roll back the freshly created, unused batch.
+          await service.from('wifi_vouchers').delete().in('id',rows.map(row=>row.id)).eq('company_id',companyId).eq('status','available');
+          return fail('Impossible de préparer le lot sur MikroTik. Aucun ticket ne doit être distribué.',503);
+        }
+        return NextResponse.json({batchId,tickets:printable,preparation:'queued',warning:'Comptes en cours de préparation sur MikroTik. Ne distribuez les tickets qu’après confirmation « Prêt ». La première connexion réussie sera comptabilisée automatiquement.'},{status:201,headers});
       }
       if(error.code==='23505')continue;
       console.error('voucher batch create',{code:error.code});
