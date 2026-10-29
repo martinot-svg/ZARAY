@@ -94,8 +94,16 @@ export default function GalaxyBackdrop() {
         }} />)}
     </div>
     <div className="zaray-wifi-wavefield" ref={waveFieldRef} data-active="false">
-      <WifiSignalGlyph className="zaray-wifi-global-pulse" />
-      <WifiSignalGlyph className="zaray-wifi-global-pulse" />
+      {/* One fine arc per emission: evenly phased on a 30-second linear trajectory.
+          Identical velocity + fixed phase offset = constant gap, no crossings. */}
+      {Array.from({ length: 8 }, (_, index) => {
+        const offset = `-${index * 3.75}s`;
+        return <WifiSignalGlyph
+          key={index}
+          className="zaray-wifi-global-pulse"
+          style={{ '--zaray-wifi-offset': offset } as React.CSSProperties}
+        />;
+      })}
     </div>
   </div>;
 }
