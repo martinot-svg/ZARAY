@@ -609,7 +609,7 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
    The REAL RGBA image was cropped from their PNG and baked into GitHub.
    Transparent pixels expose the existing ZARAY stars without any rectangular
    background, photographic substitution, silhouette mask or vector circle.
-   195 × 183 source pixels, displayed ~340px wide on a 1366px desktop.
+   624 × 587 HD source pixels, displayed ~340px wide on a 1366px desktop.
    Place the image so its bottom is below the screen; only the authentic,
    naturally curved upper limb emerges from the lower-left viewport edge. */
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
@@ -618,14 +618,14 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   bottom: clamp(-136px, -8vw, -88px);
   width: clamp(270px, 25vw, 420px);
   height: auto;
-  aspect-ratio: 195 / 183;
+  aspect-ratio: 624 / 587;
   z-index: 0;
   overflow: visible !important;
   pointer-events: none;
   user-select: none;
   opacity: 1;
   border: 0 !important;
-  background: url("/brand/zaccueil-earth-from-user.webp") left bottom / contain no-repeat !important;
+  background: image-set(\n    url("/brand/zaccueil-earth-from-user-hd.avif") type("image/avif"),\n    url("/brand/zaccueil-earth-from-user.webp") type("image/webp")\n  ) left bottom / contain no-repeat !important;\n  image-rendering: auto;
   box-shadow: none !important;
   clip-path: none !important;
   mask-image: none !important;
