@@ -73,10 +73,10 @@ export default function PersonalShell({
       <Link href="/mon-compte" className="personal-logo" aria-label="Accueil personnel ZARAY"><BrandLogo priority /></Link>
       <div className="personal-home-nav-control" ref={homeNavRef}
         onMouseEnter={() => { if (hoverMenus()) { setHomeNavOpen(true); setProfileOpen(false); } }}
-        onMouseLeave={() => { if (hoverMenus()) setHomeNavOpen(false); }}>
+        onMouseLeave={() => { if (hoverMenus() && !homeNavRef.current?.contains(document.activeElement)) setHomeNavOpen(false); }}>
         <button ref={homeNavButton} type="button" className="personal-home-nav-toggle"
           aria-controls="personal-home-navigation-links" aria-expanded={homeNavOpen}
-          aria-label="Ouvrir la navigation de mon espace ZARAY" title="Mon espace ZARAY"
+          aria-label="Ouvrir la navigation de mon espace ZARAY"
           onClick={() => { setHomeNavOpen(value => !value); setProfileOpen(false); }}>
           <ZarayIcon name="menu" size={22}/><span className="topbar-icon-label">Mon espace Zaray</span>
         </button>
@@ -93,7 +93,7 @@ export default function PersonalShell({
       </div>
       <div className="personal-topbar-actions">
         <div className="topbar-icon-group topbar-theme-control">
-          <ThemeSwitch buttonRef={themeButtonRef} />
+          <ThemeSwitch buttonRef={themeButtonRef} hideNativeTitle />
           <div className="topbar-icon-curtain" aria-label="Thème de l'interface">
             <div className="topbar-icon-curtain-inner">
               <button type="button" className="topbar-icon-menu-action"
@@ -106,7 +106,7 @@ export default function PersonalShell({
         {active === '/entreprises' && (
           <div className="topbar-icon-group topbar-create-control">
             <Link href="/entreprises/nouvelle" className="primary-link personal-topbar-create"
-              aria-label="Créer une entreprise" title="Créer une entreprise">
+              aria-label="Créer une entreprise">
               <ZarayIcon name="add" size={22} /><span className="topbar-icon-label">Créer une entreprise</span>
             </Link>
             <div className="topbar-icon-curtain" aria-label="Création d'entreprise">
@@ -120,9 +120,9 @@ export default function PersonalShell({
         )}
         <div className="personal-profile-control" ref={profileRef}
           onMouseEnter={() => { if (hoverMenus()) { setProfileOpen(true); setHomeNavOpen(false); } }}
-          onMouseLeave={() => { if (hoverMenus()) setProfileOpen(false); }}>
+          onMouseLeave={() => { if (hoverMenus() && !profileRef.current?.contains(document.activeElement)) setProfileOpen(false); }}>
         <button ref={profileButton} type="button" className="personal-topbar-profile"
-          aria-label={'Options du profil de ' + displayName} title={'Profil de ' + displayName}
+          aria-label={'Options du profil de ' + displayName}
           aria-controls="personal-profile-actions" aria-expanded={profileOpen}
           onClick={() => { setProfileOpen(value => !value); setHomeNavOpen(false); }}>
           <span className="personal-profile-avatar" aria-hidden="true"><ZarayIcon name="profile" size={22}/></span>
