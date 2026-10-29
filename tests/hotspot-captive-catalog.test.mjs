@@ -38,3 +38,32 @@ test('site-specific download never adds private credentials',()=>{
  assert.match(editor,/replaceAll\('__ZARAY_SITE_ID__',siteId\)/);
  assert.match(portal,/__ZARAY_SITE_ID__/);
 });
+
+test('one native MikroTik page serves both ticket and residential subscription journeys',()=>{
+ assert.match(portal,/id="catalog"/);
+ assert.match(portal,/id="credentials"/);
+ assert.match(portal,/id="subscribeLink"/);
+ assert.match(portal,/Accès Wi-Fi occasionnel/);
+ assert.match(portal,/Devenir un abonné/);
+ assert.match(portal,/https:\/\/zaray\.vercel\.app\/portail\//);
+ assert.match(portal,/COMPANY_SLUG='__ZARAY_COMPANY_SLUG__'/);
+});
+test('subscription destination and display name are server-derived from the site company',()=>{
+ assert.match(api,/\.select\('id,name,status,company_id'\)/);
+ assert.match(api,/\.eq\('id',site\.company_id\)/);
+ assert.match(api,/companyName:company\.legal_name/);
+ assert.match(api,/companySlug:company\.slug/);
+ assert.doesNotMatch(api,/service[_-]?role[_-]?key|voucher[_-]?password|credential_hash/);
+});
+test('downloaded MikroTik login page contains a safe public company slug fallback',()=>{
+ assert.match(editor,/replaceAll\('__ZARAY_COMPANY_SLUG__',companySlug\)/);
+ assert.match(editor,/\^\[a-z0-9-\]\{2,80\}\$/i);
+ assert.match(portal,/showSubscription\('',COMPANY_SLUG\)/);
+ assert.match(portal,/showSubscription\(data\.companyName,data\.companySlug\)/);
+});
+test('subscriber sign-up does not authenticate or activate a Hotspot voucher',()=>{
+ assert.match(portal,/registrationRequiresPaymentConfirmation|paiement doit être confirmé/);
+ assert.match(portal,/showSubscription/);
+ assert.match(portal,/window\.loginWithTicket/);
+ assert.match(portal,/action="\$\(link-login-only\)"/);
+});

@@ -21,7 +21,7 @@ const styles:{key:TicketStyle;label:string;detail:string}[]=[
  {key:'corporate',label:'Corporate',detail:'Valorise le logo et les couleurs du site.'}
 ];
 export default function WifiTicketCustomization(){
- const [companyId,setCompanyId]=useState(''),[companyName,setCompanyName]=useState('');
+ const [companyId,setCompanyId]=useState(''),[companyName,setCompanyName]=useState(''),[companySlug,setCompanySlug]=useState('');
  const [sites,setSites]=useState<Site[]>([]),[offers,setOffers]=useState<Offer[]>([]);
  const [siteId,setSiteId]=useState(''),[offerId,setOfferId]=useState('');
  const [form,setForm]=useState<Settings>(initial);
@@ -41,7 +41,7 @@ export default function WifiTicketCustomization(){
      if(!or.ok)throw Error(od.error||'Offres indisponibles.');
      if(!active)return;
      const offerList=od.offers??[];
-     setCompanyId(company);setCompanyName(found.legal_name);setSites(siteList);setOffers(offerList);
+     setCompanyId(company);setCompanyName(found.legal_name);setCompanySlug(found.slug??'');setSites(siteList);setOffers(offerList);
      setSiteId(siteList.some((s:Site)=>s.id===selected)?selected:siteList[0]?.id??'');
      const requestedOffer=qs.get('offerId')??'';
      setOfferId(offerList.some((o:Offer)=>o.id===requestedOffer)?requestedOffer:'');
@@ -87,16 +87,17 @@ export default function WifiTicketCustomization(){
   if(!siteId)return;
   setBusy(true);setError('');setNotice('');
   try{
+   if(!/^[a-z0-9-]{2,80}$/i.test(companySlug))throw Error('Identifiant public de l’entreprise indisponible.');
    const response=await fetch('/hotspot/zaray-login.html',{cache:'no-store'});
    if(!response.ok)throw Error('Modèle de portail indisponible.');
    const template=await response.text();
-   if(!template.includes('__ZARAY_SITE_ID__'))throw Error('Modèle de portail incomplet.');
-   const customized=template.replaceAll('__ZARAY_SITE_ID__',siteId);
+   if(!template.includes('__ZARAY_SITE_ID__')||!template.includes('__ZARAY_COMPANY_SLUG__'))throw Error('Modèle de portail incomplet.');
+   const customized=template.replaceAll('__ZARAY_SITE_ID__',siteId).replaceAll('__ZARAY_COMPANY_SLUG__',companySlug);
    const objectUrl=URL.createObjectURL(new Blob([customized],{type:'text/html;charset=utf-8'}));
    const a=document.createElement('a');a.href=objectUrl;a.download='login.html';
    document.body.appendChild(a);a.click();a.remove();
    setTimeout(()=>URL.revokeObjectURL(objectUrl),2000);
-   setNotice('Portail du site téléchargé. Il doit être installé dans les pages Hotspot du MikroTik avec son fichier md5.js et un accès pré-authentification autorisé aux offres ZARAY.');
+   setNotice('Portail unifié téléchargé : tickets Wi-Fi et bouton d’abonnement résidentiel. Installez login.html et md5.js dans le Hotspot, puis autorisez les pages de souscription ZARAY avant authentification.');
   }catch(e){setError(e instanceof Error?e.message:'Téléchargement impossible.');}
   finally{setBusy(false);}
  }
@@ -195,12 +196,12 @@ export default function WifiTicketCustomization(){
       <p className="muted">APERÇU DE DÉMONSTRATION — les identifiants affichés ici ne donnent aucun accès au réseau.</p>
       <p className="muted">A4 portrait · 3 colonnes × 11 lignes · 33 tickets par page. PDF, écran et impression utilisent un moteur graphique commun.</p>
       <div style={{margin:'20px 0',padding:16,border:'1px solid var(--line, #6c7d8a)',borderRadius:14}}>
-       <h3>Portail captif client · Offres puis connexion</h3>
-       <p className="muted">Le client voit les forfaits du site disposant de tickets prêts à vendre, choisit l'offre correspondante à son ticket papier, puis saisit son identifiant et son mot de passe. Le choix de l'offre n'autorise ni ne modifie son accès : MikroTik valide toujours le ticket réel.</p>
+       <h3>Portail captif unique · Wi-Fi occasionnel et abonnements résidentiels</h3>
+       <p className="muted">Tous les clients découvrent la même page après connexion au Wi-Fi du site : tickets occasionnels avec nom d’utilisateur et mot de passe, ou bouton « Devenir un abonné de {companyName||'votre entreprise'} » dirigeant vers l’inscription résidentielle. Le MikroTik reste responsable de l’authentification des tickets et du contrôle de l’accès.</p>
        <button type="button" disabled={busy||!siteId} onClick={()=>void downloadPortal()}>
         <ZarayIcon name="download" size={17}/> Télécharger la page MikroTik pour ce site
        </button>
-       <p className="muted">L'installation sur le Hotspot local et l'autorisation de l'API publique ZARAY avant connexion restent nécessaires. Cette opération n'est pas effectuée depuis Vercel.</p>
+       <p className="muted">Pour que le client puisse s’inscrire sans Internet actif, le MikroTik doit autoriser avant authentification les pages de souscription ZARAY et leurs ressources. L’installation de login.html sur le routeur local n’est pas effectuée depuis Vercel.</p>
       </div>
       <a className="primary-link" href={'/tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)+'&tab=generate'}>
         <ZarayIcon name="print" size={17}/> Générer une planche A4
