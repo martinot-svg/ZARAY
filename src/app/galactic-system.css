@@ -527,7 +527,10 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   text-align: left;
   text-decoration: none;
   white-space: nowrap;
-  font: 650 13px/1.35 inherit;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.35;
   cursor: pointer;
 }
 .personal-no-sidebar .topbar-icon-menu-action:hover,
