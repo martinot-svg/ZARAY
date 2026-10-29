@@ -10,8 +10,11 @@ import { useEffect, useRef } from 'react';
  */
 const WAVE_DURATION = 15; // seconds per emitted wave; twice the previous speed
 const WAVE_COUNT = 16; // half the previous gap, without overlapping arcs
-const INITIAL_STROKE = 0.07; // CSS pixels, intentionally ultra-fine
-const FINAL_STROKE = 0.09;
+// Subpixel strokes fragmented during rasterization. A softly translucent
+// half-pixel core creates the same delicacy with a continuous edge.
+const INITIAL_STROKE = 0.5; // CSS pixels, steady delicate fiber
+const FINAL_STROKE = 0.7;
+const HALO_EXTRA_WIDTH = 1.6; // lightweight glow, not a costly shadowBlur
 
 export default function RadioWaveCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -99,8 +102,7 @@ export default function RadioWaveCanvas() {
           const lineWidth = INITIAL_STROKE + (FINAL_STROKE - INITIAL_STROKE) * phase;
           const fadeIn = Math.min(1, phase / 0.07);
           const fadeOut = Math.pow(1 - phase, 1.5);
-          context.globalAlpha = 0.92 * fadeIn * fadeOut;
-          context.lineWidth = lineWidth;
+          const visibility = fadeIn * fadeOut;
 
           // Faithful outer Wi-Fi arc. The original source path had endpoints
           // (21,135), (478,135), upper handles (138,-15), (360,-15) and its
@@ -117,6 +119,14 @@ export default function RadioWaveCanvas() {
             111 * scale, -330 * scale,
             229 * scale, -180 * scale,
           );
+          // Double-pass on the SAME continuous Bezier path, keeping every
+          // wavefront in its existing position and preventing a dotted look.
+          // The diffuse halo is faint; the thin core defines the filament.
+          context.lineWidth = lineWidth + HALO_EXTRA_WIDTH;
+          context.globalAlpha = 0.045 * visibility;
+          context.stroke();
+          context.lineWidth = lineWidth;
+          context.globalAlpha = 0.27 * visibility;
           context.stroke();
           context.restore();
         }
