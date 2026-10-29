@@ -68,7 +68,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
   const hoverMenus = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   useEffect(() => {
     if (!menuOpen) return;
-    firstMenuLink.current?.focus();
+    // Hover opening must not steal keyboard focus from the toolbar.
     const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') { setMenuOpen(false); menuButton.current?.focus(); } };
     const closeOutside = (event: PointerEvent) => {
       if (event.target instanceof Node && !menuContainer.current?.contains(event.target)) setMenuOpen(false);
