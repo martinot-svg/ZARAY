@@ -11,7 +11,7 @@
     "test:context": "node --test tests/context.test.mjs",
     "test:brand": "node --test tests/brand.test.mjs",
     "test:navigation": "node --test tests/navigation.test.mjs",
-    "prebuild": "node scripts/generate-favicon.mjs && node scripts/build-earth-hd.mjs && node scripts/build-earth-rotation.mjs",
+    "prebuild": "node scripts/generate-favicon.mjs && node scripts/build-earth-hd.mjs && node scripts/build-earth-rotation.mjs && node scripts/build-earth-first-frame.mjs",
     "test:public": "node --test tests/public-home.test.mjs"
   },
   "dependencies": {
