@@ -112,8 +112,40 @@ async function hotspotMacRestriction(mac,block){
  if(existing!==block)throw Error('Etat du blocage non confirmé par RouterOS');
  return block?'Appareil bloqué sur Hotspot':'Restriction ZARAY retirée';
 }
+async function voucherAccount(command){
+ const {action,username,voucherId,password,durationMinutes}=command;
+ if(!/^[0-9a-f-]{36}$/i.test(String(voucherId||''))||!username||username.length>128)throw Error('Identité du ticket non valide.');
+ const table='ip/hotspot/user',comment='zaray:voucher:'+voucherId;
+ const list=await ros(table);
+ if(!Array.isArray(list))throw Error('Liste des comptes Hotspot indisponible.');
+ const matches=list.filter(u=>u.name===username);
+ if(matches.length>1)throw Error('Identifiant Hotspot en double.');
+ const existing=matches[0];
+ if(existing&&existing.comment!==comment)throw Error('Identifiant existant non géré par ZARAY.');
+ if(action==='provision_voucher'){
+  if(typeof password!=='string'||!/^[A-Z0-9]{12,32}$/.test(password)||!Number.isInteger(durationMinutes)||durationMinutes<1||durationMinutes>525600)throw Error('Ticket invalide.');
+  const payload={name:username,password,disabled:'false','limit-uptime':String(durationMinutes)+'m',comment};
+  if(existing)await ros(table+'/'+existing['.id'],'PATCH',payload);
+  else await ros(table,'PUT',payload);
+  const after=await ros(table);
+  const row=Array.isArray(after)?after.find(u=>u.name===username&&u.comment===comment):null;
+  if(!row||String(row.disabled)==='true')throw Error('Provisionnement non confirmé.');
+  return 'Compte Hotspot provisionné et activé ; première connexion attendue.';
+ }
+ if(action==='expire_voucher'){
+  if(existing){
+   await ros(table+'/'+existing['.id'],'PATCH',{disabled:'true'});
+   await disconnect('hotspot',username);
+   const after=await ros(table+'/'+existing['.id']);
+   if(String(after.disabled)!=='true')throw Error('Désactivation Hotspot non confirmée.');
+  }
+  return 'Ticket expiré ; accès désactivé ou déjà absent.';
+ }
+ throw Error('Action non autorisée pour ce ticket.');
+}
 async function execute(command){
  const {action,protocol,username,sessionId,macAddress}=command;
+ if(action==='provision_voucher'||action==='expire_voucher')return voucherAccount(command);
  if(action==='block_hotspot_mac'||action==='unblock_hotspot_mac')return hotspotMacRestriction(macAddress,action==='block_hotspot_mac');
  if(!['hotspot','pppoe'].includes(protocol)||!username||username.length>128)throw Error('Cible invalide');
  if(action==='disconnect_hotspot'&&protocol==='hotspot'||action==='disconnect_ppp'&&protocol==='pppoe'){

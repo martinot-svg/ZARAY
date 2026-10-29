@@ -6,13 +6,14 @@ import { ZarayIcon } from '@/components/ui/zaray-icon';
 import WifiTicketGenerator from '@/components/wifi-ticket-generator';
 import WifiTicketHistory from '@/components/wifi-ticket-history';
 import WifiTicketCustomization from '@/components/wifi-ticket-customization';
+import WifiVoucherSales from '@/components/wifi-voucher-sales';
 
-type Tab = 'generate' | 'history' | 'customize';
+type Tab = 'generate' | 'sell' | 'history' | 'customize';
 type Company = { id:string; legal_name:string; role:string };
 type Site = { id:string; company_id:string };
 const isManager = (role:string) => ['owner','admin','site_manager'].includes(role);
 const parseTab = (value:string|null):Tab =>
-  value === 'history' ? 'history' : value === 'customize' ? 'customize' : 'generate';
+  value === 'sell' ? 'sell' : value === 'history' ? 'history' : value === 'customize' ? 'customize' : 'generate';
 
 export default function WifiTicketsPage() {
   const [company,setCompany] = useState<Company|null>(null);
@@ -39,7 +40,7 @@ export default function WifiTicketsPage() {
           throw new Error('Ce site est inaccessible dans cette entreprise.');
         }
         const initial=parseTab(qs.get('tab'));
-        const allowed:Tab=isManager(selected.role)?initial:'history';
+        const allowed:Tab=isManager(selected.role)?initial:selected.role==='sales'?(initial==='sell'?'sell':'history'):'history';
         if(live){
           setCompany(selected);setSiteId(requestedSite);
           setTab(allowed);setVisited([allowed]);
@@ -54,6 +55,7 @@ export default function WifiTicketsPage() {
   function switchTab(next:Tab){
     if(next==='customize'&&!isManager(company?.role??''))return;
     if(next==='generate'&&!isManager(company?.role??''))return;
+    if(next==='sell'&&!isManager(company?.role??'')&&company?.role!=='sales')return;
     setTab(next);
     setVisited(previous=>previous.includes(next)?previous:[...previous,next]);
     const nextUrl=new URL(window.location.href);
@@ -64,7 +66,7 @@ export default function WifiTicketsPage() {
     const listener=()=>{
       if(!company)return;
       const selected=parseTab(new URLSearchParams(window.location.search).get('tab'));
-      const allowed=isManager(company.role)?selected:'history';
+      const allowed=isManager(company.role)?selected:company.role==='sales'?(selected==='sell'?'sell':'history'):'history';
       setTab(allowed);setVisited(previous=>previous.includes(allowed)?previous:[...previous,allowed]);
     };
     window.addEventListener('popstate',listener);
@@ -80,11 +82,11 @@ export default function WifiTicketsPage() {
   const manager=isManager(company.role);
   return <AppShell activePath="/tickets" companyId={company.id} siteId={siteId||undefined}
     eyebrow="ACTIVITÉ · WI-FI" title="Tickets Wi-Fi"
-    description="Générez, imprimez, suivez et personnalisez les tickets depuis un seul module.">
+    description="Générez, imprimez, vendez et activez automatiquement les tickets sur le MikroTik du site.">
     <nav className="panel" aria-label="Onglets du module Tickets Wi-Fi"
       style={{padding:10,display:'flex',gap:8,flexWrap:'wrap',marginBottom:18}}>
-      {([['generate','Générer','ticket'],['history','Historique','clipboard-list'],['customize','Personnalisation','settings']] as const)
-        .filter(([key])=>key==='history'||manager)
+      {([['generate','Générer','ticket'],['sell','Vente & activation','payment'],['history','Historique','clipboard-list'],['customize','Personnalisation','settings']] as const)
+        .filter(([key])=>key==='history'||manager||(key==='sell'&&company.role==='sales'))
         .map(([key,label,icon])=>
           <button type="button" key={key} aria-current={tab===key?'page':undefined}
             className={tab===key?'primary-link':'header-link'}
@@ -97,6 +99,9 @@ export default function WifiTicketsPage() {
       <h2>Génération et impression</h2>
       <p className="muted">L'impression A4 (3 colonnes × 11 lignes) est une option de génération, pas un module distinct.</p>
       <WifiTicketGenerator />
+    </section>}
+    {visited.includes('sell')&&(manager||company.role==='sales')&&<section aria-label="Vente et activation MikroTik" hidden={tab!=='sell'}>
+      <WifiVoucherSales companyId={company.id}/>
     </section>}
     {visited.includes('history')&&<section aria-label="Historique des tickets" hidden={tab!=='history'}>
       <WifiTicketHistory />
