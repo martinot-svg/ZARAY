@@ -181,3 +181,22 @@ export async function generateA4Pdf(sheet:TicketSheet):Promise<Blob>{
  const trailer=bytes('xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n'+offsets.slice(1).map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('')+'trailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n');
  chunks.push(trailer);return new Blob(chunks as BlobPart[],{type:'application/pdf'});
 }
+
+/** JPEG export uses the exact same canvas painting logic as PDF and print previews. */
+export async function generateA4Jpegs(sheet:TicketSheet):Promise<Blob[]>{
+ const logo=await loadVoucherLogo(sheet.design.logo_data_uri);
+ const pages=voucherPages(sheet.tickets);
+ if(!pages.length)throw Error('Aucun ticket à exporter.');
+ const files:Blob[]=[];
+ for(const page of pages){
+  const canvas=canvasPage(sheet,page,logo);
+  const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(result=>result?resolve(result):reject(Error('JPEG indisponible.')),'image/jpeg',.92));
+  files.push(blob);
+ }
+ return files;
+}
+export async function generateSingleTicketJpeg(ticket:PrintableVoucher,design:TicketVisual,siteName:string):Promise<Blob>{
+ const canvas=document.createElement('canvas');
+ await drawVoucherCanvas(canvas,ticket,design,siteName);
+ return new Promise<Blob>((resolve,reject)=>canvas.toBlob(result=>result?resolve(result):reject(Error('JPEG indisponible.')),'image/jpeg',.94));
+}

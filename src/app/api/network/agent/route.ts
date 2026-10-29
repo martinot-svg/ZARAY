@@ -59,6 +59,10 @@ export async function POST(request:NextRequest){
   // A first authenticated Hotspot session activates the voucher's usage window.
   const connectedNames=new Set(observations.filter(o=>o.observed_kind==='hotspot'&&o.active&&o.client_label).map(o=>o.client_label));
   if(completed.includes('hotspot')&&connectedNames.size){
+   const {error:redeemError}=await service.rpc('record_preprinted_wifi_logins',{
+     p_router_id:routerId,p_usernames:[...connectedNames].slice(0,500)
+   });
+   if(redeemError)return json({error:'Comptabilisation des premières connexions indisponible.'},503);
    const {data:links}=await service.from('wifi_voucher_network')
      .select('voucher_id').eq('router_id',routerId).eq('network_state','provisioned');
    if(links?.length){
@@ -109,11 +113,13 @@ export async function POST(request:NextRequest){
     if(!cmd.voucher_id){await service.from('network_commands').update({status:'cancelled',outcome:'Ticket manquant'}).eq('id',cmd.id);continue;}
     const [{data:voucher},{data:net}]=await Promise.all([
      service.from('wifi_vouchers').select('id,site_id,username,credential_hash,status,paid_at,duration_minutes,validity_days').eq('id',cmd.voucher_id).eq('company_id',router.company_id).maybeSingle(),
-     service.from('wifi_voucher_network').select('router_id,site_id,password_length,credential_scheme,network_state').eq('voucher_id',cmd.voucher_id).eq('router_id',routerId).maybeSingle()
+     service.from('wifi_voucher_network').select('router_id,site_id,password_length,credential_scheme,network_state,unit_price,max_devices').eq('voucher_id',cmd.voucher_id).eq('router_id',routerId).maybeSingle()
     ]);
     const provision=cmd.action==='provision_voucher';
     const valid=!!voucher&&!!net&&net.site_id===router.site_id&&cmd.username===voucher.username&&(
-      provision?(voucher.status==='paid'&&!!voucher.paid_at&&['hmac-v1','hmac-numeric-v2'].includes(net.credential_scheme)):
+      provision?((voucher.status==='paid'&&!!voucher.paid_at)||
+       (voucher.status==='available'&&net.unit_price!==null&&['queued','failed'].includes(net.network_state)))
+       &&['hmac-v1','hmac-numeric-v2'].includes(net.credential_scheme):
        (voucher.status==='expired'||voucher.status==='cancelled'));
     if(!valid){
      await service.from('network_commands').update({status:'cancelled',outcome:'Droit Wi-Fi ou site invalide',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('status','queued');continue;
@@ -126,7 +132,7 @@ export async function POST(request:NextRequest){
       if(expected!==voucher!.credential_hash){
        await service.from('network_commands').update({status:'failed',outcome:'Empreinte du ticket incohérente',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('status','queued');continue;
       }
-      voucherPayload={voucherId:voucher!.id,password,durationMinutes:voucher!.duration_minutes,credentialScheme:net!.credential_scheme};
+      voucherPayload={voucherId:voucher!.id,password,durationMinutes:voucher!.duration_minutes,maxDevices:net!.max_devices,credentialScheme:net!.credential_scheme};
     }else voucherPayload={voucherId:voucher!.id};
    }
    if(['block_hotspot_mac','unblock_hotspot_mac'].includes(cmd.action)){
@@ -168,7 +174,8 @@ export async function POST(request:NextRequest){
 
  if(command.voucher_id&&['provision_voucher','expire_voucher'].includes(command.action)){
   const newState=!ok?'failed':command.action==='provision_voucher'?'provisioned':'expired';
-  const {error:stateError}=await service.from('wifi_voucher_network').update({network_state:newState,last_error:ok?null:clean(b?.outcome,300),updated_at:new Date().toISOString()})
+  const {error:stateError}=await service.from('wifi_voucher_network').update({network_state:newState,prepared_at:ok&&command.action==='provision_voucher'?new Date().toISOString():undefined,
+    last_error:ok?null:clean(b?.outcome,300),updated_at:new Date().toISOString()})
     .eq('voucher_id',command.voucher_id).eq('router_id',routerId);
   if(stateError)return json({error:'Résultat enregistré ; état du ticket non synchronisé.'},503);
  }
