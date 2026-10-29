@@ -144,8 +144,26 @@ async function hotspotMacRestriction(mac,block){
  if(existing!==block)throw Error('Etat du blocage non confirmé par RouterOS');
  return block?'Appareil bloqué sur Hotspot':'Restriction ZARAY retirée';
 }
+async function ensureVoucherProfile(maxDevices){
+ if(!Number.isInteger(maxDevices)||maxDevices<1||maxDevices>100)throw Error('Limite appareils invalide.');
+ const name='zaray-vouchers-'+maxDevices,comment='zaray:managed-hotspot-profile';
+ const table='ip/hotspot/user/profile';
+ const list=await ros(table);
+ if(!Array.isArray(list))throw Error('Profils Hotspot indisponibles.');
+ const existing=list.find(row=>row.name===name);
+ if(existing){
+  if(existing.comment!==comment||Number(existing['shared-users'])!==maxDevices)
+   throw Error('Un profil Hotspot de même nom existe avec une configuration non gérée par ZARAY.');
+ }else{
+  await ros(table,'PUT',{name,'shared-users':String(maxDevices),'add-mac-cookie':'no',comment});
+ }
+ const after=await ros(table);
+ if(!Array.isArray(after)||!after.some(row=>row.name===name&&Number(row['shared-users'])===maxDevices&&row.comment===comment))
+  throw Error('Limite des appareils non confirmée par MikroTik.');
+ return name;
+}
 async function voucherAccount(command){
- const {action,username,voucherId,password,durationMinutes,credentialScheme}=command;
+ const {action,username,voucherId,password,durationMinutes,credentialScheme,maxDevices}=command;
  if(!/^[0-9a-f-]{36}$/i.test(String(voucherId||''))||!username||username.length>128)throw Error('Identité du ticket non valide.');
  const table='ip/hotspot/user',comment='zaray:voucher:'+voucherId;
  const list=await ros(table);
@@ -160,12 +178,13 @@ async function voucherAccount(command){
    credentialScheme==='hmac-numeric-v2'&&/^[0-9]{3,5}$/.test(password||'');
   if(typeof password!=='string'||!matchesCredential||!Number.isInteger(durationMinutes)||durationMinutes<1||durationMinutes>525600)
    throw Error('Ticket invalide.');
-  const payload={name:username,password,disabled:'false','limit-uptime':String(durationMinutes)+'m',comment};
+  const profile=await ensureVoucherProfile(maxDevices||1);
+  const payload={name:username,password,disabled:'false','limit-uptime':String(durationMinutes)+'m',profile,comment};
   if(existing)await ros(table+'/'+existing['.id'],'PATCH',payload);
   else await ros(table,'PUT',payload);
   const after=await ros(table);
   const row=Array.isArray(after)?after.find(u=>u.name===username&&u.comment===comment):null;
-  if(!row||String(row.disabled)==='true')throw Error('Provisionnement non confirmé.');
+  if(!row||String(row.disabled)==='true'||row.profile!==profile)throw Error('Provisionnement non confirmé.');
   return 'Compte Hotspot provisionné et activé ; première connexion attendue.';
  }
  if(action==='expire_voucher'){
