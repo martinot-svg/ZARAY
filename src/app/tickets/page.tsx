@@ -82,10 +82,10 @@ export default function WifiTicketsPage() {
   const manager=isManager(company.role);
   return <AppShell activePath="/tickets" companyId={company.id} siteId={siteId||undefined}
     eyebrow="ACTIVITÉ · WI-FI" title="Tickets Wi-Fi"
-    description="Générez, imprimez, vendez et activez automatiquement les tickets sur le MikroTik du site.">
+    description="Préparez et imprimez les tickets avant vente. La première connexion Hotspot réussie déclenche leur comptabilisation automatique.">
     <nav className="panel" aria-label="Onglets du module Tickets Wi-Fi"
       style={{padding:10,display:'flex',gap:8,flexWrap:'wrap',marginBottom:18}}>
-      {([['generate','Générer','ticket'],['sell','Vente & activation','payment'],['history','Historique','clipboard-list'],['customize','Personnalisation','settings']] as const)
+      {([['generate','Générer','ticket'],['sell','Stock & activations','payment'],['history','Historique','clipboard-list'],['customize','Personnalisation','settings']] as const)
         .filter(([key])=>key==='history'||manager||(key==='sell'&&company.role==='sales'))
         .map(([key,label,icon])=>
           <button type="button" key={key} aria-current={tab===key?'page':undefined}
@@ -97,10 +97,10 @@ export default function WifiTicketsPage() {
     </nav>
     {visited.includes('generate')&&manager&&<section aria-label="Génération des tickets" hidden={tab!=='generate'}>
       <h2>Génération et impression</h2>
-      <p className="muted">L'impression A4 (3 colonnes × 11 lignes) est une option de génération, pas un module distinct.</p>
+      <p className="muted">Préparation MikroTik avant vente. Export PDF, JPEG ou impression directe de tickets prêts. A4 (3 colonnes × 11 lignes) reste dans ce module.</p>
       <WifiTicketGenerator />
     </section>}
-    {visited.includes('sell')&&(manager||company.role==='sales')&&<section aria-label="Vente et activation MikroTik" hidden={tab!=='sell'}>
+    {visited.includes('sell')&&(manager||company.role==='sales')&&<section aria-label="Stock et activations MikroTik" hidden={tab!=='sell'}>
       <WifiVoucherSales companyId={company.id}/>
     </section>}
     {visited.includes('history')&&<section aria-label="Historique des tickets" hidden={tab!=='history'}>
