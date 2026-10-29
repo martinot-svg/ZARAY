@@ -3,16 +3,22 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * A true textured 3D globe — continents and clouds travel over the sphere.
- * Never rotate a flat photo. The visual is decorative and limited to Z'Accueil.
+ * A true textured 3D globe with a separate, subtly moving cloud layer.
+ * Never rotate a flat photo. Decorative and limited to Z'Accueil.
  *
- * Earth imagery: NASA Goddard Space Flight Center, Blue Marble (2002).
- * Texture is downloaded once at BUILD time and served locally by ZARAY.
- * One 360° revolution takes 240 seconds (visual time-lapse, not real-time).
+ * NASA Blue Marble (2002): cloud-free continents and photographed cloud cover
+ * are bundled as separate local maps at build time. They are historic satellite
+ * composites, NOT live meteorological data. The relative drift is a visual
+ * time-lapse of atmospheric circulation, not a forecast.
+ * The 3D Earth's existing 240-second revolution and framing are unchanged.
  */
 const REVOLUTION_MS = 240_000;
+// Clouds move relative to the land: a deliberately subtle 12-min full drift.
+// This is artistic time-lapse, not the real speed or direction of local winds.
+const CLOUD_DRIFT_MS = 720_000;
 const FRAME_INTERVAL_MS = 1000 / 30;
-const TEXTURE_URL = '/brand/zaccueil-earth-spherical-texture.webp';
+const LAND_TEXTURE_URL = '/brand/zaccueil-earth-land-texture.webp';
+const CLOUD_TEXTURE_URL = '/brand/zaccueil-earth-clouds-texture.webp';
 
 const VERTEX_SHADER = `
 attribute vec2 aPosition;
@@ -28,7 +34,9 @@ precision highp float;
 
 varying vec2 vPoint;
 uniform sampler2D uEarth;
+uniform sampler2D uClouds;
 uniform float uRotation;
+uniform float uCloudDrift;
 
 const float PI = 3.141592653589793;
 const float TWO_PI = 6.283185307179586;
@@ -55,11 +63,21 @@ void main() {
   vec2 uv = vec2(fract(0.5 + longitude / TWO_PI + uRotation),
                  0.5 + latitude / PI);
 
+  // Cloud-free NASA surface rotates with the Earth.
   vec3 earth = texture2D(uEarth, uv).rgb;
-  // Gentle orbital lighting keeps surface detail legible in the dark theme.
   float diffuse = max(dot(viewNormal, normalize(vec3(-0.42, 0.46, 0.76))), 0.0);
   earth *= 0.59 + 0.41 * diffuse;
   earth = pow(earth, vec3(0.95));
+
+  // A separate photographic cloud mosaic drifts across the continents.
+  // Latitude-dependent zonal motion avoids a rigid, sticker-like overlay.
+  // The simulated offset is deliberately time-lapsed and is NOT live weather.
+  float latitudeWind = 0.75 + 0.18 * sin(latitude * 5.5);
+  vec2 cloudUV = vec2(fract(uv.x + uCloudDrift * latitudeWind), uv.y);
+  float cloudBrightness = texture2D(uClouds, cloudUV).r;
+  float cloudOpacity = smoothstep(0.08, 0.80, cloudBrightness) * 0.86;
+  vec3 litClouds = vec3(0.76, 0.86, 0.96) * (0.73 + 0.27 * diffuse);
+  earth = mix(earth, litClouds, cloudOpacity);
 
   // A very thin blue atmospheric limb; never a rectangular background.
   float atmosphere = pow(1.0 - z, 7.0);
@@ -111,8 +129,9 @@ export default function RotatingEarthHorizon() {
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
 
     const coords = gl.createBuffer();
-    const texture = gl.createTexture();
-    if (!coords || !texture) return;
+    const landTexture = gl.createTexture();
+    const cloudTexture = gl.createTexture();
+    if (!coords || !landTexture || !cloudTexture) return;
 
     gl.useProgram(program);
     gl.bindBuffer(gl.ARRAY_BUFFER, coords);
@@ -124,8 +143,11 @@ export default function RotatingEarthHorizon() {
     gl.enableVertexAttribArray(aPosition);
     gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
     const uRotation = gl.getUniformLocation(program, 'uRotation');
+    const uCloudDrift = gl.getUniformLocation(program, 'uCloudDrift');
     const uEarth = gl.getUniformLocation(program, 'uEarth');
+    const uClouds = gl.getUniformLocation(program, 'uClouds');
     gl.uniform1i(uEarth, 0);
+    gl.uniform1i(uClouds, 1);
 
     let disposed = false;
     let visible = true;
@@ -157,6 +179,7 @@ export default function RotatingEarthHorizon() {
       // Begin over Africa/Indian Ocean like the user's Blue Marble reference.
       const orbit = (0.565 + accumulatedMs / REVOLUTION_MS) % 1;
       gl.uniform1f(uRotation, orbit);
+      gl.uniform1f(uCloudDrift, (accumulatedMs / CLOUD_DRIFT_MS) % 1);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     };
 
@@ -199,39 +222,54 @@ export default function RotatingEarthHorizon() {
     }, { threshold: 0.01 });
     intersectionObserver.observe(container);
 
-    const image = new Image();
-    image.onload = () => {
-      if (disposed) return;
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
-      loaded = true;
-      draw();
-      container.dataset.earthReady = 'true';
-      syncMotion();
-    };
-    image.onerror = () => {
-      // Never show a black globe or invisible rectangle; use original photo.
-      if (!disposed) container.dataset.earthReady = 'false';
-    };
-    image.src = TEXTURE_URL;
+    // Only reveal the WebGL globe once BOTH maps are ready, avoiding brief
+    // white/black flashes and ghost clouds baked onto the continents.
+    const images = [new Image(), new Image()];
+    const textures = [landTexture, cloudTexture];
+    const urls = [LAND_TEXTURE_URL, CLOUD_TEXTURE_URL];
+    let pending = images.length;
+    let failed = false;
+    images.forEach((image, index) => {
+      image.onload = () => {
+        if (disposed || failed) return;
+        gl.activeTexture(index === 0 ? gl.TEXTURE0 : gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, textures[index]);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+        pending -= 1;
+        if (pending === 0) {
+          loaded = true;
+          draw();
+          container.dataset.earthReady = 'true';
+          syncMotion();
+        }
+      };
+      image.onerror = () => {
+        // If one map is missing, keep the original HD globe as fallback.
+        failed = true;
+        if (!disposed) container.dataset.earthReady = 'false';
+      };
+      image.src = urls[index];
+    });
 
     return () => {
       disposed = true;
-      image.onload = null;
-      image.onerror = null;
+      for (const image of images) {
+        image.onload = null;
+        image.onerror = null;
+      }
       if (animationId) cancelAnimationFrame(animationId);
       motionQuery.removeEventListener('change', onMotionChange);
       document.removeEventListener('visibilitychange', syncMotion);
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
       container.dataset.earthReady = 'false';
-      gl.deleteTexture(texture);
+      gl.deleteTexture(landTexture);
+      gl.deleteTexture(cloudTexture);
       gl.deleteBuffer(coords);
       gl.deleteProgram(program);
       gl.deleteShader(vertexShader);
