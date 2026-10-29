@@ -605,51 +605,29 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   }
 }
 
-/* Z'Accueil — TRUE transparent-background Earth horizon.
-   Size reduced ~32% on standard desktop, with the base placed higher to
-   retain a natural partial Earth in the lower-left corner. The exported
-   WebP now has fully feathered edges to prevent the tiny visible seam.
-   NASA ISS053-E-115170 is cut out at build time, pixel by pixel.
-   The source planet and clouds are unmodified photographic pixels;
-   there is no generated ellipse, black JPEG sky, CSS clipping or panel.
-   The edge fades from the actual atmospheric boundary, while the photo's
-   visible right end is feathered in the RGBA source, without truncation. */
+/* Z'Accueil ONLY — a small real Apollo 17 Blue Marble slice.
+   The PNG source is a transparent globe; the generated local WebP preserves
+   its actual curved atmospheric edge and cloud detail. No CSS-made sphere,
+   no generic half-circle, and no dark image rectangle covering the stars. */
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
   position: fixed;
   left: 0;
-  bottom: clamp(-150px, -9vw, -85px);
-  width: clamp(480px, 50vw, 760px);
+  bottom: clamp(-110px, -8vw, -58px);
+  width: clamp(320px, 36vw, 550px);
   height: auto;
-  aspect-ratio: 1200 / 799;
+  aspect-ratio: 600 / 424;
   z-index: 0;
   overflow: visible !important;
   pointer-events: none;
   user-select: none;
-  opacity: 1;
+  background: url("/brand/zaccueil-blue-marble-limb.webp") left bottom / contain no-repeat !important;
+  opacity: .92;
   border: 0 !important;
-  background: transparent !important;
   box-shadow: none !important;
   clip-path: none !important;
   mask-image: none !important;
 }
-.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::before {
-  content: "";
-  display: block;
-  position: absolute;
-  inset: 0;
-  background: url("/brand/earth-horizon-transparent.webp") center / 100% 100% no-repeat;
-  transform: scaleX(-1);
-  transform-origin: center;
-  opacity: 1;
-  filter: brightness(1.06) saturate(1.12);
-  border: 0;
-  box-shadow: none;
-  /* Pixel-level alpha is already baked into the WebP: no CSS mask and
-     no rectangle or artificial atmospheric arc can become visible. */
-  clip-path: none !important;
-  mask-image: none !important;
-  -webkit-mask-image: none !important;
-}
+.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::before,
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::after {
   content: none !important;
 }
@@ -657,20 +635,21 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   position: relative;
   z-index: 1;
 }
-@media (min-width: 701px) and (max-width: 1100px) {
+@media (min-width:701px) and (max-width:1100px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    width: 60vw;
-    bottom: -10vw;
+    width: min(43vw, 460px);
+    bottom: -7vw;
   }
 }
-@media (max-width: 700px) {
+@media (max-width:700px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    width: min(95vw, 470px);
+    width: min(84vw, 400px);
     bottom: -12vw;
+    opacity: .86;
   }
 }
 [data-zaray-theme="light"] .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-  opacity: .56;
+  opacity: .47;
 }
 @media print {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
