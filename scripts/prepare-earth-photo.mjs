@@ -1,128 +1,74 @@
 /**
- * True photographic, transparent-background Earth for Z’Accueil.
- * Image: NASA JSC, ISS053-E-115170 (2017-10-18), actual ISS orbital photograph.
- * NASA provenance: https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?frame=115170&mission=ISS053&roll=E
- * The sky is removed from the image pixels; there is no rectangular image
- * background, no CSS-generated planet, and no artificially clipped vector rim.
- * Vercel builds bundle the finished RGBA WebP so viewers make no remote calls.
+ * Z'Accueil: extract the real clouds and curved limb from the Blue Marble.
+ * The supplied user image is a blue-enhanced, transparent rendering of the
+ * Apollo 17 Earth view. This reproducible local variant uses the identical
+ * Apollo 17 source photograph (NASA AS17-148-22727), via Wikimedia Commons.
+ *
+ * Source: https://commons.wikimedia.org/wiki/File:The_Earth_seen_from_Apollo_17_with_transparent_background.png
+ * Never invent an ellipse or overlay a rectangular sky. The file ships with
+ * the application, so Z'Accueil doesn't fetch images from external websites.
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import sharp from 'sharp';
 
-const source = 'https://eol.jsc.nasa.gov/DatabaseImages/ESC/large/ISS053/ISS053-E-115170.JPG';
-const output = join(process.cwd(), 'public', 'brand', 'earth-horizon-transparent.webp');
+const source = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/The_Earth_seen_from_Apollo_17_with_transparent_background.png/960px-The_Earth_seen_from_Apollo_17_with_transparent_background.png';
+const output = join(process.cwd(), 'public', 'brand', 'zaccueil-blue-marble-limb.webp');
 const controller = new AbortController();
-const timer = setTimeout(() => controller.abort(), 30000);
-const smooth = (t) => { const x = Math.max(0, Math.min(1, t)); return x*x*(3-2*x); };
+const timeout = setTimeout(() => controller.abort(), 30000);
+const smoothstep = t => {
+  const x = Math.min(1, Math.max(0, t));
+  return x * x * (3 - 2 * x);
+};
 
 try {
   const response = await fetch(source, {
     signal: controller.signal,
-    headers: { 'User-Agent': 'ZARAY/1.0 NASA-Earth-Background' },
+    headers: { 'User-Agent': 'ZARAYApp/1.0 (https://zaray.vercel.app; Earth visual source from Wikimedia Commons)' },
   });
-  if (!response.ok) throw new Error('NASA image HTTP ' + response.status);
-  const jpeg = Buffer.from(await response.arrayBuffer());
-  if (jpeg.length < 75000 || jpeg[0] !== 0xff || jpeg[1] !== 0xd8) {
-    throw new Error('NASA source photo is incomplete or is not JPEG');
+  if (!response.ok) throw new Error('Wikimedia Apollo 17 source returned HTTP ' + response.status);
+  const original = Buffer.from(await response.arrayBuffer());
+  if (original.length < 100000 || original.length > 12000000) {
+    throw new Error('Unexpected Blue Marble source size: ' + original.length);
   }
-
-  const { data, info } = await sharp(jpeg)
-    .rotate()
-    .resize({ width: 1200, withoutEnlargement: true })
-    .removeAlpha()
+  // Match the framing and orbital curve of the user-supplied Earth image.
+  // Stage operations separately so crop and rotation order is deterministic.
+  const sized = await sharp(original)
+    .resize(1254, 1254, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png().toBuffer();
+  const turned = await sharp(sized).rotate(180).png().toBuffer();
+  const { data, info } = await sharp(turned)
+    .extract({ left: 620, top: 0, width: 510, height: 360 })
+    .resize({ width: 600 })
+    .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
   const { width, height, channels } = info;
-  if (width < 640 || height < 300 || channels !== 3) {
-    throw new Error('Unexpected NASA photo dimensions/channels');
+  if (channels !== 4 || width !== 600 || height < 400) {
+    throw new Error('Unexpected transparent Earth crop shape');
   }
-
-  // For each horizontal position, locate the photographic boundary where
-  // continuous bright clouds/ocean/atmosphere replace the nearly black space.
-  // Several neighboring pixel groups must be bright: isolated stars are ignored.
-  const step = 6, candidate = [];
-  for (let x = 0; x < width; x += step) {
-    let found = -1;
-    for (let y = 8; y < height - 32; y += 3) {
-      let bright = 0, sum = 0;
-      for (const dx of [-12, 0, 12]) for (const dy of [0, 9, 18, 27]) {
-        const xx = Math.max(0, Math.min(width-1, x+dx));
-        const i = ((y+dy)*width+xx)*3;
-        const lum = data[i]*.23+data[i+1]*.58+data[i+2]*.19;
-        sum += lum;
-        if (lum > 41 && data[i+2] > 32) bright++;
-      }
-      if (bright >= 9 && sum/12 > 46) { found = y; break; }
+  const rgba = Buffer.from(data);
+  // Keep natural alpha along the genuine globe rim. Feather only the bottom
+  // and right file edges to avoid the harsh cuts seen in previous revisions.
+  for (let y = 0; y < height; y++) {
+    const bottom = 1 - smoothstep((y / (height - 1) - .81) / .19);
+    for (let x = 0; x < width; x++) {
+      const right = 1 - smoothstep((x / (width - 1) - .73) / .27);
+      const i = (y * width + x) * 4;
+      rgba[i + 3] = Math.round(rgba[i + 3] * bottom * right);
     }
-    candidate.push(found);
   }
-
-  const present = candidate.filter(v => v >= 0).sort((a,b) => a-b);
-  if (present.length < candidate.length*.6) {
-    throw new Error('Could not reliably isolate the real Earth horizon; refusing to ship an opaque or clipped photo');
-  }
-  const medianAll = present[Math.floor(present.length/2)];
-  // A moving median rejects occasional bright artifacts in deep space while
-  // respecting the natural curve, unlike a straight artificial SVG arc.
-  const cleaned = candidate.map((_,i)=>{
-    const local=[];
-    for(let k=Math.max(0,i-8);k<=Math.min(candidate.length-1,i+8);k++){
-      if(candidate[k]>=0)local.push(candidate[k]);
-    }
-    if(local.length<5)return medianAll;
-    local.sort((a,b)=>a-b);
-    return local[Math.floor(local.length/2)];
-  });
-  const edge = new Float32Array(width);
-  for(let x=0;x<width;x++){
-    const q=x/step, base=Math.floor(q), ratio=q-base;
-    const y0=cleaned[Math.min(cleaned.length-1,base)];
-    const y1=cleaned[Math.min(cleaned.length-1,base+1)];
-    edge[x]=y0+(y1-y0)*ratio;
-  }
-
-  // Smooth the horizon boundary across neighboring columns. This removes
-  // tiny one-column steps caused by the photographic edge detector, while
-  // preserving the real overall curvature of the Earth.
-  const edgeSmoothed = new Float32Array(width);
-  for (let x = 0; x < width; x++) {
-    let sum = 0, weight = 0;
-    for (let dx = -30; dx <= 30; dx += 2) {
-      const xx = Math.max(0, Math.min(width - 1, x + dx));
-      const w = 31 - Math.abs(dx);
-      sum += edge[xx] * w;
-      weight += w;
-    }
-    edgeSmoothed[x] = sum / weight;
-  }
-
-  const rgba = Buffer.alloc(width*height*4);
-  for(let y=0;y<height;y++) for(let x=0;x<width;x++){
-    const i=(y*width+x)*3, o=(y*width+x)*4;
-    rgba[o]=data[i];rgba[o+1]=data[i+1];rgba[o+2]=data[i+2];
-    // Keep the atmospheric halo and all visible surface pixels, with a
-    // softly feathered boundary following the real photo, not a drawn curve.
-    const surface=smooth((y-edgeSmoothed[x]+24)/46);
-    // Image is mirrored in the layout: fade the source LEFT edge so the
-    // visible RIGHT end dissolves without any abrupt vertical cutoff.
-    const right=smooth((x/width)/.32);
-    // The prior image occasionally had nonzero alpha at row zero, causing
-    // a straight horizontal seam. Guarantee fully transparent TOP and BOTTOM
-    // rows, with a generous soft transition near the natural atmosphere.
-    const top=smooth((y / 34));
-    const bottom=1-smooth((y/height-.945)/.055);
-    rgba[o+3]=Math.round(255*surface*right*top*bottom);
-  }
-  await mkdir(join(process.cwd(), 'public', 'brand'), { recursive: true });
-  const image = await sharp(rgba, { raw: { width, height, channels: 4 } })
-    .webp({ quality: 91, effort: 5, alphaQuality: 100 })
+  const processed = await sharp(rgba, { raw: { width, height, channels: 4 } })
+    .modulate({ saturation: 1.72, brightness: 1.15 })
+    .webp({ quality: 88, alphaQuality: 100, effort: 4 })
     .toBuffer();
-  await writeFile(output, image);
-  const minEdge=Math.round(Math.min(...cleaned)),maxEdge=Math.round(Math.max(...cleaned));
-  console.log('[ZARAY Earth] Transparent RGBA real NASA horizon built:', width+'x'+height,
-    Math.round(image.length/1024)+'KiB', 'photographic edge', minEdge+'–'+maxEdge+'px');
-} catch(error) {
-  console.error('[ZARAY Earth] Cannot prepare authentic transparent horizon:', error);
+  await mkdir(join(process.cwd(), 'public', 'brand'), { recursive: true });
+  await writeFile(output, processed);
+  console.log('[ZARAY Earth] Apollo 17 Blue Marble transparent crop installed:', width + 'x' + height, Math.round(processed.length / 1024) + ' KiB');
+} catch (error) {
+  // Production cannot be declared finished if the photographic asset fails.
+  console.error('[ZARAY Earth] Failed to prepare Blue Marble horizon:', error);
   process.exitCode = 1;
-} finally { clearTimeout(timer); }
+} finally {
+  clearTimeout(timeout);
+}
