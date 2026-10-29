@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import firstFrame from './earth-first-frame.module.css';
+import EarthSatellites from './earth-satellites';
 
 /**
  * A true textured 3D globe with a separate, subtly moving cloud layer.
@@ -288,5 +289,6 @@ export default function RotatingEarthHorizon() {
       src="/brand/zaccueil-earth-instant-still.webp" alt=""
       fetchPriority="high" loading="eager" decoding="async" draggable={false} />
     <canvas ref={canvasRef} className="zaray-rotating-earth-canvas" />
+    <EarthSatellites />
   </div>;
 }
