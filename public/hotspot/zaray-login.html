@@ -30,6 +30,13 @@ h2{font-size:21px;margin:0 0 8px}
 button.primary{width:100%;border:0;background:linear-gradient(90deg,#53e5a4,#23baca);color:#071922;font-size:16px;font-weight:800;border-radius:12px;padding:15px;cursor:pointer}
 button.primary:disabled{opacity:.55;cursor:progress}
 button.secondary{background:transparent;border:1px solid rgba(174,215,222,.36);color:#e4f6f7;border-radius:10px;padding:10px 16px;cursor:pointer}
+.enroll{background:linear-gradient(115deg,rgba(16,121,88,.18),rgba(32,88,119,.2));border:1px solid rgba(94,225,172,.36);border-radius:18px;padding:22px;margin-top:25px}
+.enroll h3{font-size:19px;line-height:1.35;margin:0 0 8px;color:#f1fff9}
+.enroll p{margin:0 0 14px}
+.subscribe-link{display:block;text-align:center;text-decoration:none;font-weight:750;color:#081d23;background:linear-gradient(110deg,#70f1b6,#6fdbe5);border-radius:13px;padding:15px 12px;transition:filter .2s,transform .2s;overflow-wrap:anywhere}
+.subscribe-link:hover,.subscribe-link:focus-visible{filter:brightness(1.08);transform:translateY(-1px);outline:2px solid #fff;outline-offset:2px}
+.subscribe-caption{display:block;color:#b6d4d3;margin-top:12px;font-size:12px;line-height:1.6}
+@media(prefers-reduced-motion:reduce){.subscribe-link{transition:none}}
 .field{display:block;font-weight:650;font-size:13px;margin:18px 0}
 .field input{display:block;width:100%;margin-top:9px;border-radius:12px;border:1px solid #4c6677;background:#071628;padding:14px;color:white;font-size:18px;outline:none}
 .field input:focus{border-color:#62eab1;box-shadow:0 0 0 3px rgba(82,229,173,.15)}
@@ -49,11 +56,18 @@ footer{text-align:center;margin-top:28px;color:#93a9b6;font-size:12px}
  <p class="subtle" id="siteName">Choisissez l'offre de votre ticket pour vous connecter.</p>
 </header>
 <section class="panel" id="catalog" aria-labelledby="catalogTitle">
- <h2 id="catalogTitle">Offres Wi-Fi disponibles</h2>
- <p class="subtle">Achetez le ticket imprimé chez le vendeur. Sélectionnez ensuite l'offre correspondante.</p>
+ <h2 id="catalogTitle">Accès Wi-Fi occasionnel</h2>
+ <p class="subtle">Découvrez les tickets disponibles, achetez votre ticket chez le vendeur, puis sélectionnez le forfait imprimé sur votre ticket.</p>
  <div id="offers" class="offers" aria-live="polite"><p class="subtle">Chargement des offres du point de vente…</p></div>
  <p id="feedError" class="error" role="alert" hidden></p>
  <button type="button" class="secondary" id="already" aria-label="Saisir un ticket déjà acheté">J'ai déjà un ticket</button>
+ <div class="enroll" aria-labelledby="subscribeTitle">
+  <h3 id="subscribeTitle">Vous voulez Internet à domicile ?</h3>
+  <p class="subtle">Vous préférez un abonnement résidentiel plutôt qu'un ticket Wi-Fi ? Inscrivez-vous auprès de votre fournisseur.</p>
+  <a id="subscribeLink" class="subscribe-link" href="#" hidden>Devenir un abonné</a>
+  <p id="subscribeNotice" class="subtle" role="status">Chargement de l'inscription du fournisseur…</p>
+  <span class="subscribe-caption">Votre inscription et votre demande d'abonnement n'activent pas Internet immédiatement. Le paiement doit être confirmé.</span>
+ </div>
 </section>
 <section class="panel" id="credentials" aria-labelledby="formTitle" hidden>
  <button type="button" class="secondary" id="back" style="margin-bottom:20px">← Voir les offres</button>
@@ -92,9 +106,20 @@ footer{text-align:center;margin-top:28px;color:#93a9b6;font-size:12px}
 (function(){
  'use strict';
  var SITE_ID='__ZARAY_SITE_ID__';
+ var COMPANY_SLUG='__ZARAY_COMPANY_SLUG__';
  var api='https://zaray.vercel.app/api/public/wifi-offers?siteId='+encodeURIComponent(SITE_ID);
  var offers=document.getElementById('offers'),catalog=document.getElementById('catalog'),credentials=document.getElementById('credentials');
  var inputError=document.getElementById('inputError'),feedError=document.getElementById('feedError');
+ function showSubscription(companyName,slug){
+  if(typeof slug!=='string'||!(/^[a-z0-9-]{2,80}$/i).test(slug))return;
+  var link=document.getElementById('subscribeLink');
+  var name=typeof companyName==='string'?companyName.trim():'';
+  link.textContent='Devenir un abonné'+(name?' de '+name:' de notre fournisseur');
+  link.href='https://zaray.vercel.app/portail/'+encodeURIComponent(slug);
+  link.hidden=false;
+  document.getElementById('subscribeNotice').hidden=true;
+ }
+ showSubscription('',COMPANY_SLUG);
  function showLogin(offer){
   document.getElementById('selectedOffer').textContent=offer
    ?offer.name+' — '+formatPrice(offer.priceAmount,offer.currency)+' / '+formatDuration(offer.durationMinutes)
@@ -115,7 +140,8 @@ footer{text-align:center;margin-top:28px;color:#93a9b6;font-size:12px}
  fetch(api,{mode:'cors',credentials:'omit',cache:'no-store'})
   .then(function(r){if(!r.ok)throw new Error('catalogue');return r.json();})
   .then(function(data){
-   if(data.siteName)document.getElementById('siteName').textContent='Réseau '+data.siteName+' · Sélectionnez votre forfait.';
+   if(data.siteName)document.getElementById('siteName').textContent='Réseau '+data.siteName+' · Tickets Wi-Fi et abonnements Internet.';
+   showSubscription(data.companyName,data.companySlug);
    offers.textContent='';
    if(!Array.isArray(data.offers)||data.offers.length===0){
     offers.textContent='Aucun forfait avec tickets prêts à vendre pour le moment.';
@@ -136,7 +162,9 @@ footer{text-align:center;margin-top:28px;color:#93a9b6;font-size:12px}
   .catch(function(){
    offers.textContent='';
    feedError.hidden=false;
-   feedError.textContent='Les offres ne peuvent pas être chargées. Si vous avez déjà un ticket, vous pouvez saisir vos identifiants ci-dessous.';
+   feedError.textContent='Les tickets disponibles ne peuvent pas être chargés. Si vous avez déjà un ticket, vous pouvez saisir vos identifiants ci-dessous.';
+   if(document.getElementById('subscribeLink').hidden)
+    document.getElementById('subscribeNotice').textContent='Lien d’abonnement indisponible pour ce site. Contactez le responsable du réseau.';
   });
  window.loginWithTicket=function(){
   inputError.hidden=true;
