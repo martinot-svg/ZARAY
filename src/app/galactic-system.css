@@ -627,7 +627,8 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   overflow: visible !important;
   opacity: 1;
   border: 0 !important;
-  background: url("/brand/zaccueil-earth-render-2x.webp") center / contain no-repeat;
+  /* Render the tiny baked NASA first frame immediately from CSS itself. */
+  background: var(--zaray-earth-first-frame, url("/brand/zaccueil-earth-render-2x.webp")) center / contain no-repeat;
   box-shadow: none !important;
   clip-path: none !important;
   mask-image: none !important;
@@ -635,6 +636,24 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
 }
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon[data-earth-ready="true"] {
   background-image: none;
+}
+/* HD server-rendered still remains in front of the inlined thumbnail until
+   both WebGL textures have loaded; both sides fade simultaneously so there
+   is never a blank frame between the still photo and the moving globe. */
+.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-earth-hd-still {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 1;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 500ms ease;
+}
+.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon[data-earth-ready="true"] .zaray-earth-hd-still {
+  opacity: 0;
 }
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-rotating-earth-canvas {
   display: block;
@@ -677,7 +696,8 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   opacity: .58;
 }
 @media (prefers-reduced-motion: reduce) {
-  .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-rotating-earth-canvas {
+  .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-rotating-earth-canvas,
+  .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-earth-hd-still {
     transition: none;
   }
 }
