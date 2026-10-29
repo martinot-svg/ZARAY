@@ -113,20 +113,20 @@ export async function POST(request:NextRequest){
     ]);
     const provision=cmd.action==='provision_voucher';
     const valid=!!voucher&&!!net&&net.site_id===router.site_id&&cmd.username===voucher.username&&(
-      provision?(voucher.status==='paid'&&!!voucher.paid_at&&net.credential_scheme==='hmac-v1'):
+      provision?(voucher.status==='paid'&&!!voucher.paid_at&&['hmac-v1','hmac-numeric-v2'].includes(net.credential_scheme)):
        (voucher.status==='expired'||voucher.status==='cancelled'));
     if(!valid){
      await service.from('network_commands').update({status:'cancelled',outcome:'Droit Wi-Fi ou site invalide',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('status','queued');continue;
     }
     if(provision){
       let password='';
-      try{password=deriveVoucherPassword(voucher!.id,voucher!.site_id,net!.password_length);}
+      try{password=deriveVoucherPassword(voucher!.id,voucher!.site_id,net!.password_length,net!.credential_scheme as 'hmac-v1'|'hmac-numeric-v2');}
       catch{return json({error:'Clé des tickets Wi-Fi indisponible.'},503);}
       const expected=digest(voucher!.site_id+':'+voucher!.username+':'+password);
       if(expected!==voucher!.credential_hash){
        await service.from('network_commands').update({status:'failed',outcome:'Empreinte du ticket incohérente',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('status','queued');continue;
       }
-      voucherPayload={voucherId:voucher!.id,password,durationMinutes:voucher!.duration_minutes};
+      voucherPayload={voucherId:voucher!.id,password,durationMinutes:voucher!.duration_minutes,credentialScheme:net!.credential_scheme};
     }else voucherPayload={voucherId:voucher!.id};
    }
    if(['block_hotspot_mac','unblock_hotspot_mac'].includes(cmd.action)){
