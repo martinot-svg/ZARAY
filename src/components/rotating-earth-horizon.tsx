@@ -139,7 +139,8 @@ export default function RotatingEarthHorizon() {
     const resize = () => {
       const diameter = Math.max(1, container.clientWidth);
       const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-      const deviceSize = Math.min(1000, Math.round(diameter * pixelRatio));
+      // Preserve the cloud and coastal detail on the enlarged 1185px globe.
+      const deviceSize = Math.min(1536, Math.round(diameter * pixelRatio));
       if (canvas.width !== deviceSize || canvas.height !== deviceSize) {
         canvas.width = deviceSize;
         canvas.height = deviceSize;
