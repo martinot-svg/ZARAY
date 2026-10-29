@@ -98,7 +98,7 @@ export default function PersonalShell({
             <div className="topbar-icon-curtain-inner">
               <button type="button" className="topbar-icon-menu-action"
                 onClick={() => themeButtonRef.current?.click()}>
-                <ZarayIcon name="theme" size={18} /> Changer le thème
+                <ZarayIcon name="settings" size={18} /> Changer le thème
               </button>
             </div>
           </div>
