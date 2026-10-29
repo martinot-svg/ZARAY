@@ -9,7 +9,7 @@ type Offer={id:string;name:string;status:string;duration_minutes:number;validity
 type Settings=TicketVisual;
 const initial:Settings={
  logo_data_uri:null,primary_color:'#167a46',secondary_color:'#ffffff',title_color:'#10251a',
- border_color:'#a5b9ad',font_family:'Arial',username_length:5,password_length:12,
+ border_color:'#a5b9ad',font_family:'Arial',username_length:5,password_length:5,
  template_key:'classic',accent_color:'#0e9f6e',gradient_enabled:false,decorations_enabled:true,
  brand_name:'',wifi_ssid:'',phone:'',address:'',welcome_message:'',footer_text:'',
  show_price:true,show_duration:true,show_ticket_id:false,show_wifi_ssid:false
@@ -89,7 +89,7 @@ export default function WifiTicketCustomization(){
  }
  const site=sites.find(s=>s.id===siteId),offer=offers.find(o=>o.id===offerId);
  const example:PrintableVoucher={
-   id:'DEMONSTRATION',username:'DEMO123',password:'EXEMPLE-CODE',
+   id:'DEMONSTRATION',username:'AZ7K9'.slice(0,form.username_length??5),password:'K7M9P'.slice(0,form.password_length??5),
    offer_name:offer?.name??'Forfait Wi-Fi (exemple)',price_amount:offer?.price_amount??0,
    currency:offer?.currency??'MGA',duration_minutes:offer?.duration_minutes??60,
    validity_days:offer?.validity_days??1,status:'available'
@@ -157,8 +157,9 @@ export default function WifiTicketCustomization(){
       <h2>Codes d'accès — réglages existants</h2>
       <div className="field-grid">
         <label>Longueur du nom d’utilisateur (3–5)<input type="number" min={3} max={5} value={form.username_length} onChange={e=>change('username_length',Number(e.target.value))}/></label>
-        <label>Longueur du mot de passe (12–32)<input type="number" min={12} max={32} value={form.password_length} onChange={e=>change('password_length',Number(e.target.value))}/></label>
+        <label>Longueur du mot de passe (3–5)<input type="number" min={3} max={5} value={form.password_length} onChange={e=>change('password_length',Number(e.target.value))}/></label>
       </div>
+      <p className="muted">Les codes courts sont plus faciles à saisir mais moins résistants aux tentatives de devinette. Longueur recommandée : 5 caractères.</p>
       <div className="wifi-template-actions">
         <button type="button" onClick={restore} disabled={saving}>Restaurer Classic</button>
         <button type="button" className="primary-link" disabled={busy||saving||!siteId} onClick={()=>void save()}>

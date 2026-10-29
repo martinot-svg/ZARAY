@@ -155,7 +155,7 @@ async function voucherAccount(command){
  const existing=matches[0];
  if(existing&&existing.comment!==comment)throw Error('Identifiant existant non géré par ZARAY.');
  if(action==='provision_voucher'){
-  if(typeof password!=='string'||!/^[A-Z0-9]{12,32}$/.test(password)||!Number.isInteger(durationMinutes)||durationMinutes<1||durationMinutes>525600)throw Error('Ticket invalide.');
+  if(typeof password!=='string'||!/^[A-Z0-9]{3,32}$/.test(password)||!Number.isInteger(durationMinutes)||durationMinutes<1||durationMinutes>525600)throw Error('Ticket invalide.');
   const payload={name:username,password,disabled:'false','limit-uptime':String(durationMinutes)+'m',comment};
   if(existing)await ros(table+'/'+existing['.id'],'PATCH',payload);
   else await ros(table,'PUT',payload);
