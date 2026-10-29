@@ -42,6 +42,8 @@ export default function PersonalShell({
   const homeNavRef = useRef<HTMLDivElement>(null);
   const profileButton = useRef<HTMLButtonElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const themeButtonRef = useRef<HTMLButtonElement>(null);
+  const hoverMenus = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
   // Only anchored dropdowns: no permanent or off-canvas black sidebar.
   useEffect(() => {
@@ -69,11 +71,14 @@ export default function PersonalShell({
   return <div className={'personal-shell personal-no-sidebar' + (home ? ' personal-home-shell' : '') + (['/mon-compte', '/entreprises', '/finance-globale'].includes(active) ? ' personal-sticky-topbar' : '')}>
     <header className="personal-topbar">
       <Link href="/mon-compte" className="personal-logo" aria-label="Accueil personnel ZARAY"><BrandLogo priority /></Link>
-      <div className="personal-home-nav-control" ref={homeNavRef}>
+      <div className="personal-home-nav-control" ref={homeNavRef}
+        onMouseEnter={() => { if (hoverMenus()) { setHomeNavOpen(true); setProfileOpen(false); } }}
+        onMouseLeave={() => { if (hoverMenus()) setHomeNavOpen(false); }}>
         <button ref={homeNavButton} type="button" className="personal-home-nav-toggle"
           aria-controls="personal-home-navigation-links" aria-expanded={homeNavOpen}
+          aria-label="Ouvrir la navigation de mon espace ZARAY" title="Mon espace ZARAY"
           onClick={() => { setHomeNavOpen(value => !value); setProfileOpen(false); }}>
-          <ZarayIcon name="menu" size={20}/><span>Mon espace Zaray</span>
+          <ZarayIcon name="menu" size={22}/><span className="topbar-icon-label">Mon espace Zaray</span>
         </button>
         <nav id="personal-home-navigation-links" aria-label="Navigation du compte personnel"
           className={'personal-home-nav-menu' + (homeNavOpen ? ' is-open' : '')}
@@ -87,15 +92,37 @@ export default function PersonalShell({
         </nav>
       </div>
       <div className="personal-topbar-actions">
-        <ThemeSwitch />
+        <div className="topbar-icon-group topbar-theme-control">
+          <ThemeSwitch buttonRef={themeButtonRef} />
+          <div className="topbar-icon-curtain" aria-label="Thème de l'interface">
+            <div className="topbar-icon-curtain-inner">
+              <button type="button" className="topbar-icon-menu-action"
+                onClick={() => themeButtonRef.current?.click()}>
+                <ZarayIcon name="theme" size={18} /> Changer le thème
+              </button>
+            </div>
+          </div>
+        </div>
         {active === '/entreprises' && (
-          <Link href="/entreprises/nouvelle" className="primary-link personal-topbar-create">
-            <ZarayIcon name="add" size={18} /> + Créer une entreprise
-          </Link>
+          <div className="topbar-icon-group topbar-create-control">
+            <Link href="/entreprises/nouvelle" className="primary-link personal-topbar-create"
+              aria-label="Créer une entreprise" title="Créer une entreprise">
+              <ZarayIcon name="add" size={22} /><span className="topbar-icon-label">Créer une entreprise</span>
+            </Link>
+            <div className="topbar-icon-curtain" aria-label="Création d'entreprise">
+              <div className="topbar-icon-curtain-inner">
+                <Link className="topbar-icon-menu-action" href="/entreprises/nouvelle">
+                  <ZarayIcon name="company" size={18} /> Créer une entreprise
+                </Link>
+              </div>
+            </div>
+          </div>
         )}
-        <div className="personal-profile-control" ref={profileRef}>
+        <div className="personal-profile-control" ref={profileRef}
+          onMouseEnter={() => { if (hoverMenus()) { setProfileOpen(true); setHomeNavOpen(false); } }}
+          onMouseLeave={() => { if (hoverMenus()) setProfileOpen(false); }}>
         <button ref={profileButton} type="button" className="personal-topbar-profile"
-          aria-label={'Options du profil de ' + displayName}
+          aria-label={'Options du profil de ' + displayName} title={'Profil de ' + displayName}
           aria-controls="personal-profile-actions" aria-expanded={profileOpen}
           onClick={() => { setProfileOpen(value => !value); setHomeNavOpen(false); }}>
           <span className="personal-profile-avatar" aria-hidden="true"><ZarayIcon name="profile" size={22}/></span>
