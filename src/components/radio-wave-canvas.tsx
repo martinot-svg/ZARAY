@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 
 /**
  * One lightweight canvas replaces many independently rasterized, subpixel SVGs.
@@ -17,13 +18,20 @@ const FINAL_STROKE = 0.7;
 const HALO_EXTRA_WIDTH = 1.6; // lightweight glow, not a costly shadowBlur
 
 export default function RadioWaveCanvas() {
+  const pathname = usePathname();
+  // Radio waves belong only to the public arrival and authentication experience.
+  // Z’Accueil and all subsequent account/company pages retain the starfield
+  // but no longer render any radio wave graphics.
+  const publicBackdrop = pathname === '/' || [
+    '/connexion', '/inscription', '/mot-de-passe-oublie', '/reinitialiser-mot-de-passe',
+  ].some(route => pathname === route || pathname.startsWith(route + '/'));
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const field = canvas?.parentElement;
     const context = canvas?.getContext('2d', { alpha: true });
-    if (!canvas || !field || !context) return;
+    if (!publicBackdrop || !canvas || !field || !context) return;
 
     const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
     let frame = 0;
@@ -176,7 +184,9 @@ export default function RadioWaveCanvas() {
       document.removeEventListener('visibilitychange', updatePlayback);
       motionPreference.removeEventListener('change', updatePlayback);
     };
-  }, []);
+  }, [publicBackdrop]);
+
+  if (!publicBackdrop) return null;
 
   return <div className="zaray-wifi-wavefield" data-active="false" aria-hidden="true">
     <canvas ref={canvasRef} className="zaray-wifi-wave-canvas" />
