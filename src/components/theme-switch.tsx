@@ -7,7 +7,7 @@ type Theme = 'dark' | 'light';
 const KEY = 'zaray-interface-theme';
 
 /** User controlled visual theme; never affects company, site, auth or payment data. */
-export default function ThemeSwitch({ className = '', buttonRef }: { className?: string; buttonRef?: Ref<HTMLButtonElement> }) {
+export default function ThemeSwitch({ className = '', buttonRef, hideNativeTitle = false }: { className?: string; buttonRef?: Ref<HTMLButtonElement>; hideNativeTitle?: boolean }) {
   const [theme, setTheme] = useState<Theme>('dark');
   useEffect(() => {
     let initial: Theme = 'dark';
@@ -30,7 +30,7 @@ export default function ThemeSwitch({ className = '', buttonRef }: { className?:
 
   return <button ref={buttonRef} type="button" className={'zaray-theme-switch ' + className}
     onClick={toggle} aria-label={theme === 'dark' ? 'Activer le thème clair' : 'Activer le thème sombre'}
-    title={theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
+    title={hideNativeTitle ? undefined : theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
     aria-pressed={theme === 'light'}>
     <span className="zaray-theme-icon">
       {theme === 'dark' ? <Sun size={18} aria-hidden="true"/> : <Moon size={18} aria-hidden="true"/>}
