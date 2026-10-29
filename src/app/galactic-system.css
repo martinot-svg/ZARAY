@@ -605,27 +605,47 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   }
 }
 
-/* Z'Accueil — Earth horizon: calibrated to the user's actual silhouette.
-   At 1366px viewport it covers ~520px wide × 187px tall in the bottom-left.
-   The dedicated local SVG contains real atmosphere/cloud pixels taken from
-   the supplied satellite photo and a vector arc; it loads without any
-   third-party network request or expensive animated backdrop effects. */
+/* Z'Accueil only — genuine NASA ISS photograph, ISS053-E-115170 (2017).
+   Real blue oceans, independently detailed cloud formations, and photographed
+   atmospheric scattering. The horizon is NOT a vector arc or artificial globe.
+   The flipped photo places the highest point at bottom-left and lets the limb
+   naturally descend to the right, like the user's Z'Accueil reference.
+   Image ships locally via the build step, avoiding browser-side NASA requests. */
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
   position: fixed;
   left: 0;
   bottom: 0;
   z-index: 0;
-  width: clamp(330px, 38vw, 760px);
-  aspect-ratio: 1000 / 360;
-  height: auto;
-  overflow: hidden;
+  width: clamp(740px, 68vw, 1080px);
+  height: clamp(260px, 38vh, 480px);
   pointer-events: none;
   user-select: none;
-  background: url("/brand/zaray-earth-limb.svg") left bottom / 100% 100% no-repeat;
-  opacity: .91;
+  overflow: visible;
+  isolation: auto;
+  background: transparent !important;
+  opacity: 1;
 }
-/* Delete legacy circles, masks and photo overlays completely. */
-.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::before,
+.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 0;
+  background-image: url("/brand/earth-from-orbit-nasa.jpg");
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-position: center 28px;
+  transform: scaleX(-1);
+  transform-origin: center;
+  mix-blend-mode: screen;
+  filter: brightness(.94) contrast(1.12) saturate(1.16);
+  opacity: .92;
+  /* Feather the PHOTO, not the planet: no rectangular seam at the top,
+     none at the right edge, and no artificial right-hand cutoff. */
+  -webkit-mask-image:
+    linear-gradient(to right, #000 0%, #000 32%, rgba(0,0,0,.98) 42%, rgba(0,0,0,.77) 58%, rgba(0,0,0,.24) 75%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, #000 0%, #000 32%, rgba(0,0,0,.98) 42%, rgba(0,0,0,.77) 58%, rgba(0,0,0,.24) 75%, transparent 100%);
+}
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::after {
   content: none !important;
 }
@@ -633,19 +653,24 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   position: relative;
   z-index: 1;
 }
-@media (min-width: 701px) and (max-width: 1100px) {
+@media (min-width:701px) and (max-width:1100px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    width: min(46vw, 620px);
+    width: 78vw;
+    height: clamp(250px, 36vh, 400px);
   }
 }
-@media (max-width: 700px) {
+@media (max-width:700px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    width: min(88vw, 480px);
-    opacity: .82;
+    width: 115vw;
+    height: clamp(190px, 32vh, 300px);
+  }
+  .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::before {
+    background-position: center 18px;
+    opacity: .85;
   }
 }
 [data-zaray-theme="light"] .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-  opacity: .49;
+  opacity: .38;
 }
 @media print {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
