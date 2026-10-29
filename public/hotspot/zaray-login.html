@@ -107,6 +107,9 @@ footer{text-align:center;margin-top:28px;color:#93a9b6;font-size:12px}
   var h=Math.floor(minutes/60),m=minutes%60;
   return(h?h+' h':'')+(h&&m?' ':'')+(m?m+' min':'')||'0 min';
  }
+ $(if error)
+ showLogin(null);
+ $(endif)
  document.getElementById('already').addEventListener('click',function(){showLogin(null);});
  document.getElementById('back').addEventListener('click',function(){credentials.hidden=true;catalog.hidden=false;});
  fetch(api,{mode:'cors',credentials:'omit',cache:'no-store'})
@@ -154,6 +157,9 @@ footer{text-align:center;margin-top:28px;color:#93a9b6;font-size:12px}
   document.forms.sendin.submit();
   return false;
   $(endif)
+  if(location.protocol!=='https:'){
+   inputError.hidden=false;inputError.textContent='La connexion par mot de passe exige un portail HTTPS valide, ou le mode CHAP du MikroTik.';return false;
+  }
   return true;
  };
 })();
