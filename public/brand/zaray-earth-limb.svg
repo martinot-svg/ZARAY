@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 360" width="1000" height="360" aria-hidden="true">
+  <!-- Earth's actual cloud/ocean texture comes from the supplied satellite reference.
+       The contour is built to match the exact lower-left silhouette in Z'Accueil. -->
+  <defs>
+    <clipPath id="earth-surface"><path d="M0 9 C200 -35 600 -25 1000 360 L1000 360 H0 Z"/></clipPath>
+    <linearGradient id="planet-shade" x1="0" y1="0" x2=".08" y2="1">
+      <stop offset="0" stop-color="#0b3a62" stop-opacity=".08"/>
+      <stop offset=".42" stop-color="#032544" stop-opacity=".15"/>
+      <stop offset="1" stop-color="#020a1b" stop-opacity=".31"/>
+    </linearGradient>
+    <filter id="blue-atmosphere" x="-8%" y="-33%" width="116%" height="166%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+  <g clip-path="url(#earth-surface)">
+    <rect width="1000" height="360" fill="#0d3147"/>
+    <image href="data:image/webp;base64,UklGRq4FAABXRUJQVlA4IKIFAAAQLwCdASo2AWIAPmEqkkYqpKQhKXg6+VAMCWUtjMhjDdUEMYI0VvJS5Lv8+LTfV23HkYZU/XpUbM4f2tQB6icft3JHmQCvts8Nbao9aGixjhZ9I9/JGN8r0y6VM9N/6j8Tyx7Jryx7+xkcTYOghfjJoOFPvTQbC6oFpJ5pU3flOrhQyhHVdFaMubOl836dDAce139tHEg2DLRwrdtMXfUx0EfcycMqyebyWUzujZWJiUay4SsmVuA0gx6538Cg9Bm3g6REIFlucxoWljdM7i7Fo9FFOxOGhzaVCFlcmJOK6e3BzjKtO+MDXdPmLU/sYIHuFWnniGJYUjQ9jAt2itD86yZ0MoGZ8htt/dUjZqF2rHAhzJgIUD0L+VhpLcF5cgnWc+ohoZgxX4DGRbTvRjZPcDkAcxz5bvGKmKVnO5Nx2ToNI5aZEWit+YYmRiOLLjoAD7JqITZMvFSevTAW15fp4Xd0xNj8uumT95FG18TOb/cv7ZnjVz6fOmUTh/S6rirgAP77foBnlO7QewjVZrO5ctuPfWv4c0Q/tU7QKVyIyaeYa5W5F+RLuTKu4B+1jaVJspfswe/ZhwPXsdNePSeOrieSuCtZz617YmqXRofOUkFXnL1oKn9Af3tayZF4FGe8HXEacHbO50jwkBmyBDtv/loMO5FX1fQZCMfmxA+aAsdGc2j6CUVIlCqu2nAVDGKn9j11TqKpKR1j9heVQLqr7Unr7h/0P+aU3x7xRiEMahApKiEma0ZmgrKCvu0vC4iaRBz8bIMaKpypk/71mM6DU/xAcF4FeqFPM/Xz8WZ1i8t94w156OXWZwuV7dbMQjhEyI431heHUqbv9zbuwcgWvtbBygP4GLBkioEyAwiq8lEmPrVZ/YjE+1R6PHSmK3YdjEBiigAsQ5CKxOHfSgEW30ritlYjmAg+mfRriqWtuaidE6vmZhri3Ss8mUw8mJKPXu3IZdJY+75/CDsiwdnNOCg5WO0ZIXfo85eDr7miSOUMWDmiKE2Ato+Nsx6kzTACN177vksEYjaNoc50ePOZPqto3z3Gwdj2yhcdIvbkC1yffnWLb6Q13dVfptLpNcvJzfy/8h1lEh13odhyDVEQU12L77CqL/k/hxJjpPOqb7A38W4xOvMdCeJyWYmfzwSyzN5XNnhh+lhngQLbHhrSev48KORjipFwI4r3LBv1Lw8PhD0LLuqJ0h+S9bmUN+GCTBUNPiClTzyYfohuoUMfSCv89mPIk5D92lUtrfG+i16/Gc12D3fQ6cSqf96LPtBMrIwYxStiyvTY7ragZ4c+xFNJVAraQ30vneNw2fTIBOBA8dJ0E37dOLaLAKFKmcR5vvbSlrPfp8buo0gvTHr2yhVu9YL1b8h3McyRiWE70o6ifKXj/BFID2Jojh4EXJXj9NNf6kshq4RsQot1gbx4UGvPa+pvFzrLHARqz+QXJt/sm3fgbVFnMCw2zK+nP94v9Om29i5BofrGGVi4D5p3sm2n2xEgfwkT/aeSCiPD21D3dVNJ9+5ZLNq/jmPGRDRsK6B8Dp2JGwtilgdIzpP1jwfluT9HxPvZxYWAiWVyy4rWSCN2E55CppdxJxV1F5FTiIwmonuSxOXWGeomy/kLtGq5OsL/W6W382qyGNrlAMblJuUdswMuyf8fBrJFEhkCjHfMcG2V5N/WLaxp+Oi5jzqzsRzXz6VSZe+Qu7CcYBqUuJB8Awvd6PeSFKdavwWiMreIhBhmqVr/rkzdWM2Ra5HbDd2xm0b/eKo2cucek5LeecH0D7xU5ZFz2OT+HXWYRMfcati/ooAHl6DDrhALyt7xnVaCKiopt8/wRgDUv9MExjVCHh9aU59QE1joMPg0PL8/QNCEXXSs0Cua+BHD7lv9s8WsbXQvccZch94zTg7Wo7OjnifuesGq8TjNQAAAAA==" x="0" y="-200" width="1000" height="560" preserveAspectRatio="none"/>
+    <rect width="1000" height="360" fill="url(#planet-shade)"/>
+  </g>
+  <path d="M0 9 C200 -35 600 -25 1000 360" fill="none" stroke="#3caaff" stroke-width="24" stroke-opacity=".18" filter="url(#blue-atmosphere)"/>
+  <path d="M0 9 C200 -35 600 -25 1000 360" fill="none" stroke="#47bbf3" stroke-width="8" stroke-opacity=".23" filter="url(#blue-atmosphere)"/>
+  <path d="M0 9 C200 -35 600 -25 1000 360" fill="none" stroke="#55c7ef" stroke-width="2.9" stroke-opacity=".64"/>
+  <path d="M0 9 C200 -35 600 -25 1000 360" fill="none" stroke="#e1ffff" stroke-width=".9" stroke-opacity=".47"/>
+</svg>
