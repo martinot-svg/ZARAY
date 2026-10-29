@@ -605,27 +605,31 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   }
 }
 
-/* Z'Accueil ONLY — a small real Apollo 17 Blue Marble slice.
-   The PNG source is a transparent globe; the generated local WebP preserves
-   its actual curved atmospheric edge and cloud detail. No CSS-made sphere,
-   no generic half-circle, and no dark image rectangle covering the stars. */
+/* Z'Accueil — original globe photograph supplied by the user.
+   The REAL RGBA image was cropped from their PNG and baked into GitHub.
+   Transparent pixels expose the existing ZARAY stars without any rectangular
+   background, photographic substitution, silhouette mask or vector circle.
+   195 × 183 source pixels, displayed ~340px wide on a 1366px desktop.
+   Place the image so its bottom is below the screen; only the authentic,
+   naturally curved upper limb emerges from the lower-left viewport edge. */
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
   position: fixed;
   left: 0;
-  bottom: clamp(-110px, -8vw, -58px);
-  width: clamp(320px, 36vw, 550px);
+  bottom: clamp(-136px, -8vw, -88px);
+  width: clamp(270px, 25vw, 420px);
   height: auto;
-  aspect-ratio: 600 / 424;
+  aspect-ratio: 195 / 183;
   z-index: 0;
   overflow: visible !important;
   pointer-events: none;
   user-select: none;
-  background: url("/brand/zaccueil-blue-marble-limb.webp") left bottom / contain no-repeat !important;
-  opacity: .92;
+  opacity: 1;
   border: 0 !important;
+  background: url("/brand/zaccueil-earth-from-user.webp") left bottom / contain no-repeat !important;
   box-shadow: none !important;
   clip-path: none !important;
   mask-image: none !important;
+  -webkit-mask-image: none !important;
 }
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::before,
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::after {
@@ -635,21 +639,21 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   position: relative;
   z-index: 1;
 }
-@media (min-width:701px) and (max-width:1100px) {
+@media (min-width: 701px) and (max-width: 1100px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    width: min(43vw, 460px);
-    bottom: -7vw;
+    width: clamp(260px, 31vw, 360px);
+    bottom: -9vw;
   }
 }
-@media (max-width:700px) {
+@media (max-width: 700px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    width: min(84vw, 400px);
-    bottom: -12vw;
-    opacity: .86;
+    width: min(74vw, 310px);
+    bottom: -16vw;
+    opacity: .91;
   }
 }
 [data-zaray-theme="light"] .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-  opacity: .47;
+  opacity: .59;
 }
 @media print {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
