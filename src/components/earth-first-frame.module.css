@@ -1,0 +1,6 @@
+/* Development fallback. Production prebuild replaces this module with an
+   inline 144x144 transparent WebP of the exact initial 3D Earth orientation.
+   Keeping the module committed ensures Next.js dev also starts immediately. */
+.preview {
+  --zaray-earth-first-frame: url("/brand/zaccueil-earth-render-2x.webp");
+}
