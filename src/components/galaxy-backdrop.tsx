@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import WifiSignalGlyph from '@/components/wifi-signal-glyph';
+import { useEffect, useState } from 'react';
+import RadioWaveCanvas from '@/components/radio-wave-canvas';
 
 /** Decorative-only star layer. The original page gradient stays in CSS. */
 const stars = Array.from({ length: 74 }, (_, index) => {
@@ -26,7 +26,6 @@ const meteors = [
 
 export default function GalaxyBackdrop() {
   const [reducedMotion, setReducedMotion] = useState(true);
-  const waveFieldRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
     const sync = () => setReducedMotion(preference.matches);
@@ -35,49 +34,6 @@ export default function GalaxyBackdrop() {
     return () => preference.removeEventListener('change', sync);
   }, []);
 
-
-  // Anchor the broadcast to the *real* Sun/Moon icon, even after responsive
-  // layout changes or client-side navigation. No coordinates are hardcoded.
-  useEffect(() => {
-    const field = waveFieldRef.current;
-    if (!field) return;
-    let frame = 0;
-    const updateOrigin = () => {
-      frame = 0;
-      const visibleIcon = Array.from(document.querySelectorAll<HTMLElement>('.zaray-theme-switch .zaray-theme-icon'))
-        .find((icon) => {
-          const rect = icon.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0 &&
-            rect.right > 0 && rect.bottom > 0 &&
-            rect.left < window.innerWidth && rect.top < window.innerHeight;
-        });
-      if (!visibleIcon) {
-        field.dataset.active = 'false';
-        return;
-      }
-      const rect = visibleIcon.getBoundingClientRect();
-      field.style.setProperty('--zaray-wifi-x', `${rect.left + rect.width / 2}px`);
-      field.style.setProperty('--zaray-wifi-y', `${rect.top + rect.height / 2}px`);
-      // A viewport-relative extent makes the waves reach desktop, tablet and mobile edges.
-      field.style.setProperty('--zaray-wifi-scale',
-        String(Math.min(22, Math.max(9, Math.hypot(window.innerWidth, window.innerHeight) / 108))));
-      field.dataset.active = 'true';
-    };
-    const scheduleUpdate = () => {
-      if (!frame) frame = window.requestAnimationFrame(updateOrigin);
-    };
-    const observer = new MutationObserver(scheduleUpdate);
-    observer.observe(document.body, { childList: true, subtree: true });
-    window.addEventListener('resize', scheduleUpdate, { passive: true });
-    window.addEventListener('scroll', scheduleUpdate, true);
-    scheduleUpdate();
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', scheduleUpdate);
-      window.removeEventListener('scroll', scheduleUpdate, true);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
-  }, []);
 
   return <div className="zaray-galaxy-backdrop zaray-original-backdrop" aria-hidden="true">
     <div className="zaray-starfield">
@@ -93,17 +49,6 @@ export default function GalaxyBackdrop() {
           animationDuration: meteor.duration,
         }} />)}
     </div>
-    <div className="zaray-wifi-wavefield" ref={waveFieldRef} data-active="false">
-      {/* One fine arc per emission: evenly phased on a 30-second linear trajectory.
-          Identical velocity + fixed phase offset = constant gap, no crossings. */}
-      {Array.from({ length: 8 }, (_, index) => {
-        const offset = `-${index * 3.75}s`;
-        return <WifiSignalGlyph
-          key={index}
-          className="zaray-wifi-global-pulse"
-          style={{ '--zaray-wifi-offset': offset } as CSSProperties}
-        />;
-      })}
-    </div>
+    <RadioWaveCanvas />
   </div>;
 }
