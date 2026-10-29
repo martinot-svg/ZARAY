@@ -89,8 +89,9 @@ try {
     // Keep the atmospheric halo and all visible surface pixels, with a
     // softly feathered boundary following the real photo, not a drawn curve.
     const surface=smooth((y-edge[x]+21)/32);
-    // Fade out well before the physical file's right edge, so NO vertical cut.
-    const right=1-smooth((x/width-.68)/.32);
+    // Image is mirrored in the layout: fade the source LEFT edge so the
+    // visible RIGHT end dissolves without any abrupt vertical cutoff.
+    const right=smooth((x/width)/.32);
     // A tiny feather prevents the source file's outermost row being visible.
     const bottom=1-smooth((y/height-.965)/.035);
     rgba[o+3]=Math.round(255*surface*right*bottom);
