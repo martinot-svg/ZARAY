@@ -26,7 +26,11 @@ export async function GET(request:NextRequest){
     .select('id,company_id,site_id,offer_id,batch_id,username,status,duration_minutes,validity_days,paid_at,activated_at,expires_at,created_at')
     .eq('company_id',companyId).eq('site_id',siteId).order('created_at',{ascending:false}).limit(200);
   if(error)return fail('Inventaire des tickets indisponible.',503);
-  return NextResponse.json({vouchers:data??[]},{headers});
+  const {data:links,error:linkError}=await supabase.from('wifi_voucher_network')
+    .select('voucher_id,router_id,network_state').eq('company_id',companyId).eq('site_id',siteId);
+  if(linkError)return fail('Statuts de provisionnement indisponibles.',503);
+  const byId=new Map((links??[]).map(v=>[v.voucher_id,v]));
+  return NextResponse.json({vouchers:(data??[]).map(v=>({...v,network:byId.get(v.id)??null}))},{headers});
 }
 export async function POST(request:NextRequest){
   const body=await request.json().catch(()=>null) as Record<string,unknown>|null;
