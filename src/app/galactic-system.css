@@ -605,55 +605,66 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   }
 }
 
-/* Z'Accueil only — atmospheric Earth limb in the lower-left corner.
-   This is a decorative layer, NOT a replacement of the original starfield,
-   galaxy, header or page backgrounds. No extra animation or GPU workload. */
+/* Z'Accueil: real Earth limb photographed from the International Space
+   Station, NASA JSC image ISS061-E-123327 (11 Jan 2020).
+   Source: https://eol.jsc.nasa.gov/DatabaseImages/ESC/large/ISS061/ISS061-E-123327.JPG
+   Unlike the previous ellipse, this uses an ACTUAL orbital photograph with
+   atmospheric scattering, real cloud formations and a natural horizon.
+   The photograph has feathered edges and never replaces the ZARAY galaxy. */
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-  --earth-width: clamp(750px, 105vw, 1700px);
-  --earth-height: clamp(470px, 66vw, 960px);
-  --earth-left: clamp(-420px, -28vw, -165px);
-  --earth-crest: clamp(112px, 20vh, 205px);
   position: fixed;
   left: 0;
   bottom: 0;
-  width: min(88vw, 1180px);
-  height: clamp(230px, 36vh, 420px);
+  width: min(84vw, 1120px);
+  height: clamp(300px, 53vh, 610px);
   z-index: 0;
   overflow: hidden;
-  isolation: isolate;
   pointer-events: none;
   user-select: none;
-  opacity: .86;
+  isolation: isolate;
 }
-/* Distant curved planet surface with a razor-thin pale blue atmospheric rim. */
-.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::before,
+.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("https://eol.jsc.nasa.gov/DatabaseImages/ESC/large/ISS061/ISS061-E-123327.JPG");
+  background-repeat: no-repeat;
+  background-position: center 48%;
+  background-size: cover;
+  /* Preserve real detail while toning down bright clouds for the dark UI. */
+  filter: brightness(.68) contrast(1.15) saturate(.84);
+  opacity: .81;
+  /* The visible photographic area dissolves into the existing starfield.
+     No circular border, solid panel or image rectangle remains. */
+  -webkit-mask-image: radial-gradient(
+    ellipse 82% 97% at 27% 65%,
+    #000 0%,
+    rgba(0,0,0,.98) 31%,
+    rgba(0,0,0,.77) 49%,
+    rgba(0,0,0,.36) 67%,
+    transparent 88%
+  );
+  mask-image: radial-gradient(
+    ellipse 82% 97% at 27% 65%,
+    #000 0%,
+    rgba(0,0,0,.98) 31%,
+    rgba(0,0,0,.77) 49%,
+    rgba(0,0,0,.36) 67%,
+    transparent 88%
+  );
+}
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::after {
   content: "";
   position: absolute;
-  display: block;
-  left: var(--earth-left);
-  bottom: calc(var(--earth-crest) - var(--earth-height));
-  width: var(--earth-width);
-  height: var(--earth-height);
-  border-radius: 50%;
+  inset: 0;
   pointer-events: none;
-}
-.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::before {
-  background:
-    radial-gradient(ellipse at 48% 1%, rgba(46, 132, 174, .25) 0%, rgba(12, 52, 86, .20) 24%, rgba(2, 16, 30, .40) 54%, rgba(1, 8, 18, .59) 100%);
-  border-top: 1.2px solid rgba(199, 246, 255, .76);
-  box-shadow:
-    0 -1px 3px rgba(208, 250, 255, .39),
-    0 -5px 17px rgba(82, 197, 255, .28),
-    0 -22px 58px rgba(26, 133, 216, .16),
-    inset 0 11px 30px rgba(92, 199, 248, .12);
-}
-/* Very soft upper atmosphere, blurred without turning into a bright panel. */
-.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::after {
-  bottom: calc(var(--earth-crest) - var(--earth-height) + 1px);
-  border-top: 9px solid rgba(105, 218, 255, .25);
-  filter: blur(12px);
-  opacity: .67;
+  background: radial-gradient(
+    ellipse 70% 34% at 24% 44%,
+    rgba(96,203,255,.10) 0%,
+    rgba(38,123,224,.045) 46%,
+    transparent 85%
+  );
+  mix-blend-mode: screen;
 }
 .personal-no-sidebar.personal-home-shell > .personal-content {
   position: relative;
@@ -661,27 +672,23 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
 }
 @media (min-width: 701px) and (max-width: 1100px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    --earth-width: 110vw;
-    --earth-height: 75vw;
-    --earth-left: -31vw;
-    --earth-crest: clamp(100px, 18vh, 180px);
     width: 92vw;
-    opacity: .76;
+    height: clamp(300px, 48vh, 530px);
   }
 }
 @media (max-width: 700px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    --earth-width: min(120vw, 650px);
-    --earth-height: clamp(370px, 92vw, 590px);
-    --earth-left: -34vw;
-    --earth-crest: clamp(100px, 18vh, 155px);
     width: 100vw;
-    height: 240px;
-    opacity: .7;
+    height: clamp(235px, 34vh, 360px);
+  }
+  .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::before {
+    background-position: 46% 48%;
+    filter: brightness(.58) contrast(1.14) saturate(.8);
+    opacity: .73;
   }
 }
 [data-zaray-theme="light"] .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-  opacity: .4;
+  opacity: .31;
 }
 @media print {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
