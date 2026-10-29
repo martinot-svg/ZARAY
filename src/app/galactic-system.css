@@ -605,16 +605,20 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   }
 }
 
-/* Z'Accueil only — real 3D Earth projected from NASA satellite imagery.
-   The sphere is mostly below and left of the viewport, exposing only a
-   natural curved horizon. The ZARAY starfield remains completely untouched.
-   On browsers without WebGL or if the atlas cannot load, the previously
-   approved original user's high-resolution transparent picture stays visible. */
+/* Z'Accueil — 3D Earth calibrated to the USER'S 1366 x 644 screenshot.
+   Measured white target: crest y=461, x about 80; bottom intersection
+   around x=508 at y=644. A fitted circle has radius 592.45px, center
+   (79.99, 1053.25), hence a 1185px globe at left -512px, bottom -1002px.
+   Values below reproduce this at exactly 1366x644 while adapting smoothly
+   to other desktop viewport sizes. They do not change planet rotation. */
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
+  --zaray-earth-diameter: clamp(900px, 86.75vw, 1380px);
+  --zaray-earth-center-x: clamp(50px, 5.86vw, 110px);
+  --zaray-earth-visible-rise: clamp(130px, 28.4vh, 220px);
   position: fixed;
-  left: clamp(-300px, -18.5vw, -160px);
-  bottom: clamp(-570px, -36vw, -365px);
-  width: clamp(560px, 51vw, 740px);
+  left: calc(var(--zaray-earth-center-x) - var(--zaray-earth-diameter) / 2);
+  bottom: calc(var(--zaray-earth-visible-rise) - var(--zaray-earth-diameter));
+  width: var(--zaray-earth-diameter);
   height: auto;
   aspect-ratio: 1;
   z-index: 0;
@@ -623,7 +627,7 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   overflow: visible !important;
   opacity: 1;
   border: 0 !important;
-  background: url("/brand/zaccueil-earth-render-2x.webp") left bottom / contain no-repeat;
+  background: url("/brand/zaccueil-earth-render-2x.webp") center / contain no-repeat;
   box-shadow: none !important;
   clip-path: none !important;
   mask-image: none !important;
@@ -656,16 +660,16 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
 }
 @media (min-width:701px) and (max-width:1100px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    width: clamp(530px, 60vw, 680px);
-    left: clamp(-270px, -22vw, -150px);
-    bottom: clamp(-510px, -41vw, -350px);
+    --zaray-earth-diameter: clamp(660px, 90vw, 940px);
+    --zaray-earth-center-x: clamp(42px, 5.86vw, 70px);
+    --zaray-earth-visible-rise: clamp(115px, 26vh, 185px);
   }
 }
 @media (max-width:700px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    width: clamp(360px, 118vw, 510px);
-    left: clamp(-210px, -43vw, -130px);
-    bottom: clamp(-385px, -88vw, -280px);
+    --zaray-earth-diameter: clamp(450px, 125vw, 620px);
+    --zaray-earth-center-x: clamp(28px, 7vw, 46px);
+    --zaray-earth-visible-rise: clamp(95px, 19vh, 140px);
     opacity: .91;
   }
 }
