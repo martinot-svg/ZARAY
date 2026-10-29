@@ -2,7 +2,12 @@
 import {useEffect,useMemo,useState} from 'react';
 import {ZarayIcon} from '@/components/ui/zaray-icon';
 type Site={id:string;company_id:string;name:string};
-type Voucher={id:string;username:string;status:string;duration_minutes:number;validity_days:number;paid_at:string|null;activated_at:string|null;expires_at:string|null;network:{router_id:string;network_state:string}|null};
+type Voucher={id:string;username:string;status:string;duration_minutes:number;validity_days:number;paid_at:string|null;activated_at:string|null;expires_at:string|null;network:{router_id:string;network_state:string;used_seconds:number;last_usage_at:string|null}|null};
+function formatDuration(seconds:number){
+ const safe=Math.max(0,Math.floor(seconds));
+ const hours=Math.floor(safe/3600),minutes=Math.floor((safe%3600)/60),rem=safe%60;
+ return [hours?hours+' h':null,minutes?minutes+' min':null,!hours&&!minutes?rem+' s':null].filter(Boolean).join(' ');
+}
 const stateLabels:Record<string,string>={not_sold:'En stock',queued:'Activation en attente',provisioned:'Prêt sur MikroTik',failed:'Erreur réseau',expired:'Désactivé'};
 export default function WifiVoucherSales({companyId}:{companyId:string}){
  const [sites,setSites]=useState<Site[]>([]),[siteId,setSiteId]=useState('');
@@ -33,7 +38,7 @@ export default function WifiVoucherSales({companyId}:{companyId:string}){
   }catch(e){setError(e instanceof Error?e.message:'Erreur de vente.');}finally{setBusy(false);}
  }
  return <section className="panel" style={{padding:18}}>
-  <div className="panel-head"><div><h2 className="panel-title">Vendre et activer un ticket Wi-Fi</h2><p className="muted">Un ticket imprimé reste désactivé jusqu'à l'encaissement et la confirmation du routeur.</p></div></div>
+  <div className="panel-head"><div><h2 className="panel-title">Vendre et activer un ticket Wi-Fi</h2><p className="muted">Un ticket imprimé reste désactivé jusqu'à l'encaissement et la confirmation du routeur. Le temps Internet est cumulé : une déconnexion arrête le décompte des minutes.</p></div></div>
   <div className="field-grid">
    <label>Site<select value={siteId} onChange={e=>{setSiteId(e.target.value);setVoucherId('');setError('');}}>
     {sites.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
@@ -45,9 +50,9 @@ export default function WifiVoucherSales({companyId}:{companyId:string}){
   {error&&<p className="alert alert-error" role="alert">{error}</p>}
   {notice&&<p role="status">{notice}</p>}
   <h3 style={{marginTop:24}}>État des tickets du site</h3>
-  {tickets.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Identifiant</th><th>Vente</th><th>MikroTik</th><th>Activation</th><th>Expiration</th></tr></thead>
-   <tbody>{tickets.map(t=><tr key={t.id}><td><strong>{t.username}</strong></td><td>{t.status==='available'?'En stock':t.status==='paid'?'Vendu':t.status==='active'?'Utilisé':t.status==='expired'?'Expiré':t.status}</td><td>{t.network?stateLabels[t.network.network_state]??t.network.network_state:'Ancien ticket non lié'}</td><td>{t.activated_at?new Date(t.activated_at).toLocaleString('fr-FR'):'—'}</td><td>{t.expires_at?new Date(t.expires_at).toLocaleString('fr-FR'):'—'}</td></tr>)}</tbody></table></div>
+  {tickets.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Identifiant</th><th>Vente</th><th>MikroTik</th><th>Utilisé (cumul)</th><th>Restant</th><th>Activation</th><th>Expiration</th></tr></thead>
+   <tbody>{tickets.map(t=><tr key={t.id}><td><strong>{t.username}</strong></td><td>{t.status==='available'?'En stock':t.status==='paid'?'Vendu':t.status==='active'?'Utilisé':t.status==='expired'?'Expiré':t.status}</td><td>{t.network?stateLabels[t.network.network_state]??t.network.network_state:'Ancien ticket non lié'}</td><td>{t.network?.last_usage_at?formatDuration(t.network.used_seconds):'Non synchronisé'}</td><td>{t.network?.last_usage_at?formatDuration(t.duration_minutes*60-t.network.used_seconds):'—'}</td><td>{t.activated_at?new Date(t.activated_at).toLocaleString('fr-FR'):'—'}</td><td>{t.expires_at?new Date(t.expires_at).toLocaleString('fr-FR'):'—'}</td></tr>)}</tbody></table></div>
   :<p className="muted">Aucun ticket pour ce site. Générez les identifiants depuis l’onglet Générer.</p>}
-  <p className="muted">Les identifiants des anciens lots ne peuvent pas être provisionnés automatiquement : leurs mots de passe ne sont pas récupérables. Seuls les nouveaux lots liés à un MikroTik bénéficient de l'activation.</p>
+  <p className="muted">Durée cumulée : la limite est appliquée par le MikroTik et le temps restant est synchronisé depuis son compteur Hotspot. La validité de première utilisation reste distincte. Les identifiants des anciens lots ne peuvent pas être provisionnés automatiquement : leurs mots de passe ne sont pas récupérables. Seuls les nouveaux lots liés à un MikroTik bénéficient de l'activation.</p>
  </section>;
 }
