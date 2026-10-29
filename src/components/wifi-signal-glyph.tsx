@@ -7,7 +7,7 @@ export default function WifiSignalGlyph(props: SVGProps<SVGSVGElement>) {
       viewBox="0 0 499 359"
       fill="none"
       stroke="currentColor"
-      strokeWidth="0.05"
+      strokeWidth="0.07"
       strokeLinecap="round"
       aria-hidden="true"
       focusable="false"
