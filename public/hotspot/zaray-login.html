@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="color-scheme" content="dark"/>
+<title>ZARAY Wi-Fi — Connexion</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;min-height:100dvh;color:#f0f9fa;background:#050b1b;
+ background-image:radial-gradient(ellipse at 18% 12%,rgba(16,103,137,.36),transparent 55%),radial-gradient(ellipse at 82% 72%,rgba(27,143,104,.22),transparent 50%);overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.32;background-image:radial-gradient(2px 2px at 12% 20%,white 95%,transparent),radial-gradient(2px 2px at 75% 30%,white 95%,transparent),radial-gradient(1px 1px at 35% 75%,white 95%,transparent),radial-gradient(1px 1px at 85% 85%,white 95%,transparent);background-size:230px 250px;animation:stars 40s linear infinite}
+@keyframes stars{to{transform:translateY(-20px)}}
+main{position:relative;max-width:740px;margin:auto;padding:clamp(18px,5vw,50px) 18px 56px}
+header{text-align:center;margin:12px 0 34px}
+.logo{display:inline-flex;align-items:center;gap:10px;font-size:22px;font-weight:800;letter-spacing:.09em}
+.logo-mark{display:inline-grid;place-items:center;width:42px;height:42px;color:#061423;font-size:22px;background:linear-gradient(130deg,#54f0a0,#1ca7b2);border-radius:13px}
+.subtle{color:#adc4ce;font-size:14px;line-height:1.6}
+h1{font-size:clamp(26px,6vw,38px);line-height:1.15;margin:15px 0 8px}
+h2{font-size:21px;margin:0 0 8px}
+.panel{background:linear-gradient(140deg,rgba(24,44,64,.88),rgba(12,26,46,.9));border:1px solid rgba(155,211,227,.16);border-radius:24px;box-shadow:0 18px 65px rgba(0,0,0,.23);padding:clamp(18px,4vw,30px)}
+.offers{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0}
+.offer{display:block;width:100%;background:rgba(5,20,40,.8);border:1px solid rgba(106,166,183,.31);border-radius:17px;padding:20px;text-align:left;color:inherit;cursor:pointer;transition:transform .2s,border-color .2s,background .2s}
+.offer:hover,.offer:focus-visible{transform:translateY(-2px);border-color:#64deb3;background:rgba(17,51,64,.92);outline:none}
+.offer-price{display:block;color:#82f0b7;font-weight:800;font-size:26px;margin:9px 0 4px}
+.offer-name{display:block;font-size:14px;color:#bad1d7}
+.offer-duration{display:block;font-weight:650;font-size:18px}
+.offer-hint{color:#a8bac6;font-size:12px;margin-top:10px}
+button.primary{width:100%;border:0;background:linear-gradient(90deg,#53e5a4,#23baca);color:#071922;font-size:16px;font-weight:800;border-radius:12px;padding:15px;cursor:pointer}
+button.primary:disabled{opacity:.55;cursor:progress}
+button.secondary{background:transparent;border:1px solid rgba(174,215,222,.36);color:#e4f6f7;border-radius:10px;padding:10px 16px;cursor:pointer}
+.field{display:block;font-weight:650;font-size:13px;margin:18px 0}
+.field input{display:block;width:100%;margin-top:9px;border-radius:12px;border:1px solid #4c6677;background:#071628;padding:14px;color:white;font-size:18px;outline:none}
+.field input:focus{border-color:#62eab1;box-shadow:0 0 0 3px rgba(82,229,173,.15)}
+#selectedOffer{border:1px solid rgba(100,231,180,.35);background:rgba(25,108,89,.13);border-radius:12px;padding:12px;margin:18px 0}
+.notice{border-left:3px solid #6fc5de;padding:10px 14px;background:rgba(81,147,175,.12);border-radius:7px;color:#d6ecf3}
+.error{padding:12px 14px;border:1px solid #ff8b89;background:rgba(160,47,55,.25);border-radius:12px;color:#ffe1df;margin:16px 0}
+footer{text-align:center;margin-top:28px;color:#93a9b6;font-size:12px}
+[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){body:before{animation:none}.offer{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<header>
+ <div class="logo"><span class="logo-mark" aria-hidden="true">⌁</span>ZARAY WI-FI</div>
+ <h1>Bienvenue sur notre réseau</h1>
+ <p class="subtle" id="siteName">Choisissez l'offre de votre ticket pour vous connecter.</p>
+</header>
+<section class="panel" id="catalog" aria-labelledby="catalogTitle">
+ <h2 id="catalogTitle">Offres Wi-Fi disponibles</h2>
+ <p class="subtle">Achetez le ticket imprimé chez le vendeur. Sélectionnez ensuite l'offre correspondante.</p>
+ <div id="offers" class="offers" aria-live="polite"><p class="subtle">Chargement des offres du point de vente…</p></div>
+ <p id="feedError" class="error" role="alert" hidden></p>
+ <button type="button" class="secondary" id="already" aria-label="Saisir un ticket déjà acheté">J'ai déjà un ticket</button>
+</section>
+<section class="panel" id="credentials" aria-labelledby="formTitle" hidden>
+ <button type="button" class="secondary" id="back" style="margin-bottom:20px">← Voir les offres</button>
+ <h2 id="formTitle">Connecter mon ticket</h2>
+ <p id="selectedOffer" class="subtle" aria-live="polite"></p>
+ <p class="subtle">Recopiez exactement les identifiants du ticket acheté chez le vendeur.</p>
+ $(if error)
+ <p class="error" role="alert">Connexion refusée par le réseau. Vérifiez vos identifiants et la validité du ticket.</p>
+ $(endif)
+ <p id="inputError" class="error" role="alert" hidden></p>
+ $(if chap-id)
+ <form name="sendin" method="post" action="$(link-login-only)" hidden>
+  <input type="hidden" name="username"/>
+  <input type="hidden" name="password"/>
+  <input type="hidden" name="dst" value="$(link-orig)"/>
+  <input type="hidden" name="popup" value="false"/>
+ </form>
+ <script src="md5.js"></script>
+ $(endif)
+ <form name="login" method="post" action="$(link-login-only)" onsubmit="return loginWithTicket()">
+  <label class="field" for="username">Nom d'utilisateur indiqué sur le ticket
+   <input name="username" id="username" autocomplete="off" autocapitalize="characters" spellcheck="false" minlength="3" maxlength="5" required/>
+  </label>
+  <label class="field" for="password">Mot de passe du ticket
+   <input type="password" name="password" id="password" inputmode="numeric" autocomplete="off" spellcheck="false" minlength="3" maxlength="32" required/>
+  </label>
+  <input type="hidden" name="dst" value="$(link-orig)"/>
+  <input type="hidden" name="popup" value="false"/>
+  <button class="primary" id="submit" type="submit">Se connecter</button>
+ </form>
+ <p class="subtle">La durée Internet commence à votre première connexion réussie. Les minutes sont décomptées uniquement quand vous êtes connecté.</p>
+</section>
+<footer>ZARAY · Accès Internet sécurisé par MikroTik</footer>
+</main>
+<script>
+(function(){
+ 'use strict';
+ var SITE_ID='__ZARAY_SITE_ID__';
+ var api='https://zaray.vercel.app/api/public/wifi-offers?siteId='+encodeURIComponent(SITE_ID);
+ var offers=document.getElementById('offers'),catalog=document.getElementById('catalog'),credentials=document.getElementById('credentials');
+ var inputError=document.getElementById('inputError'),feedError=document.getElementById('feedError');
+ function showLogin(offer){
+  document.getElementById('selectedOffer').textContent=offer
+   ?offer.name+' — '+formatPrice(offer.priceAmount,offer.currency)+' / '+formatDuration(offer.durationMinutes)
+   :'Votre accès sera défini par le ticket présenté, quelle que soit l’offre affichée.';
+  catalog.hidden=true;credentials.hidden=false;
+  document.getElementById('username').focus();
+ }
+ function formatPrice(price,currency){return Number(price).toLocaleString('fr-FR')+' '+(currency==='MGA'?'Ar':currency);}
+ function formatDuration(minutes){
+  var h=Math.floor(minutes/60),m=minutes%60;
+  return(h?h+' h':'')+(h&&m?' ':'')+(m?m+' min':'')||'0 min';
+ }
+ document.getElementById('already').addEventListener('click',function(){showLogin(null);});
+ document.getElementById('back').addEventListener('click',function(){credentials.hidden=true;catalog.hidden=false;});
+ fetch(api,{mode:'cors',credentials:'omit',cache:'no-store'})
+  .then(function(r){if(!r.ok)throw new Error('catalogue');return r.json();})
+  .then(function(data){
+   if(data.siteName)document.getElementById('siteName').textContent='Réseau '+data.siteName+' · Sélectionnez votre forfait.';
+   offers.textContent='';
+   if(!Array.isArray(data.offers)||data.offers.length===0){
+    offers.textContent='Aucun forfait avec tickets prêts à vendre pour le moment.';
+    return;
+   }
+   data.offers.forEach(function(o){
+    if(!o||typeof o.id!=='string'||!Number.isFinite(o.durationMinutes)||!Number.isFinite(o.priceAmount))return;
+    var b=document.createElement('button');b.type='button';b.className='offer';
+    var name=document.createElement('span');name.className='offer-name';name.textContent=o.name;
+    var price=document.createElement('strong');price.className='offer-price';price.textContent=formatPrice(o.priceAmount,o.currency);
+    var duration=document.createElement('span');duration.className='offer-duration';duration.textContent=formatDuration(o.durationMinutes);
+    var hint=document.createElement('span');hint.className='offer-hint';hint.textContent='J’ai acheté ce forfait · Saisir mon ticket';
+    b.appendChild(name);b.appendChild(price);b.appendChild(duration);b.appendChild(hint);
+    b.addEventListener('click',function(){showLogin(o);});
+    offers.appendChild(b);
+   });
+  })
+  .catch(function(){
+   offers.textContent='';
+   feedError.hidden=false;
+   feedError.textContent='Les offres ne peuvent pas être chargées. Si vous avez déjà un ticket, vous pouvez saisir vos identifiants ci-dessous.';
+  });
+ window.loginWithTicket=function(){
+  inputError.hidden=true;
+  var form=document.forms.login,user=form.username.value.trim().toUpperCase(),password=form.password.value.trim();
+  if(!/^[A-Z0-9]{3,5}$/.test(user)||!(/^([0-9]{3,5}|[A-Z0-9]{12,32})$/.test(password))){
+   inputError.hidden=false;inputError.textContent='Saisissez le nom d’utilisateur et le mot de passe exacts imprimés sur votre ticket.';
+   return false;
+  }
+  form.username.value=user;
+  // This form authenticates with the local MikroTik, not with ZARAY servers.
+  $(if chap-id)
+  if(typeof hexMD5!=='function'){
+   inputError.hidden=false;inputError.textContent='Méthode sécurisée de connexion indisponible.';return false;
+  }
+  document.forms.sendin.username.value=user;
+  document.forms.sendin.password.value=hexMD5('$(chap-id)'+password+'$(chap-challenge)');
+  document.forms.sendin.dst.value=form.dst.value;
+  document.forms.sendin.submit();
+  return false;
+  $(endif)
+  return true;
+ };
+})();
+</script>
+</body>
+</html>
