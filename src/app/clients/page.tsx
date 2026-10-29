@@ -2,14 +2,14 @@
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import AppShell from '@/components/app-shell';
-import { activeSiteId, scopedQuery, selectedCompany } from '@/lib/workspace-url';
+import { activeSiteId, selectedCompany } from '@/lib/workspace-url';
 import { MotionFeedback } from '@/components/motion';
 
 type Company={id:string;legal_name:string;slug:string;role:string};
 type Site={id:string;company_id:string;name:string};
 type Customer={id:string;company_id:string;site_id:string|null;full_name:string;email:string|null;phone:string|null;notes:string;status:string;enrollment_source:string;created_at:string};
 
-const statusLabels:Record<string,string>={active:'Actif',inactive:'Inactif',archived:'Archivé'};
+const statusLabels:Record<string,string>={active:'Fiche active',inactive:'Fiche inactive',archived:'Archivée'};
 
 export default function ClientsPage(){
  const [companies,setCompanies]=useState<Company[]>([]),[sites,setSites]=useState<Site[]>([]),[customers,setCustomers]=useState<Customer[]>([]);
@@ -17,7 +17,7 @@ export default function ClientsPage(){
  const [editing,setEditing]=useState<string|null>(null),[form,setForm]=useState({fullName:'',email:'',phone:'',siteId:'',notes:'',status:'active'});
  const [busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState('');
 
- async function loadCustomers(id:string){if(!id)return;setBusy(true);setError('');try{const r=await fetch('/api/customers?'+scopedQuery(id),{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les clients.');setCustomers(d.customers??[]);}catch(e){setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{setBusy(false);}}
+ async function loadCustomers(id:string){if(!id)return;setBusy(true);setError('');try{const r=await fetch('/api/customers?companyId='+encodeURIComponent(id),{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les clients.');setCustomers(d.customers??[]);}catch(e){setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{setBusy(false);}}
  useEffect(()=>{let active=true;(async()=>{try{const r=await fetch('/api/sites',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les entreprises.');if(active){setCompanies(d.companies??[]);setSites(d.sites??[]);if(d.companies?.[0])setCompanyId(selectedCompany(d.companies??[],d.sites??[]));}}catch(e){if(active)setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{if(active)setBusy(false);}})();return()=>{active=false};},[]);
  useEffect(()=>{setEditing(null);if(companyId)void loadCustomers(companyId);},[companyId]);
  useEffect(()=>{if(activeSiteId())setForm(old=>({...old,siteId:activeSiteId()||''}));},[companyId]);
