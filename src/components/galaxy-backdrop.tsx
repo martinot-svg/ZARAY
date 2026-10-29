@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import WifiSignalGlyph from '@/components/wifi-signal-glyph';
 
 /** Decorative-only star layer. The original page gradient stays in CSS. */
@@ -101,7 +101,7 @@ export default function GalaxyBackdrop() {
         return <WifiSignalGlyph
           key={index}
           className="zaray-wifi-global-pulse"
-          style={{ '--zaray-wifi-offset': offset } as React.CSSProperties}
+          style={{ '--zaray-wifi-offset': offset } as CSSProperties}
         />;
       })}
     </div>
