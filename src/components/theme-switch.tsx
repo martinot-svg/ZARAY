@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type Ref } from 'react';
 import { Moon, Sun } from 'lucide-react';
 
 type Theme = 'dark' | 'light';
 const KEY = 'zaray-interface-theme';
 
 /** User controlled visual theme; never affects company, site, auth or payment data. */
-export default function ThemeSwitch({ className = '' }: { className?: string }) {
+export default function ThemeSwitch({ className = '', buttonRef }: { className?: string; buttonRef?: Ref<HTMLButtonElement> }) {
   const [theme, setTheme] = useState<Theme>('dark');
   useEffect(() => {
     let initial: Theme = 'dark';
@@ -28,7 +28,7 @@ export default function ThemeSwitch({ className = '' }: { className?: string }) 
     try { window.localStorage.setItem(KEY, next); } catch { /* Non-persistent browsing. */ }
   }
 
-  return <button type="button" className={'zaray-theme-switch ' + className}
+  return <button ref={buttonRef} type="button" className={'zaray-theme-switch ' + className}
     onClick={toggle} aria-label={theme === 'dark' ? 'Activer le thème clair' : 'Activer le thème sombre'}
     title={theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
     aria-pressed={theme === 'light'}>
