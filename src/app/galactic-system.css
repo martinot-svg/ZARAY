@@ -606,6 +606,9 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
 }
 
 /* Z'Accueil — TRUE transparent-background Earth horizon.
+   Size reduced ~32% on standard desktop, with the base placed higher to
+   retain a natural partial Earth in the lower-left corner. The exported
+   WebP now has fully feathered edges to prevent the tiny visible seam.
    NASA ISS053-E-115170 is cut out at build time, pixel by pixel.
    The source planet and clouds are unmodified photographic pixels;
    there is no generated ellipse, black JPEG sky, CSS clipping or panel.
@@ -614,8 +617,8 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
   position: fixed;
   left: 0;
-  bottom: clamp(-240px, -15vw, -135px);
-  width: clamp(720px, 73vw, 1100px);
+  bottom: clamp(-150px, -9vw, -85px);
+  width: clamp(480px, 50vw, 760px);
   height: auto;
   aspect-ratio: 1200 / 799;
   z-index: 0;
@@ -656,14 +659,14 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
 }
 @media (min-width: 701px) and (max-width: 1100px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    width: 86vw;
-    bottom: -15vw;
+    width: 60vw;
+    bottom: -10vw;
   }
 }
 @media (max-width: 700px) {
   .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
-    width: 125vw;
-    bottom: -21vw;
+    width: min(95vw, 470px);
+    bottom: -12vw;
   }
 }
 [data-zaray-theme="light"] .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon {
