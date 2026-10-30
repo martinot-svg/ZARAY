@@ -30,7 +30,7 @@ begin
        and previous_order.paid_at is not null
        and previous_order.site_id is not distinct from new.site_id
        and r.site_id is not distinct from new.site_id;
-     if pg_catalog.coalesce(pg_catalog.array_length(v_matching_accounts,1),0)=1 then
+     if coalesce(pg_catalog.array_length(v_matching_accounts,1),0)=1 then
        update public.network_access_accounts
        set order_id=new.id
        where id=v_matching_accounts[1] and company_id=new.company_id;
@@ -44,9 +44,9 @@ begin
      select * into v_router from public.network_routers where id=a.router_id;
      select grace_hours into v_grace
        from public.network_company_policies where company_id=a.company_id;
-     v_grace:=pg_catalog.coalesce(v_grace,72);
-     v_new_expiry=pg_catalog.greatest(now(),pg_catalog.coalesce(a.expires_at,now()))
-       +pg_catalog.make_interval(days=>pg_catalog.greatest(new.validity_days,1));
+     v_grace:=coalesce(v_grace,72);
+     v_new_expiry=greatest(now(),coalesce(a.expires_at,now()))
+       +pg_catalog.make_interval(days=>greatest(new.validity_days,1));
      update public.network_access_accounts
         set expires_at=v_new_expiry,
             grace_until=v_new_expiry+pg_catalog.make_interval(hours=>v_grace)
@@ -99,7 +99,7 @@ begin
 
  update public.subscription_orders set
      status='active',
-     activated_at=pg_catalog.coalesce(activated_at,now()),
+     activated_at=coalesce(activated_at,now()),
      updated_at=now()
    where id=v_order.id and company_id=new.company_id
      and paid_at is not null and activated_at is null
@@ -118,7 +118,7 @@ begin
    update public.network_access_accounts
      set expires_at=v_period_end,
          grace_until=v_period_end+
-           pg_catalog.make_interval(hours=>pg_catalog.coalesce(v_grace,72))
+           pg_catalog.make_interval(hours=>coalesce(v_grace,72))
      where id=new.id and company_id=new.company_id;
  end if;
  return new;
