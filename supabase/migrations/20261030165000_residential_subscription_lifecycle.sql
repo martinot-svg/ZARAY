@@ -236,3 +236,22 @@ end;
 $fn$;
 revoke all on function public.request_residential_renewal(uuid) from public,anon;
 grant execute on function public.request_residential_renewal(uuid) to authenticated;
+
+-- KPI function uses the caller's RLS visibility (SECURITY INVOKER).
+create or replace function public.residential_subscription_summary(p_company_id uuid,p_site_id uuid default null)
+returns jsonb language sql stable security invoker set search_path=''
+as $fn$
+ select jsonb_build_object(
+ 'total',count(*),
+ 'active',count(*) filter(where s.expires_at>now()),
+ 'expiring',count(*) filter(where s.expires_at>now() and s.expires_at<=now()+interval '7 days'),
+ 'expired',count(*) filter(where s.expires_at<=now()),
+ 'waiting_payment',count(*) filter(where s.paid_cycles=0),
+ 'waiting_activation',count(*) filter(where s.paid_cycles>s.activated_cycles
+   and (s.expires_at is null or s.expires_at<=now()))
+ )
+ from public.residential_subscriptions s
+ where s.company_id=p_company_id and (p_site_id is null or s.site_id=p_site_id);
+$fn$;
+revoke all on function public.residential_subscription_summary(uuid,uuid) from public,anon;
+grant execute on function public.residential_subscription_summary(uuid,uuid) to authenticated;
