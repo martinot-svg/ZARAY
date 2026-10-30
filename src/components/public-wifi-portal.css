@@ -257,3 +257,94 @@
  .zw-oneview{min-height:520px}
 }
 @media(prefers-reduced-motion:reduce){.zw-compact-offer{transition:none}}
+
+
+/* ZARAY — single-screen premium captive login. The initial screen intentionally
+   follows the structure of a genuine mobile Hotspot, not a marketing landing. */
+.zw-landing.zw-root{height:100dvh;min-height:0;overflow:hidden}
+.zw-landing .zw-shell{height:100dvh;min-height:0}
+.zw-landing .zw-nav{min-height:55px;height:55px;flex-shrink:0}
+.zw-landing .zw-nav .zw-links{display:none}
+.zw-landing .zw-nav .zw-menu{display:none}
+.zw-landing .zw-nav .zw-mark{width:35px;height:35px;border-radius:11px}
+.zw-landing .zw-nav .zw-brand{font-size:16px;letter-spacing:.12em}
+.zw-landing .zw-nav .zw-brand small{font-size:8px;margin-top:4px}
+.zw-landing .zw-nav .zw-network{font-size:9px;padding:6px 11px}
+.zw-landing .zw-main{min-height:0;flex:1;display:flex;flex-direction:column;padding:0}
+.zw-landing .zw-footer,.zw-landing .zw-topline{display:none}
+.zw-landing .zw-sky{height:100%;background:
+ radial-gradient(circle at 85% 6%,rgba(57,136,202,.29),transparent 35%),
+ radial-gradient(circle at 15% 87%,rgba(26,167,143,.2),transparent 39%),
+ radial-gradient(circle at 50% 45%,rgba(19,71,119,.3),transparent 65%),
+ linear-gradient(160deg,#071528,#020b18 74%)}
+.zw-simple-screen{flex:1;min-height:0;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:10px 0 12px}
+.zw-simple-screen:before{content:"";position:absolute;width:min(60vw,530px);height:min(60vw,530px);border:1px solid rgba(99,207,194,.12);border-radius:50%;transform:rotate(-25deg) scaleX(1.6);pointer-events:none}
+.zw-simple-card{position:relative;z-index:1;display:flex;flex-direction:column;gap:clamp(7px,1.35vh,13px);width:min(100%,440px);max-height:100%;background:linear-gradient(135deg,rgba(17,42,64,.9),rgba(9,23,44,.94));border:1px solid rgba(115,214,213,.33);border-radius:25px;padding:clamp(16px,2.65vh,27px) clamp(18px,3.3vw,28px);box-shadow:0 18px 60px rgba(0,0,0,.39),inset 0 1px rgba(197,255,251,.11);backdrop-filter:blur(17px)}
+.zw-simple-brand{display:flex;align-items:center;justify-content:center;gap:10px;flex-shrink:0}
+.zw-simple-emblem{display:flex;align-items:center;justify-content:center;width:54px;height:54px;border:1px solid rgba(107,247,196,.62);border-radius:50%;color:#80f6cb;background:linear-gradient(135deg,#0d4161,#072036);box-shadow:0 0 23px rgba(53,228,186,.17)}
+.zw-simple-brand .zw-simple-logo{display:block;width:112px;height:auto;object-fit:contain;max-width:45%}
+.zw-simple-heading{text-align:center;flex-shrink:0}
+.zw-simple-eyebrow{font-size:9px;letter-spacing:.17em;font-weight:780;color:#75e4be;text-transform:uppercase}
+.zw-simple-heading h1{margin:5px 0 3px;line-height:1.18;font-size:clamp(19px,3.6vw,25px);font-weight:820;letter-spacing:-.035em;color:#f3fffe}
+.zw-simple-heading h1 span{color:#80f2c8}
+.zw-simple-heading p{margin:0;font-size:12px;color:#b6cbd8;font-style:italic}
+.zw-simple-login{display:flex;flex-direction:column;gap:9px;flex-shrink:0}
+.zw-simple-login>label{display:flex;flex-direction:column;gap:3px;color:#c5e0e9;font-size:10px;font-weight:680}
+.zw-simple-field{display:flex;align-items:center;gap:10px;border:1px solid rgba(146,198,221,.36);background:rgba(5,18,35,.88);border-radius:11px;padding:0 11px;min-height:46px}
+.zw-simple-field:focus-within{border-color:#75edc3;box-shadow:0 0 0 2px rgba(81,222,177,.15)}
+.zw-simple-field>svg{color:#9adccf;flex-shrink:0}
+.zw-simple-field input{width:100%;min-width:0;color:white;background:none;border:0;outline:none;font-size:14px;padding:12px 0}
+.zw-simple-field input::placeholder{color:#97afbe}
+.zw-simple-eye{flex-shrink:0;background:transparent;border:0;color:#9fe7d2;padding:5px;font-size:10px}
+.zw-simple-connect,.zw-simple-subscribe{width:100%;min-height:44px;display:flex;align-items:center;justify-content:center;gap:10px;border-radius:11px;font-size:13px;font-weight:800;line-height:1.2;padding:10px;border:1px solid transparent}
+.zw-simple-connect{background:linear-gradient(100deg,#48cefa,#52efbd);color:#042333;box-shadow:0 8px 24px rgba(28,187,178,.13);margin-top:4px}
+.zw-simple-connect:hover{filter:brightness(1.07)}
+.zw-simple-subscribe{flex-shrink:0;color:#d9fff1;background:rgba(13,62,67,.2);border-color:rgba(84,228,189,.61)}
+.zw-simple-subscribe:hover{background:rgba(26,122,119,.3)}
+.zw-simple-connect svg:last-child,.zw-simple-subscribe svg:last-child{margin-left:auto}
+.zw-simple-connect svg:first-child,.zw-simple-subscribe svg:first-child{margin-right:auto}
+.zw-simple-offers-link{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:7px;background:transparent;border:0;color:#aad0d8;font-size:11px;padding:2px 6px}
+.zw-simple-offers-link:hover{text-decoration:underline;color:#94efcb}
+.zw-simple-footer{flex-shrink:0;border-top:1px solid rgba(153,213,225,.19);padding-top:9px;display:flex;flex-direction:column;gap:2px;text-align:center;color:#a9c2d0;font-size:10px}
+.zw-simple-footer strong{color:#e9f9f5}
+.zw-simple-alert{flex-shrink:0;border:1px solid rgba(104,181,193,.39);background:rgba(32,88,111,.34);color:#e1f2ff;padding:7px;border-radius:8px;font-size:10px;margin:0}
+.zw-simple-demo-entry{flex-shrink:0;position:relative;z-index:1}
+.zw-simple-demo-entry button{font-size:10px;display:flex;align-items:center;gap:7px;color:#b9d6db;background:transparent;border:0;padding:3px}
+.zw-simple-offers-dialog .zw-simple-offers-list{display:flex;flex-direction:column;gap:7px;max-height:40dvh;overflow:auto}
+.zw-simple-offers-dialog .zw-simple-offers-list button{width:100%;display:flex;align-items:center;gap:12px;text-align:left;background:rgba(11,40,60,.85);border:1px solid rgba(121,187,192,.27);border-radius:11px;padding:12px;color:#e7f8f5}
+.zw-simple-offers-dialog .zw-simple-offers-list button span{flex:1;display:flex;flex-direction:column;gap:2px}
+.zw-simple-offers-dialog .zw-simple-offers-list button small{font-size:11px;color:#a8c4cf}
+.zw-simple-offers-dialog .zw-simple-offers-list button b{font-size:13px;color:#7dedbf}
+.zw-simple-existing{margin-top:15px;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:transparent;color:#abf5d4;border:1px solid rgba(106,228,167,.35);border-radius:10px;padding:12px}
+.zw-landing .zw-root :focus-visible,.zw-landing :focus-visible{outline:2px solid #87f3d0;outline-offset:3px}
+@media(max-width:600px){
+ .zw-landing .zw-shell{width:calc(100% - 24px)}
+ .zw-landing .zw-nav{height:49px;min-height:49px}
+ .zw-landing .zw-network{font-size:8px;padding:5px 8px}
+ .zw-simple-card{width:min(100%,410px);border-radius:21px;padding:clamp(13px,2vh,22px) 17px;gap:clamp(6px,1.15vh,11px)}
+ .zw-simple-emblem{width:47px;height:47px}
+ .zw-simple-brand .zw-simple-logo{width:100px}
+ .zw-simple-heading h1{font-size:clamp(19px,5vw,24px)}
+ .zw-simple-heading p{font-size:11px}
+ .zw-simple-field{min-height:42px}
+ .zw-simple-field input{padding:10px 0;font-size:14px}
+ .zw-simple-connect,.zw-simple-subscribe{min-height:41px}
+}
+@media(max-height:690px){
+ .zw-simple-card{gap:6px;padding:11px 16px}
+ .zw-simple-brand .zw-simple-logo{width:94px}
+ .zw-simple-emblem{width:40px;height:40px}
+ .zw-simple-heading h1{font-size:20px;margin:2px 0}
+ .zw-simple-heading p{font-size:11px}
+ .zw-simple-field{min-height:38px}
+ .zw-simple-field input{padding:8px 0}
+ .zw-simple-connect,.zw-simple-subscribe{min-height:38px;padding:8px}
+ .zw-simple-footer{padding-top:6px}
+}
+@media(max-height:510px){
+ /* Never clip form controls on very short viewports or with enlarged text. */
+ .zw-landing.zw-root{height:auto;min-height:100dvh;overflow:visible}
+ .zw-landing .zw-shell{height:auto;min-height:100dvh}
+ .zw-simple-screen{min-height:510px;padding:8px 0}
+}
+@media(prefers-reduced-motion:reduce){.zw-simple-connect,.zw-simple-subscribe{transition:none}}
