@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import StarlinkFirstPaint from './starlink-first-paint';
 
 /**
  * Three physically modeled Starlink V2 Mini-inspired satellites.
@@ -12,7 +13,7 @@ import { useEffect, useRef } from 'react';
  *
  * Camera: a stable illustrative local orbital view above the same Earth's
  * rim. The three craft never fade away or jump to the beginning of a path.
- * Motion is restrained and periodic (480/600/720 seconds), NOT live TLE tracking.
+ * Smooth visible motion cycles (260/320/400 seconds), NOT live TLE tracking.
  * The real orbital period in low Earth orbit is ~95 min; this visual is an
  * intentionally slow, stable artistic close-up, not an orbital simulation.
  *
@@ -33,14 +34,15 @@ type OrbitingCraft = {
 };
 
 const CRAFT: readonly OrbitingCraft[] = [
-  // Center coordinates are in the already-calibrated 1185px Earth-local frame.
-  // All three remain near the visible limb and move by < 12px on desktop.
-  { x: 636, y: -80, size: 13.0, period: 480, phase: 0.35,
-    pitch: -0.34, yaw: -0.40, roll: -0.11, dx: 9, dy: 5 },
-  { x: 820, y: -14, size: 11.2, period: 600, phase: 2.30,
-    pitch: 0.28, yaw: 0.50, roll: 0.14, dx: 10, dy: 5 },
-  { x: 1010, y: 94, size: 9.8, period: 720, phase: 4.25,
-    pitch: -0.20, yaw: -0.57, roll: 0.17, dx: 11, dy: 6 },
+  // Earth-local coordinates matched to the user's 1366x644 horizon.
+  // Craft move about 0.8–1.7 px/s at peak on desktop, visibly but gently.
+  // The motions reverse smoothly without teleporting, fading or vanishing.
+  { x: 680, y: -96, size: 17.5, period: 260, phase: 0.35,
+    pitch: -0.31, yaw: -0.37, roll: -0.11, dx: 72, dy: 13 },
+  { x: 868, y: -14, size: 15.0, period: 320, phase: 2.30,
+    pitch: 0.28, yaw: 0.46, roll: 0.14, dx: 64, dy: 12 },
+  { x: 1060, y: 94, size: 13.5, period: 400, phase: 4.25,
+    pitch: -0.20, yaw: -0.54, roll: 0.17, dx: 56, dy: 11 },
 ];
 
 const VERTEX = [
@@ -66,7 +68,7 @@ const VERTEX = [
   '  vec3 light = normalize(vec3(-0.55, 0.72, 1.00));',
   '  float lambert = max(dot(n, light), 0.0);',
   '  float highlight = pow(max(dot(reflect(-light,n), vec3(0.,0.,1.)),0.), 22.);',
-  '  vec3 lit = aColor * (0.33 + 0.67*lambert) + vec3(0.20,0.23,0.27)*highlight;',
+  '  vec3 lit = aColor * (0.48 + 0.52*lambert) + vec3(0.29,0.33,0.37)*highlight;',
   '  vColor = min(lit,vec3(1.));',
   '  float lens = 1.0 / (1.0 + p.z*0.045);',
   '  vec2 px = uCenter + p.xy*uScale*lens;',
@@ -181,27 +183,28 @@ function buildStarlinkV2Mini(): Float32Array {
 
     // Dual deployable solar-array wings: TWO flat framed black-blue panels.
     const cx=sign*3.04;
-    box(cx,0,-0.10,3.64,1.54,0.065,[0.37,0.45,0.54],dark);
-    box(cx,0,0.001,3.48,1.39,0.024,[0.09,0.16,0.25],photovoltaic);
+    // Broader deployed wings so solar-cell details remain perceptible in 3D.
+    box(cx,0,-0.10,3.64,2.10,0.065,[0.37,0.45,0.54],dark);
+    box(cx,0,0.001,3.48,1.95,0.024,[0.09,0.16,0.25],photovoltaic);
     const start=cx-1.69;
     for (let col=0; col<9; col++) {
       for (let row=0;row<4;row++) {
         const cellX=start+(col+0.5)*3.38/9;
-        const cellY=-0.64+(row+0.5)*1.28/4;
+        const cellY=-0.91+(row+0.5)*1.82/4;
         const shimmer=(col+row)%3===0?1.18:(col+row)%3===1?0.87:1.0;
-        box(cellX,cellY,0.026,0.338,0.284,0.006,
+        box(cellX,cellY,0.026,0.338,0.407,0.006,
           [0.05,0.11,0.19],
           [0.045*shimmer,0.14*shimmer,0.245*shimmer]);
         // Tiny shiny busbars: individual solar cells are actual rectangles.
-        box(cellX,cellY,0.033,0.010,0.258,0.003,[0.25,0.37,0.45]);
+        box(cellX,cellY,0.033,0.010,0.378,0.003,[0.25,0.37,0.45]);
       }
     }
     // The perimeter and central spars are structural 3D struts.
-    box(cx,-0.746,0.04,3.65,0.036,0.055,aluminum);
-    box(cx,0.746,0.04,3.65,0.036,0.055,aluminum);
-    box(cx-1.81,0,0.04,0.032,1.55,0.054,aluminum);
-    box(cx+1.81,0,0.04,0.032,1.55,0.054,aluminum);
-    box(cx,0,0.035,0.031,1.45,0.042,[0.54,0.62,0.67]);
+    box(cx,-1.025,0.04,3.65,0.036,0.055,aluminum);
+    box(cx,1.025,0.04,3.65,0.036,0.055,aluminum);
+    box(cx-1.81,0,0.04,0.032,2.10,0.054,aluminum);
+    box(cx+1.81,0,0.04,0.032,2.10,0.054,aluminum);
+    box(cx,0,0.035,0.031,2.00,0.042,[0.54,0.62,0.67]);
     box(sign*1.12,0,-0.03,0.55,0.085,0.09,aluminum);
   }
 
@@ -313,6 +316,11 @@ export default function StarlinkSatellites3D() {
           craft.roll+0.025*Math.sin(t));
         gl.drawArrays(gl.TRIANGLES,0,vertexCount);
       }
+      // Hide the server-rendered perspective fallback only after real 3D
+      // triangles have actually been drawn successfully by the GPU.
+      if (gl.getError() === gl.NO_ERROR) {
+        container.dataset.satellitesReady = 'true';
+      }
       lastFrame=now;
     }
 
@@ -352,6 +360,7 @@ export default function StarlinkSatellites3D() {
       resize.disconnect();
       media.removeEventListener('change',refresh);
       document.removeEventListener('visibilitychange',refresh);
+      container.dataset.satellitesReady = 'false';
       gl.deleteBuffer(buffer);
       gl.deleteProgram(program);
       gl.deleteShader(vertex);
@@ -360,7 +369,8 @@ export default function StarlinkSatellites3D() {
   },[]);
 
   return <div ref={containerRef} className="zaray-starlink-3d-layer"
-    aria-hidden="true">
+    data-satellites-ready="false" aria-hidden="true">
+    <StarlinkFirstPaint />
     <canvas ref={canvasRef} className="zaray-starlink-3d-canvas" />
   </div>;
 }
