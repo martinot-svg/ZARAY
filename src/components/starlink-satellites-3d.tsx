@@ -195,7 +195,14 @@ function shade(normal:V3,material:V3):string {
   const norm=Math.hypot(...normal)||1;
   const incidence=Math.max(0,(normal[0]*light[0]+normal[1]*light[1]+normal[2]*light[2])/norm);
   const ambient=.48+.52*incidence;
-  const spec=Math.pow(Math.max(0,normal[2]/norm),20)*.11;
+  // Light's mirror reflection against the camera (+Z), rather than a
+  // flat "front-facing polygon is bright" trick. Metal catches sun glints
+  // and graphite/PV paint remains matte, as on the actual spacecraft.
+  const nx=normal[0]/norm, ny=normal[1]/norm, nz=normal[2]/norm;
+  const dot=nx*light[0]+ny*light[1]+nz*light[2];
+  const reflectedZ=2*dot*nz-light[2];
+  const metallic=material[0] > 0.27 && material[1] > 0.30;
+  const spec=Math.pow(Math.max(0,reflectedZ),26)*(metallic?.31:.045);
   return '#'+material.map((channel,i)=>{
     const value=Math.min(255,Math.round((channel*ambient+spec*(i===0?1:.90))*255));
     return value.toString(16).padStart(2,'0');
@@ -208,7 +215,9 @@ function projected(quads:readonly Quad[],angles:V3):RenderFace[] {
     const v:V3=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];
     const normal:V3=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
     const pts=[a,b,c,d].map(p=>{
-      const perspective=1/(1+.045*p[2]);
+      // +Z points towards the camera; near edges must appear larger, NOT
+      // smaller. The old reversed projection made hardware look paper-flat.
+      const perspective=1/(1-.045*p[2]);
       return (p[0]*perspective).toFixed(3)+','+(p[1]*perspective).toFixed(3);
     }).join(' ');
     return {points:pts,fill:shade(normal,material),depth:(a[2]+b[2]+c[2]+d[2])/4};
