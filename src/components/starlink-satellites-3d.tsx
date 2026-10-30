@@ -12,7 +12,7 @@ import { useEffect, useRef } from 'react';
  *
  * Camera: a stable illustrative local orbital view above the same Earth's
  * rim. The three craft never fade away or jump to the beginning of a path.
- * Motion is subtle and periodic (240/310/390 seconds), NOT live TLE tracking.
+ * Motion is restrained and periodic (480/600/720 seconds), NOT live TLE tracking.
  * The real orbital period in low Earth orbit is ~95 min; this visual is an
  * intentionally slow, stable artistic close-up, not an orbital simulation.
  *
@@ -33,12 +33,14 @@ type OrbitingCraft = {
 };
 
 const CRAFT: readonly OrbitingCraft[] = [
-  { x: 643, y: -43, size: 9.5, period: 240, phase: 0.35,
-    pitch: -0.34, yaw: -0.40, roll: -0.11, dx: 15, dy: 7 },
-  { x: 846, y: -21, size: 8.3, period: 310, phase: 2.30,
-    pitch: 0.28, yaw: 0.50, roll: 0.14, dx: 13, dy: 8 },
-  { x: 1062, y: 45, size: 7.2, period: 390, phase: 4.25,
-    pitch: -0.20, yaw: -0.57, roll: 0.17, dx: 16, dy: 9 },
+  // Center coordinates are in the already-calibrated 1185px Earth-local frame.
+  // All three remain near the visible limb and move by < 12px on desktop.
+  { x: 636, y: -80, size: 13.0, period: 480, phase: 0.35,
+    pitch: -0.34, yaw: -0.40, roll: -0.11, dx: 9, dy: 5 },
+  { x: 820, y: -14, size: 11.2, period: 600, phase: 2.30,
+    pitch: 0.28, yaw: 0.50, roll: 0.14, dx: 10, dy: 5 },
+  { x: 1010, y: 94, size: 9.8, period: 720, phase: 4.25,
+    pitch: -0.20, yaw: -0.57, roll: 0.17, dx: 11, dy: 6 },
 ];
 
 const VERTEX = [
@@ -122,6 +124,34 @@ function buildStarlinkV2Mini(): Float32Array {
     }
   }
 
+  // Small volumetric reflector antennas with raised rims and feed centers.
+  // V2 Mini spacecraft have E-band parabolic antennas: unlike a painted
+  // white circle, each 3D bowl has real depth and reacts to directional light.
+  function reflector(x: number, y: number, front: number, radius: number) {
+    const rings = 4, sections = 16;
+    const ringColor: Vec3 = [0.66, 0.75, 0.81];
+    for (let row = 0; row < rings; row++) {
+      const inner = radius * row / rings;
+      const outer = radius * (row + 1) / rings;
+      const zi = front + 0.11 * Math.pow(inner / radius, 2);
+      const zo = front + 0.11 * Math.pow(outer / radius, 2);
+      for (let slice = 0; slice < sections; slice++) {
+        const a = 2 * Math.PI * slice / sections;
+        const b = 2 * Math.PI * (slice + 1) / sections;
+        const p0: Vec3 = [x + inner * Math.cos(a), y + inner * Math.sin(a), zi];
+        const p1: Vec3 = [x + outer * Math.cos(a), y + outer * Math.sin(a), zo];
+        const p2: Vec3 = [x + outer * Math.cos(b), y + outer * Math.sin(b), zo];
+        const p3: Vec3 = [x + inner * Math.cos(b), y + inner * Math.sin(b), zi];
+        const tone = (slice % 3) * 0.024;
+        quad(p0, p1, p2, p3, [
+          ringColor[0] - tone, ringColor[1] - tone, ringColor[2] - tone
+        ]);
+      }
+    }
+    disk(x, y, front + 0.022, radius * 0.18, [0.16, 0.26, 0.34]);
+    disk(x, y, front + 0.027, radius * 0.08, [0.80, 0.91, 0.96]);
+  }
+
   // Flat compact communications bus, shaped like a real V2 Mini rather than
   // the large parabolic-dish spacecraft in the photographic user reference.
   box(0,0,0.04,1.93,1.39,0.39,rim,aluminum);
@@ -136,10 +166,11 @@ function buildStarlinkV2Mini(): Float32Array {
     box(x,y,0.349,0.25,0.28,0.025,[0.18,0.24,0.28],[0.16,0.24,0.31]);
     box(x,y,0.37,0.19,0.22,0.014,[0.27,0.32,0.36],[0.22,0.33,0.41]);
   }
-  for (const [x,y] of [[-0.69,0.43],[0.69,0.43],[0,-0.48]]) {
-    disk(x,y,0.402,0.085,[0.09,0.14,0.21]);
-    disk(x,y,0.415,0.043,[0.52,0.68,0.76]);
-  }
+  reflector(-0.69, 0.43, 0.395, 0.148);
+  reflector( 0.69, 0.43, 0.395, 0.148);
+  // Central star-tracker and optical terminal with glass aperture.
+  disk(0,-0.48,0.411,0.085,[0.10,0.15,0.20]);
+  disk(0,-0.48,0.423,0.043,[0.55,0.74,0.83]);
 
   // Hinges, graphite deployers, braces and connectors.
   for (const sign of [-1,1]) {
