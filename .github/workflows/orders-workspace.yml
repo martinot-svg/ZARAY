@@ -1,0 +1,25 @@
+name: ZARAY orders workspace
+on:
+  push:
+    paths:
+      - 'src/app/commandes/**'
+      - 'src/app/api/subscription-orders/**'
+      - 'src/app/paiements/verification/**'
+      - 'tests/orders-workspace.test.mjs'
+      - '.github/workflows/orders-workspace.yml'
+  pull_request:
+    paths:
+      - 'src/app/commandes/**'
+      - 'src/app/api/subscription-orders/**'
+      - 'src/app/paiements/verification/**'
+      - 'tests/orders-workspace.test.mjs'
+      - '.github/workflows/orders-workspace.yml'
+jobs:
+  orders:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/orders-workspace.test.mjs
