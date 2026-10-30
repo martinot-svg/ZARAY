@@ -20,9 +20,12 @@ test('public API limits fields to public offer metadata and never returns ticket
  assert.match(api,/Access-Control-Allow-Origin/);
  assert.doesNotMatch(api,/credential_hash|secret_hash|password_length|voucher_id/);
 });
-test('RouterOS portal renders offers before showing voucher entry form',()=>{
+test('RouterOS portal opens on the voucher login and allows offer selection',()=>{
  assert.match(portal,/id="catalog"/);
- assert.match(portal,/id="credentials"[^>]*hidden/);
+ assert.match(portal,/id="credentials" aria-labelledby="formTitle">/);
+ assert.match(portal,/id="catalog"[^>]*hidden/);
+ assert.match(portal,/Bienvenue chez/);
+ assert.match(portal,/Devenir un abonné/);
  assert.match(portal,/b\.addEventListener\('click',function\(\)\{showLogin\(o\);\}\)/);
  assert.match(portal,/name="username"/);
  assert.match(portal,/name="password"/);

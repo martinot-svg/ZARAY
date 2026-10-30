@@ -46,34 +46,71 @@ button.secondary{background:transparent;border:1px solid rgba(174,215,222,.36);c
 footer{text-align:center;margin-top:28px;color:#93a9b6;font-size:12px}
 [hidden]{display:none!important}
 @media(prefers-reduced-motion:reduce){body:before{animation:none}.offer{transition:none}}
+
+/* Premium one-screen captive login; RouterOS page does not rely on external assets. */
+html,body{min-height:100%;height:auto}
+body{display:flex;align-items:center;justify-content:center;padding:15px 11px;color:#f5fffd;background:
+ radial-gradient(ellipse at 80% 10%,rgba(20,116,162,.34),transparent 50%),
+ radial-gradient(ellipse at 10% 90%,rgba(21,144,113,.21),transparent 50%),
+ #04101d}
+main{width:min(100%,460px);max-width:460px;margin:auto;padding:0;min-height:0}
+main>header{display:none}
+.panel{padding:clamp(18px,3vh,27px);border-radius:24px;border:1px solid rgba(99,222,189,.39);background:linear-gradient(135deg,rgba(18,44,65,.97),rgba(6,23,42,.98));box-shadow:0 20px 65px rgba(0,0,0,.4),inset 0 1px rgba(210,255,249,.12)}
+header{text-align:center;margin:0 0 13px}
+.logo{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:17px;font-weight:850}
+.logo>span:last-child{letter-spacing:.17em}
+.logo small{font-size:10px;color:#7af1c0;letter-spacing:.25em}
+.logo-mark{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#0c5380,#072237);color:#8afad2;font-weight:900;font-size:37px;border:1px solid rgba(108,238,188,.7);box-shadow:0 0 21px rgba(40,209,169,.21)}
+h1{font-size:clamp(19px,5vw,24px);letter-spacing:-.03em;line-height:1.17;margin:7px 0 4px;color:#f3fcfc}
+h1 span{color:#83f4c9}
+.eyebrow{color:#79dac3;letter-spacing:.13em;text-transform:uppercase;font-size:10px;margin:8px 0 0}
+.tagline{font-size:12px;font-style:italic;color:#b6d5dd;margin:0}
+.field{font-weight:700;font-size:11px;margin:11px 0;color:#d7eef2}
+.field input{border:1px solid rgba(140,193,207,.4);border-radius:11px;background:rgba(3,16,30,.9);padding:13px;font-size:15px;margin-top:5px}
+.field input:focus{border-color:#6cefc0;box-shadow:0 0 0 2px rgba(91,229,180,.18)}
+button.primary{border-radius:11px;background:linear-gradient(95deg,#40caff,#66eabe);color:#062432;min-height:46px;padding:10px;font-size:14px;margin:3px 0 0}
+button.primary>span{margin-left:9px}
+.enroll{border:0;padding:0;margin:10px 0 0;background:none}
+.enroll h3,.enroll p,.enroll .subscribe-caption{display:none}
+.subscribe-link{display:block;border-radius:11px;border:1px solid rgba(105,233,183,.67);background:rgba(15,85,74,.27);color:#ebfff3;padding:12px 10px;font-size:13px;box-shadow:none}
+#subscribeNotice{display:block!important;font-size:11px;text-align:center;margin:4px 0 0}
+#subscribeNotice[hidden]{display:none!important}
+button.secondary#back{display:block;margin:6px auto 4px;border:0;font-size:11px;color:#9de5d3}
+#selectedOffer{margin:7px 0;padding:8px;font-size:11px}
+.fineprint{text-align:center;color:#b4cfd5;font-size:10px;margin:4px 0}
+.fineprint strong{color:#e8f9f4}
+footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
+#catalog h2{font-size:18px}
+#catalog>.subtle{font-size:11px}
+.offers{grid-template-columns:1fr;gap:8px;margin:12px 0}
+.offer{padding:12px;border-radius:12px}
+.offer-duration{font-size:13px}.offer-price{font-size:20px}
+#already{margin-top:8px}
+@media(min-height:570px){.panel{padding:24px}.field input{padding:14px}}
+@media(max-height:570px){body{align-items:flex-start;padding:6px}.panel{padding:11px 17px}.logo-mark{width:36px;height:36px;font-size:25px}.logo{gap:3px;font-size:13px}header{margin:0 0 6px}h1{font-size:18px;margin:2px}.eyebrow{font-size:8px;margin:3px}.tagline{font-size:10px}.field{margin:6px 0}.field input{padding:9px;font-size:13px}button.primary{min-height:35px;padding:6px}.subscribe-link{padding:8px}.enroll{margin:6px 0 0}.fineprint{font-size:9px}}
+@media(prefers-reduced-motion:reduce){body:before{animation:none}}
+
 </style>
 </head>
 <body>
 <main>
-<header>
- <div class="logo"><span class="logo-mark" aria-hidden="true">⌁</span>ZARAY WI-FI</div>
- <h1>Bienvenue sur notre réseau</h1>
- <p class="subtle" id="siteName">Choisissez l'offre de votre ticket pour vous connecter.</p>
-</header>
-<section class="panel" id="catalog" aria-labelledby="catalogTitle">
+
+<section class="panel" id="catalog" aria-labelledby="catalogTitle" hidden>
  <h2 id="catalogTitle">Accès Wi-Fi occasionnel</h2>
  <p class="subtle">Découvrez les tickets disponibles, achetez votre ticket chez le vendeur, puis sélectionnez le forfait imprimé sur votre ticket.</p>
  <div id="offers" class="offers" aria-live="polite"><p class="subtle">Chargement des offres du point de vente…</p></div>
  <p id="feedError" class="error" role="alert" hidden></p>
  <button type="button" class="secondary" id="already" aria-label="Saisir un ticket déjà acheté">J'ai déjà un ticket</button>
- <div class="enroll" aria-labelledby="subscribeTitle">
-  <h3 id="subscribeTitle">Vous voulez Internet à domicile ?</h3>
-  <p class="subtle">Vous préférez un abonnement résidentiel plutôt qu'un ticket Wi-Fi ? Inscrivez-vous auprès de votre fournisseur.</p>
-  <a id="subscribeLink" class="subscribe-link" href="#" hidden>Devenir un abonné</a>
-  <p id="subscribeNotice" class="subtle" role="status">Chargement de l'inscription du fournisseur…</p>
-  <span class="subscribe-caption">Votre inscription et votre demande d'abonnement n'activent pas Internet immédiatement. Le paiement doit être confirmé.</span>
- </div>
+
 </section>
-<section class="panel" id="credentials" aria-labelledby="formTitle" hidden>
- <button type="button" class="secondary" id="back" style="margin-bottom:20px">← Voir les offres</button>
- <h2 id="formTitle">Connecter mon ticket</h2>
- <p id="selectedOffer" class="subtle" aria-live="polite"></p>
- <p class="subtle">Recopiez exactement les identifiants du ticket acheté chez le vendeur.</p>
+<section class="panel" id="credentials" aria-labelledby="formTitle">
+ <header>
+  <div class="logo"><span class="logo-mark" aria-hidden="true">Z</span><span>ZARAY <small>WIFI</small></span></div>
+  <p class="eyebrow" id="siteName">Portail d'accès Wi-Fi</p>
+  <h1 id="formTitle">Bienvenue chez <span id="companyHeading">ZARAY WIFI</span></h1>
+  <p class="tagline">Chaque connexion ouvre votre univers.</p>
+ </header>
+ <p id="selectedOffer" class="subtle" aria-live="polite" hidden></p>
  $(if error)
  <p class="error" role="alert">Connexion refusée par le réseau. Vérifiez vos identifiants et la validité du ticket.</p>
  $(endif)
@@ -96,11 +133,20 @@ footer{text-align:center;margin-top:28px;color:#93a9b6;font-size:12px}
   </label>
   <input type="hidden" name="dst" value="$(link-orig)"/>
   <input type="hidden" name="popup" value="false"/>
-  <button class="primary" id="submit" type="submit">Se connecter</button>
+  <button class="primary" id="submit" type="submit">Se connecter <span aria-hidden="true">→</span></button>
  </form>
- <p class="subtle">La durée Internet commence à votre première connexion réussie. Les minutes sont décomptées uniquement quand vous êtes connecté.</p>
+  <div class="enroll" aria-labelledby="subscribeTitle">
+  <h3 id="subscribeTitle">Vous voulez Internet à domicile ?</h3>
+  <p class="subtle">Vous préférez un abonnement résidentiel plutôt qu'un ticket Wi-Fi ? Inscrivez-vous auprès de votre fournisseur.</p>
+  <a id="subscribeLink" class="subscribe-link" href="#" hidden>Devenir un abonné</a>
+  <p id="subscribeNotice" class="subtle" role="status">Chargement de l'inscription du fournisseur…</p>
+  <span class="subscribe-caption">Votre inscription et votre demande d'abonnement n'activent pas Internet immédiatement. Le paiement doit être confirmé.</span>
+ </div>
+ <button type="button" class="secondary" id="back">Voir les offres Wi-Fi →</button>
+ <p class="fineprint">Fournisseur : <strong id="companyLabel">Votre réseau</strong></p>
+ <p class="fineprint">Accès Internet sécurisé par MikroTik · Votre abonnement est soumis à validation.</p>
 </section>
-<footer>ZARAY · Accès Internet sécurisé par MikroTik</footer>
+<footer>ZARAY · Portail captif</footer>
 </main>
 <script>
 (function(){
@@ -125,6 +171,7 @@ footer{text-align:center;margin-top:28px;color:#93a9b6;font-size:12px}
    ?offer.name+' — '+formatPrice(offer.priceAmount,offer.currency)+' / '+formatDuration(offer.durationMinutes)
    :'Votre accès sera défini par le ticket présenté, quelle que soit l’offre affichée.';
   catalog.hidden=true;credentials.hidden=false;
+  document.getElementById('selectedOffer').hidden=false;
   document.getElementById('username').focus();
  }
  function formatPrice(price,currency){return Number(price).toLocaleString('fr-FR')+' '+(currency==='MGA'?'Ar':currency);}
@@ -140,7 +187,11 @@ footer{text-align:center;margin-top:28px;color:#93a9b6;font-size:12px}
  fetch(api,{mode:'cors',credentials:'omit',cache:'no-store'})
   .then(function(r){if(!r.ok)throw new Error('catalogue');return r.json();})
   .then(function(data){
-   if(data.siteName)document.getElementById('siteName').textContent='Réseau '+data.siteName+' · Tickets Wi-Fi et abonnements Internet.';
+   if(data.siteName)document.getElementById('siteName').textContent='Réseau '+data.siteName;
+   if(data.companyName){
+    document.getElementById('companyHeading').textContent=data.companyName;
+    document.getElementById('companyLabel').textContent=data.companyName;
+   }
    showSubscription(data.companyName,data.companySlug);
    offers.textContent='';
    if(!Array.isArray(data.offers)||data.offers.length===0){
