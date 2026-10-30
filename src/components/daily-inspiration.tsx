@@ -1,12 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-// The inspiration widget intentionally shows ONLY the quote. Metadata such as
-// category, author, source, culture, principle, and verification links are
-// not displayed on Z'Accueil.
+// Keep the attribution with the quotation. The source and its verification
+// link are still available, but appear separately in the lower-right corner
+// of Z'Accueil (as requested), not inside the central quotation block.
 type DailyQuote = {
   content: string;
+  author: string;
+  kind: 'citation' | 'proverb';
+  sourceTitle: string;
+  sourceUrl: string;
+  provenance: string;
 };
 
 function currentLocalDate(): string {
@@ -20,6 +26,13 @@ function currentLocalDate(): string {
 export default function DailyInspiration() {
   const [daily, setDaily] = useState<{ date: string; quote: DailyQuote } | null>(null);
   const [error, setError] = useState('');
+  const [sourceHost, setSourceHost] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    // Render the source as a direct child of the personal shell. The quote's
+    // animated central parent has a CSS transform, which would otherwise
+    // make position:fixed relative to its small content box, not the screen.
+    setSourceHost(document.querySelector<HTMLElement>('.personal-no-sidebar.personal-home-shell'));
+  }, []);
   useEffect(() => {
     let active = true;
     let requestedDate = '';
@@ -68,7 +81,27 @@ export default function DailyInspiration() {
   return <div className="personal-home-quote-zone" aria-live="polite">
     {daily && <figure className="personal-home-inspiration" key={daily.date}>
       <blockquote className="personal-home-quote" lang="fr">« {daily.quote.content} »</blockquote>
+      <figcaption className="personal-home-quote-author">
+        — {daily.quote.kind === 'proverb' ? daily.quote.author : 'D’après ' + daily.quote.author}
+      </figcaption>
     </figure>}
+    {daily && sourceHost && createPortal(
+      <aside className="personal-home-source-floating" aria-label="Source de la citation du jour">
+        <p className="personal-quote-provenance">
+          <strong>Source :</strong> {daily.quote.sourceTitle}
+          <span className="personal-inspiration-translation">
+            {' · ' + (daily.quote.kind === 'proverb'
+              ? 'Tradition orale documentée'
+              : 'Adaptation française d’un texte original')}
+          </span>
+        </p>
+        <a className="personal-quote-source" href={daily.quote.sourceUrl}
+          target="_blank" rel="noopener noreferrer" title={daily.quote.provenance}>
+          Vérifier la source
+        </a>
+      </aside>,
+      sourceHost
+    )}
     {!daily && error && <p role="status" className="personal-quote-unavailable">{error}</p>}
   </div>;
 }
