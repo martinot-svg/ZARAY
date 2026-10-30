@@ -236,23 +236,36 @@ export default function StarlinkSatellites3D() {
     const container=containerRef.current;
     if (!canvas || !container) return;
 
+    // Never show the different SVG rendition while a usable 3D renderer is
+    // initializing. Its fallback is reserved EXCLUSIVELY for WebGL failures.
+    const fallback = () => {
+      container.dataset.satellitesRenderer = 'fallback';
+    };
     const gl=canvas.getContext('webgl',{
       alpha:true,antialias:true,premultipliedAlpha:false,powerPreference:'low-power',
     });
-    if (!gl) return;
+    if (!gl) { fallback(); return; }
+
+    const contextLost = (event: Event) => {
+      event.preventDefault();
+      fallback();
+    };
+    canvas.addEventListener('webglcontextlost', contextLost);
 
     const vertex=compile(gl,gl.VERTEX_SHADER,VERTEX);
     const fragment=compile(gl,gl.FRAGMENT_SHADER,FRAGMENT);
-    if (!vertex || !fragment) return;
+    if (!vertex || !fragment) { fallback(); canvas.removeEventListener('webglcontextlost', contextLost); return; }
     const program=gl.createProgram();
     const buffer=gl.createBuffer();
-    if (!program || !buffer) return;
+    if (!program || !buffer) { fallback(); canvas.removeEventListener('webglcontextlost', contextLost); return; }
 
     gl.attachShader(program,vertex);
     gl.attachShader(program,fragment);
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program,gl.LINK_STATUS)) {
       console.warn('[ZARAY Starlink 3D] Link:',gl.getProgramInfoLog(program));
+      fallback();
+      canvas.removeEventListener('webglcontextlost', contextLost);
       return;
     }
 
@@ -316,10 +329,13 @@ export default function StarlinkSatellites3D() {
           craft.roll+0.025*Math.sin(t));
         gl.drawArrays(gl.TRIANGLES,0,vertexCount);
       }
-      // Hide the server-rendered perspective fallback only after real 3D
-      // triangles have actually been drawn successfully by the GPU.
+      // Reveal ONE coherent visual: real 3D meshes. The SVG was never shown
+      // during initialization, so reloading cannot replace one satellite
+      // design with a different one. Genuine graphics failures use fallback.
       if (gl.getError() === gl.NO_ERROR) {
-        container.dataset.satellitesReady = 'true';
+        container.dataset.satellitesRenderer = '3d';
+      } else {
+        fallback();
       }
       lastFrame=now;
     }
@@ -360,7 +376,7 @@ export default function StarlinkSatellites3D() {
       resize.disconnect();
       media.removeEventListener('change',refresh);
       document.removeEventListener('visibilitychange',refresh);
-      container.dataset.satellitesReady = 'false';
+      canvas.removeEventListener('webglcontextlost', contextLost);
       gl.deleteBuffer(buffer);
       gl.deleteProgram(program);
       gl.deleteShader(vertex);
@@ -369,7 +385,9 @@ export default function StarlinkSatellites3D() {
   },[]);
 
   return <div ref={containerRef} className="zaray-starlink-3d-layer"
-    data-satellites-ready="false" aria-hidden="true">
+    data-satellites-renderer="pending" aria-hidden="true">
+    {/* Fallback SVG is NEVER displayed before WebGL. It appears only when
+        genuine 3D rendering is unavailable, not as a competing first frame. */}
     <StarlinkFirstPaint />
     <canvas ref={canvasRef} className="zaray-starlink-3d-canvas" />
   </div>;
