@@ -163,8 +163,14 @@ export async function POST(request:NextRequest){
  if(error||!command)return json({error:'Commande déjà clôturée ou inconnue.'},409);
  if(ok&&command.account_id&&['suspend_account','resume_account'].includes(command.action)){
   const applied=command.action==='resume_account'?'active':'suspended';
-  await service.from('network_access_accounts').update({applied_state:applied,last_sync_at:new Date().toISOString()})
-   .eq('id',command.account_id).eq('desired_state',applied);
+  const {data:updatedAccount,error:accountSyncError}=await service.from('network_access_accounts')
+   .update({applied_state:applied,last_sync_at:new Date().toISOString()})
+   .eq('id',command.account_id).eq('company_id',router.company_id)
+   .eq('router_id',routerId).eq('desired_state',applied).select('id').maybeSingle();
+  // The database trigger records the order's activation only after a trusted
+  // MikroTik connector confirms the resume command. Never claim success when
+  // the entitlement's applied state could not be persisted.
+  if(accountSyncError||!updatedAccount)return json({error:'Commande réseau confirmée, mais synchronisation des droits non enregistrée. Vérifiez le suivi réseau.'},503);
  }
  if(ok&&command.mac_address&&['block_hotspot_mac','unblock_hotspot_mac'].includes(command.action)){
   const applied=command.action==='block_hotspot_mac'?'blocked':'unblocked';

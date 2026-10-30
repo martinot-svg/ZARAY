@@ -3,8 +3,11 @@ on:
   push:
     paths:
       - 'src/app/abonnements/**'
+      - 'src/app/api/network/agent/route.ts'
+      - 'tests/residential-network-ack.test.mjs'
       - 'src/app/api/residential-subscriptions/**'
       - 'supabase/migrations/*residential_subscription_lifecycle.sql'
+      - 'supabase/migrations/*residential_network_acknowledgement.sql'
       - 'tests/residential-lifecycle.test.mjs'
       - '.github/workflows/residential-lifecycle.yml'
   pull_request:
@@ -23,5 +26,5 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-audit --no-fund
-      - run: node --test tests/residential-lifecycle.test.mjs
+      - run: node --test tests/residential-lifecycle.test.mjs tests/residential-network-ack.test.mjs
       - run: npm run typecheck
