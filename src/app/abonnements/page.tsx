@@ -6,7 +6,7 @@ import AppShell from '@/components/app-shell';
 import {activeSiteId,scopedQuery,selectedCompany} from '@/lib/workspace-url';
 import './residential-subscriptions.css';
 type Company={id:string;legal_name:string;role:string};
-type Site={id:string;company_id:string;name:string};
+type Site={id:string;company_id:string;name:string;status:string};
 type Sub={id:string;company_id:string;customer_id:string;site_id:string|null;offer_name:string;validity_days:number;paid_cycles:number;activated_cycles:number;last_paid_at:string|null;activated_at:string|null;expires_at:string|null;created_at:string;customers:{full_name:string;email:string|null;phone:string|null}|null};
 type Cycle={id:string;order_id:string;paid_at:string;activated_at:string|null;period_start:string|null;period_end:string|null;validity_days:number;offer_name:string;amount:number|string;currency:string};
 type Summary={total:number;active:number;expiring:number;expired:number;waiting_payment:number;waiting_activation:number};
@@ -43,6 +43,8 @@ export default function ResidentialPage(){
  const [loading,setLoading]=useState(true);
  const [busy,setBusy]=useState(false);
  const [renewing,setRenewing]=useState(false);
+ const [assigning,setAssigning]=useState(false);
+ const [assignmentSiteId,setAssignmentSiteId]=useState('');
  const [refresh,setRefresh]=useState(0);
  const [error,setError]=useState('');
  const [notice,setNotice]=useState('');
@@ -79,6 +81,8 @@ export default function ResidentialPage(){
  const siteName=(v:string|null)=>sites.find(s=>s.id===v)?.name||'Non attribué';
  const context=companyId?'?'+scopedQuery(companyId):'';
  const canRenew=['owner','admin','sales','site_manager'].includes(company?.role||'');
+ const canAssign=['owner','admin'].includes(company?.role||'');
+ const availableSites=sites.filter(site=>site.company_id===companyId&&['planned','active'].includes(site.status));
  const totalPages=Math.max(1,Math.ceil(total/perPage));
  const groups=[
   {key:'all',label:'Tous'},
@@ -91,6 +95,20 @@ export default function ResidentialPage(){
  function switchStatus(next:Status){setStatus(next);setPage(1);setSelectedId('');setRenewalRef('');}
  function onSearch(e:FormEvent<HTMLFormElement>){e.preventDefault();setSearch(input.trim());setPage(1);setSelectedId('');}
  function reset(){setInput('');setSearch('');switchStatus('all');}
+ async function assignSite(){
+  if(!detail||!canAssign||!assignmentSiteId)return;
+  if(!window.confirm('Associer cet abonné au site sélectionné ? Cette opération rattache aussi les commandes sans site et ne doit pas modifier un accès déjà provisionné.'))return;
+  setAssigning(true);setError('');setNotice('');
+  try{
+   const r=await fetch('/api/residential-subscriptions',{method:'PATCH',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({companyId,subscriptionId:detail.id,siteId:assignmentSiteId})});
+   const d=await r.json();
+   if(!r.ok)throw Error(d.error||'Affectation impossible.');
+   setNotice(d.message||'Site associé à l’abonnement.');
+   setRefresh(v=>v+1);setAssignmentSiteId('');
+  }catch(e){setError(e instanceof Error?e.message:'Impossible d’affecter le site.');}
+  finally{setAssigning(false);}
+ }
  async function renew(){
   if(!detail||!canRenew)return;
   if(!window.confirm('Préparer une commande de renouvellement pour '+(detail.customers?.full_name||'ce client')+' ? Aucun paiement ni accès Internet ne sera accordé automatiquement.'))return;
@@ -138,6 +156,7 @@ export default function ResidentialPage(){
       <div><span>Début de service</span><strong>{date(detail.activated_at)}</strong></div><div><span>Échéance</span><strong>{date(detail.expires_at)}</strong></div>
      </div>
      <p className="rs-note">{stateOf(detail).detail} L'état instantané du routeur est consultable séparément dans Gestion réseau.</p>
+     {!detail.site_id&&<div className="rs-site-assign"><strong>Site de raccordement non attribué</strong><p>Le dossier est enregistré, mais aucun compte MikroTik ne peut encore être relié sans site.</p>{canAssign&&availableSites.length>0?<div><select aria-label="Site à attribuer" value={assignmentSiteId} onChange={e=>setAssignmentSiteId(e.target.value)}><option value="">Choisir un site</option>{availableSites.map(site=><option key={site.id} value={site.id}>{site.name}</option>)}</select><button type="button" disabled={!assignmentSiteId||assigning} onClick={()=>void assignSite()}>{assigning?'Affectation…':'Attribuer ce site'}</button></div>:<p className="muted">{canAssign?'Créez d’abord un site dans le module Sites.':'Contactez un responsable pour associer cet abonné à un site.'}</p>}</div>}
      <div className="rs-actions">
       {canRenew&&<button type="button" className="rs-primary" disabled={renewing} onClick={()=>void renew()}><Wallet size={16}/>{renewing?'Renouvellement en cours…':'Préparer un renouvellement'}</button>}
       <Link className="rs-secondary" href={'/commandes'+context}>Commandes <ArrowRight size={15}/></Link>

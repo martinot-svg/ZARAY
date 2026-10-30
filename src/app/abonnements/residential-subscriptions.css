@@ -75,3 +75,11 @@
 .rs-page :focus-visible{outline:2px solid #97f5c4;outline-offset:3px}
 @media(max-width:1100px){.rs-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.rs-detail-grid{grid-template-columns:1fr}}
 @media(max-width:630px){.rs-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.rs-stat{padding:13px}.rs-stat>strong{font-size:29px}.rs-panel-head{padding:16px}.rs-panel-head h2{font-size:19px}.rs-toolbar{padding:12px}.rs-tabs{gap:6px}.rs-tabs button{font-size:10px;padding:8px 10px}.rs-detail-grid{padding:14px}.rs-info{gap:12px}.rs-search>button{padding:10px 8px}}
+
+.rs-site-assign{border:1px solid rgba(240,198,97,.32);background:rgba(120,89,25,.14);border-radius:13px;padding:15px;margin:0 0 15px;color:#f9edcd}
+.rs-site-assign>strong{font-size:13px;color:#fff1d0}
+.rs-site-assign>p{margin:8px 0;font-size:11px;color:#dfd2b2}
+.rs-site-assign>div{display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+.rs-site-assign select{background:#122f3c;border:1px solid rgba(121,211,185,.42);border-radius:10px;color:#ecfaf3;min-height:40px;padding:8px 10px;font-size:12px;max-width:100%;flex:1}
+.rs-site-assign button{background:#9ceec3;color:#122d28;border:0;border-radius:10px;padding:11px 13px;font-size:12px;font-weight:750}
+.rs-site-assign button:disabled{opacity:.5;cursor:not-allowed}

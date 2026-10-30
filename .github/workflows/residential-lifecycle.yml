@@ -3,11 +3,17 @@ on:
   push:
     paths:
       - 'src/app/abonnements/**'
+      - 'src/app/api/portal/[slug]/route.ts'
+      - 'src/app/portail/[slug]/page.tsx'
+      - 'src/components/public-wifi-portal.tsx'
+      - 'public/hotspot/zaray-login.html'
+      - 'tests/residential-site-enrollment.test.mjs'
       - 'src/app/api/network/agent/route.ts'
-      - 'tests/residential-network-ack.test.mjs'
+      - 'tests/residential-network-ack.test.mjs tests/residential-site-enrollment.test.mjs'
       - 'src/app/api/residential-subscriptions/**'
       - 'supabase/migrations/*residential_subscription_lifecycle.sql'
       - 'supabase/migrations/*residential_network_acknowledgement.sql'
+      - 'supabase/migrations/*residential_portal_site_binding.sql'
       - 'tests/residential-lifecycle.test.mjs'
       - '.github/workflows/residential-lifecycle.yml'
   pull_request:

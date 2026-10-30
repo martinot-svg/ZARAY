@@ -108,3 +108,32 @@ export async function POST(request:NextRequest){
   return json({order:result.data,message:'Demande de renouvellement créée. Aucun service ne sera prolongé sans règlement et confirmation réseau.'},201);
  }catch{return json({error:'Service indisponible.'},503);}
 }
+
+
+export async function PATCH(request:NextRequest){
+ const b=await request.json().catch(()=>null) as Record<string,unknown>|null;
+ const companyId=typeof b?.companyId==='string'?b.companyId:'';
+ const subscriptionId=typeof b?.subscriptionId==='string'?b.subscriptionId:'';
+ const siteId=typeof b?.siteId==='string'?b.siteId:'';
+ if(!uuid.test(companyId)||!uuid.test(subscriptionId)||!uuid.test(siteId))
+  return json({error:'Entreprise, abonnement ou site invalide.'},400);
+ try{
+  const session=await createClient();
+  const permission=await authorizeTenant(session,companyId);
+  if(!permission.ok)return json({error:permission.error},permission.status);
+  if(!['owner','admin'].includes(permission.member.role))
+   return json({error:'La désignation du site est réservée au dirigeant et aux administrateurs.'},403);
+  const result=await session.rpc('assign_residential_subscription_site',{
+   p_subscription_id:subscriptionId,p_site_id:siteId
+  });
+  if(result.error){
+   if(result.error.code==='42501')return json({error:'Action non autorisée.'},403);
+   if(result.error.message?.includes('site_already_assigned')||
+      result.error.message?.includes('network_account_already_bound'))
+    return json({error:'Cet abonnement possède déjà un site ou un compte réseau. Un transfert encadré est nécessaire.'},409);
+   if(result.error.code==='P0002')return json({error:'Site ou abonnement introuvable.'},404);
+   return json({error:'Impossible d’affecter le site.'},503);
+  }
+  return json({assignment:result.data,message:'Site associé au dossier résidentiel et aux commandes correspondantes.'});
+ }catch{return json({error:'Service indisponible.'},503);}
+}
