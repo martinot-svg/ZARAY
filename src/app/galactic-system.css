@@ -681,10 +681,10 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   pointer-events: none;
   user-select: none;
 }
-/* Starlink fallback: visible on the first server-rendered frame, and still
-   present (and slowly moving) on browsers whose GPU has no WebGL support.
-   Uses small perspectively shaded spacecraft, NOT icon silhouettes.
-   Once GPU triangles are ready, the real volumetric meshes replace these. */
+/* Starlink fallback: reserve the SVG for GENUINE WebGL failure only.
+   Before graphics initialization the backup is invisible: this prevents
+   the visibly different fake-satellite -> real-satellite switch on refresh.
+   A WebGL-capable browser displays only the genuine 3D mesh. */
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-starlink-first-paint {
   position: absolute;
   inset: 0;
@@ -695,12 +695,13 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   overflow: visible !important;
   pointer-events: none;
   user-select: none;
-  opacity: 1;
-  transition: opacity 200ms ease;
+  opacity: 0;
+  visibility: hidden;
 }
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon
-  .zaray-starlink-3d-layer[data-satellites-ready="true"] .zaray-starlink-first-paint {
-  opacity: 0;
+  .zaray-starlink-3d-layer[data-satellites-renderer="fallback"] .zaray-starlink-first-paint {
+  opacity: 1;
+  visibility: visible;
 }
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-starlink-first-drift {
   transform-box: view-box;
@@ -735,8 +736,12 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   display: block;
   pointer-events: none;
   background: transparent;
-  opacity: 1;
+  opacity: 0;
   z-index: 1;
+}
+.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon
+  .zaray-starlink-3d-layer[data-satellites-renderer="3d"] .zaray-starlink-3d-canvas {
+  opacity: 1;
 }
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::before,
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::after {
