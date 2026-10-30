@@ -605,6 +605,100 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
   }
 }
 
+/* Z'Accueil — citation provenance relocated into the marked lower-right
+   zone of the user's 1366x644 screenshot (x ≈ 779–1242, y ≈ 571).
+   The AUTHOR remains under the quotation. Category stays absent.
+   Portal mounts this floating footer directly under the personal shell so
+   the welcome's entrance transform cannot misposition a fixed element. */
+.personal-no-sidebar.personal-home-shell > .personal-home-source-floating {
+  position: fixed;
+  right: clamp(24px, 9vw, 124px);
+  bottom: clamp(42px, 8vh, 72px);
+  width: min(464px, calc(100vw - 48px));
+  max-width: calc(100vw - 48px);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: baseline;
+  column-gap: 12px;
+  row-gap: 2px;
+  padding: 6px 8px;
+  margin: 0;
+  z-index: 4;
+  text-align: left;
+  border: none;
+  border-radius: 8px;
+  background: rgba(0, 18, 19, .20);
+  pointer-events: auto;
+}
+.personal-no-sidebar.personal-home-shell > .personal-home-source-floating .personal-quote-provenance {
+  flex: 1 1 235px;
+  min-width: 0;
+  max-width: none;
+  margin: 0 !important;
+  font-size: clamp(10px, .83vw, 12px);
+  line-height: 1.45;
+  text-align: left !important;
+  color: #e1eee7 !important;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, .7);
+  overflow-wrap: anywhere;
+}
+.personal-no-sidebar.personal-home-shell > .personal-home-source-floating .personal-quote-source {
+  flex: 0 0 auto;
+  align-self: baseline;
+  margin: 0;
+  padding: 0 0 2px;
+  font-size: clamp(10px, .83vw, 12px);
+  line-height: 1.45;
+  text-align: left !important;
+  color: #a8ffc5 !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.personal-no-sidebar.personal-home-shell > .personal-home-source-floating .personal-quote-source:focus-visible {
+  outline: 2px solid #a8ffc5;
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+[data-zaray-theme="light"] .personal-no-sidebar.personal-home-shell > .personal-home-source-floating {
+  background: rgba(245, 250, 247, .79);
+}
+[data-zaray-theme="light"] .personal-no-sidebar.personal-home-shell > .personal-home-source-floating .personal-quote-provenance {
+  color: #254c3b !important;
+  text-shadow: none;
+}
+[data-zaray-theme="light"] .personal-no-sidebar.personal-home-shell > .personal-home-source-floating .personal-quote-source {
+  color: #116c3d !important;
+}
+@media (min-width:701px) and (max-width:1000px) {
+  .personal-no-sidebar.personal-home-shell > .personal-home-source-floating {
+    right: 24px;
+    bottom: 42px;
+    width: min(464px, 55vw);
+  }
+}
+@media (max-width:700px) {
+  .personal-no-sidebar.personal-home-shell > .personal-home-source-floating {
+    left: 18px;
+    right: 18px;
+    bottom: calc(94px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    max-width: none;
+    padding: 7px 10px;
+    row-gap: 4px;
+  }
+  .personal-no-sidebar.personal-home-shell > .personal-home-source-floating .personal-quote-provenance {
+    flex-basis: 100%;
+  }
+}
+@media (max-height:520px) and (min-width:701px) {
+  .personal-no-sidebar.personal-home-shell > .personal-home-source-floating {
+    bottom: 16px;
+  }
+}
+
 /* Z'Accueil — 3D Earth calibrated to the USER'S 1366 x 644 screenshot.
    Measured white target: crest y=461, x about 80; bottom intersection
    around x=508 at y=644. A fitted circle has radius 592.45px, center
