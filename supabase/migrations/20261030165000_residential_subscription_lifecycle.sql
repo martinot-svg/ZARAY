@@ -255,3 +255,16 @@ as $fn$
 $fn$;
 revoke all on function public.residential_subscription_summary(uuid,uuid) from public,anon;
 grant execute on function public.residential_subscription_summary(uuid,uuid) to authenticated;
+
+create or replace function public.residential_subscription_pending_ids(p_company_id uuid,p_site_id uuid default null)
+returns setof uuid language sql stable security invoker set search_path=''
+as $fn$
+ select s.id
+ from public.residential_subscriptions s
+ where s.company_id=p_company_id and (p_site_id is null or s.site_id=p_site_id)
+   and s.paid_cycles>s.activated_cycles
+   and (s.expires_at is null or s.expires_at<=now())
+ order by s.updated_at desc;
+$fn$;
+revoke all on function public.residential_subscription_pending_ids(uuid,uuid) from public,anon;
+grant execute on function public.residential_subscription_pending_ids(uuid,uuid) to authenticated;
