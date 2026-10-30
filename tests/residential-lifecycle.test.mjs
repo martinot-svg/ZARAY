@@ -54,3 +54,16 @@ test('residential UI offers real lifecycle, periods, expiry and visible limits',
  assert.match(page,/l'activation réseau restent deux validations distinctes/);
  assert.match(shell,/\/abonnements/);
 });
+
+test('client can submit a renewal payment proof from the order reference',()=>{
+ const checkout=read('src/app/paiement/[reference]/page.tsx');
+ const statusApi=read('src/app/api/manual-payments/status/route.ts');
+ assert.match(checkout,/\/api\/manual-payments\/submit/);
+ assert.match(checkout,/\/api\/portal\//);
+ assert.match(checkout,/customerEmail/);
+ assert.match(checkout,/form\.set\('reference'/);
+ assert.match(checkout,/form\.set\('proof'/);
+ assert.match(statusApi,/companySlug/);
+ assert.match(statusApi,/companyName/);
+ assert.match(checkout,/Aucun accès Internet n'est activé/);
+});
