@@ -8,7 +8,7 @@ as $fn$
  select s.id,s.name,s.status
  from public.sites s
  join public.companies c on c.id=s.company_id
- where c.slug=pg_catalog.lower(pg_catalog.trim(p_company_slug))
+ where c.slug=pg_catalog.lower(pg_catalog.btrim(p_company_slug))
    and c.status in ('trial','active')
    and s.status in ('active','planned')
  order by (s.status='active') desc,s.name,s.id limit 100;
@@ -25,11 +25,12 @@ as $fn$
 declare
  v_company_id uuid;
  v_offer public.offers%rowtype;
- v_name text:=pg_catalog.trim(coalesce(p_customer_name,''));
- v_email text:=pg_catalog.lower(pg_catalog.trim(coalesce(p_customer_email,'')));
- v_phone text:=nullif(pg_catalog.trim(coalesce(p_customer_phone,'')),'');
+ v_name text:=pg_catalog.btrim(coalesce(p_customer_name,''));
+ v_email text:=pg_catalog.lower(pg_catalog.btrim(coalesce(p_customer_email,'')));
+ v_phone text:=nullif(pg_catalog.btrim(coalesce(p_customer_phone,'')),'');
  v_site_id uuid;
  v_site_ids uuid[];
+ v_existing_site uuid;
  v_order_id uuid;
  v_reference text;
  v_recent_count integer;
@@ -40,11 +41,11 @@ begin
    or (v_phone is not null and pg_catalog.length(v_phone) not between 5 and 32) then
    raise exception 'invalid_customer_details' using errcode='22023';
  end if;
- if p_company_slug is null or pg_catalog.length(pg_catalog.trim(p_company_slug)) not between 2 and 80 then
+ if p_company_slug is null or pg_catalog.length(pg_catalog.btrim(p_company_slug)) not between 2 and 80 then
    raise exception 'invalid_company' using errcode='22023';
  end if;
  select c.id into v_company_id from public.companies c
- where c.slug=pg_catalog.lower(pg_catalog.trim(p_company_slug))
+ where c.slug=pg_catalog.lower(pg_catalog.btrim(p_company_slug))
    and c.status in ('active','trial');
  if v_company_id is null then raise exception 'company_not_found' using errcode='P0002'; end if;
  select o.* into v_offer from public.offers o
@@ -57,7 +58,7 @@ begin
  else
    select pg_catalog.array_agg(s.id) into v_site_ids from public.sites s
    where s.company_id=v_company_id and s.status in ('active','planned');
-   if pg_catalog.coalesce(pg_catalog.array_length(v_site_ids,1),0)>1 then
+   if coalesce(pg_catalog.array_length(v_site_ids,1),0)>1 then
      raise exception 'site_required' using errcode='22023';
    end if;
    v_site_id=v_site_ids[1];
@@ -65,6 +66,13 @@ begin
  -- Per-company/customer advisory lock and the pre-existing anti-spam ceiling.
  perform pg_catalog.pg_advisory_xact_lock(
    pg_catalog.hashtextextended(v_company_id::text||':'||v_email,0));
+ -- An existing home network subscriber cannot silently move to another site.
+ select c.site_id into v_existing_site from public.customers c
+  where c.company_id=v_company_id and c.email=v_email and c.site_id is not null
+  limit 1;
+ if v_existing_site is not null and v_site_id is not null and v_existing_site<>v_site_id then
+   raise exception 'customer_already_assigned_to_site' using errcode='23505';
+ end if;
  select count(*) into v_recent_count from public.subscription_orders so
  where so.company_id=v_company_id and so.customer_email=v_email
    and so.status='pending_payment'
