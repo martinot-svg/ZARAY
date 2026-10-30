@@ -4,6 +4,7 @@ import {useEffect,useState,type FormEvent} from 'react';
 import Link from 'next/link';
 import {ArrowLeft,ArrowRight,Check,CheckCircle2,Clock3,CreditCard,House,LockKeyhole,Menu,Router,ShieldCheck,Ticket,Wifi,WifiOff,X} from 'lucide-react';
 import './public-wifi-portal.css';
+import BrandLogo from '@/components/brand-logo';
 
 type Offer={id:string;name:string;description?:string;durationMinutes:number;validityDays?:number;priceAmount:number;currency:string;maxDevices?:number};
 type Method={provider:'orange_money'|'mvola';accountNumber:string;accountName:string;instructions:string};
@@ -52,6 +53,8 @@ export default function PublicWifiPortal({slug}: {slug?:string}){
  const [error,setError]=useState('');
  const [mobileMenu,setMobileMenu]=useState(false);
  const [enterpriseDialog,setEnterpriseDialog]=useState(false);
+ const [offersDialog,setOffersDialog]=useState(false);
+ const [showPassword,setShowPassword]=useState(false);
 
  useEffect(()=>{
   if(!slug)return;
@@ -169,43 +172,51 @@ export default function PublicWifiPortal({slug}: {slug?:string}){
 
    <main className="zw-main">
     <div className="zw-topline"><span className="zw-line"/> EXPÉRIENCE INTERNET CONNECTÉE <span className="zw-line"/></div>
-    {mode==='home'&&<section className="zw-oneview" aria-labelledby="zw-welcome-title">
-     <div className="zw-compact-hero">
-      <div className="zw-welcome">
-       <span className="zw-overline"><span className="zw-live-dot"/> UN SEUL PORTAIL · TOUS VOS ACCÈS</span>
-       <h1 id="zw-welcome-title">Bienvenue sur <span>votre Wi-Fi.</span></h1>
-       <p>Un ticket pour aujourd’hui ou Internet à domicile : choisissez simplement votre accès.</p>
+
+    {mode==='home'&&<section className="zw-simple-screen" aria-labelledby="zw-welcome-title">
+     <div className="zw-simple-card">
+      <div className="zw-simple-brand" aria-label="ZARAY WIFI">
+       <span className="zw-simple-emblem"><Wifi size={30} strokeWidth={2.4}/></span>
+       <BrandLogo className="zw-simple-logo" surface="dark"/>
       </div>
-      <div className="zw-compact-provider"><Wifi size={17}/><span>{siteName?'Réseau '+siteName:companyName}</span></div>
+      <div className="zw-simple-heading">
+       <span className="zw-simple-eyebrow">PORTAIL WIFI · {siteName||'CONNEXION'}</span>
+       <h1 id="zw-welcome-title">Bienvenue chez <span>{demo?'ZARAY WIFI':companyName}</span></h1>
+       <p>Chaque connexion ouvre votre univers.</p>
+      </div>
+      <form className="zw-simple-login" onSubmit={previewTicket}>
+       <label htmlFor="zw-simple-user">Nom d’utilisateur
+        <span className="zw-simple-field"><Ticket size={17} aria-hidden="true"/><input id="zw-simple-user" value={ticketUser} onChange={e=>setTicketUser(e.target.value.toUpperCase())} autoComplete="username" autoCapitalize="characters" spellCheck={false} placeholder="Nom d’utilisateur" minLength={3} maxLength={5} required/></span>
+       </label>
+       <label htmlFor="zw-simple-password">Mot de passe
+        <span className="zw-simple-field"><LockKeyhole size={17} aria-hidden="true"/><input id="zw-simple-password" type={showPassword?'text':'password'} value={ticketPassword} onChange={e=>setTicketPassword(e.target.value)} autoComplete="off" placeholder="Mot de passe du ticket" minLength={3} maxLength={32} required/><button type="button" className="zw-simple-eye" onClick={()=>setShowPassword(!showPassword)} aria-label={showPassword?'Masquer le mot de passe':'Afficher le mot de passe'}>{showPassword?'Masquer':'Afficher'}</button></span>
+       </label>
+       <button type="submit" className="zw-simple-connect"><Wifi size={18}/> Se connecter <ArrowRight size={18}/></button>
+      </form>
+      {ticketMessage&&<p className="zw-simple-alert" role="status">{ticketMessage}</p>}
+      <button type="button" className="zw-simple-subscribe" onClick={()=>toMode('subscribe')}><House size={18}/> Devenir un abonné de {companyName} <ArrowRight size={18}/></button>
+      <button type="button" className="zw-simple-offers-link" onClick={()=>setOffersDialog(true)}>Voir les offres Wi-Fi {ticketCount>0?'('+ticketCount+')':''} <ArrowRight size={14}/></button>
+      <div className="zw-simple-footer">
+       <span>Fournisseur : <strong>{companyName}</strong></span>
+       <span>{demo?'Démonstration : aucun accès Internet activé':'Vérification du ticket par MikroTik après installation'}</span>
+      </div>
      </div>
-     {demo&&<div className="zw-compact-demo"><ShieldCheck size={17}/><span>Mode démonstration · tarifs fictifs et aucune activation Internet.</span><button type="button" onClick={()=>setEnterpriseDialog(true)}>Mon entreprise <ArrowRight size={14}/></button></div>}
-     <div className="zw-landing-grid">
-      <section className="zw-landing-tickets" aria-labelledby="zw-ticket-title">
-       <div className="zw-compact-heading">
-        <span className="zw-compact-type"><Ticket size={18}/> ACCÈS OCCASIONNEL</span>
-        <span className="zw-count">{ticketCount} offre{ticketCount===1?'':'s'}</span>
-       </div>
-       <h2 id="zw-ticket-title">J’ai un ticket Wi-Fi</h2>
-       {loading?<p className="zw-loading" role="status">Chargement des offres…</p>:ticketCount?<div className="zw-compact-offers">{ticketOffers.map((o,i)=><button type="button" className="zw-compact-offer" key={o.id} onClick={()=>openTicket(o)} aria-label={'Choisir '+o.name+' à '+displayPrice(o)}><span className="zw-compact-offer-icon"><Wifi size={17}/></span><span className="zw-compact-offer-info"><strong>{o.name}</strong><small><Clock3 size={12}/>{displayTime(o.durationMinutes)}</small></span><b>{displayPrice(o)}</b><ArrowRight className="zw-compact-offer-arrow" size={17}/></button>)}</div>:<div className="zw-compact-empty">Les tickets du site ne sont pas encore disponibles en ligne. Vous pouvez saisir un ticket déjà acheté.</div>}
-       <button type="button" className="zw-compact-existing" onClick={()=>openTicket(null)}>Saisir les identifiants de mon ticket <ArrowRight size={16}/></button>
+     {offersDialog&&<div className="zw-enterprise-shade" role="presentation" onClick={()=>setOffersDialog(false)}>
+      <section className="zw-enterprise-dialog zw-simple-offers-dialog" role="dialog" aria-modal="true" aria-labelledby="zw-offers-title" onClick={e=>e.stopPropagation()}>
+       <button className="zw-dialog-close" type="button" aria-label="Fermer les offres" onClick={()=>setOffersDialog(false)}><X size={20}/></button>
+       <span className="zw-overline">TICKETS WI-FI</span>
+       <h2 id="zw-offers-title">Offres disponibles</h2>
+       {loading?<p role="status">Chargement des offres…</p>:ticketCount?<div className="zw-simple-offers-list">{ticketOffers.map(o=><button type="button" key={o.id} onClick={()=>{setOffersDialog(false);openTicket(o);}}><span><strong>{o.name}</strong><small>{displayTime(o.durationMinutes)}</small></span><b>{displayPrice(o)}</b><ArrowRight size={16}/></button>)}</div>:<p>Aucun ticket prêt à vendre n’est encore publié pour ce site.</p>}
+       <button type="button" className="zw-simple-existing" onClick={()=>{setOffersDialog(false);openTicket(null);}}>J’ai déjà un ticket <ArrowRight size={16}/></button>
       </section>
-      <section className="zw-landing-subscribe" aria-labelledby="zw-sub-title">
-       <div className="zw-compact-type"><House size={18}/> INTERNET À DOMICILE</div>
-       <div className="zw-landing-subscribe-icon"><House size={30}/></div>
-       <div className="zw-landing-subscribe-copy">
-        <h2 id="zw-sub-title">Je veux devenir abonné</h2>
-        <p>Choisissez votre forfait résidentiel et inscrivez-vous directement auprès de votre fournisseur.</p>
-       </div>
-       <button className="zw-cta zw-subscribe-cta" type="button" onClick={()=>toMode('subscribe')}>Devenir un abonné de {companyName} <ArrowRight size={17}/></button>
-       <small>Inscription sans activation Internet immédiate.</small>
-      </section>
-     </div>
+     </div>}
+     {demo&&<div className="zw-simple-demo-entry"><button type="button" onClick={()=>setEnterpriseDialog(true)}>Accéder au portail de mon entreprise <ArrowRight size={14}/></button></div>}
      {enterpriseDialog&&<div className="zw-enterprise-shade" role="presentation" onClick={()=>setEnterpriseDialog(false)}>
       <section className="zw-enterprise-dialog" role="dialog" aria-modal="true" aria-labelledby="zw-enterprise-title" onClick={e=>e.stopPropagation()}>
        <button className="zw-dialog-close" type="button" aria-label="Fermer" onClick={()=>setEnterpriseDialog(false)}><X size={20}/></button>
        <span className="zw-overline">PORTAIL DE VOTRE ENTREPRISE</span>
        <h2 id="zw-enterprise-title">Ouvrir les offres réelles</h2>
-       <p>Renseignez l'identifiant public de votre entreprise pour accéder à son portail et aux inscriptions résidentielles réelles.</p>
+       <p>Entrez l’identifiant public de votre entreprise pour accéder à son portail et à l’inscription résidentielle réelle.</p>
        <form onSubmit={e=>{e.preventDefault();if(validSlug)window.location.assign(destination);}} className="zw-form">
         <label htmlFor="zw-enterprise">Identifiant public de l’entreprise<input id="zw-enterprise" value={slugEntry} onChange={e=>setSlugEntry(e.target.value)} placeholder="ex. mon-entreprise" minLength={2} maxLength={80} pattern="[a-zA-Z0-9-]{2,80}" required autoFocus/></label>
         <button className="zw-cta zw-wide" type="submit" disabled={!validSlug}>Ouvrir mon portail <ArrowRight size={16}/></button>
