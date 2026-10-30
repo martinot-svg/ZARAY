@@ -121,3 +121,139 @@
 @media(max-width:650px){.zw-shell{width:min(100% - 32px,530px)}.zw-nav{height:76px}.zw-links{display:none}.zw-menu{display:inline-flex}.zw-network{font-size:9px;padding:8px}.zw-mobile-nav{display:flex;gap:17px;flex-wrap:wrap;border-bottom:1px solid var(--zw-line);padding:14px 0}.zw-topline{font-size:8px;letter-spacing:.13em;gap:9px}.zw-line{width:23px}.zw-main{padding-top:25px}.zw-hero{padding:47px 0}.zw-hero h1{font-size:clamp(33px,9vw,47px)}.zw-section{padding-bottom:57px}.zw-section-heading{align-items:flex-start}.zw-count{display:none}.zw-offer-grid{grid-template-columns:1fr;gap:12px}.zw-offer{min-height:207px;padding:20px}.zw-offer>p{min-height:0}.zw-offer-footer{margin-top:7px}.zw-residential{display:block;padding:25px 22px;margin-bottom:39px}.zw-house-icon{width:65px;height:65px;border-radius:20px;margin-bottom:20px}.zw-house-icon svg{width:33px;height:33px}.zw-residential h2{font-size:27px}.zw-feature-list{gap:10px}.zw-cta{width:100%}.zw-access{padding:20px}.zw-footer{flex-direction:column;align-items:flex-start}.zw-flow{margin-top:25px}.zw-form-card{padding:25px 19px}.zw-brand{font-size:17px}.zw-mark{width:41px;height:41px}}
 @media(max-width:370px){.zw-network{display:none}.zw-feature-list{flex-direction:column}.zw-offer-footer span:last-child{font-size:10px}.zw-selection{flex-direction:column;align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){.zw-mesh{animation:none}.zw-offer,.zw-cta{transition:none}}
+
+
+/* Compact, non-scrolling welcome screen. Ticket and subscription forms may scroll separately. */
+.zw-root.zw-landing{height:100dvh;min-height:0;overflow:hidden}
+.zw-landing .zw-shell{height:100dvh;min-height:0;display:flex;flex-direction:column}
+.zw-landing .zw-nav{height:67px;min-height:67px}
+.zw-landing .zw-main{flex:1;min-height:0;display:flex;flex-direction:column;padding:0}
+.zw-landing .zw-topline{display:none}
+.zw-landing .zw-footer{min-height:39px;flex-shrink:0;padding:8px 0}
+.zw-oneview{flex:1;min-height:0;display:flex;flex-direction:column;gap:clamp(8px,1.8vh,16px);padding:clamp(10px,2vh,22px) 0 12px}
+.zw-compact-hero{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.zw-welcome{min-width:0}
+.zw-welcome>.zw-overline{display:flex;align-items:center;gap:9px;font-size:10px}
+.zw-welcome h1{font-size:clamp(27px,3.4vw,42px);font-weight:800;letter-spacing:-.055em;line-height:1.1;margin:7px 0 5px}
+.zw-welcome h1 span{background:linear-gradient(90deg,#75f4be,#83dbe9);background-clip:text;-webkit-background-clip:text;color:transparent}
+.zw-welcome p{font-size:12px;color:#a7c1cd;margin:0}
+.zw-compact-provider{border:1px solid rgba(104,233,172,.35);border-radius:99px;background:rgba(35,105,85,.19);padding:10px 14px;display:flex;align-items:center;gap:9px;max-width:35%;font-size:12px;font-weight:750;color:#d1fce8}
+.zw-compact-provider span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zw-compact-provider svg{flex-shrink:0;color:#68ecb8}
+.zw-compact-demo{flex:0 0 auto;display:flex;align-items:center;gap:10px;background:rgba(20,55,76,.58);border:1px solid rgba(111,184,211,.24);border-radius:10px;padding:8px 12px;font-size:11px;color:#b8d1de}
+.zw-compact-demo>svg{color:#8aeac8;flex-shrink:0}
+.zw-compact-demo>span{flex:1;min-width:0}
+.zw-compact-demo button{display:inline-flex;align-items:center;gap:7px;flex-shrink:0;background:transparent;border:0;color:#8ef7c4;font-size:11px;font-weight:750;padding:3px}
+.zw-compact-demo button:hover{text-decoration:underline}
+.zw-landing-grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.14fr) minmax(0,.86fr);gap:14px}
+.zw-landing-tickets,.zw-landing-subscribe{min-width:0;min-height:0;overflow:hidden;border-radius:21px;border:1px solid rgba(130,189,213,.2);padding:clamp(15px,2.8vh,25px);display:flex;flex-direction:column}
+.zw-landing-tickets{background:linear-gradient(135deg,rgba(18,38,56,.97),rgba(10,24,38,.98))}
+.zw-compact-heading{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-shrink:0}
+.zw-compact-type{display:inline-flex;align-items:center;gap:9px;letter-spacing:.14em;font-size:10px;color:#78eac0;font-weight:800}
+.zw-compact-type svg{flex-shrink:0}
+.zw-compact-heading .zw-count{font-size:10px;padding:4px 10px}
+.zw-landing-tickets h2,.zw-landing-subscribe h2{font-size:clamp(21px,2.4vw,30px);letter-spacing:-.045em;line-height:1.17;margin:9px 0 14px;flex-shrink:0}
+.zw-compact-offers{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
+.zw-compact-offer{flex:1;min-height:0;width:100%;background:#091b2b;border:1px solid rgba(139,185,204,.19);border-radius:12px;display:flex;align-items:center;gap:13px;padding:8px 13px;text-align:left;color:#e9f9fc;transition:background .17s,border-color .17s}
+.zw-compact-offer:hover,.zw-compact-offer:focus-visible{background:#123b42;border-color:#67e5b3;outline:none}
+.zw-compact-offer-icon{flex-shrink:0;width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:rgba(55,172,134,.16);color:#7df2bf}
+.zw-compact-offer-info{min-width:0;flex:1;display:flex;flex-direction:column}
+.zw-compact-offer-info strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zw-compact-offer-info small{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#aac1cf}
+.zw-compact-offer b{font-size:17px;letter-spacing:-.025em;color:#e7ffed;white-space:nowrap}
+.zw-compact-offer-arrow{color:#81edc0;flex-shrink:0}
+.zw-compact-existing{margin-top:12px;flex-shrink:0;width:100%;border:1px solid rgba(119,224,179,.46);border-radius:11px;padding:10px;display:inline-flex;justify-content:center;align-items:center;gap:10px;background:rgba(31,104,90,.13);color:#d1f8e5;font-size:12px;font-weight:750}
+.zw-compact-existing:hover{background:rgba(52,152,111,.22)}
+.zw-compact-empty{flex:1;display:flex;align-items:center;color:#b3ced9;font-size:12px}
+.zw-landing-subscribe{border-color:rgba(102,219,166,.33);background:radial-gradient(circle at 90% 15%,rgba(38,123,112,.29),transparent 55%),linear-gradient(145deg,#10353b,#0c2034);align-items:flex-start}
+.zw-landing-subscribe-icon{width:68px;height:68px;border-radius:19px;border:1px solid rgba(123,243,185,.3);background:rgba(73,194,158,.12);display:grid;place-items:center;color:#99f6ce;flex-shrink:0;margin:15px 0}
+.zw-landing-subscribe h2{font-size:clamp(22px,2.6vw,32px);margin:0 0 10px}
+.zw-landing-subscribe p{font-size:12px;color:#c1d5db;line-height:1.55;margin:0}
+.zw-landing-subscribe-copy{flex:1;min-height:0}
+.zw-subscribe-cta{width:100%;flex-shrink:0;font-size:13px;padding:15px 12px;margin:12px 0 8px}
+.zw-landing-subscribe>small{flex-shrink:0;font-size:10px;color:#b2d0d0}
+.zw-enterprise-shade{position:fixed;inset:0;z-index:50;background:rgba(1,7,16,.79);backdrop-filter:blur(10px);display:grid;place-items:center;padding:16px}
+.zw-enterprise-dialog{position:relative;width:min(100%,470px);max-height:calc(100dvh - 32px);overflow:auto;background:#101e30;border:1px solid rgba(103,224,173,.41);border-radius:22px;padding:clamp(20px,5vw,32px);box-shadow:0 30px 95px rgba(0,0,0,.5)}
+.zw-enterprise-dialog h2{font-size:27px;letter-spacing:-.04em;margin:10px 0}
+.zw-enterprise-dialog p{color:#b3ccd5;font-size:13px;margin-bottom:20px}
+.zw-dialog-close{position:absolute;top:14px;right:14px;background:none;border:1px solid rgba(183,221,227,.25);color:#d9f5ed;border-radius:9px;padding:8px}
+@media(max-width:850px){
+ .zw-landing .zw-nav{min-height:59px;height:59px}
+ .zw-landing .zw-footer{display:none}
+ .zw-landing .zw-shell{width:min(100% - 30px,670px)}
+ .zw-landing .zw-links{display:none}
+ .zw-landing .zw-menu{display:inline-flex}
+ .zw-landing .zw-mobile-nav{position:absolute;z-index:15;top:59px;left:15px;right:15px;padding:14px;border:1px solid rgba(130,189,213,.3);border-radius:12px;background:#0e2132;display:flex;gap:18px;flex-wrap:wrap}
+ .zw-oneview{gap:8px;padding:10px 0}
+ .zw-welcome>.zw-overline{font-size:9px}
+ .zw-welcome h1{font-size:clamp(26px,5.5vw,35px)}
+ .zw-welcome p{display:none}
+ .zw-compact-provider{padding:8px;font-size:11px;max-width:40%}
+ .zw-compact-demo{padding:7px 10px;font-size:10px}
+ .zw-landing-grid{grid-template-columns:1fr;grid-template-rows:minmax(0,1.25fr) minmax(0,.75fr);gap:9px}
+ .zw-landing-tickets,.zw-landing-subscribe{padding:13px 17px;border-radius:17px}
+ .zw-landing-tickets h2{font-size:21px;margin:4px 0 8px}
+ .zw-compact-offers{gap:5px}
+ .zw-compact-offer{padding:4px 10px;gap:10px}
+ .zw-compact-offer-icon{width:29px;height:29px;border-radius:8px}
+ .zw-compact-existing{padding:7px;margin-top:7px;font-size:11px}
+ .zw-landing-subscribe{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto 1fr auto;gap:5px 11px;align-items:center}
+ .zw-landing-subscribe .zw-compact-type{grid-column:1/3}
+ .zw-landing-subscribe-icon{grid-column:2;grid-row:2;margin:0;width:48px;height:48px;border-radius:14px}
+ .zw-landing-subscribe-icon svg{width:25px;height:25px}
+ .zw-landing-subscribe-copy{grid-column:1;grid-row:2}
+ .zw-landing-subscribe h2{font-size:21px;margin:1px 0 3px}
+ .zw-landing-subscribe p{font-size:11px;line-height:1.35}
+ .zw-subscribe-cta{grid-column:1/3;grid-row:3;margin:0;padding:9px 12px;font-size:11px}
+ .zw-landing-subscribe>small{display:none}
+}
+@media(max-width:480px){
+ .zw-landing .zw-brand{font-size:15px;gap:9px}
+ .zw-landing .zw-mark{width:34px;height:34px;border-radius:10px}
+ .zw-landing .zw-network{font-size:8px;letter-spacing:.02em}
+ .zw-landing .zw-shell{width:calc(100% - 24px)}
+ .zw-oneview{padding:7px 0 8px}
+ .zw-compact-hero{gap:8px}
+ .zw-welcome h1{font-size:clamp(23px,6.2vw,30px);margin:3px 0}
+ .zw-welcome>.zw-overline{font-size:8px;letter-spacing:.07em}
+ .zw-compact-provider{font-size:10px;max-width:32%;padding:7px}
+ .zw-compact-provider svg{display:none}
+ .zw-compact-demo{padding:6px 8px;font-size:9px}
+ .zw-compact-demo svg{width:14px}
+ .zw-compact-demo button{font-size:10px}
+ .zw-landing-tickets,.zw-landing-subscribe{padding:9px 11px;border-radius:14px}
+ .zw-compact-type{font-size:9px;gap:6px}
+ .zw-compact-type svg{width:15px;height:15px}
+ .zw-compact-heading .zw-count{font-size:9px;padding:2px 6px}
+ .zw-landing-tickets h2{font-size:19px;margin:3px 0 6px}
+ .zw-compact-offer b{font-size:14px}
+ .zw-compact-offer-info strong{font-size:12px}
+ .zw-compact-offer-info small{font-size:9px}
+ .zw-compact-offer-arrow{width:14px}
+ .zw-compact-existing{font-size:10px;margin-top:6px}
+ .zw-landing-subscribe h2{font-size:19px}
+ .zw-landing-subscribe p{font-size:10px}
+ .zw-subscribe-cta{font-size:10px;padding:8px}
+}
+@media(max-height:650px){
+ .zw-landing .zw-nav{min-height:52px;height:52px}
+ .zw-oneview{gap:6px;padding:5px 0}
+ .zw-welcome h1{font-size:clamp(22px,3vw,28px)}
+ .zw-welcome>.zw-overline{font-size:8px}
+ .zw-landing-tickets h2{margin:2px 0 5px;font-size:19px}
+ .zw-compact-offer-icon{width:27px;height:27px}
+ .zw-compact-offer{padding:2px 7px}
+ .zw-compact-existing{padding:6px;margin-top:5px}
+ .zw-landing-subscribe-icon{width:42px;height:42px}
+ .zw-landing-subscribe h2{font-size:19px}
+ .zw-subscribe-cta{padding:7px}
+ .zw-landing .zw-footer{display:none}
+}
+@media(max-height:520px){
+ /* Very small windows and enlarged accessibility text: show all content rather than clip it. */
+ .zw-root.zw-landing{height:auto;min-height:100dvh;overflow:visible}
+ .zw-landing .zw-shell{height:auto;min-height:100dvh}
+ .zw-landing .zw-main{flex:1}
+ .zw-oneview{min-height:520px}
+}
+@media(prefers-reduced-motion:reduce){.zw-compact-offer{transition:none}}
