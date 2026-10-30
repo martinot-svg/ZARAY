@@ -4,6 +4,7 @@ import BrandLogo from '@/components/brand-logo';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useParams } from 'next/navigation';
 
+type Site = { id: string; name: string; status: string };
 type Offer = { id: string; name: string; description: string; durationMinutes: number; validityDays: number; priceAmount: number; currency: string; maxDevices: number };
 type CreatedOrder = { id?: string; reference: string; status: string; amount: number; currency: string; offer_name: string };
 type PaymentMethod = { provider: 'orange_money' | 'mvola'; accountNumber: string; accountName: string; instructions: string };
@@ -15,6 +16,8 @@ export default function CaptivePortalPage() {
   const slug = params.slug;
   const [companyName, setCompanyName] = useState('');
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [sites, setSites] = useState<Site[]>([]);
+  const [siteId, setSiteId] = useState('');
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [offerId, setOfferId] = useState('');
   const [customerName, setCustomerName] = useState('');
@@ -48,6 +51,10 @@ export default function CaptivePortalPage() {
           setCompanyName(data.companyName);
           setOffers(data.offers ?? []);
           setOfferId(data.offers?.[0]?.id ?? '');
+          const availableSites:Site[]=data.sites??[];
+          const linkedSite=new URLSearchParams(window.location.search).get('siteId')||'';
+          setSites(availableSites);
+          setSiteId(availableSites.some(site=>site.id===linkedSite)?linkedSite:availableSites.length===1?availableSites[0].id:'');
           const methods = methodsResponse.ok ? (methodData.methods ?? []) as PaymentMethod[] : [];
           setPaymentMethods(methods);
           setSelectedProvider(methods[0]?.provider ?? '');
@@ -59,11 +66,13 @@ export default function CaptivePortalPage() {
   }, [slug]);
 
   async function subscribe(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setError(''); setOrder(null); setSubmissionState(null); setProofError(''); setSubmitting(true);
+    event.preventDefault(); setError(''); setOrder(null); setSubmissionState(null); setProofError('');
+    if(sites.length>1&&!siteId){setError('Sélectionnez le site où vous souhaitez recevoir Internet.');return;}
+    setSubmitting(true);
     try {
       const response = await fetch('/api/portal/' + encodeURIComponent(slug), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offerId, customerName, customerEmail, customerPhone }),
+        body: JSON.stringify({ offerId, customerName, customerEmail, customerPhone, siteId:siteId||null }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Souscription impossible.');
@@ -127,6 +136,7 @@ export default function CaptivePortalPage() {
         <h2>Inscription du client résidentiel</h2>
         <p className="muted">Vos coordonnées seront ajoutées au répertoire Clients de votre fournisseur. Si vous avez déjà effectué une demande avec la même adresse, votre fiche sera réutilisée.</p>
         <form className="form-stack" onSubmit={subscribe}>
+          {sites.length>1?<label>Site de raccordement<select value={siteId} onChange={e=>setSiteId(e.target.value)} required><option value="">Choisir un site</option>{sites.map(site=><option key={site.id} value={site.id}>{site.name}</option>)}</select></label>:sites.length===1?<p>Site de raccordement : <strong>{sites[0].name}</strong></p>:<p className="muted">Aucun site n'est encore enregistré. Votre fournisseur devra affecter votre dossier à un site avant l'activation.</p>}
           <label>Nom complet<input value={customerName} onChange={(e) => setCustomerName(e.target.value)} minLength={2} maxLength={160} required /></label>
           <label>Adresse e-mail<input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} maxLength={254} required /></label>
           <label>Téléphone de contact (facultatif)<input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} maxLength={32} placeholder="0341234567" /></label>
