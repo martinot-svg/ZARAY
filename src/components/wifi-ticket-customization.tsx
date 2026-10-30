@@ -201,7 +201,8 @@ export default function WifiTicketCustomization(){
        <button type="button" disabled={busy||!siteId} onClick={()=>void downloadPortal()}>
         <ZarayIcon name="download" size={17}/> Télécharger la page MikroTik pour ce site
        </button>
-       <p className="muted">Pour que le client puisse s’inscrire sans Internet actif, le MikroTik doit autoriser avant authentification les pages de souscription ZARAY et leurs ressources. L’installation de login.html sur le routeur local n’est pas effectuée depuis Vercel.</p>
+       <p className="muted"><a href={'/wifi/'+encodeURIComponent(companySlug)+(siteId?'?siteId='+encodeURIComponent(siteId):'')} target="_blank" rel="noopener noreferrer"><ZarayIcon name="next" size={17}/> Ouvrir la version web interactive du portail de ce site</a></p>
+       <p className="muted">La version web fonctionne avant connexion du MikroTik : les inscriptions résidentielles sont réelles, tandis que les tickets ne peuvent pas encore autoriser un accès Internet. Pour que le client ouvre automatiquement la page sur le Wi-Fi, le MikroTik doit autoriser les pages nécessaires et installer login.html.</p>
       </div>
       <a className="primary-link" href={'/tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)+'&tab=generate'}>
         <ZarayIcon name="print" size={17}/> Générer une planche A4
