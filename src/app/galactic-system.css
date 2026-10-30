@@ -669,79 +669,59 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon[data-earth-ready="true"] .zaray-rotating-earth-canvas {
   opacity: 1;
 }
-/* Genuine 3D-meshed Starlink V2 Mini-inspired spacecraft.
-   Independent transparent WebGL layer: no SVG icons, no fading trails,
-   no Wi-Fi arcs. Positions use the EXACT existing responsive globe box.
-   Its top overhang permits detailed satellites just above the horizon. */
-.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-starlink-3d-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  overflow: visible !important;
-  pointer-events: none;
-  user-select: none;
-}
-/* Starlink fallback: reserve the SVG for GENUINE WebGL failure only.
-   Before graphics initialization the backup is invisible: this prevents
-   the visibly different fake-satellite -> real-satellite switch on refresh.
-   A WebGL-capable browser displays only the genuine 3D mesh. */
-.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-starlink-first-paint {
+/* Z'Accueil Starlink: the FINAL lit 3D geometry is projected during SSR.
+   It is visible with the very first painted HTML and stays the SAME visual
+   forever (no WebGL delay, no separate fallback, no opacity switch).
+   Only CSS animates its slow orbit; no runtime scripts are required. */
+.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon > .zaray-starlink-permanent {
   position: absolute;
   inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  z-index: 0;
+  z-index: 3;
   overflow: visible !important;
+  opacity: 1;
   pointer-events: none;
   user-select: none;
-  opacity: 0;
-  visibility: hidden;
+  background: transparent;
 }
-.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon
-  .zaray-starlink-3d-layer[data-satellites-renderer="fallback"] .zaray-starlink-first-paint {
-  opacity: 1;
-  visibility: visible;
+.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-starlink-solid {
+  filter: drop-shadow(0 1px 3px rgba(6, 13, 24, .32));
 }
-.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-starlink-first-drift {
-  transform-box: view-box;
-  animation: zaray-starlink-persist 260s ease-in-out infinite;
+.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-starlink-orbit {
+  animation-name: zaray-starlink-ever-present;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  will-change: transform;
 }
-.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-starlink-first-two .zaray-starlink-first-drift {
-  animation-duration: 320s;
-  animation-delay: -82s;
+/* A closed, gentle orbital arc. 108–164 second laps with no discontinuity.
+   Negative phase offsets ensure the satellites are already in motion on
+   the FIRST painted frame rather than appearing at a common starting point. */
+@keyframes zaray-starlink-ever-present {
+  0%, 100% { transform: translate3d(-55px, 8px, 0) rotate(-2deg); }
+  25% { transform: translate3d(0px, -12px, 0) rotate(0deg); }
+  50% { transform: translate3d(55px, -4px, 0) rotate(1.8deg); }
+  75% { transform: translate3d(0px, 12px, 0) rotate(0deg); }
 }
-.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-starlink-first-three .zaray-starlink-first-drift {
-  animation-duration: 400s;
-  animation-delay: -181s;
-}
-@keyframes zaray-starlink-persist {
-  0%, 100% { transform: translate3d(-55px, 6px, 0); }
-  50% { transform: translate3d(55px, -6px, 0); }
+@media (max-width:700px) {
+  .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-starlink-orbit {
+    /* Orbital motion stays proportional to the existing responsive globe. */
+    animation-name: zaray-starlink-mobile-ever-present;
+  }
+  @keyframes zaray-starlink-mobile-ever-present {
+    0%, 100% { transform: translate3d(-38px, 5px, 0) rotate(-2deg); }
+    25% { transform: translate3d(0px, -8px, 0) rotate(0deg); }
+    50% { transform: translate3d(38px, -3px, 0) rotate(1.8deg); }
+    75% { transform: translate3d(0px, 8px, 0) rotate(0deg); }
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-starlink-first-drift {
+  .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-starlink-orbit {
     animation: none !important;
+    will-change: auto;
   }
-  .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-starlink-first-paint {
-    transition: none !important;
-  }
-}
-.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon .zaray-starlink-3d-canvas {
-  position: absolute;
-  top: -13%;
-  left: 0;
-  width: 100%;
-  height: 113%;
-  display: block;
-  pointer-events: none;
-  background: transparent;
-  opacity: 0;
-  z-index: 1;
-}
-.personal-no-sidebar.personal-home-shell > .zaray-earth-horizon
-  .zaray-starlink-3d-layer[data-satellites-renderer="3d"] .zaray-starlink-3d-canvas {
-  opacity: 1;
 }
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::before,
 .personal-no-sidebar.personal-home-shell > .zaray-earth-horizon::after {
