@@ -50,24 +50,25 @@ test('portal is discoverable from admin and responsive across devices',()=>{
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 });
 
-test('landing exposes both paths within one viewport without initial scrolling',()=>{
- assert.match(web,/zw-root zw-landing/);
- assert.match(web,/className="zw-landing-grid"/);
- assert.match(web,/className="zw-landing-tickets"/);
- assert.match(web,/className="zw-landing-subscribe"/);
- assert.match(web,/J’ai un ticket Wi-Fi/);
- assert.match(web,/Je veux devenir abonné/);
- assert.match(css,/\.zw-root\.zw-landing\{height:100dvh;min-height:0;overflow:hidden\}/);
- assert.match(css,/\.zw-landing-grid\{flex:1;min-height:0;display:grid/);
- assert.match(css,/@media\(max-width:850px\)/);
- assert.match(css,/@media\(max-width:480px\)/);
- assert.match(css,/@media\(max-height:650px\)/);
- assert.match(css,/@media\(max-height:520px\)/);
+test('premium welcome displays login, subscribe CTA and offers without scrolling',()=>{
+ assert.match(web,/className="zw-simple-screen"/);
+ assert.match(web,/className="zw-simple-card"/);
+ assert.match(web,/BrandLogo className="zw-simple-logo"/);
+ assert.match(web,/id="zw-simple-user"/);
+ assert.match(web,/id="zw-simple-password"/);
+ assert.match(web,/Se connecter/);
+ assert.match(web,/Devenir un abonné de \{companyName\}/);
+ assert.match(web,/setOffersDialog\(true\)/);
+ assert.match(css,/\.zw-landing\.zw-root\{height:100dvh;min-height:0;overflow:hidden\}/);
+ assert.match(css,/\.zw-simple-screen\{flex:1;min-height:0;/);
+ assert.match(css,/@media\(max-width:600px\)/);
+ assert.match(css,/@media\(max-height:510px\)/);
 });
 test('real forms remain available after leaving compact home screen',()=>{
  assert.match(web,/mode==='ticket'/);
  assert.match(web,/mode==='subscribe'/);
  assert.match(web,/mode==='order'/);
  assert.match(web,/setEnterpriseDialog\(true\)/);
+ assert.match(web,/setOffersDialog\(true\)/);
  assert.match(web,/role="dialog" aria-modal="true"/);
 });
