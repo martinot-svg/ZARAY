@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     amount: order.amount,
     currency: order.currency,
     orderStatus: order.status,
-    paid: order.status === 'paid' && Boolean(order.paid_at),
+    paid: Boolean(order.paid_at) && ['paid','activation_pending','active'].includes(order.status),
     submission: submission ? {
       provider: submission.provider,
       status: submission.status,
