@@ -10,8 +10,12 @@
  * CSS orbital animations start at first paint, run continuously without JS,
  * respect prefers-reduced-motion, and preserve the existing Earth framing.
  *
- * Illustrative Starlink-like geometry and orbital movement; not official
- * SpaceX CAD files and not real-time satellite tracking.
+ * Geometry follows the public SpaceX V2 Mini architecture: thin flat
+ * communications bus, two deployed PV wings, multiple phased-array patches,
+ * E/Ka-band radio hardware, three optical terminals and ion thruster.
+ * Reference: https://starlink.com/technology
+ * This is a faithful public-reference reconstruction, NOT proprietary SpaceX
+ * CAD and not live tracking.
  */
 
 type V3 = readonly [number, number, number];
@@ -22,11 +26,14 @@ type Craft = {
   angles: V3; orbitClass: string; period: string; delay: string;
 };
 
-const aluminum: V3 = [0.63,0.72,0.79];
-const steel: V3 = [0.33,0.45,0.56];
-const graphite: V3 = [0.07,0.115,0.165];
-const photovoltaic: V3 = [0.075,0.20,0.335];
-const glass: V3 = [0.36,0.64,0.76];
+// SpaceX spacecraft use dark optical/radio surfaces, not a glossy chrome bus.
+const aluminum: V3 = [0.72,0.77,0.78];
+const steel: V3 = [0.30,0.36,0.42];
+const graphite: V3 = [0.052,0.070,0.089];
+const photovoltaic: V3 = [0.052,0.095,0.156];
+const glass: V3 = [0.27,0.49,0.59];
+const copper: V3 = [0.59,0.35,0.20];
+const foil: V3 = [0.64,0.68,0.65];
 
 const CRAFT: readonly Craft[] = [
   {key:'one', x:670, y:-92, size:17.5, angles:[-0.32,-0.35,-0.12],
@@ -77,21 +84,57 @@ function makeModel(): Quad[] {
     circle(x,y,z+.041,radius*.06,glass);
   }
 
-  // Actual volumetric compact communications bus (front/back/edges).
-  box(0,0,.04,2.10,1.54,.43,aluminum,steel);
-  box(0,0,.295,1.85,1.32,.10,[.43,.52,.59],steel);
-  box(0,-.61,.36,1.92,.11,.07,aluminum);
-  box(0,.60,.36,1.92,.10,.07,steel);
-  for (const x of [-.57,-.19,.19,.57]) {
-    for(const y of [-.27,.20]) {
-      box(x,y,.368,.28,.30,.028,[.14,.28,.39],steel);
-      box(x,y,.392,.22,.24,.022,[.26,.40,.51],steel);
+  // Low-profile dark V2 Mini bus, powder-coated equipment panels and
+  // exposed lightweight-aluminum perimeter. Individual slabs have volume.
+  box(0,0,.04,2.10,1.54,.43,steel,graphite);
+  box(0,0,.295,1.85,1.32,.10,[.21,.26,.29],steel);
+  box(0,-.69,.36,2.02,.08,.07,aluminum,steel);
+  box(0,.69,.36,2.02,.08,.07,aluminum,steel);
+  box(-.99,0,.36,.095,1.42,.09,foil,steel);
+  box(.99,0,.36,.095,1.42,.09,foil,steel);
+  box(0,0,.38,.034,1.35,.014,aluminum,graphite);
+  box(0,0,.389,1.84,.028,.012,[.48,.54,.58],graphite);
+  // External silvery rails, fasteners and foil-clad battery/avionics panels.
+  for (const side of [-1,1]) {
+    box(side*.84,-.57,.415,.17,.15,.035,foil,steel);
+    box(side*.84,.56,.415,.16,.13,.035,foil,steel);
+    for(const y of [-.58,-.38,.38,.59]) {
+      circle(side*.98,y,.43,.025,[.57,.61,.63]);
+      circle(side*.98,y,.44,.010,graphite);
     }
   }
-  dish(-.72,.48,.39,.17);
-  dish(.72,.48,.39,.17);
-  circle(0,-.54,.431,.095,graphite);
-  circle(0,-.54,.44,.044,glass);
+  // Five user-link Ku patches and three Ka/E-band apertures.
+  // Unlike toy solar panels, RF surfaces face Earth and are matte/dark.
+  for (const [i,x] of [-.61,-.305,0,.305,.61].entries()) {
+    const y=-.27;
+    box(x,y,.400,.24,.33,.021,[.085,.125,.14],steel);
+    box(x,y,.415,.18,.265,.010,[.16,.21,.23],graphite);
+    if(i%2===0) box(x,y,.424,.07,.20,.006,[.23,.27,.28],graphite);
+  }
+  for (const x of [-.54,0,.54]) {
+    const y=.20;
+    box(x,y,.402,.32,.30,.024,[.105,.14,.16],steel);
+    box(x,y,.422,.24,.23,.016,[.20,.24,.25],graphite);
+  }
+  // Realistic radio feed dishes, recessed optics and copper-like RF ports.
+  dish(-.72,.48,.425,.145);
+  dish(.72,.48,.425,.145);
+  circle(0,-.56,.442,.10,graphite);
+  circle(0,-.56,.448,.046,glass);
+  for (const side of [-1,1]) {
+    box(side*1.04,-.15,.0,.16,.28,.17,foil,steel);
+    circle(side*1.07,-.15,.105,.10,copper);
+    circle(side*1.07,-.15,.117,.045,graphite);
+    box(side*.93,.28,.12,.24,.16,.13,steel,graphite);
+    circle(side*.93,.28,.217,.065,[.31,.44,.54]);
+  }
+  // Three optical inter-satellite terminal apertures.
+  circle(-.91,.58,.425,.055,graphite);
+  circle(-.91,.58,.437,.024,glass);
+  circle(.91,.58,.425,.055,graphite);
+  circle(.91,.58,.437,.024,glass);
+  circle(0,.61,.425,.056,graphite);
+  circle(0,.61,.437,.026,glass);
 
   // Two broad structural solar wings, not thin flat 2D clipart.
   for(const sign of [-1,1]) {
@@ -100,15 +143,20 @@ function makeModel(): Quad[] {
     const cx=sign*3.11;
     box(cx,0,-.13,3.66,2.16,.10,steel,graphite);
     box(cx,0,-.044,3.51,2.00,.024,photovoltaic,graphite);
+    // Two segmented deployable wings, not featureless rectangles:
+    // bright titanium longitudinal hinge and four transverse seams.
+    for (const seam of [-.65,-.21,.21,.65]) {
+      box(cx,seam,.016,3.50,.010,.010,[.18,.27,.33],graphite);
+    }
     const xStart=cx-1.69;
     for(let col=0;col<9;col++) {
       for(let row=0;row<5;row++) {
         const px=xStart+(col+.5)*3.37/9;
         const py=-.94+(row+.5)*1.87/5;
         const shimmer=(col*3+row)%4;
-        const material:V3=shimmer===0?[.12,.32,.48]:
-          shimmer===1?[.065,.15,.26]:
-          shimmer===2?[.085,.22,.38]:[.10,.27,.43];
+        const material:V3=shimmer===0?[.14,.25,.33]:
+          shimmer===1?[.038,.085,.14]:
+          shimmer===2?[.095,.18,.27]:[.065,.135,.21];
         quad([px-.171,py-.174,.004],[px+.171,py-.174,.004],
           [px+.171,py+.174,.004],[px-.171,py+.174,.004],material);
         // One thin visible conductive busbar, not a six-faced micro-box:
@@ -125,8 +173,11 @@ function makeModel(): Quad[] {
     }
     box(cx,0,.042,.036,2.08,.05,[.43,.57,.65],steel);
   }
+  // Hall-effect argon thruster: real raised nozzle and metallic housing.
   box(0,0,-.35,.62,.62,.21,steel,graphite);
-  circle(0,0,-.47,.22,graphite);
+  circle(0,0,-.47,.22,foil);
+  circle(0,0,-.482,.176,copper);
+  circle(0,0,-.490,.126,graphite);
   return quads;
 }
 
