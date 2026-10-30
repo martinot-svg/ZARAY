@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 
 const sections = [
   { label: 'GESTION', items: [['/tableau-de-bord', 'Tableau de bord'], ['/sites', 'Sites'], ['/membres', 'Membres']] },
-  { label: 'ACTIVITÉ', items: [['/clients', 'Clients'], ['/offres', 'Offres Internet'], ['/commandes', 'Commandes'], ['/tickets', 'Tickets Wi-Fi']] },
+  { label: 'ACTIVITÉ', items: [['/clients', 'Clients'], ['/offres', 'Offres Internet'], ['/commandes', 'Commandes'], ['/abonnements', 'Abonnements résidentiels'], ['/tickets', 'Tickets Wi-Fi']] },
   { label: 'FINANCE & RÉSEAU', items: [['/paiements/verification', 'Paiements'], ['/parametres-paiement', 'Moyens de paiement'], ['/portail', 'Portail captif'], ['/gestion-reseau', 'Gestion réseau']] },
 ];
 
@@ -24,7 +24,7 @@ const mobileDockItems = [
 const navigationIcons = {
   '/tableau-de-bord': 'dashboard', '/entreprises': 'company', '/sites': 'site',
   '/membres': 'members', '/clients': 'customers', '/offres': 'wifi',
-  '/commandes': 'orders', '/tickets': 'ticket', '/paiements/verification': 'payment',
+  '/commandes': 'orders', '/abonnements': 'wifi', '/tickets': 'ticket', '/paiements/verification': 'payment',
   '/parametres-paiement': 'finance', '/portail': 'network', '/gestion-reseau': 'network',
 } as const;
 type WorkspaceCompany = { id:string; legal_name:string; role:string };
@@ -102,7 +102,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
             {sections.map(section => <div className="app-nav-group" key={section.label}>
               <span className="app-nav-label">{section.label}</span>
               {section.items.map(([href, label]) => {
-                const siteOperational = ['/clients','/commandes','/tickets','/paiements/verification'].includes(href);
+                const siteOperational = ['/clients','/commandes','/abonnements','/tickets','/paiements/verification'].includes(href);
                 const scoped=href === '/entreprises' ? href : activeCompany
                   ? href+(href.includes('?')?'&':'?')+'companyId='+encodeURIComponent(activeCompany)+(activeSite && siteOperational ? '&siteId='+encodeURIComponent(activeSite) : '')
                   : href;
