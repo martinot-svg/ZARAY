@@ -111,7 +111,10 @@ function makeModel(): Quad[] {
           shimmer===2?[.085,.22,.38]:[.10,.27,.43];
         quad([px-.171,py-.174,.004],[px+.171,py-.174,.004],
           [px+.171,py+.174,.004],[px-.171,py+.174,.004],material);
-        box(px,py,.012,.012,.30,.008,[.29,.44,.54]);
+        // One thin visible conductive busbar, not a six-faced micro-box:
+        // substantially smaller first-paint HTML and faster mobile parsing.
+        quad([px-.006,py-.15,.017],[px+.006,py-.15,.017],
+          [px+.006,py+.15,.017],[px-.006,py+.15,.017],[.29,.44,.54]);
       }
     }
     for(const y of [-1.06,1.06]) {
