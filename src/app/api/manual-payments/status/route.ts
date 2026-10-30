@@ -8,21 +8,26 @@ export async function GET(request: NextRequest) {
   const service = createServiceClient();
   if (!service) return NextResponse.json({ error: 'Service indisponible.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
   const { data: order, error } = await service.from('subscription_orders')
-    .select('id,public_reference,offer_name,amount,currency,status,paid_at')
+    .select('id,company_id,public_reference,offer_name,amount,currency,status,paid_at')
     .eq('public_reference', reference).maybeSingle();
   if (error) { console.error('manual payment status order lookup failed', { code: error.code }); return NextResponse.json({ error: 'Service indisponible.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } }); }
   if (!order) return NextResponse.json({ error: 'Commande introuvable.' }, { status: 404, headers: { 'Cache-Control': 'no-store' } });
+  const { data: company, error: companyError } = await service.from('companies')
+    .select('slug,legal_name').eq('id',order.company_id).maybeSingle();
+  if (companyError||!company) return NextResponse.json({error:'Fournisseur indisponible.'},{status:503,headers:{'Cache-Control':'no-store'}});
   const { data: submission, error: submissionError } = await service.from('manual_payment_submissions')
     .select('provider,status,created_at,reviewed_at')
     .eq('order_id', order.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
   if (submissionError) { console.error('manual payment status submission lookup failed', { code: submissionError.code }); return NextResponse.json({ error: 'Service indisponible.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } }); }
   return NextResponse.json({
     reference: order.public_reference,
+    companySlug: company.slug,
+    companyName: company.legal_name,
     offerName: order.offer_name,
     amount: order.amount,
     currency: order.currency,
     orderStatus: order.status,
-    paid: order.status === 'paid' && Boolean(order.paid_at),
+    paid: Boolean(order.paid_at) && ['paid','activation_pending','active'].includes(order.status),
     submission: submission ? {
       provider: submission.provider,
       status: submission.status,
