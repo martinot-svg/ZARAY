@@ -161,7 +161,8 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
   var link=document.getElementById('subscribeLink');
   var name=typeof companyName==='string'?companyName.trim():'';
   link.textContent='Devenir un abonné'+(name?' de '+name:' de notre fournisseur');
-  link.href='https://zaray.vercel.app/portail/'+encodeURIComponent(slug);
+  link.href='https://zaray.vercel.app/portail/'+encodeURIComponent(slug)
+    +(/^[0-9a-f-]{36}$/i.test(SITE_ID)?'?siteId='+encodeURIComponent(SITE_ID):'');
   link.hidden=false;
   document.getElementById('subscribeNotice').hidden=true;
  }
