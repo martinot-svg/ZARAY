@@ -51,7 +51,15 @@ function logoPaint(ctx:CanvasRenderingContext2D,img:HTMLImageElement|null,x:numb
  if(!img||!img.naturalWidth||!img.naturalHeight)return false;
  const scale=Math.min(w/img.naturalWidth,h/img.naturalHeight);
  const iw=img.naturalWidth*scale,ih=img.naturalHeight*scale;
- ctx.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);return true;
+ ctx.save();
+ // A neutral tile plus a contour shadow keeps transparent, white and dark
+ // logo artwork distinguishable in the 60×20 mm physical ticket format.
+ ctx.fillStyle='rgba(210,226,233,.94)';
+ ctx.fillRect(x-2,y-2,w+4,h+4);
+ ctx.shadowColor='rgba(0,0,0,.66)';ctx.shadowBlur=2;
+ ctx.shadowOffsetX=1;ctx.shadowOffsetY=1;
+ ctx.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);
+ ctx.restore();return true;
 }
 const imageCache=new Map<string,Promise<HTMLImageElement|null>>();
 export async function loadVoucherLogo(uri:string|null):Promise<HTMLImageElement|null>{
@@ -60,6 +68,12 @@ export async function loadVoucherLogo(uri:string|null):Promise<HTMLImageElement|
  const promise=new Promise<HTMLImageElement|null>(resolve=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=uri;});
  if(imageCache.size>=6)imageCache.clear();
  imageCache.set(uri,promise);return promise;
+}
+/** Refuse to silently export/print missing logos from a branded site. */
+export async function requireVoucherLogo(uri:string|null){
+ const logo=await loadVoucherLogo(uri);
+ if(uri&&!logo)throw Error('Le logo du site ne peut pas être affiché. Réimportez-le avant impression.');
+ return logo;
 }
 export function voucherPages(tickets:PrintableVoucher[]){
  const pages:PrintableVoucher[][]=[];
@@ -117,8 +131,8 @@ export function paintVoucher(ctx:CanvasRenderingContext2D,x:number,y:number,tick
    }
    ctx.beginPath();ctx.moveTo(split,y+8);ctx.lineTo(split,y+h-8);
    ctx.setLineDash([4,4]);ctx.strokeStyle=darkTheme?'rgba(255,255,255,.65)':border;ctx.lineWidth=1.4;ctx.stroke();ctx.setLineDash([]);
-   const logoUsed=logoPaint(ctx,logo,mainX,y+8,38,27);
-   const textX=mainX+(logoUsed?43:0),textW=mainWidth-(logoUsed?43:0);
+   const logoUsed=logoPaint(ctx,logo,mainX,y+7,64,36);
+   const textX=mainX+(logoUsed?70:0),textW=mainWidth-(logoUsed?70:0);
    fit(ctx,name,textX,y+21,textW,16,fg,font,true);
    fit(ctx,ticket.offer_name,mainX,y+40,mainWidth,15,fg,font,true);
    fit(ctx,'UTILISATEUR  '+ticket.username,mainX,y+62,mainWidth,14,fg,font,true);
@@ -143,7 +157,7 @@ export function paintVoucher(ctx:CanvasRenderingContext2D,x:number,y:number,tick
 export async function drawVoucherCanvas(canvas:HTMLCanvasElement,ticket:PrintableVoucher,design:TicketVisual,siteName:string){
  canvas.width=TICKET_PIXEL_WIDTH;canvas.height=TICKET_PIXEL_HEIGHT;
  const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas indisponible.');
- const logo=await loadVoucherLogo(design.logo_data_uri);
+ const logo=await requireVoucherLogo(design.logo_data_uri);
  // Discard races by letting callers guard effect lifetimes; drawing is synchronous.
  ctx.clearRect(0,0,canvas.width,canvas.height);
  paintVoucher(ctx,0,0,ticket,design,siteName,logo);
@@ -161,7 +175,7 @@ function canvasPage(sheet:TicketSheet,arr:PrintableVoucher[],logo:HTMLImageEleme
 }
 /** A4 physical PDF geometry and 150dpi JPEG image pages are unchanged. */
 export async function generateA4Pdf(sheet:TicketSheet):Promise<Blob>{
- const logo=await loadVoucherLogo(sheet.design.logo_data_uri);
+ const logo=await requireVoucherLogo(sheet.design.logo_data_uri);
  const pages=voucherPages(sheet.tickets);if(!pages.length)throw Error('Aucun ticket à exporter.');
  const objects:(Uint8Array|null)[]=[null,null],kids:number[]=[];
  for(const items of pages){
@@ -184,7 +198,7 @@ export async function generateA4Pdf(sheet:TicketSheet):Promise<Blob>{
 
 /** JPEG export uses the exact same canvas painting logic as PDF and print previews. */
 export async function generateA4Jpegs(sheet:TicketSheet):Promise<Blob[]>{
- const logo=await loadVoucherLogo(sheet.design.logo_data_uri);
+ const logo=await requireVoucherLogo(sheet.design.logo_data_uri);
  const pages=voucherPages(sheet.tickets);
  if(!pages.length)throw Error('Aucun ticket à exporter.');
  const files:Blob[]=[];

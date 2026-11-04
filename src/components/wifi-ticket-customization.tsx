@@ -1,8 +1,10 @@
 'use client';
-import { useEffect,useState,type ChangeEvent } from 'react';
+import { useEffect,useRef,useState,type ChangeEvent } from 'react';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import VoucherCanvas from '@/components/voucher-canvas';
 import type { TicketVisual,TicketStyle,PrintableVoucher } from '@/lib/ticket-pdf';
+import {legibleInk} from '@/lib/ticket-pdf';
+import {paletteFromLogo} from '@/lib/logo-palette';
 
 type Site={id:string;company_id:string;name:string};
 type Offer={id:string;name:string;status:string;duration_minutes:number;validity_days:number;price_amount:number|string;currency:string};
@@ -25,7 +27,8 @@ export default function WifiTicketCustomization(){
  const [sites,setSites]=useState<Site[]>([]),[offers,setOffers]=useState<Offer[]>([]);
  const [siteId,setSiteId]=useState(''),[offerId,setOfferId]=useState('');
  const [form,setForm]=useState<Settings>(initial);
- const [busy,setBusy]=useState(true),[saving,setSaving]=useState(false);
+ const [busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[analyzingLogo,setAnalyzingLogo]=useState(false);
+ const logoRequest=useRef(0);
  const [error,setError]=useState(''),[notice,setNotice]=useState('');
  useEffect(()=>{let active=true;(async()=>{
    try{
@@ -48,7 +51,7 @@ export default function WifiTicketCustomization(){
    }catch(e){if(active)setError(e instanceof Error?e.message:'Erreur de chargement.');}
    finally{if(active)setBusy(false);}
  })();return()=>{active=false};},[]);
- useEffect(()=>{if(!companyId||!siteId)return;let active=true;setBusy(true);setError('');(async()=>{
+ useEffect(()=>{logoRequest.current++;if(!companyId||!siteId)return;let active=true;setBusy(true);setError('');(async()=>{
    try{
      const q=new URLSearchParams({companyId,siteId});
      if(offerId)q.set('offerId',offerId);
@@ -59,13 +62,28 @@ export default function WifiTicketCustomization(){
    finally{if(active)setBusy(false);}
  })();return()=>{active=false};},[companyId,siteId,offerId]);
  function change<K extends keyof Settings>(key:K,value:Settings[K]){setForm(previous=>({...previous,[key]:value}));}
+ async function applyLogoPalette(uri:string,replaceLogo:boolean){
+  const request=++logoRequest.current;
+  setAnalyzingLogo(true);setError('');setNotice('');
+  try{
+   const palette=await paletteFromLogo(uri);
+   if(request!==logoRequest.current)return;
+   setForm(previous=>({...previous,...(palette??{}),...(replaceLogo?{logo_data_uri:uri}:{})}));
+   setNotice(palette
+    ?'Couleurs détectées dans le logo : ajustez-les librement, puis enregistrez ce site.'
+    :'Logo chargé. Les couleurs ne peuvent pas être détectées : choisissez-les manuellement.');
+  }catch{
+   if(request===logoRequest.current)setError('Impossible d’analyser les couleurs du logo.');
+  }finally{if(request===logoRequest.current)setAnalyzingLogo(false);}
+ }
  async function upload(e:ChangeEvent<HTMLInputElement>){
    const file=e.target.files?.[0];if(!file)return;
    if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>130000){
      setError('Logo PNG, JPEG ou WebP, maximum 130 Ko.');return;
    }
    const reader=new FileReader();
-   reader.onload=()=>{if(typeof reader.result==='string')change('logo_data_uri',reader.result);};
+   reader.onload=()=>{if(typeof reader.result==='string')void applyLogoPalette(reader.result,true);};
+   reader.onerror=()=>setError('Impossible de lire le fichier logo.');
    reader.readAsDataURL(file);
  }
  async function save(){
@@ -166,8 +184,13 @@ export default function WifiTicketCustomization(){
       </div>
       <h2>Couleurs et identité</h2>
       {!offerId?<div><label>Logo du site (PNG, JPEG, WebP)</label>
-        <input type="file" accept="image/png,image/jpeg,image/webp" onChange={upload}/>
-        {form.logo_data_uri&&<button type="button" onClick={()=>change('logo_data_uri',null)}>Retirer le logo</button>}
+        <input type="file" accept="image/png,image/jpeg,image/webp" onChange={upload} disabled={analyzingLogo}/>
+        <p className="muted">À l'import, ZARAY détecte automatiquement les couleurs principales du logo dans le navigateur. Vous pouvez ensuite personnaliser librement chaque couleur.</p>
+        {form.logo_data_uri&&<div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:12,margin:'12px 0'}}>
+         <img src={form.logo_data_uri} alt="Logo du site chargé" style={{width:148,height:74,objectFit:'contain',background:'#E8EDF1',borderRadius:10,padding:7,border:'1px solid #9BADBA'}}/>
+         <button type="button" disabled={analyzingLogo} onClick={()=>void applyLogoPalette(form.logo_data_uri!,false)}>{analyzingLogo?'Analyse du logo…':'Reprendre les couleurs du logo'}</button>
+         <button type="button" disabled={analyzingLogo} onClick={()=>{logoRequest.current++;change('logo_data_uri',null);}}>Retirer le logo</button>
+        </div>}
       </div>:<p className="muted">Le logo est hérité du site. La personnalisation d'une offre ne modifie pas le logo du site.</p>}
       <div className="field-grid">
         {([['primary_color','Principale'],['secondary_color','Fond'],['accent_color','Accent / dégradé'],
@@ -202,7 +225,7 @@ export default function WifiTicketCustomization(){
       <p className="muted">Les mots de passe des nouveaux tickets contiennent uniquement des chiffres (0–9). Pour réduire les tentatives de devinette, 5 chiffres sont recommandés.</p>
       <div className="wifi-template-actions">
         <button type="button" onClick={restore} disabled={saving}>Restaurer Classic</button>
-        <button type="button" className="primary-link" disabled={busy||saving||!siteId} onClick={()=>void save()}>
+        <button type="button" className="primary-link" disabled={busy||saving||analyzingLogo||!siteId} onClick={()=>void save()}>
           <ZarayIcon name="save" size={17}/>{saving?'Enregistrement…':'Enregistrer comme modèle'}
         </button>
       </div>
@@ -220,13 +243,13 @@ export default function WifiTicketCustomization(){
        <h3>Portail captif personnalisé par site</h3>
        <p className="muted">Le client voit immédiatement le formulaire nom d’utilisateur et mot de passe. Un lien discret « Découvrir les offres » affiche ensuite les forfaits occasionnels et l’inscription résidentielle. Le nom commercial, le logo, les couleurs et le message d’accueil sont ceux du site sélectionné, jamais ceux d’une autre offre.</p>
        {!offerId?<div aria-label="Aperçu du portail captif du site" style={{margin:'14px auto',maxWidth:360,padding:20,borderRadius:20,background:'linear-gradient(140deg,#102436,#071522)',border:'1px solid '+(form.primary_color||'#40caff'),textAlign:'center',color:'#f2fbff'}}>
-         {form.logo_data_uri?<img src={form.logo_data_uri} alt="Logo du site" style={{height:54,maxWidth:140,objectFit:'contain',marginBottom:8}}/>:<div aria-hidden="true" style={{fontSize:25,fontWeight:800,color:form.accent_color||'#66eabe'}}>Wi-Fi</div>}
+         {form.logo_data_uri?<img src={form.logo_data_uri} alt="Logo du site" style={{height:70,maxWidth:180,objectFit:'contain',marginBottom:8,padding:6,background:'#DDE8ED',borderRadius:10,filter:'drop-shadow(0 1px 1px rgba(0,0,0,.6))'}}/>:<div aria-hidden="true" style={{fontSize:25,fontWeight:800,color:form.accent_color||'#66eabe'}}>Wi-Fi</div>}
          <div style={{fontWeight:800,fontSize:16}}>{form.brand_name||site?.name||companyName}</div>
          <p style={{fontSize:11,color:'#b8d3d9'}}>{form.welcome_message||'Chaque connexion ouvre votre univers.'}</p>
          <div style={{display:'grid',gap:8,textAlign:'left',fontSize:11,marginTop:14}}>
           <span>Nom d’utilisateur<input readOnly tabIndex={-1} value="" aria-label="Aperçu utilisateur" placeholder="Identifiant du ticket" style={{width:'100%',padding:9,borderRadius:8,background:'#142b3b',border:'1px solid #476071',color:'#ffffff'}}/></span>
           <span>Mot de passe<input readOnly tabIndex={-1} type="password" value="" aria-label="Aperçu mot de passe" placeholder="PIN" style={{width:'100%',padding:9,borderRadius:8,background:'#142b3b',border:'1px solid #476071',color:'#ffffff'}}/></span>
-          <div style={{padding:10,borderRadius:9,background:'linear-gradient(90deg,'+(form.primary_color||'#40caff')+','+(form.accent_color||'#66eabe')+')',textAlign:'center',color:'#081720',fontWeight:800}}>Se connecter</div>
+          <div style={{padding:10,borderRadius:9,background:'linear-gradient(90deg,'+(form.primary_color||'#40caff')+','+(form.accent_color||'#66eabe')+')',textAlign:'center',color:legibleInk('#081720',form.primary_color||'#40caff'),fontWeight:800}}>Se connecter</div>
          </div>
          <div style={{marginTop:10,fontSize:11,color:form.accent_color||'#66eabe',textDecoration:'underline'}}>Découvrir les offres</div>
         </div>:<p className="muted">Pour personnaliser ce portail, choisissez « Tous les forfaits du site » : l'identité du Hotspot reste commune aux offres du même site.</p>}

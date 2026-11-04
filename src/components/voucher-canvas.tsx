@@ -17,15 +17,18 @@ export default function VoucherCanvas({ticket,design,siteName,preview=false}:{
      canvas.width=TICKET_PIXEL_WIDTH;canvas.height=TICKET_PIXEL_HEIGHT;
      const ctx=canvas.getContext('2d');
      if(ctx){
+       canvas.dataset.logoReady='false';
        // Draw the readable core immediately, even while a logo is decoding.
        paintVoucher(ctx,0,0,ticket,design,siteName,null);
        if(design.logo_data_uri){
          void loadVoucherLogo(design.logo_data_uri).then(logo=>{
-           if(!alive||!logo)return;
+           if(!alive)return;
+           if(!logo){canvas.dataset.logoReady='error';return;}
            ctx.clearRect(0,0,canvas.width,canvas.height);
            paintVoucher(ctx,0,0,ticket,design,siteName,logo);
+           canvas.dataset.logoReady='true';
          });
-       }
+       }else{canvas.dataset.logoReady='true';}
      }
    }
    return()=>{alive=false};
