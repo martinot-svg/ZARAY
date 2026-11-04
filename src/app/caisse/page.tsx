@@ -186,10 +186,10 @@ export default function CaissePage() {
             </article>
           </section>
 
-          <section className="panel" style={{ marginTop: 16 }}>
+          <details className="workspace-disclosure"><summary>Ventes récentes</summary><section className="panel" style={{ marginTop: 16 }}>
             <div className="panel-head"><div><div className="panel-title">Ventes récentes</div><div className="muted">Historique des tickets générés pour les clients occasionnels.</div></div></div>
             {busy ? null : sales.length ? <div className="data-list">{sales.slice(0, 20).map((sale) => <div className="data-row" key={sale.id}><div><strong>{sale.receipt_number}</strong><div className="muted">{sale.customer_name} · {sale.offer_name} · {paymentLabels[sale.payment_method] ?? sale.payment_method}</div></div><div style={{ textAlign: 'right' }}><strong>{Number(sale.amount).toLocaleString('fr-FR')} {sale.currency}</strong><div className="muted">{statusLabels[sale.ticket_status] ?? sale.ticket_status}</div></div></div>)}</div> : <div className="empty-state"><strong>Aucune vente occasionnelle</strong><p>Les encaissements réalisés depuis cette caisse apparaîtront ici.</p></div>}
-          </section>
+          </section></details>
         </AppShell>
       </div>
       <style jsx global>{`

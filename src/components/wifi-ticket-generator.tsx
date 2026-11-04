@@ -171,7 +171,7 @@ export default function WifiTicketGenerator(){
    </div>
    {error&&<p className="alert alert-error" role="alert">{error}</p>}
   </section>
-  <section className="panel" style={{padding:18,marginBottom:16}}>
+  <details className="workspace-disclosure"><summary>Lots et stock</summary><section className="panel" style={{padding:18,marginBottom:16}}>
    <h2>Lots et stock de tickets préimprimés</h2>
    <p className="muted">Les lots sont préparés automatiquement sur MikroTik avant leur impression. Une réimpression nécessite l'autorisation d'un responsable et est journalisée.</p>
    {batches.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Lot</th><th>Création</th><th>Stock prêt</th><th>Activés</th><th>En préparation</th><th>Exportés</th><th>Action</th></tr></thead>
@@ -179,7 +179,7 @@ export default function WifiTicketGenerator(){
     <td>{b.ready} / {b.count}</td><td>{b.activated}</td><td>{b.pending}</td><td>{b.printed}</td>
     <td><button type="button" disabled={busy||b.ready!==b.count||b.activated>0||b.expired>0} onClick={()=>void restoreBatch(b.batchId)}>Ouvrir / réimprimer</button></td></tr>)}</tbody></table></div>
     :<p className="muted">Aucun lot pour ce site.</p>}
-  </section>
+  </section></details>
   {tickets.length>0&&<>
    <div className="panel" style={{padding:18,marginBottom:18}}>
     <h2>Lot créé — {tickets.length} identifiants uniques</h2>

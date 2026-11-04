@@ -51,12 +51,12 @@ export default async function GlobalFinancePage({ searchParams }: { searchParams
           <div className="personal-finance-totals">{[...consolidated.entries()].map(([currency, amount]) =>
             <div className="kpi" key={currency}><p className="kpi-label">PAIEMENTS CONFIRMÉS · {currency}</p><strong className="kpi-value">{format(amount,currency)}</strong></div>)}</div>
         </section>
-        <section className="panel"><h2 className="panel-title">Détail par entreprise autorisée</h2>
+        <details className="workspace-disclosure"><summary>Détail par entreprise</summary><section className="panel"><h2 className="panel-title">Détail par entreprise autorisée</h2>
           <div className="data-list">{rows.map(row => <div className="data-row" key={row.id}><span><strong>{row.name}</strong>
             <span className="muted"> · {row.count} paiement{row.count !== 1 ? 's' : ''} confirmé{row.count !== 1 ? 's' : ''}</span></span>
             <span>{row.count ? [...row.values.entries()].map(([currency,amount]) => <span key={currency}>{format(amount,currency)} </span>) : 'Aucun paiement confirmé'}</span>
           </div>)}</div>
-        </section>
+        </section></details>
       </>}
     {!error && <PersonalFinanceOverview client={client} companies={companies}
       requestedCompanyId={financeCompanyId} requestedCurrency={currency} filtersAction="/finance-globale" />}
