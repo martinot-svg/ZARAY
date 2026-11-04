@@ -96,8 +96,7 @@ export default function WifiTicketsPage() {
           </button>)}
     </nav>
     {visited.includes('generate')&&manager&&<section aria-label="Génération des tickets" hidden={tab!=='generate'}>
-      <h2>Génération et impression</h2>
-      <p className="muted">Préparation MikroTik avant vente. Export PDF, JPEG ou impression directe de tickets prêts. A4 (3 colonnes × 11 lignes) reste dans ce module.</p>
+      <details className="workspace-inline-disclosure"><summary>Impression des tickets</summary><p className="muted">Les tickets sont préparés sur MikroTik avant vente. Export PDF, JPEG et planches A4 de 33 tickets disponibles ici.</p></details>
       <WifiTicketGenerator />
     </section>}
     {visited.includes('sell')&&(manager||company.role==='sales')&&<section aria-label="Stock et activations MikroTik" hidden={tab!=='sell'}>
