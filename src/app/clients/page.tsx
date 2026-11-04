@@ -29,11 +29,11 @@ export default function ClientsPage(){
  const formTitle='Corriger une fiche client';
  const signupSlug=companies.find(c=>c.id===companyId)?.slug||'';
  return <AppShell activePath="/clients" eyebrow="ACTIVITÉ · CRM" title="Clients" description="Répertoire alimenté automatiquement par les inscriptions sur le portail d’abonnement de l’entreprise. Aucune création manuelle de clients." actions={signupSlug?<a className="primary-link" href={'/portail/'+encodeURIComponent(signupSlug)} target="_blank" rel="noopener noreferrer"><ZarayIcon name="next" size={18} /> Portail d’inscription</a>:undefined}>
-   <section className="panel" style={{padding:16,marginBottom:16}}>
+   <details className="workspace-disclosure"><summary>Origine des clients</summary><section className="panel" style={{padding:16,marginBottom:16}}>
     <strong>Inscription automatique des clients résidentiels</strong>
     <p className="muted">Un client complète ses coordonnées et choisit son abonnement sur le portail public de l’entreprise. Sa fiche est ajoutée automatiquement ici, sans création manuelle. Une inscription ou une commande non payée ne donne pas accès à Internet.</p>
     <p className="muted">Les coordonnées communiquées par le visiteur ne sont pas automatiquement vérifiées. Le paiement et l’activation réseau restent soumis aux contrôles existants.</p>
-   </section>
+   </section></details>
    <section className="toolbar panel"><div className="toolbar-main"><span className="muted">Entreprise active : {companies.find(c=>c.id===companyId)?.legal_name ?? '—'}</span><label className="toolbar-field toolbar-grow">Rechercher<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Nom, e-mail ou téléphone…"/></label><label className="toolbar-field">Statut<select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="all">Tous</option><option value="active">Actifs</option><option value="inactive">Inactifs</option><option value="archived">Archivés</option></select></label></div><div className="toolbar-meta">{filtered.length} client{filtered.length!==1?'s':''}</div></section>
    <div className="workspace-grid">
     {editing&&<section id="client-form" className="panel sticky-panel"><div className="panel-head"><div><div className="panel-title">{formTitle}</div><div className="muted">Les modifications sont contrôlées côté serveur.</div></div>{editing&&<button type="button" onClick={reset}><ZarayIcon name="close" size={18} /> Annuler</button>}</div>

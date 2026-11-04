@@ -96,6 +96,14 @@ async function probe(page) {
       return root;
     });
   });
+  // React hydration and the contrast observer are asynchronous on auth pages.
+  // Wait for the real input color correction rather than sampling a fixed delay.
+  await page.waitForFunction(() => {
+    const input=document.getElementById('probe-input');
+    if(!input)return false;
+    const css=getComputedStyle(input);
+    return css.color !== css.backgroundColor;
+  },null,{timeout:7000});
   let reports=await verify();
   for(const item of reports) {
     if(item.contrast<4.5 || (item.placeholderContrast!==undefined && item.placeholderContrast<4.5))

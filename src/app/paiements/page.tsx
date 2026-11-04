@@ -46,18 +46,18 @@ export default function PaymentsPage() {
   return <main className="form-shell"><section className="form-card" style={{maxWidth:1100,width:'min(100%,1100px)'}}>
       <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
     <WorkspaceBreadcrumb companyId={companyId}/><p className="eyebrow">ZARAY · MODULE 9 · PAIEMENTS</p><h1>Suivi des paiements</h1>
-    <p>Les confirmations proviennent du webhook signé et sont vérifiées côté serveur contre la référence, le montant et la devise de la commande. Un événement répété est traité de façon idempotente ; un paiement ne déclenche pas directement l’activation Internet.</p>
-    <section className="module" style={{marginTop:20,minHeight:0}}>
+    <details className="payment-info-disclosure"><summary>Fonctionnement technique des paiements</summary>
+    <p>Les confirmations sont vérifiées côté serveur. Elles n’activent pas directement Internet.</p>
+    <section className="module" style={{marginTop:12,minHeight:0}}>
       <h2>Passerelle de paiement</h2>
       <p>Le registre et le point d’entrée sécurisé sont prêts. La création de sessions de paiement et le format de signature doivent être raccordés à la passerelle choisie ; aucune passerelle n’est activée par défaut.</p>
       <p><strong>Ne renseignez pas de clé privée dans le navigateur.</strong> Le secret webhook attendu est une variable serveur <code>ZARAY_PAYMENT_WEBHOOK_SECRET</code>.</p>
-    </section>
+    </section></details>
     {companies.length>0&&<span className="muted">Entreprise active : {companies.find(c=>c.id===companyId)?.legal_name ?? '—'}</span>}
     {busy?null:payments.length?<div className="module-grid" style={{marginTop:24}}>
       {payments.map(p=><article className="module" key={p.id}>
         <span className="module-number">{labels[p.status] ?? p.status}</span><h3>{Number(p.amount).toLocaleString('fr-FR')} {p.currency}</h3>
-        <p>Fournisseur : {p.provider}</p><p>Référence paiement : {p.provider_payment_id}</p>
-        <p>Commande : {p.order_id}</p><span className="module-status">{p.confirmed_at?'Confirmé le '+new Date(p.confirmed_at).toLocaleString('fr-FR'):'Créé le '+new Date(p.created_at).toLocaleString('fr-FR')}</span>
+        <details className="payment-info-disclosure"><summary>Références</summary><p>Fournisseur : {p.provider}</p><p>Référence paiement : {p.provider_payment_id}</p><p>Commande : {p.order_id}</p></details><span className="module-status">{p.confirmed_at?'Confirmé le '+new Date(p.confirmed_at).toLocaleString('fr-FR'):'Créé le '+new Date(p.created_at).toLocaleString('fr-FR')}</span>
       </article>)}
     </div>:!busy?<p>Aucun paiement enregistré pour cette entreprise.</p>:null}
     <MotionFeedback message={error} kind="error"/>

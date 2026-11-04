@@ -197,20 +197,21 @@ export default function WifiTicketCustomization(){
            ['title_color','Texte'],['border_color','Bordure']] as const).map(([key,label])=>
           <label key={key}>{label}<input type="color" value={form[key]??'#ffffff'} onChange={e=>change(key,e.target.value)}/></label>)}
       </div>
-      <div className="field-grid">
+<details className="workspace-inline-disclosure"><summary>Effets et typographie</summary>      <div className="field-grid">
         {([['gradient_enabled','Dégradé (hors Classic)'],['decorations_enabled','Ornements graphiques']] as const).map(([key,label])=>
           <label key={key} className="wifi-template-check"><input type="checkbox" checked={form[key]===true} onChange={e=>change(key,e.target.checked)}/> {label}</label>)}
       </div>
       <label>Police<select value={form.font_family} onChange={e=>change('font_family',e.target.value)}>
         {['Arial','Georgia','Verdana','Tahoma'].map(f=><option value={f} key={f}>{f}</option>)}
       </select></label>
-      <h2>Informations personnalisées</h2>
+</details>
+            <h2>Informations personnalisées</h2>
       <div className="field-grid">
         {names.map(([key,label,max])=><label key={key}>{label}
           <input type="text" value={form[key]??''} maxLength={max} onChange={e=>change(key,e.target.value)}/>
         </label>)}
       </div>
-      <div className="field-grid">
+<details className="workspace-inline-disclosure"><summary>Options et codes d’accès</summary>      <div className="field-grid">
         {([['show_ticket_id','Afficher le numéro'],['show_wifi_ssid','Afficher le SSID']] as const).map(([key,label])=>
           <label key={key} className="wifi-template-check">
             <input type="checkbox" checked={form[key]===true} onChange={e=>change(key,e.target.checked)}/> {label}
@@ -223,7 +224,8 @@ export default function WifiTicketCustomization(){
         <label>Longueur du mot de passe (3–5 chiffres)<input type="number" min={3} max={5} value={form.password_length} onChange={e=>change('password_length',Number(e.target.value))}/></label>
       </div>
       <p className="muted">Les mots de passe des nouveaux tickets contiennent uniquement des chiffres (0–9). Pour réduire les tentatives de devinette, 5 chiffres sont recommandés.</p>
-      <div className="wifi-template-actions">
+</details>
+            <div className="wifi-template-actions">
         <button type="button" onClick={restore} disabled={saving}>Restaurer Classic</button>
         <button type="button" className="primary-link" disabled={busy||saving||analyzingLogo||!siteId} onClick={()=>void save()}>
           <ZarayIcon name="save" size={17}/>{saving?'Enregistrement…':'Enregistrer comme modèle'}
@@ -237,11 +239,10 @@ export default function WifiTicketCustomization(){
       <div className="wifi-template-preview-wrap">
         <VoucherCanvas preview ticket={example} design={form} siteName={site?.name??'Site'}/>
       </div>
-      <p className="muted">APERÇU DE DÉMONSTRATION — les identifiants affichés ici ne donnent aucun accès au réseau.</p>
-      <p className="muted">A4 portrait · 3 colonnes × 11 lignes · 33 tickets par page. PDF, écran et impression utilisent un moteur graphique commun.</p>
-      <div style={{margin:'20px 0',padding:16,border:'1px solid var(--line, #6c7d8a)',borderRadius:14}}>
+      <p className="muted">Aperçu fictif · aucun accès réseau.</p>
+<details className="workspace-inline-disclosure"><summary>Aperçu et installation du portail captif</summary>      <div style={{margin:'20px 0',padding:16,border:'1px solid var(--line, #6c7d8a)',borderRadius:14}}>
        <h3>Portail captif personnalisé par site</h3>
-       <p className="muted">Le client voit immédiatement le formulaire nom d’utilisateur et mot de passe. Un lien discret « Découvrir les offres » affiche ensuite les forfaits occasionnels et l’inscription résidentielle. Le nom commercial, le logo, les couleurs et le message d’accueil sont ceux du site sélectionné, jamais ceux d’une autre offre.</p>
+       <p className="muted">Identité du site et connexion par ticket.</p>
        {!offerId?<div aria-label="Aperçu du portail captif du site" style={{margin:'14px auto',maxWidth:360,padding:20,borderRadius:20,background:'linear-gradient(140deg,#102436,#071522)',border:'1px solid '+(form.primary_color||'#40caff'),textAlign:'center',color:'#f2fbff'}}>
          {form.logo_data_uri?<img src={form.logo_data_uri} alt="Logo du site" style={{height:70,maxWidth:180,objectFit:'contain',marginBottom:8,padding:6,background:'#DDE8ED',borderRadius:10,filter:'drop-shadow(0 1px 1px rgba(0,0,0,.6))'}}/>:<div aria-hidden="true" style={{fontSize:25,fontWeight:800,color:form.accent_color||'#66eabe'}}>Wi-Fi</div>}
          <div style={{fontWeight:800,fontSize:16}}>{form.brand_name||site?.name||companyName}</div>
@@ -253,14 +254,15 @@ export default function WifiTicketCustomization(){
          </div>
          <div style={{marginTop:10,fontSize:11,color:form.accent_color||'#66eabe',textDecoration:'underline'}}>Découvrir les offres</div>
         </div>:<p className="muted">Pour personnaliser ce portail, choisissez « Tous les forfaits du site » : l'identité du Hotspot reste commune aux offres du même site.</p>}
-       <p className="muted">Cliquez sur « Enregistrer comme modèle » pour sauvegarder l’identité du site avant de télécharger son portail. Le modèle embarque ces réglages et peut aussi les actualiser depuis ZARAY lorsque le réseau l’autorise.</p>
+       <p className="muted">Enregistrez le modèle avant de télécharger le portail.</p>
        <button type="button" disabled={busy||!siteId} onClick={()=>void downloadPortal()}>
         <ZarayIcon name="download" size={17}/> Télécharger la page MikroTik pour ce site
        </button>
        <p className="muted"><a href={'/wifi/'+encodeURIComponent(companySlug)+(siteId?'?siteId='+encodeURIComponent(siteId):'')} target="_blank" rel="noopener noreferrer"><ZarayIcon name="next" size={17}/> Ouvrir la version web interactive du portail de ce site</a></p>
        <p className="muted">La version web fonctionne avant connexion du MikroTik : les inscriptions résidentielles sont réelles, tandis que les tickets ne peuvent pas encore autoriser un accès Internet. Pour que le client ouvre automatiquement la page sur le Wi-Fi, le MikroTik doit autoriser les pages nécessaires et installer login.html.</p>
       </div>
-      <a className="primary-link" href={'/tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)+'&tab=generate'}>
+</details>
+            <a className="primary-link" href={'/tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)+'&tab=generate'}>
         <ZarayIcon name="print" size={17}/> Générer une planche A4
       </a>
     </section>
