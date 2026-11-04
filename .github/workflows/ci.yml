@@ -15,6 +15,7 @@ jobs:
       - run: npm run test:context
       - run: npm run test:navigation
       - run: npm run test:brand
+      - run: node --test tests/wifi-key-rotation.test.mjs tests/network-connector-security.test.mjs
       - run: npm run test:public
       - run: node --test tests/premium-experience.test.mjs
       - run: node --test tests/total-redesign.test.mjs

@@ -2,7 +2,7 @@ import {NextRequest,NextResponse} from 'next/server';
 import {createClient} from '@/lib/supabase/server';
 import {createServiceClient} from '@/lib/supabase/service';
 import {authorizeTenant} from '@/lib/tenant-context';
-import {deriveVoucherPassword,type VoucherCredentialScheme} from '@/lib/network-voucher-secret';
+import {deriveVoucherPassword,type VoucherCredentialScheme,type VoucherKeyVersion} from '@/lib/network-voucher-secret';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const json=(data:unknown,status=200)=>NextResponse.json(data,{status,headers:{'Cache-Control':'no-store'}});
@@ -49,7 +49,7 @@ export async function POST(req:NextRequest){
  if(vouchers.length>99||vouchers.some(v=>v.status!=='available'))return json({error:'Réimpression réservée aux lots intégralement en stock.'},409);
  const ids=vouchers.map(v=>v.id);
  const {data:links,error:linkError}=await service.from('wifi_voucher_network')
-  .select('voucher_id,network_state,password_length,credential_scheme,unit_price,unit_currency,last_printed_at,reprint_count')
+  .select('voucher_id,network_state,password_length,credential_scheme,key_version,unit_price,unit_currency,last_printed_at,reprint_count')
   .eq('company_id',companyId).eq('site_id',siteId).in('voucher_id',ids);
  if(linkError||links?.length!==vouchers.length)return json({error:'Lots réseau incomplets.'},409);
  const net=new Map((links??[]).map(l=>[l.voucher_id,l]));
@@ -63,9 +63,9 @@ export async function POST(req:NextRequest){
  try{
   for(const v of vouchers){
    const n=net.get(v.id)!;
-   if(!['hmac-v1','hmac-numeric-v2'].includes(n.credential_scheme))throw Error('Schéma de ticket inconnu.');
+   if(!['hmac-v1','hmac-numeric-v2'].includes(n.credential_scheme)||![1,2].includes(n.key_version))throw Error('Version de ticket inconnue.');
    tickets.push({id:v.id,username:v.username,
-    password:deriveVoucherPassword(v.id,siteId,n.password_length,n.credential_scheme as VoucherCredentialScheme),
+    password:deriveVoucherPassword(v.id,siteId,n.password_length,n.credential_scheme as VoucherCredentialScheme,n.key_version as VoucherKeyVersion),
     offer_name:names.get(v.offer_id)||'Offre Wi-Fi',
     price_amount:n.unit_price,currency:n.unit_currency,duration_minutes:v.duration_minutes,
     validity_days:v.validity_days,status:v.status});

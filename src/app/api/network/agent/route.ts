@@ -1,7 +1,7 @@
-import {createHash,randomBytes} from 'node:crypto';
+import {createHash,randomBytes,timingSafeEqual} from 'node:crypto';
 import {NextRequest,NextResponse} from 'next/server';
 import {createServiceClient} from '@/lib/supabase/service';
-import {deriveVoucherPassword} from '@/lib/network-voucher-secret';
+import {deriveVoucherPassword,hashVoucherCredential,type VoucherKeyVersion} from '@/lib/network-voucher-secret';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const uuid=/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i;
@@ -113,23 +113,26 @@ export async function POST(request:NextRequest){
     if(!cmd.voucher_id){await service.from('network_commands').update({status:'cancelled',outcome:'Ticket manquant'}).eq('id',cmd.id);continue;}
     const [{data:voucher},{data:net}]=await Promise.all([
      service.from('wifi_vouchers').select('id,site_id,username,credential_hash,status,paid_at,duration_minutes,validity_days').eq('id',cmd.voucher_id).eq('company_id',router.company_id).maybeSingle(),
-     service.from('wifi_voucher_network').select('router_id,site_id,password_length,credential_scheme,network_state,unit_price,max_devices').eq('voucher_id',cmd.voucher_id).eq('router_id',routerId).maybeSingle()
+     service.from('wifi_voucher_network').select('router_id,site_id,password_length,credential_scheme,key_version,network_state,unit_price,max_devices').eq('voucher_id',cmd.voucher_id).eq('router_id',routerId).maybeSingle()
     ]);
     const provision=cmd.action==='provision_voucher';
     const valid=!!voucher&&!!net&&net.site_id===router.site_id&&cmd.username===voucher.username&&(
       provision?((voucher.status==='paid'&&!!voucher.paid_at)||
        (voucher.status==='available'&&net.unit_price!==null&&['queued','failed'].includes(net.network_state)))
-       &&['hmac-v1','hmac-numeric-v2'].includes(net.credential_scheme):
+       &&['hmac-v1','hmac-numeric-v2'].includes(net.credential_scheme)&&[1,2].includes(net.key_version):
        (voucher.status==='expired'||voucher.status==='cancelled'));
     if(!valid){
      await service.from('network_commands').update({status:'cancelled',outcome:'Droit Wi-Fi ou site invalide',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('status','queued');continue;
     }
     if(provision){
       let password='';
-      try{password=deriveVoucherPassword(voucher!.id,voucher!.site_id,net!.password_length,net!.credential_scheme as 'hmac-v1'|'hmac-numeric-v2');}
+      try{password=deriveVoucherPassword(voucher!.id,voucher!.site_id,net!.password_length,net!.credential_scheme as 'hmac-v1'|'hmac-numeric-v2',net!.key_version as VoucherKeyVersion);}
       catch{return json({error:'Clé des tickets Wi-Fi indisponible.'},503);}
-      const expected=digest(voucher!.site_id+':'+voucher!.username+':'+password);
-      if(expected!==voucher!.credential_hash){
+      const expected=hashVoucherCredential(voucher!.site_id,voucher!.username,password,net!.key_version as VoucherKeyVersion);
+      const actual=voucher!.credential_hash;
+      const hashMatches=typeof actual==='string'&&/^[0-9a-f]{64}$/i.test(actual)&&
+        timingSafeEqual(Buffer.from(expected,'hex'),Buffer.from(actual,'hex'));
+      if(!hashMatches){
        await service.from('network_commands').update({status:'failed',outcome:'Empreinte du ticket incohérente',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('status','queued');continue;
       }
       voucherPayload={voucherId:voucher!.id,password,durationMinutes:voucher!.duration_minutes,maxDevices:net!.max_devices,credentialScheme:net!.credential_scheme};

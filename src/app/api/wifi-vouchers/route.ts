@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { authorizeTenant } from '@/lib/tenant-context';
 import { createServiceClient } from '@/lib/supabase/service';
-import { deriveVoucherPassword } from '@/lib/network-voucher-secret';
+import { deriveVoucherPassword,hashVoucherCredential } from '@/lib/network-voucher-secret';
 export const dynamic='force-dynamic';
 const headers={'Cache-Control':'no-store'};
 const fail=(error:string,status:number)=>NextResponse.json({error},{status,headers});
@@ -10,10 +10,6 @@ const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function randomText(length:number){
   const bytes=crypto.getRandomValues(new Uint8Array(length));
   return Array.from(bytes,b=>alphabet[b%alphabet.length]).join('');
-}
-async function sha256(input:string){
-  const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(input));
-  return Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');
 }
 export async function GET(request:NextRequest){
   const companyId=request.nextUrl.searchParams.get('companyId')??'';
@@ -79,13 +75,13 @@ export async function POST(request:NextRequest){
         do{username=randomText(usernameLength);}while(used.has(username));
         used.add(username);
         const id=crypto.randomUUID();
-        const password=deriveVoucherPassword(id,siteId,passwordLength,'hmac-numeric-v2');
-        rows.push({id,company_id:companyId,site_id:siteId,offer_id:offerId,batch_id:batchId,username,credential_hash:await sha256(siteId+':'+username+':'+password),created_by:access.user.id,duration_minutes:offer.duration_minutes,validity_days:offer.validity_days});
+        const password=deriveVoucherPassword(id,siteId,passwordLength,'hmac-numeric-v2',2);
+        rows.push({id,company_id:companyId,site_id:siteId,offer_id:offerId,batch_id:batchId,username,credential_hash:hashVoucherCredential(siteId,username,password,2),created_by:access.user.id,duration_minutes:offer.duration_minutes,validity_days:offer.validity_days});
         printable.push({id,username,password,offer_name:offer.name,price_amount:offer.price_amount,currency:offer.currency,duration_minutes:offer.duration_minutes,validity_days:offer.validity_days,status:'available'});
       }
       const {error}=await supabase.from('wifi_vouchers').insert(rows);
       if(!error){
-        const networkRows=rows.map(row=>({voucher_id:row.id,company_id:companyId,site_id:siteId,router_id:routerId,password_length:passwordLength,credential_scheme:'hmac-numeric-v2',network_state:'queued',unit_price:offer.price_amount,unit_currency:offer.currency,max_devices:offer.max_devices}));
+        const networkRows=rows.map(row=>({voucher_id:row.id,company_id:companyId,site_id:siteId,router_id:routerId,password_length:passwordLength,credential_scheme:'hmac-numeric-v2',key_version:2,network_state:'queued',unit_price:offer.price_amount,unit_currency:offer.currency,max_devices:offer.max_devices}));
         const {error:linkedError}=await service.from('wifi_voucher_network').insert(networkRows);
         if(linkedError){
           await service.from('wifi_vouchers').delete().in('id',rows.map(row=>row.id)).eq('company_id',companyId).eq('status','available');
