@@ -6,3 +6,13 @@
 .form-shell .payment-info-disclosure[open]>summary:after{content:" −"}
 .form-shell .payment-info-disclosure>summary:focus-visible{outline:2px solid #35b979;outline-offset:3px}
 @media print{.payment-info-disclosure>summary{display:none}}
+
+/* Personal-space finance drilldowns share the same predictable disclosure
+   behavior without changing the Z’Accueil scene or its animations. */
+.personal-no-sidebar .workspace-disclosure{background:var(--zf-panel)!important;border:1px solid var(--zf-border);border-radius:13px;margin:16px 0;color:var(--zf-heading)}
+.personal-no-sidebar .workspace-disclosure>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:50px;padding:13px 18px;font-weight:720;font-size:14px}
+.personal-no-sidebar .workspace-disclosure>summary::-webkit-details-marker{display:none}
+.personal-no-sidebar .workspace-disclosure>summary:after{content:"+";color:var(--zf-mint);font-size:18px}
+.personal-no-sidebar .workspace-disclosure[open]>summary:after{content:"−"}
+.personal-no-sidebar .workspace-disclosure>summary:focus-visible{outline:2px solid var(--zf-focus);outline-offset:3px}
+.personal-no-sidebar .workspace-disclosure>.panel{background:transparent!important;border:0!important;box-shadow:none!important;margin:0!important}
