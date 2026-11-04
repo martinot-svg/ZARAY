@@ -1,0 +1,8 @@
+/* Progressive disclosure for older payment screens that predate AppShell. */
+.form-shell .payment-info-disclosure{border:1px solid rgba(99,185,137,.2);border-radius:12px;padding:10px 15px;margin:14px 0;background:rgba(24,52,41,.08)}
+.form-shell .payment-info-disclosure>summary{cursor:pointer;list-style:none;font-size:13px;font-weight:730;padding:7px 0}
+.form-shell .payment-info-disclosure>summary::-webkit-details-marker{display:none}
+.form-shell .payment-info-disclosure>summary:after{content:" +";color:#28b56e}
+.form-shell .payment-info-disclosure[open]>summary:after{content:" −"}
+.form-shell .payment-info-disclosure>summary:focus-visible{outline:2px solid #35b979;outline-offset:3px}
+@media print{.payment-info-disclosure>summary{display:none}}

@@ -28,6 +28,7 @@ jobs:
             tests/premium-experience.test.mjs \
             tests/total-redesign.test.mjs \
             tests/workspace-art-direction.test.mjs \
+            tests/ux-progressive-disclosure.test.mjs \
             tests/compact-forms.test.mjs \
             tests/galactic-system.test.mjs \
             tests/password-visibility.test.mjs \

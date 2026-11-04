@@ -49,7 +49,7 @@ export default function WifiVoucherSales({companyId}:{companyId:string}){
  const totalValue=stats?.activatedValue.map(x=>Number(x.amount).toLocaleString('fr-FR')+' '+(x.currency==='MGA'?'Ar':x.currency)).join(' + ')||'0 Ar';
  return <section className="panel" style={{padding:18}}>
   <div className="panel-head"><div><h2 className="panel-title">Stock, premières connexions et montants</h2>
-   <p className="muted">Les tickets sont vendus physiquement en espèces. Le MikroTik prépare les codes avant impression et la première connexion réussie est comptabilisée automatiquement une seule fois.</p>
+   <details className="workspace-inline-disclosure"><summary>Comment fonctionnent les ventes ?</summary><p className="muted">Vente en espèces ; codes préparés avant impression, première connexion enregistrée une seule fois.</p></details>
   </div></div>
   <label>Site<select value={siteId} onChange={e=>{setSiteId(e.target.value);setError('');}}>{sites.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
   <div className="workspace-grid" style={{marginTop:16}}>
