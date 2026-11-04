@@ -91,13 +91,34 @@ export default function WifiTicketCustomization(){
    const response=await fetch('/hotspot/zaray-login.html',{cache:'no-store'});
    if(!response.ok)throw Error('Modèle de portail indisponible.');
    const template=await response.text();
-   if(!template.includes('__ZARAY_SITE_ID__')||!template.includes('__ZARAY_COMPANY_SLUG__'))throw Error('Modèle de portail incomplet.');
-   const customized=template.replaceAll('__ZARAY_SITE_ID__',siteId).replaceAll('__ZARAY_COMPANY_SLUG__',companySlug);
+   if(!template.includes('__ZARAY_SITE_ID__')||!template.includes('__ZARAY_COMPANY_SLUG__')
+      ||!template.includes('__ZARAY_BRANDING_JSON__'))throw Error('Modèle de portail incomplet.');
+   // Always fetch the SITE default, never an offer override: Hotspot identity
+   // belongs to the site, independently of whichever ticket is being edited.
+   const qs=new URLSearchParams({companyId,siteId});
+   const stored=await fetch('/api/ticket-templates?'+qs,{cache:'no-store'});
+   const saved=await stored.json();
+   if(!stored.ok)throw Error(saved.error||'Identité du site indisponible.');
+   const base=saved.settings??initial;
+   const snapshot={
+    siteName:site?.name??'',
+    brandName:String(base.brand_name||site?.name||companyName).slice(0,90),
+    logoDataUri:typeof base.logo_data_uri==='string'?base.logo_data_uri:null,
+    primaryColor:base.primary_color||'#40caff',
+    accentColor:base.accent_color||'#66eabe',
+    welcomeMessage:String(base.welcome_message||'').slice(0,120)
+   };
+   // encodeURIComponent leaves apostrophes unescaped, which must not be
+   // injected into a single-quoted JavaScript string in the RouterOS page.
+   const safeBranding=encodeURIComponent(JSON.stringify(snapshot)).replace(/'/g,'%27');
+   const customized=template.replaceAll('__ZARAY_SITE_ID__',siteId)
+    .replaceAll('__ZARAY_COMPANY_SLUG__',companySlug)
+    .replaceAll('__ZARAY_BRANDING_JSON__',safeBranding);
    const objectUrl=URL.createObjectURL(new Blob([customized],{type:'text/html;charset=utf-8'}));
    const a=document.createElement('a');a.href=objectUrl;a.download='login.html';
    document.body.appendChild(a);a.click();a.remove();
    setTimeout(()=>URL.revokeObjectURL(objectUrl),2000);
-   setNotice('Portail unifié téléchargé : tickets Wi-Fi et bouton d’abonnement résidentiel. Installez login.html et md5.js dans le Hotspot, puis autorisez les pages de souscription ZARAY avant authentification.');
+   setNotice('Portail du site téléchargé avec son logo et ses couleurs enregistrés. Connexion d’abord, offres et abonnement sur demande. Installez login.html et md5.js dans le Hotspot ; autorisez les pages ZARAY nécessaires avant authentification.');
   }catch(e){setError(e instanceof Error?e.message:'Téléchargement impossible.');}
   finally{setBusy(false);}
  }
@@ -196,8 +217,20 @@ export default function WifiTicketCustomization(){
       <p className="muted">APERÇU DE DÉMONSTRATION — les identifiants affichés ici ne donnent aucun accès au réseau.</p>
       <p className="muted">A4 portrait · 3 colonnes × 11 lignes · 33 tickets par page. PDF, écran et impression utilisent un moteur graphique commun.</p>
       <div style={{margin:'20px 0',padding:16,border:'1px solid var(--line, #6c7d8a)',borderRadius:14}}>
-       <h3>Portail captif unique · Wi-Fi occasionnel et abonnements résidentiels</h3>
-       <p className="muted">Tous les clients découvrent la même page après connexion au Wi-Fi du site : tickets occasionnels avec nom d’utilisateur et mot de passe, ou bouton « Devenir un abonné de {companyName||'votre entreprise'} » dirigeant vers l’inscription résidentielle. Le MikroTik reste responsable de l’authentification des tickets et du contrôle de l’accès.</p>
+       <h3>Portail captif personnalisé par site</h3>
+       <p className="muted">Le client voit immédiatement le formulaire nom d’utilisateur et mot de passe. Un lien discret « Découvrir les offres » affiche ensuite les forfaits occasionnels et l’inscription résidentielle. Le nom commercial, le logo, les couleurs et le message d’accueil sont ceux du site sélectionné, jamais ceux d’une autre offre.</p>
+       {!offerId?<div aria-label="Aperçu du portail captif du site" style={{margin:'14px auto',maxWidth:360,padding:20,borderRadius:20,background:'linear-gradient(140deg,#102436,#071522)',border:'1px solid '+(form.primary_color||'#40caff'),textAlign:'center',color:'#f2fbff'}}>
+         {form.logo_data_uri?<img src={form.logo_data_uri} alt="Logo du site" style={{height:54,maxWidth:140,objectFit:'contain',marginBottom:8}}/>:<div aria-hidden="true" style={{fontSize:25,fontWeight:800,color:form.accent_color||'#66eabe'}}>Wi-Fi</div>}
+         <div style={{fontWeight:800,fontSize:16}}>{form.brand_name||site?.name||companyName}</div>
+         <p style={{fontSize:11,color:'#b8d3d9'}}>{form.welcome_message||'Chaque connexion ouvre votre univers.'}</p>
+         <div style={{display:'grid',gap:8,textAlign:'left',fontSize:11,marginTop:14}}>
+          <span>Nom d’utilisateur<input readOnly tabIndex={-1} value="" aria-label="Aperçu utilisateur" placeholder="Identifiant du ticket" style={{width:'100%',padding:9,borderRadius:8,background:'#142b3b',border:'1px solid #476071',color:'#ffffff'}}/></span>
+          <span>Mot de passe<input readOnly tabIndex={-1} type="password" value="" aria-label="Aperçu mot de passe" placeholder="PIN" style={{width:'100%',padding:9,borderRadius:8,background:'#142b3b',border:'1px solid #476071',color:'#ffffff'}}/></span>
+          <div style={{padding:10,borderRadius:9,background:'linear-gradient(90deg,'+(form.primary_color||'#40caff')+','+(form.accent_color||'#66eabe')+')',textAlign:'center',color:'#081720',fontWeight:800}}>Se connecter</div>
+         </div>
+         <div style={{marginTop:10,fontSize:11,color:form.accent_color||'#66eabe',textDecoration:'underline'}}>Découvrir les offres</div>
+        </div>:<p className="muted">Pour personnaliser ce portail, choisissez « Tous les forfaits du site » : l'identité du Hotspot reste commune aux offres du même site.</p>}
+       <p className="muted">Cliquez sur « Enregistrer comme modèle » pour sauvegarder l’identité du site avant de télécharger son portail. Le modèle embarque ces réglages et peut aussi les actualiser depuis ZARAY lorsque le réseau l’autorise.</p>
        <button type="button" disabled={busy||!siteId} onClick={()=>void downloadPortal()}>
         <ZarayIcon name="download" size={17}/> Télécharger la page MikroTik pour ce site
        </button>

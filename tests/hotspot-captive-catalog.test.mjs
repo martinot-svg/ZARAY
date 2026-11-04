@@ -70,3 +70,43 @@ test('subscriber sign-up does not authenticate or activate a Hotspot voucher',()
  assert.match(portal,/window\.loginWithTicket/);
  assert.match(portal,/action="\$\(link-login-only\)"/);
 });
+
+// Each site reuses its own public, administrator-configured ticket identity.
+// The snapshot keeps the same brand on a captive network without API access.
+test('native captive portal opens only the login with one discreet offers control',()=>{
+ assert.match(portal,/id="catalog"[^>]*hidden/);
+ assert.match(portal,/id="credentials" aria-labelledby="formTitle">/);
+ assert.match(portal,/id="back" aria-controls="catalog" aria-expanded="false">Découvrir les offres/);
+ const login=portal.slice(portal.indexOf('id="credentials"'),portal.indexOf('</section>',portal.indexOf('id="credentials"')));
+ assert.doesNotMatch(login,/id="subscribeLink"/);
+ assert.match(portal,/id="subscribeLink"/);
+ assert.match(portal,/id="already"/);
+});
+test('public brand lookup is scoped by active site and default site template, not offer overrides',()=>{
+ assert.match(api,/\.eq\('id',siteId\)\.eq\('status','active'\)/);
+ assert.match(api,/\.eq\('site_id',siteId\)\.eq\('company_id',site.company_id\)\.is\('offer_id',null\)/);
+ assert.match(api,/\.select\('brand_name,logo_data_uri,primary_color,accent_color,welcome_message'\)/);
+ assert.match(api,/branding,/);
+ assert.doesNotMatch(api,/service[_-]?role[_-]?key|credential_hash|ticket_password/);
+});
+test('download embeds escaped site-level branding and preserves native RouterOS authentication',()=>{
+ assert.match(editor,/const qs=new URLSearchParams\(\{companyId,siteId\}\)/);
+ assert.match(editor,/encodeURIComponent\(JSON.stringify\(snapshot\)\)\.replace\(\/\'\/g,'%27'\)/);
+ assert.match(editor,/replaceAll\('__ZARAY_BRANDING_JSON__',safeBranding\)/);
+ assert.match(portal,/var EMBEDDED_BRANDING='__ZARAY_BRANDING_JSON__'/);
+ assert.match(portal,/JSON\.parse\(decodeURIComponent\(EMBEDDED_BRANDING\)\)/);
+ assert.match(portal,/applyBranding\(readEmbeddedBranding\(\)\)/);
+ assert.match(portal,/applyBranding\(data.branding\)/);
+ assert.match(portal,/window.loginWithTicket=function/);
+ assert.match(portal,/action="\$\(link-login-only\)"/);
+});
+test('site colors, logo and welcome text are applied as safe values, not HTML injection',()=>{
+ assert.match(portal,/^.*validHex\(value\)/m);
+ assert.match(portal,/document\.documentElement\.style\.setProperty\('--site-primary'/);
+ assert.match(portal,/document\.documentElement\.style\.setProperty\('--site-accent'/);
+ assert.match(portal,/document\.getElementById\('welcomeText'\)\.textContent/);
+ assert.match(portal,/document\.getElementById\('companyHeading'\)\.textContent/);
+ assert.match(portal,/^.*logo\.src=image/m);
+ assert.match(portal,/data:image\\\/(png\|jpeg\|webp)/);
+ assert.doesNotMatch(portal,/innerHTML\s*=/);
+});
