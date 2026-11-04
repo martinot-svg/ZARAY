@@ -105,6 +105,13 @@ async function probe(page) {
     return css.color !== css.backgroundColor;
   },null,{timeout:7000});
   let reports=await verify();
+  // Do not accept a one-frame correction that immediately flickers back.
+  await page.waitForTimeout(140);
+  const stableReports=await verify();
+  for(const item of stableReports) {
+    if(item.contrast<4.5 || (item.placeholderContrast!==undefined && item.placeholderContrast<4.5))
+      failures.push('Unstable contrast after re-scan: '+JSON.stringify(item));
+  }
   for(const item of reports) {
     if(item.contrast<4.5 || (item.placeholderContrast!==undefined && item.placeholderContrast<4.5))
       failures.push('Artificial contrast probe failed: '+JSON.stringify(item));

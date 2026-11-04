@@ -66,6 +66,20 @@ export function ContrastGuardian() {
           if (element.matches('input[type="hidden"],input[type="checkbox"],input[type="radio"],input[type="range"],input[type="color"],input[type="image"]')) return;
           const existing = corrected.get(element);
           if (existing) {
+            // Keep a valid correction in place during future DOM mutations.
+            // Reverting/repainting every scan causes visible black-on-black
+            // flashes on inputs and races with hydration / contrast tests.
+            const currentStyle = getComputedStyle(element);
+            const currentColor = rgb(currentStyle.color);
+            const currentBackground = background(element);
+            const currentSize = parseFloat(currentStyle.fontSize);
+            const currentBold = Number(currentStyle.fontWeight) >= 700 || currentStyle.fontWeight === 'bold';
+            const currentTarget = currentSize >= 24 || (currentSize >= 18.66 && currentBold) ? 3 : 4.5;
+            if (currentColor && contrast(over(currentColor, currentBackground), currentBackground) >= currentTarget) {
+              return;
+            }
+            // Re-evaluate only when the corrected ink really lost contrast
+            // (for example after a theme or field background change).
             element.style.removeProperty('color');
             if (existing.color) element.style.setProperty('color', existing.color, existing.priority);
             corrected.delete(element);
