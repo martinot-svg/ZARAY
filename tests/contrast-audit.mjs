@@ -7,7 +7,14 @@ import fs from 'node:fs/promises';
 import { chromium } from 'playwright';
 
 const base = process.env.BASE_URL || 'https://zaray.vercel.app';
-const paths = ['/', '/connexion', '/inscription', '/mot-de-passe-oublie', '/reinitialiser-mot-de-passe', '/mon-compte', '/entreprises', '/sites', '/tableau-de-bord', '/membres', '/clients', '/offres', '/commandes', '/tickets', '/paiements', '/paiements/verification', '/parametres-paiement', '/caisse', '/autorisations-paiement', '/finance-globale', '/portail', '/invitations'];
+const allPaths = ['/', '/connexion', '/inscription', '/mot-de-passe-oublie', '/reinitialiser-mot-de-passe', '/mon-compte', '/entreprises', '/sites', '/tableau-de-bord', '/membres', '/clients', '/offres', '/commandes', '/tickets', '/paiements', '/paiements/verification', '/parametres-paiement', '/caisse', '/autorisations-paiement', '/finance-globale', '/portail', '/invitations'];
+// Production tests all routes. An anonymous local build lacks the Supabase
+// session/server context for these four server-rendered private pages, so they
+// are covered by the production job and not given artificial 500 failures here.
+const serverContextRoutes = ['/mon-compte','/entreprises','/tableau-de-bord','/finance-globale'];
+const paths = process.env.CONTRAST_LOCAL_ANONYMOUS === '1'
+  ? allPaths.filter(path=>!serverContextRoutes.includes(path))
+  : allPaths;
 const results = [];
 const failures = [];
 await fs.mkdir('artifacts/contrast', { recursive: true });
@@ -105,6 +112,13 @@ async function probe(page) {
     return css.color !== css.backgroundColor;
   },null,{timeout:7000});
   let reports=await verify();
+  // Do not accept a one-frame correction that immediately flickers back.
+  await page.waitForTimeout(140);
+  const stableReports=await verify();
+  for(const item of stableReports) {
+    if(item.contrast<4.5 || (item.placeholderContrast!==undefined && item.placeholderContrast<4.5))
+      failures.push('Unstable contrast after re-scan: '+JSON.stringify(item));
+  }
   for(const item of reports) {
     if(item.contrast<4.5 || (item.placeholderContrast!==undefined && item.placeholderContrast<4.5))
       failures.push('Artificial contrast probe failed: '+JSON.stringify(item));
