@@ -14,7 +14,7 @@ test('enterprise module chapters are contextual and individually art-directed',(
  assert.match(shell,/data-workspace-path=\{activePath\}/);
  assert.match(shell,/studio-chapter-number/);
  assert.match(shell,/studio-page-header/);
- assert.match(shell,/Espace du site/);
+ assert.match(shell,/workspace-help/);
  assert.doesNotMatch(shell,/ZARAY EXPERIENCE · 2026/);
 });
 test('task layouts differ for dashboards, tables, forms and tickets',()=>{
