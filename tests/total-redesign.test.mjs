@@ -26,7 +26,8 @@ test('refonte is really loaded after all older styles, not a standalone concept'
 test('a real toggle is available in the public, personal and company headers', () => {
   assert.ok(theme.includes("window.localStorage.setItem(KEY, next)"));
   assert.ok(theme.includes("document.documentElement.setAttribute('data-zaray-theme', next)"));
-  for (const source of [app, personal, landing]) assert.ok(source.includes('<ThemeSwitch />'));
+  for (const source of [app, personal, landing]) assert.match(source,/<ThemeSwitch\b/);
+  assert.match(layout,/<ThemeSwitch\s*\/>/);
   assert.ok(css.includes('[data-zaray-theme="light"]'));
   assert.ok(css.includes('[data-zaray-theme="dark"]'));
 });
@@ -59,7 +60,7 @@ test('mobile, tablet, desktop, reduced motion and printable output are all addre
   assert.ok(!home.includes('personal-command-card'));
   assert.ok(css.includes('text-align:justify!important'));
   assert.ok(css.includes('.personal-home-quote-footer'));
-  assert.ok(ticket.includes("type Tab = 'generate' | 'history' | 'customize'"));
+  assert.ok(ticket.includes("type Tab = 'generate' | 'sell' | 'history' | 'customize'"));
   assert.ok(app.includes('encodeURIComponent(activeCompany)'));
   assert.ok(!theme.includes('supabase'));
 });
@@ -72,10 +73,12 @@ test('personal welcome remains centered while daily quote attribution and source
   assert.ok(personal.includes("href: '/finance-globale'"));
   assert.ok(personal.includes('Z’Alliance'));
   assert.ok(daily.includes('className="personal-home-quote-author"'));
-  assert.ok(daily.includes('className="personal-home-quote-footer"'));
+  assert.ok(daily.includes('className="personal-home-source-floating"'));
+  assert.ok(daily.includes('sourceHost && createPortal'));
+  assert.ok(read('src/app/galactic-system.css').includes('.personal-no-sidebar.personal-home-shell > .personal-home-source-floating'));
   assert.ok(daily.includes('Vérifier la source'));
-  assert.ok(daily.includes('daily.quote.country'));
-  assert.ok(daily.includes('daily.quote.principle'));
+  assert.ok(daily.includes('daily.quote.provenance'));
+  assert.ok(daily.includes('daily.quote.sourceUrl'));
   assert.ok(daily.includes('daily.quote.sourceTitle'));
   assert.ok(css.includes('text-align:right!important'));
   assert.ok(css.includes('text-align:center!important'));

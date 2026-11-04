@@ -87,7 +87,8 @@ test('company list preserves creation route and never uses example records',()=>
  const page=source('src/app/entreprises/page.tsx');
  const creation=source('src/app/entreprises/nouvelle/page.tsx');
  assert.match(page,/Mes entreprises/);
- assert.match(source('src/components/personal-shell.tsx'),/\+ Créer une entreprise/);
+ assert.match(source('src/components/personal-shell.tsx'),/href="\/entreprises\/nouvelle"/);
+ assert.match(source('src/components/personal-shell.tsx'),/aria-label="Créer une entreprise"/);
  assert.match(page,/company\.legal_name/);
  assert.match(page,/companyId=/);
  assert.match(creation,/\/api\/companies/);
@@ -125,7 +126,7 @@ test('company dashboard scope stays visible, navigation remains compact and mobi
 
 test('site filtering is limited to operational pages and company-wide site directory remains global',()=>{
  const shell=source('src/components/app-shell.tsx');
- assert.match(shell,/const siteOperational = \['\/clients','\/commandes','\/tickets','\/paiements\/verification'\]/);
+ assert.match(shell,/const siteOperational = \['\/clients','\/commandes','\/abonnements','\/tickets','\/paiements\/verification'\]/);
  assert.match(shell,/activeSite && siteOperational/);
  assert.match(shell,/href === '\/entreprises'/);
 });
@@ -327,7 +328,7 @@ test('ZARAY uses no permanent or off-canvas black sidebars in personal or compan
  assert.match(company,/aria-controls="zaray-app-nav" aria-expanded=\{menuOpen\}/);
  assert.match(company,/inert=\{!menuOpen\} aria-hidden=\{!menuOpen\}/);
  assert.match(company,/document\.addEventListener\('pointerdown', closeOutside\)/);
- assert.match(company,/firstMenuLink\.current\?\.focus\(\)/);
+ assert.match(company,/menuButton\.current\?\.focus\(\)/);
  assert.match(company,/<SignOutButton \/>/);
  assert.match(css,/\.app-shell\.app-no-sidebar \.app-main\{\s*margin-left:0/);
  assert.match(css,/\.app-no-sidebar \.app-menu-button\{\s*display:inline-flex/);
@@ -457,7 +458,7 @@ test('premium Wi-Fi templates use the existing single module and preserve 33 A4 
  const migration=source('db/migrations/20261027_wifi_premium_visual_templates.sql');
  assert.match(page,/WifiTicketGenerator/);
  assert.match(page,/WifiTicketCustomization/);
- assert.match(page,/type Tab = 'generate' \| 'history' \| 'customize'/);
+ assert.match(page,/type Tab = 'generate' \| 'sell' \| 'history' \| 'customize'/);
  for(const k of ['pageWidthMm:210','pageHeightMm:297','voucherWidthMm:60','voucherHeightMm:20',
  'columns:3','rows:11','perPage:33','leftMm:10','topMm:21','columnGapMm:5','rowGapMm:3.5','dpi:150'])
   assert.ok(pdf.includes(k),'Print geometry must remain fixed: '+k);

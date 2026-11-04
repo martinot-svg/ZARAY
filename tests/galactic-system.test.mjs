@@ -15,7 +15,7 @@ test('all routes and future modules inherit exactly one persistent galaxy in roo
  assert.doesNotMatch(mount,/usePathname|prefixes|return workspace\s*\?/);
  assert.match(layout,/import '\.\/galactic-system\.css'/);
  assert.ok(layout.indexOf("import './galactic-system.css'")>layout.indexOf("import './form-proportions.css'"));
- assert.match(galaxy,/className="zaray-galaxy-backdrop"/);
+ assert.match(galaxy,/className="zaray-galaxy-backdrop zaray-original-backdrop"/);
  assert.match(galaxy,/className="zaray-starfield"/);
  assert.match(galaxy,/RadioWaveCanvas/);
 });
