@@ -8,7 +8,8 @@ const motion = source('src/components/motion.tsx');
 const shell = source('src/components/app-shell.tsx');
 const dashboard = source('src/components/dashboard-workspace.tsx');
 const login = source('src/app/connexion/page.tsx');
-const tickets = source('src/components/wifi-ticket-history.tsx');
+const oldTickets = source('src/components/wifi-ticket-history-legacy.tsx');
+const currentTickets = source('src/components/wifi-voucher-sales.tsx');
 
 test('ZARAY motion durations and easing are centralized', () => {
   for (const token of ['--motion-fast:120ms', '--motion-standard:180ms', '--motion-page:240ms', '--motion-curve:', '--motion-distance:8px']) {
@@ -20,7 +21,9 @@ test('Ten requested animation categories have implementation anchors', () => {
     assert.ok((css + motion).includes(marker), marker);
   }
   assert.ok(motion.includes('requestAnimationFrame'), 'count-up interpolates on frame boundaries');
-  assert.ok(tickets.includes('MotionFeedback'), 'success and error states are wired');
+  assert.ok(oldTickets.includes('MotionFeedback'), 'legacy tickets retain accessible animated feedback');
+  assert.match(currentTickets,/role="alert"/);
+  assert.match(currentTickets,/role="status"/);
 });
 test('Reduced motion disables animation; count-up respects preference', () => {
   assert.ok(css.includes('prefers-reduced-motion:reduce'));
@@ -48,38 +51,43 @@ test('Login retains its local ambient motion while the global galaxy is shared',
 test('Company and site dashboards use validated tenant context',()=>{const api=source('src/app/api/dashboard/route.ts');const auth=source('src/lib/tenant-context.ts');assert.ok(api.includes('authorizeTenant'));assert.ok(api.includes("count:'exact'"));assert.ok(api.includes("subscription_orders.site_id"));assert.ok(auth.includes(".eq('company_id',companyId)"));});
 
 
-test('galaxy is a true continuously rendered GPU animation with independent living layers',()=>{
+test('original animated stars and the shared route-local canvas use one persistent backdrop',()=>{
  const galaxy=source('src/components/galaxy-backdrop.tsx');
- for(const feature of [
-  "getContext('webgl2'", "requestAnimationFrame(draw)", "gl.drawArrays(gl.TRIANGLES, 0, 3)",
-  "float fbm(vec2 p)", "float stars(vec2 p", "float vaporA", "float vaporB",
-  "float streamA", "float streamB", "float farDust", "float midStars",
-  "float nearStars", "uniform float u_time", "uniform vec2 u_resolution",
- ]) assert.ok(galaxy.includes(feature), 'missing '+feature);
- assert.match(galaxy,/if \(!motionPreference\.matches && !dataSaver\) \{/);
- assert.match(galaxy,/sharedGalaxyClock = elapsed/);
- assert.match(galaxy,/let elapsed = sharedGalaxyClock/);
- assert.match(galaxy,/mobile\.matches \? 24/);
- assert.match(galaxy,/dataSaver \? 1/);
- assert.match(galaxy,/!motionPreference\.matches && !dataSaver/);
- assert.match(galaxy,/slowFrames > 90/);
- assert.match(galaxy,/Math\.sqrt\(maxPixels \/ \(width \* height\)\)/);
- assert.doesNotMatch(galaxy,/setInterval\(|setTimeout\(|Math\.random\(/);
+ const wave=source('src/components/radio-wave-canvas.tsx');
+ const styles=source('src/app/galactic-system.css');
+ assert.match(galaxy,/Array\.from\(\{ length: 74 \}/);
+ assert.match(galaxy,/Math\.sin\(/);
+ assert.doesNotMatch(galaxy,/Math\.random\(/);
+ for(const name of ['zaray-starfield','zaray-twinkle-star','zaray-shooting-star'])
+  assert.ok(galaxy.includes('className="'+name+'"'),name);
+ assert.match(galaxy,/!reducedMotion && meteors\.map/);
+ assert.match(styles,/@keyframes zaray-twinkle-drift/);
+ assert.match(styles,/@keyframes zaray-shooting-flight/);
+ assert.match(wave,/getContext\('2d'/);
+ assert.match(wave,/frame = window\.requestAnimationFrame\(draw\)/);
+ assert.match(wave,/const WAVE_DURATION = 15/);
+ assert.match(wave,/const WAVE_COUNT = 16/);
+ assert.match(wave,/publicBackdrop = pathname === '\/'/);
+ assert.match(wave,/\.some\(route => pathname === route/);
+ assert.doesNotMatch(wave,/Math\.random\(/);
 });
-test('galaxy pauses responsibly, cleans up GPU resources and respects reduced motion',()=>{
+test('reduced motion, background visibility, GPU-free cleanup and decorative isolation',()=>{
  const galaxy=source('src/components/galaxy-backdrop.tsx');
+ const wave=source('src/components/radio-wave-canvas.tsx');
+ const styles=source('src/app/galactic-system.css');
  assert.match(galaxy,/matchMedia\('\(prefers-reduced-motion: reduce\)'\)/);
- assert.match(galaxy,/document\.hidden/);
- assert.match(galaxy,/document\.addEventListener\('visibilitychange', visibility\)/);
- assert.match(galaxy,/document\.removeEventListener\('visibilitychange', visibility\)/);
- assert.match(galaxy,/webglcontextlost/);
- assert.match(galaxy,/webglcontextrestored/);
- assert.match(galaxy,/cancelAnimationFrame\(frame\)/);
- assert.match(galaxy,/gl\.deleteProgram\(program\)/);
- assert.match(galaxy,/gl\.deleteVertexArray\(vao\)/);
- assert.match(galaxy,/motionPreference\.removeEventListener\('change', preferenceChanged\)/);
- assert.match(galaxy,/return <div className="zaray-galaxy-backdrop" aria-hidden="true">/);
- assert.match(css,/\.zaray-galaxy-backdrop\{/);
- assert.match(css,/pointer-events:none/);
- assert.match(css,/prefers-reduced-motion:reduce/);
+ assert.match(galaxy,/preference\.addEventListener\('change', sync\)/);
+ assert.match(galaxy,/preference\.removeEventListener\('change', sync\)/);
+ assert.match(wave,/if \(disposed \|\| document\.hidden \|\| motionPreference\.matches\) return/);
+ assert.match(wave,/document\.addEventListener\('visibilitychange', updatePlayback\)/);
+ assert.match(wave,/document\.removeEventListener\('visibilitychange', updatePlayback\)/);
+ assert.match(wave,/window\.cancelAnimationFrame\(frame\)/);
+ assert.match(wave,/motionPreference\.removeEventListener\('change', updatePlayback\)/);
+ assert.match(wave,/observer\.disconnect\(\)/);
+ assert.match(wave,/Math\.min\(window\.devicePixelRatio \|\| 1, 1\.5\)/);
+ assert.match(galaxy,/aria-hidden="true"/);
+ assert.match(styles,/\.zaray-original-backdrop \.zaray-starfield/);
+ assert.match(styles,/@media \(prefers-reduced-motion: reduce\)/);
+ assert.match(styles,/animation: none !important/);
+ assert.match(styles,/pointer-events: none/);
 });

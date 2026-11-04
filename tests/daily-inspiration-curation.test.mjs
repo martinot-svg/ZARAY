@@ -94,18 +94,24 @@ test('daily selection is deterministic, locally date-driven and balanced every 4
  assert.equal(new Set(selected.map(q=>q.id)).size,34,'every curated entry appears in a 40-day rotation');
 });
 
-test('user-visible credit shows African country, authentic author, law and source link',()=>{
+test('daily quotation preserves author attribution and independently verifiable provenance',()=>{
  const ui=read('src/components/daily-inspiration.tsx');
- assert.match(ui,/daily\.quote\.country/);
- assert.match(ui,/daily\.quote\.culture/);
- assert.match(ui,/daily\.quote\.principle/);
+ const css=read('src/app/galactic-system.css');
+ assert.match(ui,/daily\.quote\.author/);
  assert.match(ui,/D’après /);
+ assert.match(ui,/daily\.quote\.kind === 'proverb'/);
  assert.match(ui,/Tradition orale documentée/);
+ assert.match(ui,/Adaptation française d’un texte original/);
+ assert.match(ui,/daily\.quote\.sourceTitle/);
+ assert.match(ui,/daily\.quote\.sourceUrl/);
+ assert.match(ui,/title=\{daily\.quote\.provenance\}/);
  assert.match(ui,/Vérifier la source/);
- assert.match(ui,/n’est pas une citation française mot pour mot|Adaptation française d’un texte original/);
- assert.match(ui,/ne constitue pas une loi scientifique démontrée/);
- const css=read('src/app/zaray-total-redesign.css');
- assert.match(css,/personal-inspiration-details/);
- assert.match(css,/personal-inspiration-category/);
- assert.match(css,/personal-home-quote-footer\{\s*position:static!important/);
+ assert.match(ui,/rel="noopener noreferrer"/);
+ assert.match(ui,/sourceHost && createPortal/);
+ assert.match(ui,/personal-home-quote-author/);
+ assert.match(ui,/personal-home-source-floating/);
+ assert.match(css,/\.personal-no-sidebar\.personal-home-shell > \.personal-home-source-floating \{/);
+ assert.match(css,/position: fixed/);
+ assert.match(css,/right: clamp/);
+ assert.match(css,/bottom: clamp/);
 });

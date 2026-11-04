@@ -2,6 +2,8 @@ name: CI
 on:
   push:
   pull_request:
+permissions:
+  contents: read
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -11,17 +13,26 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-audit --no-fund
-      - run: npm run test:motion
-      - run: npm run test:context
-      - run: npm run test:navigation
-      - run: npm run test:brand
-      - run: node --test tests/wifi-key-rotation.test.mjs tests/network-connector-security.test.mjs
-      - run: npm run test:public
-      - run: node --test tests/premium-experience.test.mjs
-      - run: node --test tests/total-redesign.test.mjs
-      - run: node --test tests/compact-forms.test.mjs
-      - run: node --test tests/galactic-system.test.mjs
-      - run: node --test tests/password-visibility.test.mjs
-      - run: node --test tests/daily-inspiration-curation.test.mjs
+      # Execute ALL existing checks, even if one module fails. Node reports the
+      # complete list of failing assertions and still exits non-zero on failures.
+      - name: Run complete ZARAY regression suite
+        run: |
+          node --test --test-concurrency=2 \
+            tests/motion.test.mjs \
+            tests/context.test.mjs \
+            tests/navigation.test.mjs \
+            tests/brand.test.mjs \
+            tests/wifi-key-rotation.test.mjs \
+            tests/network-connector-security.test.mjs \
+            tests/public-home.test.mjs \
+            tests/premium-experience.test.mjs \
+            tests/total-redesign.test.mjs \
+            tests/compact-forms.test.mjs \
+            tests/galactic-system.test.mjs \
+            tests/password-visibility.test.mjs \
+            tests/daily-inspiration-curation.test.mjs \
+            tests/network-preparation.test.mjs \
+            tests/hotspot-captive-catalog.test.mjs \
+            tests/public-wifi-web-portal.test.mjs
       - run: npm run typecheck
       - run: npm run build

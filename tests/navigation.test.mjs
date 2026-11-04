@@ -87,7 +87,8 @@ test('company list preserves creation route and never uses example records',()=>
  const page=source('src/app/entreprises/page.tsx');
  const creation=source('src/app/entreprises/nouvelle/page.tsx');
  assert.match(page,/Mes entreprises/);
- assert.match(source('src/components/personal-shell.tsx'),/\+ Créer une entreprise/);
+ assert.match(source('src/components/personal-shell.tsx'),/href="\/entreprises\/nouvelle"/);
+ assert.match(source('src/components/personal-shell.tsx'),/aria-label="Créer une entreprise"/);
  assert.match(page,/company\.legal_name/);
  assert.match(page,/companyId=/);
  assert.match(creation,/\/api\/companies/);
@@ -125,7 +126,7 @@ test('company dashboard scope stays visible, navigation remains compact and mobi
 
 test('site filtering is limited to operational pages and company-wide site directory remains global',()=>{
  const shell=source('src/components/app-shell.tsx');
- assert.match(shell,/const siteOperational = \['\/clients','\/commandes','\/tickets','\/paiements\/verification'\]/);
+ assert.match(shell,/const siteOperational = \['\/clients','\/commandes','\/abonnements','\/tickets','\/paiements\/verification'\]/);
  assert.match(shell,/activeSite && siteOperational/);
  assert.match(shell,/href === '\/entreprises'/);
 });
@@ -187,8 +188,8 @@ test('daily inspiration uses sourced four-topic curated library and preserves lo
  assert.match(quote,/Vérifier la source/);
  assert.match(quote,/daily\.quote\.author/);
  assert.match(quote,/daily\.quote\.sourceTitle/);
- assert.match(quote,/daily\.quote\.country/);
- assert.match(quote,/daily\.quote\.principle/);
+ assert.match(quote,/daily\.quote\.provenance/);
+ assert.match(quote,/personal-home-source-floating/);
  assert.doesNotMatch(quote,/Math\.random|dailyInspirationQuotes/);
  const css=source('src/app/globals.css');
  assert.match(css,/@keyframes zaray-home-rise/);
@@ -284,8 +285,8 @@ test('daily inspirations are curated in French with original verifiable sources'
  assert.match(page,/Adaptation française d’un texte original/);
  assert.match(page,/daily\.quote\.sourceUrl/);
  assert.match(page,/Vérifier la source/);
- assert.match(page,/daily\.quote\.country/);
- assert.match(page,/daily\.quote\.principle/);
+ assert.match(page,/daily\.quote\.provenance/);
+ assert.match(page,/personal-home-source-floating/);
  assert.doesNotMatch(page,/lang="en"|Texte en anglais/);
  assert.match(library,/quoteLibrary: CuratedQuote\[\]/);
 });
@@ -327,7 +328,7 @@ test('ZARAY uses no permanent or off-canvas black sidebars in personal or compan
  assert.match(company,/aria-controls="zaray-app-nav" aria-expanded=\{menuOpen\}/);
  assert.match(company,/inert=\{!menuOpen\} aria-hidden=\{!menuOpen\}/);
  assert.match(company,/document\.addEventListener\('pointerdown', closeOutside\)/);
- assert.match(company,/firstMenuLink\.current\?\.focus\(\)/);
+ assert.match(company,/menuButton\.current\?\.focus\(\)/);
  assert.match(company,/<SignOutButton \/>/);
  assert.match(css,/\.app-shell\.app-no-sidebar \.app-main\{\s*margin-left:0/);
  assert.match(css,/\.app-no-sidebar \.app-menu-button\{\s*display:inline-flex/);
@@ -457,7 +458,7 @@ test('premium Wi-Fi templates use the existing single module and preserve 33 A4 
  const migration=source('db/migrations/20261027_wifi_premium_visual_templates.sql');
  assert.match(page,/WifiTicketGenerator/);
  assert.match(page,/WifiTicketCustomization/);
- assert.match(page,/type Tab = 'generate' \| 'history' \| 'customize'/);
+ assert.match(page,/type Tab = 'generate' \| 'sell' \| 'history' \| 'customize'/);
  for(const k of ['pageWidthMm:210','pageHeightMm:297','voucherWidthMm:60','voucherHeightMm:20',
  'columns:3','rows:11','perPage:33','leftMm:10','topMm:21','columnGapMm:5','rowGapMm:3.5','dpi:150'])
   assert.ok(pdf.includes(k),'Print geometry must remain fixed: '+k);
@@ -478,7 +479,8 @@ test('premium Wi-Fi templates use the existing single module and preserve 33 A4 
  assert.match(pdf,/NON ACTIVÉ/);
  assert.match(pdf,/ticket.duration_minutes\+' min/);
  assert.match(pdf,/String\(ticket.price_amount\)/);
- assert.match(issue,/credential_hash:await sha256\(siteId\+':'\+username\+':'\+password\)/);
+ assert.match(issue,/credential_hash:hashVoucherCredential\(siteId,username,password,2\)/);
+  assert.match(issue,/key_version:2/);
  assert.match(issue,/const batchId=crypto.randomUUID\(\)/);
  assert.match(issue,/status:'available'/);
  assert.doesNotMatch(customize,/AppShell/);
