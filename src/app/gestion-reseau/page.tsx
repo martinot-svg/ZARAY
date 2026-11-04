@@ -19,6 +19,30 @@ export default function NetworkPage(){
  const [grace,setGrace]=useState('72'),[extensionLimit,setExtensionLimit]=useState('24'),[filter,setFilter]=useState('all'),[selectedDevice,setSelectedDevice]=useState('');
  const canManage=role==='owner'||role==='admin';
  const chosen=routers.find(r=>r.id===routerId);
+ const recentlySeenRouters=routers.filter(r=>fresh(r.last_seen_at));
+ // This configuration template intentionally contains no pairing token or RouterOS credentials.
+ function downloadConnectorConfig(router:Router){
+  const rows=[
+   '# ZARAY — configuration locale du connecteur MikroTik',
+   '# À remplir sur la machine du réseau local, jamais dans GitHub.',
+   'ZARAY_URL=https://zaray.vercel.app',
+   'ZARAY_ROUTER_ID='+router.id,
+   'MIKROTIK_URL=https://'+router.host.trim(),
+   'MIKROTIK_USER=REMPLACER_COMPTE_ROUTEROS',
+   'MIKROTIK_PASSWORD=REMPLACER_LOCALEMENT',
+   'ZARAY_PAIRING_TOKEN=REMPLACER_CODE_TEMPORAIRE',
+   '# NODE_EXTRA_CA_CERTS=/chemin/ca-routeros.pem',
+   ''
+  ];
+  const url=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/plain;charset=utf-8'}));
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='zaray-connecteur-'+router.id+'.env.example';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+ }
  const visibleDevices=useMemo(()=>devices.filter(d=>filter==='all'||d.observed_kind===filter),[devices,filter]);
  async function refresh(id=companyId){
   if(!id)return;
@@ -72,12 +96,24 @@ export default function NetworkPage(){
    <section className="panel"><div className="panel-head"><div><h2 className="panel-title">Équipements MikroTik</h2><span className="muted">{routers.length} routeur(s)</span></div></div>
     {routers.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Routeur</th><th>Site</th><th>Connexion</th><th>Contrôle</th><th>Actions</th></tr></thead><tbody>{routers.map(r=><tr key={r.id}>
      <td><strong>{r.name}</strong><small>{r.model||r.host} · {r.routeros_version||'RouterOS non détecté'}</small></td><td>{sites.find(s=>s.id===r.site_id)?.name||'—'}</td><td>{status(r)}<small>{fmt(r.last_seen_at)}</small></td>
-     <td>{r.control_enabled?'Activé':'Lecture seule'}</td><td><button type="button" disabled={!canManage||busy} onClick={()=>void pairing(r)}>Associer</button> <button type="button" disabled={role!=='owner'||busy} onClick={()=>void control(r)}>{r.control_enabled?'Désactiver':'Activer le contrôle'}</button></td>
+     <td>{r.control_enabled?'Activé':'Lecture seule'}</td><td><button type="button" onClick={()=>downloadConnectorConfig(r)} title="Télécharger un modèle sans aucun secret">Préparer le connecteur</button> <button type="button" disabled={!canManage||busy} onClick={()=>void pairing(r)}>Associer</button> <button type="button" disabled={role!=='owner'||busy} onClick={()=>void control(r)}>{r.control_enabled?'Désactiver':'Activer le contrôle'}</button></td>
     </tr>)}</tbody></table></div>:<div className="empty-state"><strong>Aucun MikroTik</strong><p>Enregistrez un équipement pour commencer.</p></div>}
    </section>
   </div>
   {pair&&<section className="panel" aria-live="polite"><h2 className="panel-title">Code d’association à usage unique</h2><p>Valable jusqu’au {fmt(pair.expiresAt)}. Ce code n’est affiché qu’une fois.</p><p><code style={{overflowWrap:'anywhere'}}>{pair.token}</code></p><p className="muted">Routeur : <code>{pair.routerId}</code>. Installez le connecteur Node.js du projet sur une machine du réseau local, avec les variables ZARAY_ROUTER_ID, ZARAY_PAIRING_TOKEN, MIKROTIK_URL, MIKROTIK_USER et MIKROTIK_PASSWORD. Utilisez un certificat RouterOS vérifiable. </p><button type="button" onClick={()=>void navigator.clipboard.writeText(pair.token)}>Copier le code</button> <button type="button" onClick={()=>setPair(null)}>Masquer</button></section>}
   <section className="panel"><div className="panel-head"><div><h2 className="panel-title">Cartographie du réseau</h2><p className="muted">Topologie déduite des sites, routeurs et observations réellement remontées. Les liens radio non confirmés ne sont pas inventés.</p></div></div>
+   <section className="panel" aria-label="Préparation du premier MikroTik">
+    <div className="panel-head">
+     <div><h2 className="panel-title">Préparer le premier MikroTik</h2><p className="muted">Tout préparer dans ZARAY avant l'installation du matériel, sans simuler une connexion Internet.</p></div>
+     <span className="muted" role="status">{recentlySeenRouters.length?'Connecteur observé récemment':routers.length?'Routeur enregistré, connecteur en attente':'En attente du routeur physique'}</span>
+    </div>
+    <ol style={{display:'grid',gap:12,margin:'16px 0',paddingLeft:24}}>
+     <li><strong>Préparer les tickets et le portail captif</strong><p className="muted">Choisissez le site dans Tickets Wi-Fi, puis téléchargez sa page RouterOS login.html. Les tickets ne seront utilisables qu'après confirmation réseau.</p><a href="/tickets">Tickets et page MikroTik</a> · <a href="/wifi">Prévisualiser le portail</a></li>
+     <li><strong>Enregistrer le routeur sur le bon site</strong><p className="muted">Après son installation, renseignez son adresse locale ci-dessous et téléchargez un fichier de configuration sans mot de passe.</p></li>
+     <li><strong>Associer le connecteur local en HTTPS</strong><p className="muted">Sur une machine du même réseau, lancez le connecteur Node.js avec un certificat RouterOS vérifié et un compte aux droits limités. Générez le code d'appairage de 15 minutes uniquement au moment de l'installation.</p></li>
+    </ol>
+    <p className="muted">Aucune modification du routeur ni activation d'Internet n'a lieu depuis cet écran de préparation.</p>
+   </section>
    <div className="workspace-grid">{sites.map(s=><div className="panel" key={s.id} style={{padding:16}}>
     <h3>◈ {s.name}</h3>{routers.filter(r=>r.site_id===s.id).map(r=><div key={r.id} style={{margin:'12px 0',padding:12,border:'1px solid var(--border, rgba(120,150,200,.25))',borderRadius:12}}>
       <strong>↳ {r.name}</strong> <small>{status(r)}</small>
