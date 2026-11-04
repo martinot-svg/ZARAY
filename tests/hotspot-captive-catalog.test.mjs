@@ -107,6 +107,7 @@ test('site colors, logo and welcome text are applied as safe values, not HTML in
  assert.match(portal,/document\.getElementById\('welcomeText'\)\.textContent/);
  assert.match(portal,/document\.getElementById\('companyHeading'\)\.textContent/);
  assert.match(portal,/^.*logo\.src=image/m);
- assert.match(portal,/data:image\\\/(png\|jpeg\|webp)/);
+ assert.match(portal,/image.length<=180000/);
+ assert.match(portal,/png\|jpeg\|webp/);
  assert.doesNotMatch(portal,/innerHTML\s*=/);
 });
