@@ -101,7 +101,7 @@ export default function NetworkPage(){
    </section>
   </div>
   {pair&&<section className="panel" aria-live="polite"><h2 className="panel-title">Code d’association à usage unique</h2><p>Valable jusqu’au {fmt(pair.expiresAt)}. Ce code n’est affiché qu’une fois.</p><p><code style={{overflowWrap:'anywhere'}}>{pair.token}</code></p><p className="muted">Routeur : <code>{pair.routerId}</code>. Installez le connecteur Node.js du projet sur une machine du réseau local, avec les variables ZARAY_ROUTER_ID, ZARAY_PAIRING_TOKEN, MIKROTIK_URL, MIKROTIK_USER et MIKROTIK_PASSWORD. Utilisez un certificat RouterOS vérifiable. </p><button type="button" onClick={()=>void navigator.clipboard.writeText(pair.token)}>Copier le code</button> <button type="button" onClick={()=>setPair(null)}>Masquer</button></section>}
-  <section className="panel"><div className="panel-head"><div><h2 className="panel-title">Cartographie du réseau</h2><p className="muted">Topologie déduite des sites, routeurs et observations réellement remontées. Les liens radio non confirmés ne sont pas inventés.</p></div></div>
+  <details className="workspace-disclosure"><summary>Cartographie et préparation</summary><section className="panel"><div className="panel-head"><div><h2 className="panel-title">Cartographie du réseau</h2><p className="muted">Topologie déduite des sites, routeurs et observations réellement remontées. Les liens radio non confirmés ne sont pas inventés.</p></div></div>
    <section className="panel" aria-label="Préparation du premier MikroTik">
     <div className="panel-head">
      <div><h2 className="panel-title">Préparer le premier MikroTik</h2><p className="muted">Tout préparer dans ZARAY avant l'installation du matériel, sans simuler une connexion Internet.</p></div>
@@ -121,11 +121,11 @@ export default function NetworkPage(){
       <div style={{display:'flex',gap:7,flexWrap:'wrap',marginTop:8}}>{devices.filter(d=>d.router_id===r.id).slice(0,18).map(d=><span key={d.id} className="muted" style={{border:'1px solid currentColor',borderRadius:20,padding:'4px 8px'}}>{d.observed_kind==='wifi'?'⌁':'•'} {d.client_label||d.identity_key}</span>)}</div>
     </div>)}{!routers.some(r=>r.site_id===s.id)&&<p className="muted">Aucun routeur associé.</p>}
    </div>)}</div>
-  </section>
-  <section className="panel"><div className="panel-head"><div><h2 className="panel-title">Appareils et sessions détectés</h2><p className="muted">« Actif » signifie observé dans les 2 min 30 précédentes. DHCP ou voisinage seuls ne prouvent pas une connexion Internet.</p></div><label>Source <select value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">Toutes</option>{['hotspot','pppoe','dhcp','wifi','neighbor','radius'].map(x=><option key={x} value={x}>{x.toUpperCase()}</option>)}</select></label></div>
+  </section></details>
+  <details className="workspace-disclosure"><summary>Sessions et appareils</summary><section className="panel"><div className="panel-head"><div><h2 className="panel-title">Appareils et sessions détectés</h2><p className="muted">« Actif » signifie observé dans les 2 min 30 précédentes. DHCP ou voisinage seuls ne prouvent pas une connexion Internet.</p></div><label>Source <select value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">Toutes</option>{['hotspot','pppoe','dhcp','wifi','neighbor','radius'].map(x=><option key={x} value={x}>{x.toUpperCase()}</option>)}</select></label></div>
    {visibleDevices.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Appareil / Utilisateur</th><th>Source</th><th>Adresse IP</th><th>État</th><th>Intervention</th></tr></thead><tbody>{visibleDevices.map(d=><tr key={d.id}><td><strong>{d.client_label||d.identity_key}</strong><small>{d.mac_address||'MAC inconnue'}</small></td><td>{d.observed_kind}</td><td>{d.ip_address||'—'}</td><td>{d.active&&fresh(d.observed_at)&&routers.some(r=>r.id===d.router_id&&fresh(r.last_seen_at))?'Session active':'Historique / état inconnu'}</td><td>{d.observed_kind==='hotspot'&&d.mac_address&&canManage?<button type="button" disabled={busy} onClick={()=>void deviceAction(d,true)}>Bloquer</button>:<span className="muted">Consultation</span>}</td></tr>)}</tbody></table></div>:<div className="empty-state"><strong>Aucune découverte</strong><p>Les équipements apparaîtront après l’appairage et la première synchronisation.</p></div>}
-  </section>
-  <div className="workspace-grid"><section className="panel"><h2 className="panel-title">Associer un abonnement au réseau</h2>
+  </section></details>
+  <div className="workspace-grid"><details className="workspace-disclosure"><summary>Associer un abonnement</summary><section className="panel"><h2 className="panel-title">Associer un abonnement au réseau</h2>
    <form className="form-stack compact-form" onSubmit={register}>
     <label>Routeur<select value={routerId} onChange={e=>setRouterId(e.target.value)} required>{routers.map(r=><option value={r.id} key={r.id}>{r.name}</option>)}</select></label>
     <label>Commande<select value={orderId} onChange={e=>setOrderId(e.target.value)} required><option value="">Choisir une commande</option>{orders.filter(o=>chosen&&o.site_id===chosen.site_id&&!accounts.some(a=>a.order_id===o.id)).map(o=><option key={o.id} value={o.id}>{o.customer_name} · {o.public_reference} · {o.status}</option>)}</select></label>
@@ -134,16 +134,16 @@ export default function NetworkPage(){
     <p className="muted">Le compte doit exister sur RouterOS. Aucun identifiant de ticket imprimé n’est provisionné automatiquement.</p>
     <button type="submit" disabled={!canManage||!routerId||!orderId||busy}>Associer le compte</button>
    </form>
-  </section>
-  <section className="panel"><h2 className="panel-title">Règles des impayés</h2><p className="muted">Définies par le dirigeant ; les justificatifs non approuvés ne déclenchent jamais un renouvellement.</p>
+  </section></details>
+  <details className="workspace-disclosure"><summary>Règles des impayés</summary><section className="panel"><h2 className="panel-title">Règles des impayés</h2><p className="muted">Définies par le dirigeant ; les justificatifs non approuvés ne déclenchent jamais un renouvellement.</p>
    <div className="form-stack compact-form"><label>Délai de grâce (heures)<input type="number" min="0" max="2160" value={grace} onChange={e=>setGrace(e.target.value)}/></label>
    <label>Prolongation exceptionnelle maximale (heures)<input type="number" min="1" max="87600" value={extensionLimit} onChange={e=>setExtensionLimit(e.target.value)}/></label>
    <button type="button" disabled={role!=='owner'||busy} onClick={()=>void run('/api/network/access',{kind:'policy',graceHours:Number(grace),extensionMaxHours:Number(extensionLimit)},'PATCH')}>Enregistrer les règles</button></div>
-  </section></div>
-  <section className="panel"><div className="panel-head"><h2 className="panel-title">Comptes et suspensions</h2><span className="muted">{accounts.length} comptes</span></div>
+  </section></details></div>
+  <details className="workspace-disclosure"><summary>Comptes et suspensions</summary><section className="panel"><div className="panel-head"><h2 className="panel-title">Comptes et suspensions</h2><span className="muted">{accounts.length} comptes</span></div>
    {accounts.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Compte</th><th>Expiration / grâce</th><th>Décision</th><th>Appliqué sur MikroTik</th><th>Actions</th></tr></thead><tbody>{accounts.map(a=><tr key={a.id}><td><strong>{a.username}</strong><small>{a.protocol.toUpperCase()}{a.administrative_hold?' · Suspension administrative':''}</small></td><td>{fmt(a.expires_at)}<small>Grâce : {fmt(a.grace_until)} · Exception : {fmt(a.extension_until)}</small></td><td>{a.desired_state}</td><td>{a.applied_state}</td><td><button type="button" disabled={!canManage||busy} onClick={()=>void hold(a)}>{a.administrative_hold?'Lever le blocage':'Suspendre'}</button> <button type="button" disabled={!canManage||busy} onClick={()=>void extend(a)}>Prolonger</button></td></tr>)}</tbody></table></div>:<div className="empty-state"><strong>Aucun compte associé</strong><p>Associez une commande à un utilisateur Hotspot ou PPPoE.</p></div>}
-  </section>
-  <section className="panel"><h2 className="panel-title">Historique des commandes réseau</h2>{commands.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Heure</th><th>Action</th><th>Compte</th><th>Statut</th><th>Retour</th></tr></thead><tbody>{commands.map(c=><tr key={c.id}><td>{fmt(c.created_at)}</td><td>{c.action}</td><td>{c.username}</td><td>{c.status}</td><td>{c.outcome||'—'}</td></tr>)}</tbody></table></div>:<p className="muted">Aucune commande pour cette entreprise.</p>}</section>
+  </section></details>
+  <details className="workspace-disclosure"><summary>Historique des commandes</summary><section className="panel"><h2 className="panel-title">Historique des commandes réseau</h2>{commands.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Heure</th><th>Action</th><th>Compte</th><th>Statut</th><th>Retour</th></tr></thead><tbody>{commands.map(c=><tr key={c.id}><td>{fmt(c.created_at)}</td><td>{c.action}</td><td>{c.username}</td><td>{c.status}</td><td>{c.outcome||'—'}</td></tr>)}</tbody></table></div>:<p className="muted">Aucune commande pour cette entreprise.</p>}</section></details>
   {(error||notice)&&<section className="panel" role={error?'alert':'status'}>{error||notice}</section>}
  </AppShell>;
 }
