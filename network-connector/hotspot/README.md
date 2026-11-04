@@ -5,8 +5,8 @@ Le fichier `public/hotspot/zaray-login.html` est un modèle natif RouterOS Hotsp
 ## Parcours client unique
 
 1. Le client rejoint le SSID du site et le MikroTik affiche automatiquement sa même page Hotspot `login.html` (si le Hotspot est correctement configuré ; certains terminaux demandent d’ouvrir le navigateur).
-2. **Client occasionnel :** le portail affiche **directement** le nom d’utilisateur et le mot de passe du ticket, sans faire défiler les offres. Il peut ouvrir « Voir les offres Wi-Fi » pour consulter les forfaits disposant de tickets réellement provisionnés sur le site, puis revenir à l’authentification native du Hotspot.
-3. **Futur client résidentiel :** sur cette **même carte de connexion**, sous « Se connecter », il clique **« Devenir un abonné de [nom de l’entreprise] »**, puis arrive sur `https://zaray.vercel.app/portail/<slug-entreprise>` pour renseigner ses coordonnées, choisir son abonnement et transmettre un justificatif de paiement.
+2. **Client occasionnel :** le portail affiche **directement** le nom d’utilisateur et le mot de passe du ticket, sans offres encombrantes. Le petit bouton « Découvrir les offres » ouvre la liste des forfaits du site et permet de revenir à la connexion. La page reste compacte et adaptée aux mobiles.
+3. **Futur client résidentiel :** depuis **« Découvrir les offres »**, il peut cliquer sur **« Devenir un abonné de [nom de l’entreprise] »**, puis arrive sur `https://zaray.vercel.app/portail/<slug-entreprise>` pour renseigner ses coordonnées, choisir son abonnement et transmettre un justificatif de paiement. Le formulaire de connexion initial ne contient pas d’inscription.
 4. La demande publique crée automatiquement une fiche CRM dans le module **Clients** (réutilisée si l’adresse e-mail existe dans la même entreprise) et une commande de souscription. **Aucun droit d’accès n’est activé avant paiement validé et provisionnement réseau confirmé.** 
 5. **Client occasionnel :** le formulaire transmet les identifiants directement au Hotspot MikroTik, pas à l’API ZARAY. Le routeur authentifie le compte. L’agent ZARAY détecte la première session et comptabilise une seule activation.
 
@@ -17,7 +17,7 @@ Le routeur garde l'autorité. La valeur comptabilisée est celle de la première
 
 ## Préparation du fichier
 
-Depuis **Tickets Wi-Fi > Personnalisation**, choisir le site et cliquer **Télécharger la page MikroTik pour ce site**. Le `login.html` téléchargé contient l’identifiant UUID du site ainsi que le **slug public de l’entreprise** pour que le bouton d’abonnement reste accessible même si le catalogue d’offres ne se charge pas. Aucun secret API ni mot de passe de ticket ne s’y trouve. La réponse API fournit le nom public de l’entreprise pour personnaliser le libellé « Devenir un abonné de … ».
+Depuis **Tickets Wi-Fi > Personnalisation**, sélectionner **Tous les forfaits du site**, puis définir et **enregistrer** le nom commercial, le logo, les couleurs et le message d’accueil du site. Cliquer sur **Télécharger la page MikroTik pour ce site**. Le `login.html` contient son identifiant UUID, le **slug public de l’entreprise** et une **copie statique des réglages publics du site** : le branding fonctionne même sans chargement du catalogue pendant l’authentification. Quand l’API peut être jointe, ces réglages publics sont actualisés. Le logo doit rester un PNG, JPEG ou WebP de taille limitée. Les styles individuels des offres n’affectent pas le portail commun du site. Aucun secret API ni mot de passe de ticket n’y figure. Après modification de l’identité, remplacer le fichier `login.html` sur le MikroTik pour mettre à jour également sa copie hors ligne.
 
 ## Configuration nécessaire sur un MikroTik local
 

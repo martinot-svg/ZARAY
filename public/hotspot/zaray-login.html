@@ -6,7 +6,8 @@
 <meta name="color-scheme" content="dark"/>
 <title>ZARAY Wi-Fi — Connexion</title>
 <style>
-:root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+ --site-primary:#40caff;--site-accent:#66eabe;--site-primary-ink:#061723}
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;min-height:100dvh;color:#f0f9fa;background:#050b1b;
  background-image:radial-gradient(ellipse at 18% 12%,rgba(16,103,137,.36),transparent 55%),radial-gradient(ellipse at 82% 72%,rgba(27,143,104,.22),transparent 50%);overflow-x:hidden}
@@ -60,28 +61,31 @@ header{text-align:center;margin:0 0 13px}
 .logo{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:17px;font-weight:850}
 .logo>span:last-child{letter-spacing:.17em}
 .logo small{font-size:10px;color:#7af1c0;letter-spacing:.25em}
-.logo-mark{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#0c5380,#072237);color:#8afad2;font-weight:900;font-size:37px;border:1px solid rgba(108,238,188,.7);box-shadow:0 0 21px rgba(40,209,169,.21)}
+.logo-mark{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--site-primary),var(--site-accent));color:var(--site-primary-ink);font-weight:900;font-size:37px;border:1px solid rgba(108,238,188,.7);box-shadow:0 0 21px rgba(40,209,169,.21);overflow:hidden}
+.logo-mark img{display:block;width:100%;height:100%;object-fit:contain;padding:4px;background:rgba(3,16,30,.07)}
 h1{font-size:clamp(19px,5vw,24px);letter-spacing:-.03em;line-height:1.17;margin:7px 0 4px;color:#f3fcfc}
-h1 span{color:#83f4c9}
-.eyebrow{color:#79dac3;letter-spacing:.13em;text-transform:uppercase;font-size:10px;margin:8px 0 0}
+h1 span{color:var(--site-accent)}
+.eyebrow{color:var(--site-accent);letter-spacing:.13em;text-transform:uppercase;font-size:10px;margin:8px 0 0}
 .tagline{font-size:12px;font-style:italic;color:#b6d5dd;margin:0}
 .field{font-weight:700;font-size:11px;margin:11px 0;color:#d7eef2}
 .field input{border:1px solid rgba(140,193,207,.4);border-radius:11px;background:rgba(3,16,30,.9);padding:13px;font-size:15px;margin-top:5px}
-.field input:focus{border-color:#6cefc0;box-shadow:0 0 0 2px rgba(91,229,180,.18)}
-button.primary{border-radius:11px;background:linear-gradient(95deg,#40caff,#66eabe);color:#062432;min-height:46px;padding:10px;font-size:14px;margin:3px 0 0}
+.field input:focus{border-color:var(--site-primary);box-shadow:0 0 0 2px rgba(91,229,180,.18)}
+button.primary{border-radius:11px;background:linear-gradient(95deg,var(--site-primary),var(--site-accent));color:var(--site-primary-ink);min-height:46px;padding:10px;font-size:14px;margin:3px 0 0}
 button.primary>span{margin-left:9px}
 .enroll{border:0;padding:0;margin:10px 0 0;background:none}
 .enroll h3,.enroll p,.enroll .subscribe-caption{display:none}
-.subscribe-link{display:block;border-radius:11px;border:1px solid rgba(105,233,183,.67);background:rgba(15,85,74,.27);color:#ebfff3;padding:12px 10px;font-size:13px;box-shadow:none}
+.subscribe-link{display:block;border-radius:11px;border:1px solid var(--site-primary);background:rgba(15,85,74,.27);color:#ebfff3;padding:12px 10px;font-size:13px;box-shadow:none}
 #subscribeNotice{display:block!important;font-size:11px;text-align:center;margin:4px 0 0}
 #subscribeNotice[hidden]{display:none!important}
-button.secondary#back{display:block;margin:6px auto 4px;border:0;font-size:11px;color:#9de5d3}
+button.secondary#back{display:block;margin:9px auto 0;border:0;padding:6px 8px;font-size:11px;color:var(--site-accent);text-decoration:underline;text-underline-offset:3px;background:transparent}
 #selectedOffer{margin:7px 0;padding:8px;font-size:11px}
 .fineprint{text-align:center;color:#b4cfd5;font-size:10px;margin:4px 0}
 .fineprint strong{color:#e8f9f4}
 footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
 #catalog h2{font-size:18px}
 #catalog>.subtle{font-size:11px}
+#catalog .enroll{margin-top:13px}
+#catalog #already{border-color:var(--site-primary);color:var(--site-accent)}
 .offers{grid-template-columns:1fr;gap:8px;margin:12px 0}
 .offer{padding:12px;border-radius:12px}
 .offer-duration{font-size:13px}.offer-price{font-size:20px}
@@ -100,15 +104,21 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
  <p class="subtle">Découvrez les tickets disponibles, achetez votre ticket chez le vendeur, puis sélectionnez le forfait imprimé sur votre ticket.</p>
  <div id="offers" class="offers" aria-live="polite"><p class="subtle">Chargement des offres du point de vente…</p></div>
  <p id="feedError" class="error" role="alert" hidden></p>
- <button type="button" class="secondary" id="already" aria-label="Saisir un ticket déjà acheté">J'ai déjà un ticket</button>
-
+ <button type="button" class="secondary" id="already" aria-label="Revenir à la connexion avec mon ticket">J'ai déjà un ticket</button>
+ <div class="enroll" aria-labelledby="subscribeTitle">
+  <h3 id="subscribeTitle">Internet à domicile</h3>
+  <p class="subtle">Vous préférez un abonnement résidentiel ? Découvrez les offres de votre fournisseur.</p>
+  <a id="subscribeLink" class="subscribe-link" href="#" hidden>Devenir un abonné</a>
+  <p id="subscribeNotice" class="subtle" role="status">Chargement de l'inscription du fournisseur…</p>
+  <span class="subscribe-caption">Le paiement doit être confirmé avant toute activation Internet.</span>
+ </div>
 </section>
 <section class="panel" id="credentials" aria-labelledby="formTitle">
  <header>
-  <div class="logo"><span class="logo-mark" aria-hidden="true">Z</span><span>ZARAY <small>WIFI</small></span></div>
+  <div class="logo"><span class="logo-mark" id="siteLogo" aria-hidden="true">Z</span><span>ZARAY <small>WIFI</small></span></div>
   <p class="eyebrow" id="siteName">Portail d'accès Wi-Fi</p>
   <h1 id="formTitle">Bienvenue chez <span id="companyHeading">ZARAY WIFI</span></h1>
-  <p class="tagline">Chaque connexion ouvre votre univers.</p>
+  <p class="tagline" id="welcomeText">Chaque connexion ouvre votre univers.</p>
  </header>
  <p id="selectedOffer" class="subtle" aria-live="polite" hidden></p>
  $(if error)
@@ -135,14 +145,7 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
   <input type="hidden" name="popup" value="false"/>
   <button class="primary" id="submit" type="submit">Se connecter <span aria-hidden="true">→</span></button>
  </form>
-  <div class="enroll" aria-labelledby="subscribeTitle">
-  <h3 id="subscribeTitle">Vous voulez Internet à domicile ?</h3>
-  <p class="subtle">Vous préférez un abonnement résidentiel plutôt qu'un ticket Wi-Fi ? Inscrivez-vous auprès de votre fournisseur.</p>
-  <a id="subscribeLink" class="subscribe-link" href="#" hidden>Devenir un abonné</a>
-  <p id="subscribeNotice" class="subtle" role="status">Chargement de l'inscription du fournisseur…</p>
-  <span class="subscribe-caption">Votre inscription et votre demande d'abonnement n'activent pas Internet immédiatement. Le paiement doit être confirmé.</span>
- </div>
- <button type="button" class="secondary" id="back">Voir les offres Wi-Fi →</button>
+ <button type="button" class="secondary" id="back" aria-controls="catalog" aria-expanded="false">Découvrir les offres</button>
  <p class="fineprint">Fournisseur : <strong id="companyLabel">Votre réseau</strong></p>
  <p class="fineprint">Accès Internet sécurisé par MikroTik · Votre abonnement est soumis à validation.</p>
 </section>
@@ -153,6 +156,44 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
  'use strict';
  var SITE_ID='__ZARAY_SITE_ID__';
  var COMPANY_SLUG='__ZARAY_COMPANY_SLUG__';
+ // URL-encoded, JSON-serialized public site branding; no credentials or keys.
+ // Snapshot keeps the portal branded before a blocked/offline catalog API request.
+ var EMBEDDED_BRANDING='__ZARAY_BRANDING_JSON__';
+ function readEmbeddedBranding(){
+  try{return JSON.parse(decodeURIComponent(EMBEDDED_BRANDING));}
+  catch(e){return {};}
+ }
+ function validHex(value){return typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value);}
+ function applyBranding(branding){
+  if(!branding||typeof branding!=='object')return;
+  if(validHex(branding.primaryColor))
+   document.documentElement.style.setProperty('--site-primary',branding.primaryColor);
+  if(validHex(branding.accentColor))
+   document.documentElement.style.setProperty('--site-accent',branding.accentColor);
+  var color=validHex(branding.primaryColor)?branding.primaryColor:'#40caff';
+  var rgb=[1,3,5].map(function(i){var c=parseInt(color.slice(i,i+2),16)/255;
+   return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);
+  });
+  document.documentElement.style.setProperty('--site-primary-ink',
+   0.2126*rgb[0]+0.7152*rgb[1]+0.0722*rgb[2]>.179?'#051b1d':'#ffffff');
+  if(typeof branding.siteName==='string'&&branding.siteName.trim())
+   document.getElementById('siteName').textContent='Réseau '+branding.siteName.trim().slice(0,120);
+  if(typeof branding.brandName==='string'&&branding.brandName.trim()){
+   document.getElementById('companyHeading').textContent=branding.brandName.trim().slice(0,90);
+   document.getElementById('companyLabel').textContent=branding.brandName.trim().slice(0,90);
+  }
+  if(typeof branding.welcomeMessage==='string'&&branding.welcomeMessage.trim())
+   document.getElementById('welcomeText').textContent=branding.welcomeMessage.trim().slice(0,120);
+  var image=branding.logoDataUri;
+  var mark=document.getElementById('siteLogo');
+  if(typeof image==='string'&&image.length<=180000
+    &&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/i.test(image)){
+   var logo=document.createElement('img');
+   logo.src=image;logo.alt='';logo.decoding='async';
+   mark.textContent='';mark.appendChild(logo);
+  }
+ }
+ applyBranding(readEmbeddedBranding());
  var api='https://zaray.vercel.app/api/public/wifi-offers?siteId='+encodeURIComponent(SITE_ID);
  var offers=document.getElementById('offers'),catalog=document.getElementById('catalog'),credentials=document.getElementById('credentials');
  var inputError=document.getElementById('inputError'),feedError=document.getElementById('feedError');
@@ -172,6 +213,7 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
    ?offer.name+' — '+formatPrice(offer.priceAmount,offer.currency)+' / '+formatDuration(offer.durationMinutes)
    :'Votre accès sera défini par le ticket présenté, quelle que soit l’offre affichée.';
   catalog.hidden=true;credentials.hidden=false;
+  document.getElementById('back').setAttribute('aria-expanded','false');
   document.getElementById('selectedOffer').hidden=false;
   document.getElementById('username').focus();
  }
@@ -184,7 +226,7 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
  showLogin(null);
  $(endif)
  document.getElementById('already').addEventListener('click',function(){showLogin(null);});
- document.getElementById('back').addEventListener('click',function(){credentials.hidden=true;catalog.hidden=false;});
+ document.getElementById('back').addEventListener('click',function(){credentials.hidden=true;catalog.hidden=false;this.setAttribute('aria-expanded','true');});
  fetch(api,{mode:'cors',credentials:'omit',cache:'no-store'})
   .then(function(r){if(!r.ok)throw new Error('catalogue');return r.json();})
   .then(function(data){
@@ -193,6 +235,7 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
     document.getElementById('companyHeading').textContent=data.companyName;
     document.getElementById('companyLabel').textContent=data.companyName;
    }
+   applyBranding(data.branding);
    showSubscription(data.companyName,data.companySlug);
    offers.textContent='';
    if(!Array.isArray(data.offers)||data.offers.length===0){
