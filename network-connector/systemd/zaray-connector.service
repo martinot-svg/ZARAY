@@ -1,0 +1,31 @@
+[Unit]
+Description=ZARAY MikroTik secure connector
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=zaray
+Group=zaray
+EnvironmentFile=/etc/zaray/connector.env
+Environment=ZARAY_SECRET_FILE=/var/lib/zaray/connector.json
+WorkingDirectory=/opt/zaray
+ExecStart=/usr/bin/node /opt/zaray/network-connector/agent.mjs
+Restart=always
+RestartSec=15s
+UMask=0077
+StateDirectory=zaray
+StateDirectoryMode=0700
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target

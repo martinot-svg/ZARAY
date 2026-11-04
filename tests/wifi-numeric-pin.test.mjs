@@ -41,7 +41,7 @@ test('generator and agent both select versioned credentials',()=>{
  const dispatcher=read('src/app/api/network/agent/route.ts');
  const connector=read('network-connector/agent.mjs');
  const schema=read('supabase/migrations/20261029143500_wifi_numeric_voucher_scheme_v2.sql');
- assert.match(generator,/deriveVoucherPassword\(id,siteId,passwordLength,'hmac-numeric-v2'\)/);
+ assert.match(generator,/deriveVoucherPassword\(id,siteId,passwordLength,'hmac-numeric-v2',2\)/);
  assert.match(generator,/credential_scheme:'hmac-numeric-v2'/);
  assert.match(dispatcher,/net!\.credential_scheme as 'hmac-v1'\|'hmac-numeric-v2'/);
  assert.match(connector,/\^\[0-9\]\{3,5\}\$/);

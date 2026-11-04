@@ -32,6 +32,8 @@ async function api(action,details={}){
  return request(cloud+'/api/network/agent',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({routerId:ROUTER_ID,action,...details})});
 }
 if(!token){
+ // Verify the actual RouterOS TLS certificate and minimum read rights BEFORE consuming the one-time pairing code.
+ await ros('system/resource');
  const pair=env.ZARAY_PAIRING_TOKEN||'';
  if(!/^[0-9a-f]{64}$/i.test(pair))throw Error('Code d’appairage initial requis : ZARAY_PAIRING_TOKEN (valide 15 minutes).');
  token=pair;
@@ -220,12 +222,18 @@ async function execute(command){
  }
  throw Error('Action non autorisée : '+action);
 }
+async function reportResult(commandId,ok,outcome){
+ for(let attempt=0;attempt<3;attempt++){
+  try{return await api('result',{commandId,ok,outcome});}
+  catch(e){if(attempt===2)throw e;await sleep(1000*(attempt+1));}
+ }
+}
 async function poll(){
  const r=await api('poll');
  for(const command of r.commands||[]){
   let ok=false,outcome='';
   try{outcome=await execute(command);ok=true;}catch(e){outcome=String(e.message).slice(0,450);}
-  try{await api('result',{commandId:command.id,ok,outcome});}
+  try{await reportResult(command.id,ok,outcome);}
   catch(e){console.error('[ZARAY] Résultat non confirmé :',command.id,e.message);}
  }
 }
