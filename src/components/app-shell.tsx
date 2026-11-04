@@ -27,6 +27,20 @@ const navigationIcons = {
   '/commandes': 'orders', '/abonnements': 'wifi', '/tickets': 'ticket', '/paiements/verification': 'payment',
   '/parametres-paiement': 'finance', '/portail': 'network', '/gestion-reseau': 'network',
 } as const;
+const editorialChapters:Record<string,{number:string;group:string;accent:string}>={
+  '/tableau-de-bord':{number:'01',group:'Pilotage',accent:'mint'},
+  '/sites':{number:'02',group:'Territoires',accent:'cyan'},
+  '/membres':{number:'03',group:'Équipe et accès',accent:'violet'},
+  '/clients':{number:'04',group:'Relation client',accent:'violet'},
+  '/offres':{number:'05',group:'Catalogue',accent:'amber'},
+  '/commandes':{number:'06',group:'Opérations',accent:'cyan'},
+  '/abonnements':{number:'07',group:'Abonnements',accent:'violet'},
+  '/tickets':{number:'08',group:'Accès Wi-Fi',accent:'amber'},
+  '/paiements/verification':{number:'09',group:'Finance',accent:'amber'},
+  '/parametres-paiement':{number:'10',group:'Configuration financière',accent:'amber'},
+  '/portail':{number:'11',group:'Expérience client',accent:'mint'},
+  '/gestion-reseau':{number:'12',group:'Infrastructure réseau',accent:'cyan'}
+};
 type WorkspaceCompany = { id:string; legal_name:string; role:string };
 type WorkspaceSite = { id:string; company_id:string; name:string };
 type AppShellProps = { children: ReactNode; activePath: string; companyId?:string; siteId?:string; eyebrow?: string; title?: string; description?: string; actions?: ReactNode };
@@ -60,6 +74,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
     })();
     return()=>{mounted=false};
   },[companyId,siteId]);
+  const chapter=editorialChapters[activePath] ?? {number:'—',group:'Espace de travail',accent:'mint'};
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   const firstMenuLink = useRef<HTMLAnchorElement>(null);
@@ -77,7 +92,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
     document.addEventListener('pointerdown', closeOutside);
     return () => { window.removeEventListener('keydown', closeOnEscape); document.removeEventListener('pointerdown', closeOutside); };
   }, [menuOpen]);
-  return <div className="app-shell app-no-sidebar">
+  return <div className="app-shell app-no-sidebar" data-workspace-chapter={chapter.accent} data-workspace-path={activePath}>
     <div className="app-main">
       <header className="app-topbar">
         <div className="app-menu-container" ref={menuContainer}
@@ -182,7 +197,21 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
         </div>
       </header>
       <main className="app-content">
-        {(eyebrow || title || description || actions) && <header className="page-header"><div>{eyebrow && <p className="eyebrow">{eyebrow}</p>}{title && <h1 className="app-title">{title}</h1>}{description && <p className="app-subtitle">{description}</p>}<span className="workspace-hero-release"><ZarayIcon name="permissions" size={14} /> ZARAY EXPERIENCE · 2026</span></div>{actions && <div className="page-actions">{actions}</div>}</header>}
+        {(eyebrow || title || description || actions) && <header className="page-header studio-page-header">
+          <div className="studio-page-grid">
+            <div className="studio-chapter" aria-hidden="true">
+              <span className="studio-chapter-number">{chapter.number}</span>
+              <span className="studio-chapter-line"/>
+            </div>
+            <div className="studio-page-copy">
+              <p className="studio-kicker"><span className="studio-kicker-dot" aria-hidden="true"/>{chapter.group}{eyebrow && <span className="studio-context-detail"> / {eyebrow}</span>}</p>
+              {title && <h1 className="app-title">{title}</h1>}
+              {description && <p className="app-subtitle">{description}</p>}
+              <span className="workspace-hero-release"><ZarayIcon name="permissions" size={14} /> {activeSite?'Espace du site':'Espace entreprise'} · {chapter.group}</span>
+            </div>
+          </div>
+          {actions && <div className="page-actions">{actions}</div>}
+        </header>}
         {children}
       </main>
     </div>
