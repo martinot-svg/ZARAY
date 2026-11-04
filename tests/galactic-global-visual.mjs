@@ -70,6 +70,7 @@ try{
    // Verify real motion when the user hasn't requested reduced animations, not just markup presence.
    await page.emulateMedia({reducedMotion:'no-preference'});
    await page.waitForFunction(()=>getComputedStyle(document.querySelector('.zaray-twinkle-star')).animationName==='zaray-twinkle-drift');
+   await page.waitForFunction(()=>document.querySelectorAll('.zaray-shooting-star').length===3);
    const moving=await background.evaluate(el=>({
     stars:el.querySelectorAll('.zaray-twinkle-star').length,
     meteors:el.querySelectorAll('.zaray-shooting-star').length,
