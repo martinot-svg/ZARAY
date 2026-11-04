@@ -120,7 +120,7 @@ export default function PublicWifiPortal({slug}: {slug?:string}){
  async function subscribe(e:FormEvent<HTMLFormElement>){
   e.preventDefault();setError('');
   if(demo){setError('Mode démonstration : aucun compte ni paiement n’est créé. Renseignez l’identifiant de votre entreprise pour utiliser la véritable inscription.');return;}
-  if(!selectedSubscription){setError('Choisissez un forfait avant de poursuivre.');return;}
+  if(!selectedSubscription){setError('Choisissez votre forfait résidentiel avant de poursuivre.');return;}
   if(residentialSites.length>1&&!selectedSiteId){setError('Choisissez votre site de raccordement avant de poursuivre.');return;}
   setSubmitting(true);
   try{
