@@ -1005,3 +1005,6 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
     gap: 6px;
   }
 }
+[data-zaray-theme="light"] .landing .landing-hero h1 span {
+  background-image: linear-gradient(115deg, #10492d, #147c35);
+}
