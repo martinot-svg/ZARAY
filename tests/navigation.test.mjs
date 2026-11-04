@@ -188,8 +188,8 @@ test('daily inspiration uses sourced four-topic curated library and preserves lo
  assert.match(quote,/Vérifier la source/);
  assert.match(quote,/daily\.quote\.author/);
  assert.match(quote,/daily\.quote\.sourceTitle/);
- assert.match(quote,/daily\.quote\.country/);
- assert.match(quote,/daily\.quote\.principle/);
+ assert.match(quote,/daily\.quote\.provenance/);
+ assert.match(quote,/personal-home-source-floating/);
  assert.doesNotMatch(quote,/Math\.random|dailyInspirationQuotes/);
  const css=source('src/app/globals.css');
  assert.match(css,/@keyframes zaray-home-rise/);
@@ -285,8 +285,8 @@ test('daily inspirations are curated in French with original verifiable sources'
  assert.match(page,/Adaptation française d’un texte original/);
  assert.match(page,/daily\.quote\.sourceUrl/);
  assert.match(page,/Vérifier la source/);
- assert.match(page,/daily\.quote\.country/);
- assert.match(page,/daily\.quote\.principle/);
+ assert.match(page,/daily\.quote\.provenance/);
+ assert.match(page,/personal-home-source-floating/);
  assert.doesNotMatch(page,/lang="en"|Texte en anglais/);
  assert.match(library,/quoteLibrary: CuratedQuote\[\]/);
 });
