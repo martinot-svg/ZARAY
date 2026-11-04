@@ -16,7 +16,8 @@ test('all routes and future modules inherit exactly one persistent galaxy in roo
  assert.match(layout,/import '\.\/galactic-system\.css'/);
  assert.ok(layout.indexOf("import './galactic-system.css'")>layout.indexOf("import './form-proportions.css'"));
  assert.match(galaxy,/className="zaray-galaxy-backdrop"/);
- assert.match(galaxy,/className="zaray-galaxy-canvas"/);
+ assert.match(galaxy,/className="zaray-starfield"/);
+ assert.match(galaxy,/RadioWaveCanvas/);
 });
 
 test('galactic visual styles are global yet keep legible cards/tables and existing pages',()=>{
@@ -25,43 +26,34 @@ test('galactic visual styles are global yet keep legible cards/tables and existi
  assert.match(css,/\.landing \.landing-section/);
  assert.match(css,/\.form-shell\s*\{/);
  assert.match(css,/\[data-zaray-theme="light"\] body > \.zaray-galaxy-backdrop/);
- assert.match(css,/\.zaray-galaxy-canvas/);
+ assert.match(css,/\.zaray-original-backdrop \.zaray-starfield/);
+ assert.match(css,/\.zaray-original-backdrop \.zaray-wifi-wave-canvas/);
  assert.doesNotMatch(css,/\.form-card\s*\{|\.data-table\s*\{|\.kpi\s*\{/);
  assert.match(css,/@media print\s*\{/);
 });
 
-test('existing theme switch emits passive three-wave WiFi signals in both themes',()=>{
+test('theme switch remains accessible while decorative waveforms are rendered separately',()=>{
+ const wave=read('src/components/radio-wave-canvas.tsx');
  assert.match(theme,/className="zaray-theme-icon"/);
- assert.match(theme,/className="zaray-theme-radio-waves" aria-hidden="true"/);
- assert.match(css,/\.zaray-theme-icon\s*\{[\s\S]*?position:relative/);
- assert.equal((theme.match(/className="zaray-theme-radio-wave"\s*\/>/g)||[]).length,3);
  assert.match(theme,/aria-pressed=\{theme === 'light'\}/);
  assert.match(theme,/onClick=\{toggle\}/);
- assert.match(css,/pointer-events:none;/);
- assert.match(css,/@keyframes zaray-theme-signal/);
- assert.match(css,/\[data-zaray-theme="light"\]/);
- assert.match(css,/prefers-reduced-motion:reduce/);
- assert.match(css,/animation:none!important/);
+ assert.match(theme,/window\.localStorage\.setItem\(KEY, next\)/);
+ assert.match(wave,/\.zaray-theme-switch \.zaray-theme-icon/);
+ assert.match(css,/\.zaray-original-backdrop \.zaray-wifi-wavefield/);
+ assert.match(css,/pointer-events: none/);
+ assert.match(css,/prefers-reduced-motion: reduce/);
 });
-
-test('galaxy pauses on saveData and reduced motion, and keeps dynamic resolution bounds',()=>{
- assert.match(galaxy,/navigator as Navigator & \{ connection\?: \{ saveData\?: boolean \} \}/);
- assert.match(galaxy,/mobile\.matches \? 24/);
- assert.match(galaxy,/!motionPreference\.matches && !dataSaver/);
- assert.match(galaxy,/maxPixels\s*=\s*mobile\.matches/);
- assert.match(galaxy,/document\.hidden/);
- assert.match(galaxy,/visibilitychange/);
- assert.match(galaxy,/webglcontextlost/);
-});
-
-
-test('starry fallback survives missing WebGL and context loss without covering controls',()=>{
- assert.match(galaxy,/showFallback\(\)/);
- assert.match(galaxy,/showWebGL\(\)/);
- assert.match(galaxy,/webglcontextlost/);
- assert.match(css,/body > \.zaray-galaxy-backdrop:not\(\[data-zaray-galaxy-renderer="webgl"\]\)::before/);
- assert.match(css,/animation:zaray-galaxy-fallback-drift/);
+test('starfield and canvas respect accessibility, visibility and device limits',()=>{
+ const wave=read('src/components/radio-wave-canvas.tsx');
+ assert.match(galaxy,/matchMedia\('\(prefers-reduced-motion: reduce\)'\)/);
+ assert.match(galaxy,/!reducedMotion && meteors\.map/);
+ assert.match(wave,/document\.hidden/);
+ assert.match(wave,/visibilitychange/);
+ assert.match(wave,/Math\.min\(window\.devicePixelRatio \|\| 1, 1\.5\)/);
+ assert.match(wave,/window\.cancelAnimationFrame\(frame\)/);
+ assert.match(css,/\.zaray-original-backdrop \.zaray-shooting-star/);
+ assert.match(css,/@keyframes zaray-twinkle-drift/);
+ assert.match(css,/@media print/);
  assert.match(css,/pointer-events:none/);
- assert.match(css,/prefers-reduced-motion:reduce/);
- assert.match(css,/body > \.screen-only:has\(> \.app-shell\)/);
 });
+

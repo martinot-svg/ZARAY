@@ -1,97 +1,88 @@
 import assert from 'node:assert/strict';
-import { chromium } from 'playwright';
-import { mkdirSync } from 'node:fs';
+import {chromium} from 'playwright';
+import {mkdirSync} from 'node:fs';
 
-const base=process.env.BASE_URL ?? 'http://127.0.0.1:3000';
+const base=process.env.BASE_URL??'http://127.0.0.1:3000';
 const folder='artifacts/premium-visual/global-galaxy';
 mkdirSync(folder,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
-const devices=[
- {name:'desktop',width:1366,height:850},
- {name:'mobile',width:390,height:844},
-];
-// Browser smoke tests public routes only: authenticated workspaces require a valid tenant/session.
-// The common root-layout mount guarantees the same background on private routes.
-const paths=['/','/connexion','/inscription','/mot-de-passe-oublie'];
-
-try {
+const devices=[{name:'desktop',width:1366,height:850},{name:'mobile',width:390,height:844}];
+const routes=['/','/connexion','/inscription','/mot-de-passe-oublie'];
+try{
  for(const device of devices){
   const context=await browser.newContext({
-    viewport:{width:device.width,height:device.height},
-    reducedMotion:'reduce',
+   viewport:{width:device.width,height:device.height},
+   reducedMotion:'reduce'
   });
   const page=await context.newPage();
   page.setDefaultTimeout(16000);
-  for(const path of paths) {
-   const response=await page.goto(new URL(path,base).href,{waitUntil:'domcontentloaded',timeout:45000});
-   assert.ok(response && response.status()<400,device.name+'/'+path+' HTTP route');
-   const galaxy=page.locator('body > .zaray-galaxy-backdrop');
-   await galaxy.waitFor({state:'attached'});
-   assert.equal(await galaxy.count(),1,device.name+'/'+path+' exactly one shared galaxy');
-   assert.equal(await page.locator('.zaray-galaxy-canvas').count(),1,device.name+'/'+path+' exactly one canvas');
-   const state=await galaxy.evaluate(el=>{
-    const style=getComputedStyle(el);
+  for(const route of routes){
+   const response=await page.goto(new URL(route,base).href,{waitUntil:'domcontentloaded',timeout:45000});
+   assert.ok(response&&response.status()<400,device.name+'/'+route+' loads successfully');
+   const background=page.locator('body > .zaray-galaxy-backdrop.zaray-original-backdrop');
+   await background.waitFor({state:'attached'});
+   assert.equal(await background.count(),1,device.name+'/'+route+' one shared persistent backdrop');
+   assert.equal(await background.locator('.zaray-twinkle-star').count(),74,
+    device.name+'/'+route+' full static seed star layer');
+   assert.equal(await background.locator('.zaray-shooting-star').count(),0,
+    device.name+'/'+route+' no meteors with reduced motion');
+   const canvas=background.locator('canvas.zaray-wifi-wave-canvas');
+   assert.equal(await canvas.count(),1,device.name+'/'+route+' a single public-route canvas');
+   const geometry=await background.evaluate(el=>{
+    const style=getComputedStyle(el),star=el.querySelector('.zaray-twinkle-star');
     const canvas=el.querySelector('canvas');
     return {
-      position:style.position,
-      pointerEvents:style.pointerEvents,
-      opacity:style.opacity,
-      bounds:el.getBoundingClientRect().width,
-      canvasOpacity:canvas?getComputedStyle(canvas).opacity:null,
-      canvasPresent:!!canvas,
-      theme:document.documentElement.getAttribute('data-zaray-theme'),
+     position:style.position,
+     pointerEvents:style.pointerEvents,
+     opacity:style.opacity,
+     width:el.getBoundingClientRect().width,
+     starAnimation:star?getComputedStyle(star).animationName:null,
+     canvasWidth:canvas?.width??0,
+     canvasHeight:canvas?.height??0,
+     wavePointerEvents:canvas?getComputedStyle(canvas).pointerEvents:null,
     };
    });
-   assert.equal(state.position,'fixed',device.name+'/'+path+' fixed backdrop');
-   assert.equal(state.pointerEvents,'none',device.name+'/'+path+' no click interception');
-   assert.equal(state.opacity,'1',device.name+'/'+path+' galaxy must be visible');
-   assert.ok(state.bounds>=device.width-2,device.name+'/'+path+' covers viewport');
-   assert.equal(state.theme,'dark',device.name+'/'+path+' dark default');
-   assert.equal(state.canvasOpacity,'1',device.name+'/'+path+' dark starfield');
+   assert.equal(geometry.position,'fixed',device.name+'/'+route+' backdrop fixed');
+   assert.equal(geometry.pointerEvents,'none',device.name+'/'+route+' does not intercept controls');
+   assert.equal(geometry.opacity,'1',device.name+'/'+route+' visible background');
+   assert.ok(geometry.width>=device.width-2,device.name+'/'+route+' covers viewport');
+   assert.equal(geometry.starAnimation,'none',device.name+'/'+route+' reduced motion disables twinkle');
+   assert.equal(geometry.wavePointerEvents,'none',device.name+'/'+route+' wave canvas click-through');
+   assert.ok(geometry.canvasWidth>0&&geometry.canvasHeight>0,device.name+'/'+route+' initialized canvas');
    const toggle=page.getByRole('button',{name:'Activer le thème clair'}).first();
    await toggle.waitFor({state:'visible'});
-   assert.equal(await toggle.locator('.zaray-theme-radio-wave').count(),3,
-     device.name+'/'+path+' three decorative Wi-Fi waves');
-   const icon=toggle.locator('.zaray-theme-icon');
-   assert.equal(await icon.count(),1,device.name+'/'+path+' waves anchor to Sun/Moon icon');
-   const wavesCenter=await page.evaluate(button=>{
-     const source=button.querySelector('.zaray-theme-icon svg').getBoundingClientRect();
-     const signal=button.querySelector('.zaray-theme-radio-waves').getBoundingClientRect();
-     return {
-       gap:Math.hypot((source.left+source.width/2)-(signal.left+signal.width/2),
-                      (source.top+source.height/2)-(signal.top+signal.height/2)),
-       isPassive:getComputedStyle(button.querySelector('.zaray-theme-radio-waves')).pointerEvents==='none'
-     };
-   },await toggle.elementHandle());
-   assert.ok(wavesCenter.gap<2,device.name+'/'+path+' pulse waves emanate from theme icon');
-   assert.ok(wavesCenter.isPassive,device.name+'/'+path+' pulse remains click-through');
-   const signal=await toggle.locator('.zaray-theme-radio-wave').first().evaluate(el=>({
-      pointerEvents:getComputedStyle(el).pointerEvents,
-      animation:getComputedStyle(el).animationName,
-   }));
-   assert.equal(signal.pointerEvents,'none');
-   assert.equal(signal.animation,'none','reduced motion prevents radio animation');
-   const primary=page.locator('main').first();
-   assert.ok(await primary.count()>0,device.name+'/'+path+' visible page');
-   if(path==='/' || path==='/connexion'){
-    await page.screenshot({path:`${folder}/${device.name}-${path==='/'?'home':'login'}-dark.png`,animations:'disabled'});
+   assert.equal(await toggle.locator('.zaray-theme-icon svg').count(),1,
+     device.name+'/'+route+' accessible theme toggle');
+   if(route==='/'||route==='/connexion'){
+    await page.screenshot({path:`${folder}/${device.name}-${route==='/'?'home':'login'}-dark.png`,animations:'disabled'});
    }
    await toggle.click();
    await page.waitForFunction(()=>document.documentElement.getAttribute('data-zaray-theme')==='light');
-   const light=await galaxy.evaluate(el=>({
-     bg:getComputedStyle(el).backgroundColor,
-     opacity:getComputedStyle(el).opacity,
-     canvasOpacity:getComputedStyle(el.querySelector('canvas')).opacity,
-   }));
-   assert.equal(light.opacity,'1',device.name+'/'+path+' light sky still visible');
-   assert.equal(light.canvasOpacity,'0.09',device.name+'/'+path+' light stars remain understated');
-   assert.equal(await page.getByRole('button',{name:'Activer le thème sombre'}).first().isVisible(),true);
-   if(path==='/' || path==='/connexion'){
-     await page.screenshot({path:`${folder}/${device.name}-${path==='/'?'home':'login'}-light.png`,animations:'disabled'});
+   const lightStarColor=await background.locator('.zaray-twinkle-star').first().evaluate(el=>getComputedStyle(el).backgroundColor);
+   assert.equal(lightStarColor,'rgb(40, 138, 83)',device.name+'/'+route+' dark green ink on light sky');
+   assert.ok(await page.getByRole('button',{name:'Activer le thème sombre'}).first().isVisible(),
+     device.name+'/'+route+' theme can be reversed');
+   if(route==='/'||route==='/connexion'){
+    await page.screenshot({path:`${folder}/${device.name}-${route==='/'?'home':'login'}-light.png`,animations:'disabled'});
    }
-   console.log(JSON.stringify({route:path,device:device.name,galaxyCount:1,lightCanvasOpacity:light.canvasOpacity,themeWaveCount:3,reducedMotion:true}));
    await page.getByRole('button',{name:'Activer le thème sombre'}).first().click();
+   await page.waitForFunction(()=>document.documentElement.getAttribute('data-zaray-theme')==='dark');
+   // Verify real motion when the user hasn't requested reduced animations, not just markup presence.
+   await page.emulateMedia({reducedMotion:'no-preference'});
+   await page.waitForFunction(()=>getComputedStyle(document.querySelector('.zaray-twinkle-star')).animationName==='zaray-twinkle-drift');
+   const moving=await background.evaluate(el=>({
+    stars:el.querySelectorAll('.zaray-twinkle-star').length,
+    meteors:el.querySelectorAll('.zaray-shooting-star').length,
+    anim:getComputedStyle(el.querySelector('.zaray-twinkle-star')).animationName
+   }));
+   assert.equal(moving.stars,74);
+   assert.equal(moving.anim,'zaray-twinkle-drift');
+   assert.equal(moving.meteors,3,device.name+'/'+route+' decorative meteors enabled');
+   await page.emulateMedia({reducedMotion:'reduce'});
+   await page.waitForFunction(()=>document.querySelectorAll('.zaray-shooting-star').length===0);
+   console.log(JSON.stringify({device:device.name,route,stars:74,meteorsWithMotion:3,reducedMotion:true,
+    canvasPresent:true,lightDarkToggle:true}));
   }
   await context.close();
  }
-}finally{await browser.close()}
+}finally{await browser.close();}
