@@ -204,7 +204,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
               <span className="studio-chapter-line"/>
             </div>
             <div className="studio-page-copy">
-              <p className="studio-kicker"><span className="studio-kicker-dot" aria-hidden="true"/>{chapter.group}{eyebrow && <span className="studio-context-detail"> / {eyebrow}</span>}</p>
+              <p className="studio-kicker"><span className="studio-kicker-dot" aria-hidden="true"/>{chapter.group}</p>
               {title && <h1 className="app-title">{title}</h1>}
               {description && <p className="app-subtitle">{description}</p>}
               <span className="workspace-hero-release"><ZarayIcon name="permissions" size={14} /> {activeSite?'Espace du site':'Espace entreprise'} · {chapter.group}</span>
