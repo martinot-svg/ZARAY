@@ -479,7 +479,8 @@ test('premium Wi-Fi templates use the existing single module and preserve 33 A4 
  assert.match(pdf,/NON ACTIVÉ/);
  assert.match(pdf,/ticket.duration_minutes\+' min/);
  assert.match(pdf,/String\(ticket.price_amount\)/);
- assert.match(issue,/credential_hash:await sha256\(siteId\+':'\+username\+':'\+password\)/);
+ assert.match(issue,/credential_hash:hashVoucherCredential\(siteId,username,password,2\)/);
+  assert.match(issue,/key_version:2/);
  assert.match(issue,/const batchId=crypto.randomUUID\(\)/);
  assert.match(issue,/status:'available'/);
  assert.doesNotMatch(customize,/AppShell/);
