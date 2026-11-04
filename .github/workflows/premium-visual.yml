@@ -58,11 +58,17 @@ jobs:
         run: node tests/galactic-global-visual.mjs
       - name: Verify site-specific MikroTik login-first branding
         run: node tests/hotspot-site-branding-visual.mjs
+      - name: Verify dynamic contrast on the local build
+        env:
+          BASE_URL: http://127.0.0.1:3000
+        run: node tests/contrast-audit.mjs
       - name: Preserve visual evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: zaray-premium-visual
-          path: artifacts/premium-visual/
+          path: |
+            artifacts/premium-visual/
+            artifacts/contrast/
           if-no-files-found: warn
           retention-days: 14
