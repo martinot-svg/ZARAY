@@ -133,3 +133,11 @@
     font-size:clamp(16px,4.8vw,20px) !important;
   }
 }
+
+/* Exactly one accessible logo, swapping the official wordmark by active surface. */
+[data-zaray-theme="dark"] .form-shell .zaray-standalone-module-brand .brand-logo {
+  content:url("/brand/zaray-logo.svg");
+}
+[data-zaray-theme="light"] .form-shell .zaray-standalone-module-brand .brand-logo {
+  content:url("/brand/zaray-logo-on-light.svg");
+}
