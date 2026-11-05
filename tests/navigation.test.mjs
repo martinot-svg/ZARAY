@@ -147,7 +147,7 @@ test('personal dashboard uses only authorized enterprise finance data and clear 
  assert.match(finance,/financeCompanyId/);
  assert.match(finance,/monthlyByCurrency/);
  assert.match(finance,/amountsByCompany/);
- assert.match(finance,/Aucune finance privée/);
+ assert.match(finance,/financeRoles/);
  assert.doesNotMatch(finance,/Mes finances personnelles|Solde de trésorerie disponible/);
 });
 
