@@ -35,7 +35,7 @@ async function authorized(companyId:string,siteId:string){
  if(!service)return {response:json({error:'Service indisponible.'},503)};
  return {service,userId:access.user.id};
 }
-async function existing(service:NonNullable<Awaited<ReturnType<typeof authorized>>['service']>,companyId:string,siteId:string){
+async function existing(service:NonNullable<ReturnType<typeof createServiceClient>>,companyId:string,siteId:string){
  const {data,error}=await service.from('site_custom_domains')
   .select('hostname,status,verified_at,last_checked_at')
   .eq('company_id',companyId).eq('site_id',siteId).maybeSingle();
