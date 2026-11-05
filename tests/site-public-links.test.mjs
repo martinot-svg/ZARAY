@@ -22,25 +22,20 @@ test('admins can create free links with tenant-scoped access and no Vercel depen
  assert.doesNotMatch(api,/checkSiteProjectDomain|ZARAY_VERCEL_API_TOKEN|\.status:'active'/);
 });
 
-test('public link redirects to the linked site registration, not an unverified DNS hostname',()=>{
+test('local-only aliases cannot redirect clients to hosted ZARAY pages',()=>{
  const route=read('src/app/l/[alias]/route.ts');
  assert.match(route,/\.eq\('alias',alias\)/);
  assert.match(route,/site\.status!=='active'/);
- assert.match(route,/company\.status/);
- assert.match(route,/\/wifi\/.*encodeURIComponent\(company.slug\)/);
- assert.match(route,/redirect\.searchParams\.set\('siteId',site\.id\)/);
- assert.match(route,/redirect\.searchParams\.set\('inscription','1'\)/);
- assert.match(route,/NextResponse\.redirect\(redirect/);
- assert.doesNotMatch(route,/https:\/\/.*alias/);
- const portal=read('src/components/public-wifi-portal.tsx');
- assert.match(portal,/startInSubscription\|\|new URLSearchParams\(window.location.search\).get\('inscription'\)==='1'/);
+ assert.match(route,/return new NextResponse\('Cette adresse fonctionne uniquement/);
+ assert.match(route,/status:410/);
+ assert.doesNotMatch(route,/redirect\.searchParams\.set\('siteId'/);
 });
 
-test('site UI shares a ZARAY URL rather than suggesting domain ownership',()=>{
+test('local site UI explains DNS and installation requirements',()=>{
  const settings=read('src/app/sites/[siteId]/domaine/page.tsx');
- assert.match(settings,/Lien public du site/);
- assert.match(settings,/Aucun achat de domaine ni réglage DNS/);
- assert.match(settings,/origin\+link\.path/);
- assert.match(settings,/navigator\.clipboard\.writeText\(publicUrl\)/);
+ assert.match(settings,/Adresse locale Wi-Fi/);
+ assert.match(settings,/configuration du DNS et du HotSpot/);
+ assert.match(settings,/const localAddress=link\?'http:\/\/'\+link.alias/);
+ assert.match(settings,/navigator\.clipboard\.writeText\(localAddress\)/);
  assert.doesNotMatch(settings,/Vérifier maintenant|Ouvrir la configuration Vercel/);
 });
