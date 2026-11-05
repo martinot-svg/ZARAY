@@ -1283,19 +1283,13 @@ body:has(.form-shell) .global-auth-theme{
 .app-no-sidebar .studio-page-header .studio-chapter-number{font-size:clamp(30px,3vw,44px)}
 .app-no-sidebar .studio-page-header .studio-chapter-line{width:24px}
 .app-no-sidebar .studio-page-header .studio-kicker{font-size:10px;margin-bottom:7px}
-.app-no-sidebar .workspace-help{margin-top:10px;max-width:680px}
-.app-no-sidebar .workspace-help>summary{list-style:none;display:inline-flex;gap:8px;align-items:center;color:var(--studio-accent);font-size:12px;font-weight:700;cursor:pointer;padding:5px 0;text-decoration:underline;text-underline-offset:3px}
-.app-no-sidebar .workspace-help>summary::-webkit-details-marker{display:none}
-.app-no-sidebar .workspace-help>summary:after{content:"+"}
-.app-no-sidebar .workspace-help[open]>summary:after{content:"−"}
-.app-no-sidebar .workspace-help .app-subtitle{font-size:13px!important;margin:8px 0!important;line-height:1.55!important}
 .app-no-sidebar .workspace-disclosure,.app-no-sidebar .workspace-inline-disclosure{min-width:0;max-width:100%;margin:14px 0;border:1px solid var(--studio-stroke);border-radius:12px;background:var(--studio-surface)!important;color:var(--studio-fg);box-shadow:0 8px 24px rgba(0,0,0,.06)}
 .app-no-sidebar .workspace-disclosure>summary,.app-no-sidebar .workspace-inline-disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;list-style:none;padding:13px clamp(15px,2vw,22px);font-size:14px;font-weight:730;color:var(--studio-fg);cursor:pointer}
 .app-no-sidebar .workspace-disclosure>summary::-webkit-details-marker,.app-no-sidebar .workspace-inline-disclosure>summary::-webkit-details-marker{display:none}
 .app-no-sidebar .workspace-disclosure>summary:after,.app-no-sidebar .workspace-inline-disclosure>summary:after{content:"+";display:grid;place-items:center;width:24px;height:24px;flex:none;border:1px solid var(--studio-stroke);border-radius:7px;font-size:16px;color:var(--studio-accent)}
 .app-no-sidebar .workspace-disclosure[open]>summary:after,.app-no-sidebar .workspace-inline-disclosure[open]>summary:after{content:"−"}
 .app-no-sidebar .workspace-disclosure[open]>summary,.app-no-sidebar .workspace-inline-disclosure[open]>summary{border-bottom:1px solid var(--studio-line)}
-.app-no-sidebar :is(.workspace-disclosure,.workspace-inline-disclosure,.workspace-help)>summary:focus-visible{outline:2px solid var(--studio-accent);outline-offset:3px}
+.app-no-sidebar :is(.workspace-disclosure,.workspace-inline-disclosure)>summary:focus-visible{outline:2px solid var(--studio-accent);outline-offset:3px}
 .app-no-sidebar .workspace-disclosure>.panel{border:0!important;background:transparent!important;box-shadow:none!important;border-radius:0!important;margin:0!important}
 .app-no-sidebar .workspace-disclosure .panel{box-shadow:none!important}
 .app-no-sidebar .workspace-grid>.workspace-disclosure{margin:0}
@@ -1318,7 +1312,7 @@ body:has(.form-shell) .global-auth-theme{
 .app-no-sidebar .workspace-disclosure>.panel{padding:15px!important}
 }
 @media(prefers-reduced-motion:reduce){.app-no-sidebar .workspace-disclosure{animation:none!important;transition:none!important}}
-@media print{.app-no-sidebar .workspace-disclosure>summary,.app-no-sidebar .workspace-help>summary{display:none!important}}
+@media print{.app-no-sidebar .workspace-disclosure>summary{display:none!important}}
 
 /* Number-free module headings: only the context and page title remain.
    A single content column replaces the former numbered chapter gutter. */
