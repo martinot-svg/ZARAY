@@ -45,7 +45,7 @@ export default function PaymentsPage() {
 
   return <main className="form-shell"><section className="form-card" style={{maxWidth:1100,width:'min(100%,1100px)'}}>
       <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
-    <WorkspaceBreadcrumb companyId={companyId}/><p className="eyebrow">ZARAY · MODULE 9 · PAIEMENTS</p><h1>Suivi des paiements</h1>
+    <WorkspaceBreadcrumb companyId={companyId}/><p className="eyebrow">ZARAY · PAIEMENTS</p><h1>Suivi des paiements</h1>
     <details className="payment-info-disclosure"><summary>Fonctionnement technique des paiements</summary>
     <p>Les confirmations sont vérifiées côté serveur. Elles n’activent pas directement Internet.</p>
     <section className="module" style={{marginTop:12,minHeight:0}}>

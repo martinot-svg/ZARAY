@@ -216,7 +216,7 @@ export default function OrdersWorkspace(){
        <Link className="co-secondary" href={'/clients'+context}><UserRound size={17}/> Répertoire Clients</Link>
       </div>
       <p className="co-warning">Une inscription ou un paiement ne signifie pas que l’accès Internet est actif. L’état du réseau est confirmé séparément.</p>
-    </div><div className="co-tracking"><h3>Historique des étapes</h3><Timeline order={selected}/>{selected.status==='failed'&&<div className="co-error"><AlertCircle size={16}/> Échec signalé : vérifiez l’état réseau dans le module 10.</div>}</div></div>
+    </div><div className="co-tracking"><h3>Historique des étapes</h3><Timeline order={selected}/>{selected.status==='failed'&&<div className="co-error"><AlertCircle size={16}/> Échec signalé : vérifiez l’état dans Gestion réseau.</div>}</div></div>
    </section>}
    {receipt&&<section className="co-receipt" id="cash-receipt" aria-label="Reçu de paiement en espèces">
     <div className="co-receipt-head"><Receipt size={19}/><strong>Reçu de paiement d’abonnement · Espèces</strong></div>

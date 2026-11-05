@@ -1319,3 +1319,24 @@ body:has(.form-shell) .global-auth-theme{
 }
 @media(prefers-reduced-motion:reduce){.app-no-sidebar .workspace-disclosure{animation:none!important;transition:none!important}}
 @media print{.app-no-sidebar .workspace-disclosure>summary,.app-no-sidebar .workspace-help>summary{display:none!important}}
+
+/* Number-free module headings: only the context and page title remain.
+   A single content column replaces the former numbered chapter gutter. */
+.app-no-sidebar .studio-page-header .studio-page-grid{
+  display:block!important;
+  grid-template-columns:none!important;
+  max-width:min(100%,1000px);
+}
+.app-no-sidebar .studio-page-header .studio-page-copy{width:100%}
+.app-no-sidebar .studio-page-header .studio-kicker{padding-inline-start:0}
+/* No forced light theme on Z’Accueil; this selector also protects the
+   personal homepage on the first frame before client-side theme sync. */
+html[data-zaray-theme="light"]:has(.personal-home-shell){
+  color-scheme:dark;
+}
+html[data-zaray-theme="light"]:has(.personal-home-shell) body{
+  background:#070f14!important;
+}
+@media(max-width:700px){
+ .app-no-sidebar .studio-page-header .studio-page-grid{display:block!important;grid-template-columns:none!important}
+}

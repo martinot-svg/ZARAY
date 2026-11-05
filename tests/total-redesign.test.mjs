@@ -23,11 +23,13 @@ test('refonte is really loaded after all older styles, not a standalone concept'
   assert.ok(landing.includes('<PremiumExperience />'));
 });
 
-test('a real toggle is available in the public, personal and company headers', () => {
+test('theme toggle remains available outside dark-only Z’Accueil', () => {
   assert.ok(theme.includes("window.localStorage.setItem(KEY, next)"));
   assert.ok(theme.includes("document.documentElement.setAttribute('data-zaray-theme', next)"));
   for (const source of [app, personal, landing]) assert.match(source,/<ThemeSwitch\b/);
   assert.match(layout,/<ThemeSwitch\s*\/>/);
+  assert.match(theme,/homeDarkOnly = pathname === '\/mon-compte'/);
+  assert.match(personal,/!home && <div className="topbar-icon-group topbar-theme-control">/);
   assert.ok(css.includes('[data-zaray-theme="light"]'));
   assert.ok(css.includes('[data-zaray-theme="dark"]'));
 });
