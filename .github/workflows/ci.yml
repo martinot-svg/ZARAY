@@ -45,6 +45,7 @@ jobs:
             tests/logo-palette.test.mjs \
             tests/public-wifi-web-portal.test.mjs \
             tests/residential-white-label.test.mjs \
-            tests/site-notifications.test.mjs
+            tests/site-notifications.test.mjs \
+            tests/site-custom-domains.test.mjs
       - run: npm run typecheck
       - run: npm run build
