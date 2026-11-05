@@ -536,7 +536,7 @@ test('Opening an enterprise sends its dashboard data in the first server respons
  assert.doesNotMatch(dashboard,/fetch\(/);
  assert.match(server,/count:'exact'/);
  assert.doesNotMatch(dashboard,/window\.location\.replace\(/);
- assert.match(shell,/router\.push\(next\?/);
+ assert.match(shell,/router\.push\(next\s*\?/);
  assert.doesNotMatch(shell,/window\.location\.assign/);
  assert.match(shell,/import Link from 'next\/link'/);
  assert.doesNotMatch(personal,/prefetch=\{false\}/);
