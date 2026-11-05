@@ -25,12 +25,19 @@ async function permission(companyId:string,siteId:string|null){
  }
  const access=await authorizeTenant(session,companyId,siteId);
  if(!access.ok)return {response:json({error:access.error},access.status)};
- // Site-manager assignments are not verified yet: deny them rather than
- // allowing a guessed siteId to reveal an entire company's notifications.
- if(!['owner','admin'].includes(access.member.role))
-  return {response:json({error:'Notifications réservées aux administrateurs autorisés.'},403)};
  const service=createServiceClient();
  if(!service)return {response:json({error:'Service indisponible.'},503)};
+ if(['owner','admin'].includes(access.member.role))
+  return {service,userId:access.user.id,companyIds:[companyId]};
+ // A site_manager can view only a site explicitly assigned by an administrator.
+ // Company membership alone, and an arbitrary siteId, never authorize access.
+ if(access.member.role!=='site_manager'||!siteId)
+  return {response:json({error:'Notifications réservées aux responsables autorisés.'},403)};
+ const {data:assignment,error:assignmentError}=await service.from('site_notification_assignments')
+  .select('site_id').eq('company_id',companyId).eq('site_id',siteId)
+  .eq('user_id',access.user.id).maybeSingle();
+ if(assignmentError)return {response:json({error:'Autorisations indisponibles.'},503)};
+ if(!assignment)return {response:json({error:'Ce site ne vous a pas été attribué.'},403)};
  return {service,userId:access.user.id,companyIds:[companyId]};
 }
 
