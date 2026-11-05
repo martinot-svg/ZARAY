@@ -6,7 +6,7 @@ const escapeHtml=(value:string)=>value.replace(/[&<>"']/g,c=>({
 const config=()=>{
  const key=process.env.ZARAY_RESEND_API_KEY||process.env.RESEND_API_KEY||'';
  const sender=process.env.ZARAY_CUSTOMER_EMAIL_FROM||'';
- if(!key||!/^[^\s@<>]+@[^\s@<>]+\.[a-z]{2,}$/i.test(sender))return null;
+ if(process.env.ZARAY_CUSTOMER_FROM_VERIFIED!=='true'||!key||!/^[^\s@<>]+@[^\s@<>]+\.[a-z]{2,}$/i.test(sender))return null;
  if(/zaray/i.test(sender))return null; // Never reveal the SaaS brand to a resident.
  return {key,sender};
 };
