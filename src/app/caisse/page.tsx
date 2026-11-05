@@ -137,7 +137,7 @@ export default function CaissePage() {
   return (
     <>
       <div className="screen-only">
-        <AppShell activePath="/caisse" eyebrow="VENTE RAPIDE · CLIENTS OCCASIONNELS" title="Caisse & tickets" description="Encaissez un client de passage, générez immédiatement son reçu et son ticket Wi-Fi imprimable.">
+        <AppShell activePath="/caisse" title="Caisse & tickets">
           {companies.length > 1 && <span className="muted">Entreprise active : {companies.find(c=>c.id===companyId)?.legal_name ?? '—'}</span>}
 
           <section className="module-grid" style={{ alignItems: 'start' }}>
