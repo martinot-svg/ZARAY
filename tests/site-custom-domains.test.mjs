@@ -56,7 +56,7 @@ test('site administrators can open domain management; clients retain white-label
  const residential=read('src/app/mon-internet/[siteId]/page.tsx');
  assert.match(sites,/\/domaine\?companyId=/);
  assert.match(settings,/\/api\/site-domains/);
- assert.match(settings,/domain.status==='active'/);
+ assert.match(settings,/domain\?\.status==='active'/);
  assert.match(settings,/L’automatisation Vercel n’est pas encore configurée/);
  assert.match(residential,/applicationName:name/);
 });
