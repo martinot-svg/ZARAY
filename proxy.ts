@@ -44,6 +44,11 @@ function customHostResponse(request:NextRequest,site:SiteDomain|null){
   target.search='?siteId='+encodeURIComponent(site.siteId);
   return NextResponse.rewrite(target,{request});
  }
+ if(/^\\/paiement\\/[A-Fa-f0-9]{12}$/.test(path)){
+  target.pathname='/mon-internet/'+site.siteId+'/paiement/'+path.split('/')[2].toUpperCase();
+  target.search='';
+  return NextResponse.rewrite(target,{request});
+ }
  if(path==='/mon-internet/'+site.siteId)return NextResponse.next({request});
  if(path==='/wifi/'+site.companySlug
   &&(!search.has('siteId')||search.get('siteId')===site.siteId)){
@@ -62,8 +67,17 @@ function customHostResponse(request:NextRequest,site:SiteDomain|null){
   return NextResponse.next({request});
  if(path==='/api/residential/otp'&&request.method==='POST')
   return NextResponse.next({request});
- if(path==='/api/portal/'+site.companySlug
-  ||path==='/api/portal/'+site.companySlug+'/payment-methods')
+ if(path==='/api/manual-payments/status'&&search.get('siteId')===site.siteId)
+  return NextResponse.next({request});
+ if(path==='/api/portal/'+site.companySlug){
+  if(request.method==='GET'){
+   if(search.has('siteId')&&search.get('siteId')!==site.siteId)return denied();
+   target.searchParams.set('siteId',site.siteId);
+   return NextResponse.rewrite(target,{request});
+  }
+  if(request.method==='POST')return NextResponse.next({request});
+ }
+ if(path==='/api/portal/'+site.companySlug+'/payment-methods')
   return NextResponse.next({request});
  if(path==='/api/manual-payments/submit'&&request.method==='POST')
   return NextResponse.next({request});
