@@ -164,7 +164,7 @@ try {
     assert.equal(await card.locator('.brand-logo').count(),0,'logo must be outside login card');
     assert.equal(await headingTextCount(),1);
     async function headingTextCount() {
-      return page.getByRole('heading',{level:1,name:'Votre univers vous attend'}).count();
+      return page.getByRole('heading',{level:1,name:'Connexion'}).count();
     }
     assert.equal(await page.getByText('Votre univers ZARAY vous attend',{exact:true}).count(),0);
     assert.equal(await page.getByText('Connexion à mon compte ZARAY',{exact:true}).count(),0);
@@ -188,8 +188,15 @@ try {
     });
     assert.ok(Math.abs(cardCenter-size.width/2)<2,
       'login form must be horizontally centered: '+cardCenter+' vs '+size.width/2);
-    const titleAlign = await heading.evaluate(el=>getComputedStyle(el).textAlign);
-    assert.equal(titleAlign,'center','login heading must be centered');
+    const loginHeader = await page.locator('.login-brand').evaluate(el=>{
+      const logo=el.querySelector('.brand-logo')?.getBoundingClientRect();
+      const title=el.querySelector('#login-title')?.getBoundingClientRect();
+      return { logoRight:logo?.right??0, titleLeft:title?.left??0,
+        logoTop:logo?.top??0, logoBottom:logo?.bottom??0,
+        titleTop:title?.top??0, titleBottom:title?.bottom??0 };
+    });
+    assert.ok(loginHeader.titleLeft>=loginHeader.logoRight-2,'login title must be to the right of logo');
+    assert.ok(loginHeader.titleTop<loginHeader.logoBottom && loginHeader.titleBottom>loginHeader.logoTop,'login heading and logo must share a row');
     const inspectLinks=async()=>{
       const regular=await left.evaluate(el=>({
         weight:getComputedStyle(el).fontWeight,
