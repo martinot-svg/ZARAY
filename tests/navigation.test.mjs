@@ -32,7 +32,7 @@ test('personal navigation distinguishes home and enterprise dashboard without a 
  assert.match(nav,/inert=\{!homeNavOpen\}/);
  assert.match(nav,/name\?\.trim\(\)/);
  assert.doesNotMatch(nav,/personal-profile-copy/);
- assert.match(nav,/Espace personnel/);
+ assert.match(nav,/aria-label=\{'Options du profil de ' \+ displayName\}/);
  const css=source('src/app/globals.css');
  assert.match(css,/\.personal-shell\.personal-no-sidebar\{/);
  assert.match(css,/display:flex;flex-direction:column;min-height:100dvh;width:100%/);
@@ -86,7 +86,8 @@ test('company menu uses three named groups, retains routes and excludes public w
 test('company list preserves creation route and never uses example records',()=>{
  const page=source('src/app/entreprises/page.tsx');
  const creation=source('src/app/entreprises/nouvelle/page.tsx');
- assert.match(page,/Mes entreprises/);
+ assert.match(page,/<PersonalShell active="\/entreprises"/);
+ assert.match(source('src/components/personal-shell.tsx'),/\'\/entreprises\': 'Mes entreprises'/);
  assert.match(source('src/components/personal-shell.tsx'),/href="\/entreprises\/nouvelle"/);
  assert.match(source('src/components/personal-shell.tsx'),/aria-label="Créer une entreprise"/);
  assert.match(page,/company\.legal_name/);
@@ -364,7 +365,7 @@ test('Z’Alliance is a real protected workspace with existing Supabase invitati
  assert.match(ui,/fetch\('\/api\/audit-logs/);
  assert.match(ui,/submitting\.current/);
  assert.match(ui,/Aucun e-mail n’a été envoyé/);
- assert.match(ui,/état d’envoi est indiqué séparément/);
+ assert.match(ui,/delivery_status/);
  assert.match(ui,/Mes invitations reçues/);
  assert.match(ui,/member\.status === 'active'/);
  assert.match(api,/rpc\('create_company_invitation'/);
@@ -509,7 +510,8 @@ test('personal topbar places logo first and company creation beside profile, wit
  assert.match(header,/href="\/entreprises\/nouvelle"/);
  assert.match(shell,/!home && email && active !== '\/entreprises'/);
  assert.doesNotMatch(page,/ESPACE PERSONNEL|Uniquement les organisations|href="\/entreprises\/nouvelle"/);
- assert.match(page,/personal-page-heading personal-enterprises-heading/);
+ assert.doesNotMatch(page,/personal-page-heading personal-enterprises-heading/);
+ assert.match(header,/personal-topbar-module-title/);
  assert.match(page,/company\.legal_name/);
  assert.match(css,/\.personal-no-sidebar \.personal-enterprises-heading\{/);
  assert.match(css,/\.personal-topbar-actions \.personal-profile-control\{margin-left:0\}/);
