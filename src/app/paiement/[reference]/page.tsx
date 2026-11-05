@@ -1,6 +1,6 @@
 'use client';
 import {ZarayIcon} from '@/components/ui/zaray-icon';
-import BrandLogo from '@/components/brand-logo';
+import StandaloneModuleHeader from '@/components/standalone-module-header';
 import {useEffect,useState,type FormEvent} from 'react';
 import {useParams} from 'next/navigation';
 
@@ -70,9 +70,8 @@ export default function PaymentStatusPage(){
  }
  const selected=methods.find(m=>m.provider===provider);
  const canSubmit=status?.orderStatus==='pending_payment'&&!status.paid&&status.submission?.status!=='submitted'&&methods.length>0;
- return <main className="form-shell"><section className="form-card" style={{width:'min(100%,720px)'}}>
-  <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo/></a></div>
-  <p className="eyebrow">ZARAY · PAIEMENT MANUEL</p><h1>Suivi du paiement</h1>
+ return <main className="form-shell"><section className="form-card zaray-utility-page" style={{width:'min(100%,720px)'}}>
+  <StandaloneModuleHeader title="Suivi du paiement" homeHref="/" />
   <p>Référence de commande : <strong>{reference}</strong></p>
   {busy&&<p role="status">Vérification du statut…</p>}
   {status&&<section className="module" style={{minHeight:0,marginTop:20}}>
