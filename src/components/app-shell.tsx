@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 const sections = [
-  { label: 'GESTION', items: [['/tableau-de-bord', 'Tableau de bord'], ['/sites', 'Sites'], ['/membres', 'Membres']] },
+  { label: 'GESTION', items: [['/tableau-de-bord', 'Tableau de bord'], ['/sites', 'Sites'], ['/notifications', 'Notifications'], ['/membres', 'Membres']] },
   { label: 'ACTIVITÉ', items: [['/clients', 'Clients'], ['/offres', 'Offres Internet'], ['/commandes', 'Commandes'], ['/abonnements', 'Abonnements résidentiels'], ['/tickets', 'Tickets Wi-Fi']] },
   { label: 'FINANCE & RÉSEAU', items: [['/paiements/verification', 'Paiements'], ['/parametres-paiement', 'Moyens de paiement'], ['/portail', 'Portail captif'], ['/gestion-reseau', 'Gestion réseau']] },
 ];
@@ -23,7 +23,7 @@ const mobileDockItems = [
 ] as const;
 
 const navigationIcons = {
-  '/tableau-de-bord': 'dashboard', '/entreprises': 'company', '/sites': 'site',
+  '/tableau-de-bord': 'dashboard', '/entreprises': 'company', '/sites': 'site', '/notifications': 'notifications',
   '/membres': 'members', '/clients': 'customers', '/offres': 'wifi',
   '/commandes': 'orders', '/abonnements': 'wifi', '/tickets': 'ticket', '/paiements/verification': 'payment',
   '/parametres-paiement': 'finance', '/portail': 'network', '/gestion-reseau': 'network',
@@ -171,6 +171,13 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
               <SignOutButton />
             </div>
           </nav>
+        </div>
+        <div className="topbar-icon-group">
+          <Link className="header-link"
+            href={activeCompany?'/notifications?companyId='+encodeURIComponent(activeCompany)+(activeSite?'&siteId='+encodeURIComponent(activeSite):''):'/notifications'}
+            aria-label="Centre de notifications" title="Notifications">
+            <ZarayIcon name="notifications" size={22}/><span className="topbar-icon-label">Notifications</span>
+          </Link>
         </div>
         <div className="app-site-container" ref={siteContainer}>
           <button ref={siteButton} type="button" className="app-site-button"
