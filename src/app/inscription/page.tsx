@@ -1,7 +1,7 @@
 'use client';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 
-import BrandLogo from '@/components/brand-logo';
+import StandaloneModuleHeader from '@/components/standalone-module-header';
 import PasswordField from '@/components/ui/password-field';
 
 import { useState, type FormEvent } from 'react';
@@ -93,11 +93,8 @@ export default function InscriptionPage() {
     }
   }
 
-  return <main className="form-shell auth-motion"><section className="form-card">
-    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority surface="light" /></a></div>
-    <p className="eyebrow">ZARAY · MODULE 1</p>
-    <h1>Créer un compte administrateur</h1>
-    <p>Créez votre compte, puis confirmez votre adresse e-mail avant d’inscrire votre entreprise.</p>
+  return <main className="form-shell auth-motion"><section className="form-card zaray-utility-page">
+    <StandaloneModuleHeader title="Créer un compte" homeHref="/" />
 
     {!registeredEmail && !verified && <form onSubmit={register} className="form-stack">
       <label>Nom complet<input name="name" autoComplete="name" required minLength={2} maxLength={120} /></label>

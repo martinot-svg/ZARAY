@@ -41,9 +41,10 @@ test('ZARAY login exposes a logo outside form and a single left/right footer row
  const right=login.indexOf('<a href="/inscription">Créer un compte</a>');
  assert.ok(logoPosition>=0 && cardPosition>logoPosition,'logo must be outside the card');
  assert.ok(left>cardPosition && right>left,'forgotten password left, account creation right');
- assert.ok(login.includes('<h1 id="login-title">Votre univers vous attend</h1>'));
+ assert.ok(login.includes('<h1 id="login-title">Connexion</h1>'));
  assert.ok(!login.includes('Votre univers ZARAY vous attend'));
  assert.ok(!login.includes('Connexion à mon compte ZARAY'));
+ assert.ok(login.indexOf('id="login-title"') < cardPosition, 'title belongs beside the logo');
  assert.ok(!login.includes('ZARAY · ACCÈS SÉCURISÉ'));
  assert.match(style,/\.login-shell > \.login-card #login-title/);
  assert.match(style,/white-space:nowrap/);

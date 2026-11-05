@@ -1,0 +1,143 @@
+/* Module heading system shared by auth, public transaction and admin utilities.
+   The headings are real DOM h1 elements; no redundant guide banners remain. */
+.form-shell .zaray-standalone-module-header {
+  display:flex;
+  align-items:center;
+  flex-wrap:nowrap;
+  gap:clamp(10px,1.8vw,20px);
+  margin:0 0 18px;
+  padding:0 0 14px;
+  border-bottom:1px solid var(--zf-border,rgba(40,102,73,.14));
+  min-width:0;
+}
+.form-shell .zaray-standalone-module-brand {
+  flex:0 0 clamp(86px,13vw,132px);
+  width:clamp(86px,13vw,132px);
+  line-height:0;
+  display:block;
+}
+.form-shell .zaray-standalone-module-brand .brand-logo {
+  width:100%;
+  height:auto;
+  display:block;
+}
+.form-shell .zaray-standalone-module-header h1 {
+  flex:1 1 auto;
+  min-width:0;
+  max-width:none;
+  margin:0 !important;
+  font-size:clamp(18px,2vw,28px) !important;
+  font-weight:800;
+  line-height:1.17;
+  letter-spacing:-.045em;
+  overflow-wrap:anywhere;
+  color:var(--zf-heading,#152b20);
+}
+.form-shell .form-card.zaray-utility-page {
+  padding:clamp(16px,2.1vw,26px);
+  gap:10px;
+  border-radius:16px;
+}
+.form-shell .zaray-utility-page .module-grid {
+  gap:10px;
+  margin-top:10px !important;
+}
+.form-shell .zaray-utility-page .module {
+  min-height:0;
+  padding:clamp(12px,1.5vw,18px);
+  border-radius:12px;
+}
+.form-shell .zaray-utility-page .module h2,
+.form-shell .zaray-utility-page .module h3 {
+  margin-block:8px;
+}
+.form-shell .zaray-utility-page .workspace-breadcrumb {
+  margin:0 0 9px;
+  padding:6px 0;
+}
+.form-shell .zaray-utility-page .form-stack {
+  gap:12px;
+}
+@media (max-width: 700px) {
+  .form-shell .zaray-standalone-module-header {
+    gap:10px;
+    margin-bottom:12px;
+    padding-bottom:11px;
+  }
+  .form-shell .zaray-standalone-module-brand {
+    width:clamp(72px,22vw,98px);
+    flex-basis:clamp(72px,22vw,98px);
+  }
+  .form-shell .zaray-standalone-module-header h1 {
+    font-size:clamp(16px,4.1vw,21px) !important;
+  }
+  .form-shell .form-card.zaray-utility-page {
+    padding:14px;
+  }
+}
+/* Personal workspace toolbar: one title, one set of icon actions. */
+.personal-no-sidebar .personal-topbar .personal-topbar-module-title {
+  flex:1 1 auto;
+  min-width:0;
+  margin:0;
+  font-size:clamp(14px,1.45vw,19px);
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.personal-no-sidebar .personal-topbar .personal-topbar-actions {
+  margin-left:auto;
+}
+.personal-no-sidebar .personal-topbar .personal-topbar-profile {
+  min-width:44px;
+  min-height:44px;
+  width:44px;
+  justify-content:center;
+  padding:0;
+}
+@media(max-width:700px){
+  .personal-no-sidebar .personal-topbar .personal-topbar-module-title {
+    font-size:12px;
+  }
+}
+
+/* Connection also follows logo + title, without disturbing the keyboard lift. */
+.login-shell > .login-brand {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:clamp(12px,2vw,20px);
+  max-width:100%;
+  min-width:0;
+}
+.login-shell > .login-brand a {
+  flex:0 0 clamp(100px,14vw,150px);
+  max-width:45%;
+}
+.login-shell > .login-brand #login-title {
+  margin:0 !important;
+  color:var(--zf-heading,#f1fff5);
+  font-size:clamp(17px,2vw,24px) !important;
+  font-weight:800;
+  line-height:1.2;
+  letter-spacing:-.035em;
+}
+[data-zaray-theme="light"] .login-shell > .login-brand #login-title {
+  color:#11271d;
+}
+@media(max-width:700px) {
+  .login-shell > .login-brand a {
+    flex-basis:clamp(88px,28vw,125px);
+  }
+  .login-shell > .login-brand #login-title {
+    font-size:clamp(16px,4.8vw,20px) !important;
+  }
+}
+
+/* Exactly one accessible logo, swapping the official wordmark by active surface. */
+[data-zaray-theme="dark"] .form-shell .zaray-standalone-module-brand .brand-logo {
+  content:url("/brand/zaray-logo.svg");
+}
+[data-zaray-theme="light"] .form-shell .zaray-standalone-module-brand .brand-logo {
+  content:url("/brand/zaray-logo-on-light.svg");
+}

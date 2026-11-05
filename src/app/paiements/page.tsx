@@ -1,9 +1,8 @@
 'use client';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
-import BrandLogo from '@/components/brand-logo';
+import StandaloneModuleHeader from '@/components/standalone-module-header';
 import { useEffect, useState } from 'react';
-import WorkspaceBreadcrumb from '@/components/workspace-breadcrumb';
-import { activeSiteId, scopedQuery, selectedCompany } from '@/lib/workspace-url';
+import { scopedQuery, selectedCompany } from '@/lib/workspace-url';
 import { MotionFeedback } from '@/components/motion';
 type Company = { id: string; legal_name: string; role: string };
 type Payment = { id: string; order_id: string; provider: string; provider_payment_id: string; amount: number | string; currency: string; status: string; confirmed_at: string | null; created_at: string };
@@ -43,9 +42,8 @@ export default function PaymentsPage() {
     return()=>{active=false;};
   },[companyId]);
 
-  return <main className="form-shell"><section className="form-card" style={{maxWidth:1100,width:'min(100%,1100px)'}}>
-      <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
-    <WorkspaceBreadcrumb companyId={companyId}/><p className="eyebrow">ZARAY · PAIEMENTS</p><h1>Suivi des paiements</h1>
+  return <main className="form-shell"><section className="form-card zaray-utility-page" style={{maxWidth:1100,width:'min(100%,1100px)'}}>
+    <StandaloneModuleHeader title="Suivi des paiements" />
     
     {companies.length>0&&<span className="muted">Entreprise active : {companies.find(c=>c.id===companyId)?.legal_name ?? '—'}</span>}
     {busy?null:payments.length?<div className="module-grid" style={{marginTop:24}}>

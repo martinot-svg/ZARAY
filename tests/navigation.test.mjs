@@ -31,8 +31,8 @@ test('personal navigation distinguishes home and enterprise dashboard without a 
  assert.match(nav,/event\.key !== 'Escape'/);
  assert.match(nav,/inert=\{!homeNavOpen\}/);
  assert.match(nav,/name\?\.trim\(\)/);
- assert.match(nav,/personal-profile-copy/);
- assert.match(nav,/Espace personnel/);
+ assert.doesNotMatch(nav,/personal-profile-copy/);
+ assert.match(nav,/aria-label=\{'Options du profil de ' \+ displayName\}/);
  const css=source('src/app/globals.css');
  assert.match(css,/\.personal-shell\.personal-no-sidebar\{/);
  assert.match(css,/display:flex;flex-direction:column;min-height:100dvh;width:100%/);
@@ -40,15 +40,15 @@ test('personal navigation distinguishes home and enterprise dashboard without a 
 test('personal profile stays top-right and the navigation works from the topbar on every page',()=>{
  const shell=source('src/components/personal-shell.tsx');
  const topbar=shell.slice(shell.indexOf('<header className="personal-topbar">'),shell.indexOf('</header>'));
- assert.match(topbar,/Mon espace Zaray/);
+ assert.match(topbar,/personal-topbar-module-title/);
  assert.match(topbar,/name="menu"/);
  assert.match(topbar,/aria-controls="personal-home-navigation-links" aria-expanded=\{homeNavOpen\}/);
  assert.match(topbar,/inert=\{!homeNavOpen\}/);
  assert.match(topbar,/navigationLinks\.map/);
  assert.match(topbar,/className="personal-topbar-profile"/);
  assert.match(topbar,/personal-profile-avatar/);
- assert.match(topbar,/\{displayName\}/);
- assert.match(topbar,/Espace personnel/);
+ assert.match(shell,/aria-label=\{'Options du profil de ' \+ displayName\}/);
+ assert.doesNotMatch(topbar,/personal-profile-copy/);
  assert.match(shell,/setHomeNavOpen\(value => !value\)/);
  assert.doesNotMatch(shell,/Mahasiloke Tinot/);
  const css=source('src/app/globals.css');
@@ -60,7 +60,7 @@ test('topbar menu replaces personal sidebar with outside-click, Escape and reduc
  const shell=source('src/components/personal-shell.tsx');
  const css=source('src/app/globals.css');
  assert.doesNotMatch(shell,/Mon compte ZARAY|personal-drawer-head|<nav id="personal-navigation"/);
- assert.equal((shell.match(/Mon espace Zaray/g)??[]).length,1);
+ assert.equal((shell.match(/Mon espace Zaray/g)??[]).length,0);
  assert.match(shell,/className="personal-home-nav-toggle"/);
  assert.match(shell,/className=\{'personal-home-nav-menu'/);
  assert.match(shell,/inert=\{!homeNavOpen\}/);
@@ -86,7 +86,8 @@ test('company menu uses three named groups, retains routes and excludes public w
 test('company list preserves creation route and never uses example records',()=>{
  const page=source('src/app/entreprises/page.tsx');
  const creation=source('src/app/entreprises/nouvelle/page.tsx');
- assert.match(page,/Mes entreprises/);
+ assert.match(page,/<PersonalShell active="\/entreprises"/);
+ assert.match(source('src/components/personal-shell.tsx'),/\'\/entreprises\': 'Mes entreprises'/);
  assert.match(source('src/components/personal-shell.tsx'),/href="\/entreprises\/nouvelle"/);
  assert.match(source('src/components/personal-shell.tsx'),/aria-label="Créer une entreprise"/);
  assert.match(page,/company\.legal_name/);
@@ -364,7 +365,7 @@ test('Z’Alliance is a real protected workspace with existing Supabase invitati
  assert.match(ui,/fetch\('\/api\/audit-logs/);
  assert.match(ui,/submitting\.current/);
  assert.match(ui,/Aucun e-mail n’a été envoyé/);
- assert.match(ui,/état d’envoi est indiqué séparément/);
+ assert.match(ui,/delivery_status/);
  assert.match(ui,/Mes invitations reçues/);
  assert.match(ui,/member\.status === 'active'/);
  assert.match(api,/rpc\('create_company_invitation'/);
@@ -509,7 +510,8 @@ test('personal topbar places logo first and company creation beside profile, wit
  assert.match(header,/href="\/entreprises\/nouvelle"/);
  assert.match(shell,/!home && email && active !== '\/entreprises'/);
  assert.doesNotMatch(page,/ESPACE PERSONNEL|Uniquement les organisations|href="\/entreprises\/nouvelle"/);
- assert.match(page,/personal-page-heading personal-enterprises-heading/);
+ assert.doesNotMatch(page,/personal-page-heading personal-enterprises-heading/);
+ assert.match(header,/personal-topbar-module-title/);
  assert.match(page,/company\.legal_name/);
  assert.match(css,/\.personal-no-sidebar \.personal-enterprises-heading\{/);
  assert.match(css,/\.personal-topbar-actions \.personal-profile-control\{margin-left:0\}/);
@@ -565,7 +567,9 @@ test('finance page has only its title above the existing payments and filters',(
  const page=source('src/app/finance-globale/page.tsx');
  const shell=source('src/components/personal-shell.tsx');
  const css=source('src/app/globals.css');
- assert.match(page,/<header className="personal-page-heading personal-finance-page-heading"><h1>Finance globale<\/h1><\/header>/);
+ assert.doesNotMatch(page,/personal-finance-page-heading/);
+ assert.match(shell,/personal-topbar-module-title/);
+ assert.match(shell,/\'\/finance-globale\': 'Finance globale'/);
  assert.doesNotMatch(page,/COMPTE PERSONNEL · FINANCE|Consolidation des paiements confirmés du registre uniquement/);
  assert.match(shell,/active !== '\/entreprises' && active !== '\/finance-globale'/);
  assert.match(page,/PersonalFinanceOverview/);

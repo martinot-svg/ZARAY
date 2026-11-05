@@ -1,6 +1,6 @@
 'use client';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
-import BrandLogo from '@/components/brand-logo';
+import StandaloneModuleHeader from '@/components/standalone-module-header';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useParams } from 'next/navigation';
 
@@ -119,10 +119,8 @@ export default function CaptivePortalPage() {
   const selectedOffer = offers.find((offer) => offer.id === offerId);
   const offerPayable = selectedOffer?.currency === 'MGA';
 
-  return <main className="form-shell"><section className="form-card" style={{ width: 'min(100%, 760px)' }}>
-      <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
-    <p className="eyebrow">ZARAY · INSCRIPTION CLIENT · ABONNEMENTS</p>
-    <h1>{companyName || 'Connexion Wi-Fi'}</h1>
+  return <main className="form-shell"><section className="form-card zaray-utility-page" style={{ width: 'min(100%, 760px)' }}>
+    <StandaloneModuleHeader title={companyName || 'Connexion Wi-Fi'} homeHref="/" />
     <p>Inscrivez-vous auprès de votre fournisseur, choisissez votre abonnement, puis transmettez le justificatif de paiement. Votre dossier client est créé automatiquement dans ZARAY. L’accès Internet n’est autorisé qu’après validation du paiement et confirmation réseau.</p>
     {busy ? <p role="status">Chargement des offres…</p> : offers.length ? <>
       <h2>Forfaits disponibles</h2>
@@ -134,7 +132,7 @@ export default function CaptivePortalPage() {
       </div>
       {!order && <>
         <h2>Inscription du client résidentiel</h2>
-        <p className="muted">Vos coordonnées seront ajoutées au répertoire Clients de votre fournisseur. Si vous avez déjà effectué une demande avec la même adresse, votre fiche sera réutilisée.</p>
+        <p className="muted">Vos coordonnées seront transmises à votre fournisseur pour traiter l’abonnement.</p>
         <form className="form-stack" onSubmit={subscribe}>
           {sites.length>1?<label>Site de raccordement<select value={siteId} onChange={e=>setSiteId(e.target.value)} required><option value="">Choisir un site</option>{sites.map(site=><option key={site.id} value={site.id}>{site.name}</option>)}</select></label>:sites.length===1?<p>Site de raccordement : <strong>{sites[0].name}</strong></p>:<p className="muted">Aucun site n'est encore enregistré. Votre fournisseur devra affecter votre dossier à un site avant l'activation.</p>}
           <label>Nom complet<input value={customerName} onChange={(e) => setCustomerName(e.target.value)} minLength={2} maxLength={160} required /></label>

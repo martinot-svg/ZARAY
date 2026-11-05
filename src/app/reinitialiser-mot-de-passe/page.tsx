@@ -1,7 +1,7 @@
 'use client';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 
-import BrandLogo from '@/components/brand-logo';
+import StandaloneModuleHeader from '@/components/standalone-module-header';
 import PasswordField from '@/components/ui/password-field';
 
 import { useEffect, useState, type FormEvent } from 'react';
@@ -74,10 +74,8 @@ export default function ReinitialiserMotDePassePage() {
     }
   }
 
-  return <main className="form-shell auth-motion"><section className="form-card">
-    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority surface="light" /></a></div>
-    <p className="eyebrow">ZARAY · SÉCURITÉ DU COMPTE</p>
-    <h1>Créer un nouveau mot de passe</h1>
+  return <main className="form-shell auth-motion"><section className="form-card zaray-utility-page">
+    <StandaloneModuleHeader title="Créer un nouveau mot de passe" homeHref="/" />
     {!ready && !error && <p>Vérification du lien sécurisé…</p>}
     {ready && !message && <form className="form-stack" onSubmit={submit}>
       <PasswordField label="Nouveau mot de passe" name="password" autoComplete="new-password" minLength={12} required />

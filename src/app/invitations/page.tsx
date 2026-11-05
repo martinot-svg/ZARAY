@@ -1,6 +1,6 @@
 'use client';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
-import BrandLogo from '@/components/brand-logo';
+import StandaloneModuleHeader from '@/components/standalone-module-header';
 
 import { useEffect, useState } from 'react';
 type Invitation = { id: string; company_id: string; company_name: string; role: string; created_at: string; expires_at: string };
@@ -31,10 +31,8 @@ export default function InvitationsPage() {
       await load();
     } catch(e) { setError(e instanceof Error ? e.message : 'Erreur.'); setBusy(false); }
   }
-  return <main className="form-shell"><section className="form-card" style={{maxWidth:900,width:'min(100%,900px)'}}>
-      <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
-    <p className="eyebrow">ZARAY · ESPACE ÉQUIPE</p><h1>Mes invitations</h1>
-    <p>Les invitations sont associées à votre adresse e-mail vérifiée. Connectez-vous avec l’adresse exacte qui a reçu l’invitation.</p>
+  return <main className="form-shell"><section className="form-card zaray-utility-page" style={{maxWidth:900,width:'min(100%,900px)'}}>
+    <StandaloneModuleHeader title="Mes invitations" />
     {busy ? null : invitations.length ? <div className="module-grid">{invitations.map(inv=><article className="module" key={inv.id}>
       <span className="module-number">INVITATION</span><h2>{inv.company_name}</h2><p>Rôle proposé : {labels[inv.role] ?? inv.role}</p><p>Expire le {new Date(inv.expires_at).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'})}</p>
       <button className="primary-link" type="button" disabled={busy} onClick={()=>void accept(inv.id)}><ZarayIcon name="confirm" size={18} /> Accepter l’invitation</button>

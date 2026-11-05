@@ -1,4 +1,5 @@
 'use client';
+import StandaloneModuleHeader from '@/components/standalone-module-header';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -60,17 +61,15 @@ export default function AcceptZAllianceInvitation() {
     finally{setBusy(false);}
   }
 
-  return <main className="form-shell"><section className="form-card" style={{maxWidth:620,width:'100%'}}>
-    <p className="eyebrow">ZARAY · COLLABORATION</p>
-    <h1><ZarayIcon name="alliance" size={27}/> Rejoindre Z’Alliance</h1>
+  return <main className="form-shell"><section className="form-card zaray-utility-page" style={{maxWidth:620,width:'100%'}}>
+    <StandaloneModuleHeader title="Rejoindre Z’Alliance" />
     {success ? <>
       <div className="alert alert-success" role="status">Vous avez rejoint {success.company_name}. Votre rôle a été confirmé.</div>
       <Link href={'/tableau-de-bord?companyId='+encodeURIComponent(success.company_id)} className="primary-link">
         <ZarayIcon name="next" size={18}/> Ouvrir mon entreprise
       </Link>
     </> : <>
-      <p>Cette invitation est personnelle. Connectez-vous ou inscrivez-vous avec <strong>l’adresse e-mail qui a reçu l’invitation</strong> pour consulter les droits proposés.</p>
-      <p>Une fois connecté et votre adresse confirmée, choisissez « Accepter l’invitation ». Aucun accès n’est accordé avant cette validation.</p>
+      <p>Connectez-vous avec <strong>l’adresse e-mail invitée</strong> pour accepter l’invitation.</p>
       {preview && <div className="panel" style={{margin:'18px 0'}}><p><strong>Entreprise :</strong> {preview.company_name}</p><p><strong>Rôle proposé :</strong> {({admin:'Administrateur',site_manager:'Responsable de site',support:'Support',technician:'Technicien',sales:'Commercial',finance:'Finance'} as Record<string,string>)[preview.role]??preview.role}</p><p><strong>Expiration :</strong> {new Date(preview.expires_at).toLocaleDateString('fr-FR')}</p></div>}
       {preview && token && <button type="button" className="primary-link" onClick={()=>void accept()} disabled={busy}>
         <ZarayIcon name="confirm" size={18}/> {busy?'Vérification en cours…':'Accepter l’invitation'}
