@@ -2,7 +2,7 @@ import type {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 import {publicResidentialSite} from '@/lib/residential-site-identity';
 import PublicWifiPortal from '@/components/public-wifi-portal';
-type Context={params:Promise<{slug:string}>;searchParams:Promise<{siteId?:string}>};
+type Context={params:Promise<{slug:string}>;searchParams:Promise<{siteId?:string;inscription?:string}>};
 export const dynamic='force-dynamic';
 export async function generateMetadata({params,searchParams}:Context):Promise<Metadata>{
  const {slug}=await params;
@@ -19,7 +19,7 @@ export async function generateMetadata({params,searchParams}:Context):Promise<Me
 }
 export default async function WifiCompanyPage({params,searchParams}:Context){
  const {slug}=await params;
- const {siteId,inscription}=await searchParams as {siteId?:string;inscription?:string};
+ const {siteId,inscription}=await searchParams;
  if(!/^[a-z0-9-]{2,80}$/i.test(slug))notFound();
  return <PublicWifiPortal slug={slug.toLowerCase()} linkedSiteId={siteId||''} startInSubscription={inscription==='1'}/>;
 }
