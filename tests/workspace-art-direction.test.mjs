@@ -13,9 +13,8 @@ test('enterprise module chapters are contextual and individually art-directed',(
  assert.match(shell,/data-workspace-chapter=\{chapter.accent\}/);
  assert.match(shell,/data-workspace-path=\{activePath\}/);
  assert.doesNotMatch(shell,/studio-chapter-number|chapter\.number/);
- assert.match(shell,/studio-page-grid/);
- assert.match(shell,/studio-page-header/);
- assert.match(shell,/workspace-help/);
+ assert.match(shell,/app-topbar-title/);
+ assert.doesNotMatch(shell,/studio-page-header|workspace-help/);
  assert.doesNotMatch(shell,/ZARAY EXPERIENCE · 2026/);
 });
 test('task layouts differ for dashboards, tables, forms and tickets',()=>{
