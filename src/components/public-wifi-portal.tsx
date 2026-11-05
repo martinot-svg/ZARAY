@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect,useState,type FormEvent} from 'react';
+import {useEffect,useState,type CSSProperties,type FormEvent} from 'react';
 import Link from 'next/link';
 import {ArrowLeft,ArrowRight,Check,CheckCircle2,Clock3,CreditCard,House,LockKeyhole,Menu,Router,ShieldCheck,Ticket,Wifi,WifiOff,X} from 'lucide-react';
 import './public-wifi-portal.css';
@@ -8,6 +8,7 @@ import BrandLogo from '@/components/brand-logo';
 
 type Offer={id:string;name:string;description?:string;durationMinutes:number;validityDays?:number;priceAmount:number;currency:string;maxDevices?:number};
 type ResidentialSite={id:string;name:string;status:string};
+type PublicIdentity={brandName:string;siteName:string;logoDataUri:string|null;primaryColor:string;secondaryColor:string;accentColor:string;titleColor:string};
 type Method={provider:'orange_money'|'mvola';accountNumber:string;accountName:string;instructions:string};
 type Order={reference:string;status:string;amount:number;currency:string;offer_name:string};
 type Mode='home'|'ticket'|'subscribe'|'order';
@@ -35,6 +36,7 @@ export default function PublicWifiPortal({slug}: {slug?:string}){
  const [subscriptionOffers,setSubscriptionOffers]=useState<Offer[]>(demo?sampleSubscriptions:[]);
  const [residentialSites,setResidentialSites]=useState<ResidentialSite[]>([]);
  const [selectedSiteId,setSelectedSiteId]=useState('');
+ const [siteIdentity,setSiteIdentity]=useState<PublicIdentity|null>(null);
  const [paymentMethods,setPaymentMethods]=useState<Method[]>([]);
  const [selectedTicket,setSelectedTicket]=useState<Offer|null>(null);
  const [selectedSubscription,setSelectedSubscription]=useState('');
@@ -106,6 +108,14 @@ export default function PublicWifiPortal({slug}: {slug?:string}){
   return()=>{mounted=false;};
  },[slug]);
 
+ useEffect(()=>{
+  if(!slug||!selectedSiteId){setSiteIdentity(null);return;}
+  let active=true;
+  requestJson('/api/public/residential-site?siteId='+encodeURIComponent(selectedSiteId))
+   .then(result=>{if(active)setSiteIdentity(result.site as PublicIdentity);})
+   .catch(()=>{if(active)setSiteIdentity(null);});
+  return()=>{active=false};
+ },[slug,selectedSiteId]);
  function toMode(next:Mode){setMode(next);setTicketMessage('');setError('');setMobileMenu(false);window.scrollTo?.({top:0,behavior:'smooth'});}
  function openTicket(offer:Offer|null){setSelectedTicket(offer);setTicketUser('');setTicketPassword('');toMode('ticket');}
  function previewTicket(e:FormEvent<HTMLFormElement>){
@@ -158,13 +168,19 @@ export default function PublicWifiPortal({slug}: {slug?:string}){
  const selectedOffer=subscriptionOffers.find(o=>o.id===selectedSubscription);
  const destination=validSlug?'/wifi/'+encodeURIComponent(slugEntry.trim().toLowerCase()):'';
  const ticketCount=ticketOffers.length;
- return <div className={mode==='home'?'zw-root zw-landing':'zw-root'}>
+ const displayBrand=demo?'ZARAY WIFI':siteIdentity?.brandName||siteName||companyName;
+ const realBrandStyle=slug&&siteIdentity?{
+  '--zw-accent':siteIdentity.primaryColor,'--zw-cyan':siteIdentity.accentColor,
+  '--zw-site-primary':siteIdentity.primaryColor,'--zw-site-secondary':siteIdentity.secondaryColor,
+  '--zw-site-title':siteIdentity.titleColor,
+ } as CSSProperties:undefined;
+ return <div className={mode==='home'?'zw-root zw-landing':'zw-root'} data-site-branded={slug?'true':undefined} style={realBrandStyle}>
   <div className="zw-sky" aria-hidden="true"/><div className="zw-mesh" aria-hidden="true"/>
   <div className="zw-shell">
    <header className="zw-nav">
-    <button type="button" className="zw-brand" onClick={()=>toMode('home')} aria-label="Portail ZARAY — accueil">
+    <button type="button" className="zw-brand" onClick={()=>toMode('home')} aria-label={demo?"Portail de démonstration":"Accueil du fournisseur"}>
      <span className="zw-mark"><Wifi size={23}/></span>
-     <span>ZARAY <small>WIFI PORTAL</small></span>
+     <span>{displayBrand}<small>PORTAIL WIFI</small></span>
     </button>
     <nav className="zw-links" aria-label="Navigation du portail">
      <button type="button" onClick={()=>toMode('home')}>Accueil</button>
@@ -183,13 +199,16 @@ export default function PublicWifiPortal({slug}: {slug?:string}){
 
     {mode==='home'&&<section className="zw-simple-screen" aria-labelledby="zw-welcome-title">
      <div className="zw-simple-card">
-      <div className="zw-simple-brand" aria-label="ZARAY WIFI">
-       <span className="zw-simple-emblem"><Wifi size={30} strokeWidth={2.4}/></span>
-       <BrandLogo className="zw-simple-logo" surface="dark"/>
+      <div className="zw-simple-brand" aria-label={displayBrand}>
+       {slug&&siteIdentity?.logoDataUri
+         ?<img className="zw-simple-logo zw-site-logo" src={siteIdentity.logoDataUri} alt={'Logo '+displayBrand}/>
+         :<span className="zw-simple-emblem"><Wifi size={30} strokeWidth={2.4}/></span>}
+       {demo&&<BrandLogo className="zw-simple-logo" surface="dark"/>}
+       {slug&&!siteIdentity?.logoDataUri&&<strong className="zw-site-name">{displayBrand}</strong>}
       </div>
       <div className="zw-simple-heading">
        <span className="zw-simple-eyebrow">PORTAIL WIFI · {siteName||'CONNEXION'}</span>
-       <h1 id="zw-welcome-title">Bienvenue chez <span>{demo?'ZARAY WIFI':companyName}</span></h1>
+       <h1 id="zw-welcome-title">Bienvenue chez <span>{displayBrand}</span></h1>
        <p>Chaque connexion ouvre votre univers.</p>
       </div>
       <form className="zw-simple-login" onSubmit={previewTicket}>
@@ -203,6 +222,7 @@ export default function PublicWifiPortal({slug}: {slug?:string}){
       </form>
       {ticketMessage&&<p className="zw-simple-alert" role="status">{ticketMessage}</p>}
       <button type="button" className="zw-simple-subscribe" onClick={()=>toMode('subscribe')}><House size={18}/> Devenir un abonné de {companyName} <ArrowRight size={18}/></button>
+      {!demo&&selectedSiteId&&<Link className="zw-simple-offers-link zw-resident-account-link" href={'/mon-internet/'+encodeURIComponent(selectedSiteId)}><ShieldCheck size={17}/> Mon espace abonné <ArrowRight size={14}/></Link>}
       <button type="button" className="zw-simple-offers-link" onClick={()=>setOffersDialog(true)}>Voir les offres Wi-Fi {ticketCount>0?'('+ticketCount+')':''} <ArrowRight size={14}/></button>
       <div className="zw-simple-footer">
        <span>Fournisseur : <strong>{companyName}</strong></span>
@@ -232,11 +252,11 @@ export default function PublicWifiPortal({slug}: {slug?:string}){
       </section>
      </div>}
     </section>}
-    {mode==='ticket'&&<section className="zw-flow"><button className="zw-back" type="button" onClick={()=>toMode('home')}><ArrowLeft size={17}/> Retour aux offres</button><div className="zw-form-card"><div className="zw-flow-icon"><Ticket size={26}/></div><span className="zw-overline">ACCÈS OCCASIONNEL</span><h1>Connectez votre ticket</h1><p>Renseignez le nom d’utilisateur et le code présents sur le ticket acheté auprès de votre vendeur.</p>{selectedTicket&&<div className="zw-selection"><div><strong>{selectedTicket.name}</strong><span>{displayTime(selectedTicket.durationMinutes)}</span></div><b>{displayPrice(selectedTicket)}</b></div>}<form onSubmit={previewTicket} className="zw-form"><label htmlFor="zw-user">Nom d’utilisateur du ticket<input id="zw-user" value={ticketUser} onChange={e=>setTicketUser(e.target.value.toUpperCase())} autoCapitalize="characters" autoComplete="off" placeholder="Ex. AB123" maxLength={5} minLength={3} required/></label><label htmlFor="zw-code">Mot de passe du ticket<input id="zw-code" value={ticketPassword} onChange={e=>setTicketPassword(e.target.value)} type="password" autoComplete="off" placeholder="Code du ticket" maxLength={32} minLength={3} required/></label><button className="zw-cta zw-wide" type="submit"><LockKeyhole size={18}/> Vérifier le formulaire <ArrowRight size={18}/></button></form>{ticketMessage&&<div role="status" className="zw-notice">{ticketMessage}</div>}<div className="zw-muted-note"><Router size={17}/> Avant la connexion de ZARAY au MikroTik, les identifiants restent sur cet appareil. Ce formulaire n’authentifie pas et n’active pas le ticket.</div></div></section>}
-    {mode==='subscribe'&&<section className="zw-flow"><button className="zw-back" type="button" onClick={()=>toMode('home')}><ArrowLeft size={17}/> Retour au portail</button><div className="zw-form-card zw-subscribe-card"><div className="zw-flow-icon"><House size={26}/></div><span className="zw-overline">ABONNEMENT RÉSIDENTIEL</span><h1>Devenir un abonné de {companyName}</h1><p>Remplissez votre demande : votre fiche client sera créée dans ZARAY après enregistrement de votre souscription. Aucun accès réseau ne sera accordé avant paiement et activation.</p>{demo&&<div className="zw-notice"><ShieldCheck size={17}/> Démonstration : aucune donnée saisie ici ne sera enregistrée. Utilisez le portail de votre entreprise pour une véritable inscription.</div>}{loading?<p role="status">Chargement des offres…</p>:subscriptionOffers.length?<form className="zw-form" onSubmit={subscribe}><label htmlFor="zw-sub-offer">Choisir mon abonnement<select id="zw-sub-offer" value={selectedSubscription||subscriptionOffers[0]?.id} onChange={e=>setSelectedSubscription(e.target.value)} required>{subscriptionOffers.map(o=><option value={o.id} key={o.id}>{o.name} — {displayPrice(o)} / {o.validityDays||1} jour(s)</option>)}</select></label>{!demo&&residentialSites.length>1?<label htmlFor="zw-res-site">Votre site de raccordement<select id="zw-res-site" value={selectedSiteId} onChange={e=>setSelectedSiteId(e.target.value)} required><option value="">Sélectionnez un site</option>{residentialSites.map(site=><option key={site.id} value={site.id}>{site.name}</option>)}</select></label>:!demo&&residentialSites.length===1?<div className="zw-selection"><strong>Site de raccordement</strong><b>{residentialSites[0].name}</b></div>:!demo&&<div className="zw-notice">Aucun site n’est encore enregistré pour ce fournisseur. Votre dossier pourra être rattaché à un site par son administrateur avant activation.</div>}<label htmlFor="zw-fullname">Nom complet<input id="zw-fullname" value={customerName} onChange={e=>setCustomerName(e.target.value)} placeholder="Votre nom et prénom" minLength={2} maxLength={160} autoComplete="name" required/></label><label htmlFor="zw-email">Adresse e-mail<input id="zw-email" type="email" value={customerEmail} onChange={e=>setCustomerEmail(e.target.value)} placeholder="nom@exemple.com" maxLength={254} autoComplete="email" required/></label><label htmlFor="zw-phone">Téléphone (facultatif)<input id="zw-phone" value={customerPhone} onChange={e=>setCustomerPhone(e.target.value)} type="tel" placeholder="034 12 345 67" maxLength={32} autoComplete="tel"/></label>{selectedOffer&&<div className="zw-selection"><strong>Abonnement choisi</strong><b>{displayPrice(selectedOffer)}</b></div>}<button type="submit" className="zw-cta zw-wide" disabled={submitting}>{submitting?'Enregistrement…':demo?'Essayer le formulaire':'Enregistrer ma souscription'} <ArrowRight size={18}/></button></form>:<div className="zw-empty"><WifiOff size={25}/> Aucun abonnement actif n’est disponible pour cette entreprise.</div>}{error&&<p className="zw-error" role="alert">{error}</p>}{demo&&<div className="zw-muted-note">Pour les clients réels, le formulaire d’inscription doit être ouvert sur le portail propre à l’entreprise.</div>}</div></section>}
+    {mode==='ticket'&&<section className="zw-flow"><button className="zw-back" type="button" onClick={()=>toMode('home')}><ArrowLeft size={17}/> Retour aux offres</button><div className="zw-form-card"><div className="zw-flow-icon"><Ticket size={26}/></div><span className="zw-overline">ACCÈS OCCASIONNEL</span><h1>Connectez votre ticket</h1><p>Renseignez le nom d’utilisateur et le code présents sur le ticket acheté auprès de votre vendeur.</p>{selectedTicket&&<div className="zw-selection"><div><strong>{selectedTicket.name}</strong><span>{displayTime(selectedTicket.durationMinutes)}</span></div><b>{displayPrice(selectedTicket)}</b></div>}<form onSubmit={previewTicket} className="zw-form"><label htmlFor="zw-user">Nom d’utilisateur du ticket<input id="zw-user" value={ticketUser} onChange={e=>setTicketUser(e.target.value.toUpperCase())} autoCapitalize="characters" autoComplete="off" placeholder="Ex. AB123" maxLength={5} minLength={3} required/></label><label htmlFor="zw-code">Mot de passe du ticket<input id="zw-code" value={ticketPassword} onChange={e=>setTicketPassword(e.target.value)} type="password" autoComplete="off" placeholder="Code du ticket" maxLength={32} minLength={3} required/></label><button className="zw-cta zw-wide" type="submit"><LockKeyhole size={18}/> Vérifier le formulaire <ArrowRight size={18}/></button></form>{ticketMessage&&<div role="status" className="zw-notice">{ticketMessage}</div>}<div className="zw-muted-note"><Router size={17}/> Avant la connexion effective du réseau, les identifiants restent sur cet appareil. Ce formulaire n’authentifie pas et n’active pas le ticket.</div></div></section>}
+    {mode==='subscribe'&&<section className="zw-flow"><button className="zw-back" type="button" onClick={()=>toMode('home')}><ArrowLeft size={17}/> Retour au portail</button><div className="zw-form-card zw-subscribe-card"><div className="zw-flow-icon"><House size={26}/></div><span className="zw-overline">ABONNEMENT RÉSIDENTIEL</span><h1>Devenir un abonné de {companyName}</h1><p>Remplissez votre demande : votre dossier client sera créé chez votre fournisseur après votre inscription. Aucun accès réseau ne sera accordé avant paiement et activation.</p>{demo&&<div className="zw-notice"><ShieldCheck size={17}/> Démonstration : aucune donnée saisie ici ne sera enregistrée. Utilisez le portail de votre entreprise pour une véritable inscription.</div>}{loading?<p role="status">Chargement des offres…</p>:subscriptionOffers.length?<form className="zw-form" onSubmit={subscribe}><label htmlFor="zw-sub-offer">Choisir mon abonnement<select id="zw-sub-offer" value={selectedSubscription||subscriptionOffers[0]?.id} onChange={e=>setSelectedSubscription(e.target.value)} required>{subscriptionOffers.map(o=><option value={o.id} key={o.id}>{o.name} — {displayPrice(o)} / {o.validityDays||1} jour(s)</option>)}</select></label>{!demo&&residentialSites.length>1?<label htmlFor="zw-res-site">Votre site de raccordement<select id="zw-res-site" value={selectedSiteId} onChange={e=>setSelectedSiteId(e.target.value)} required><option value="">Sélectionnez un site</option>{residentialSites.map(site=><option key={site.id} value={site.id}>{site.name}</option>)}</select></label>:!demo&&residentialSites.length===1?<div className="zw-selection"><strong>Site de raccordement</strong><b>{residentialSites[0].name}</b></div>:!demo&&<div className="zw-notice">Aucun site n’est encore enregistré pour ce fournisseur. Votre dossier pourra être rattaché à un site par son administrateur avant activation.</div>}<label htmlFor="zw-fullname">Nom complet<input id="zw-fullname" value={customerName} onChange={e=>setCustomerName(e.target.value)} placeholder="Votre nom et prénom" minLength={2} maxLength={160} autoComplete="name" required/></label><label htmlFor="zw-email">Adresse e-mail<input id="zw-email" type="email" value={customerEmail} onChange={e=>setCustomerEmail(e.target.value)} placeholder="nom@exemple.com" maxLength={254} autoComplete="email" required/></label><label htmlFor="zw-phone">Téléphone (facultatif)<input id="zw-phone" value={customerPhone} onChange={e=>setCustomerPhone(e.target.value)} type="tel" placeholder="034 12 345 67" maxLength={32} autoComplete="tel"/></label>{selectedOffer&&<div className="zw-selection"><strong>Abonnement choisi</strong><b>{displayPrice(selectedOffer)}</b></div>}<button type="submit" className="zw-cta zw-wide" disabled={submitting}>{submitting?'Enregistrement…':demo?'Essayer le formulaire':'Enregistrer ma souscription'} <ArrowRight size={18}/></button></form>:<div className="zw-empty"><WifiOff size={25}/> Aucun abonnement actif n’est disponible pour cette entreprise.</div>}{error&&<p className="zw-error" role="alert">{error}</p>}{demo&&<div className="zw-muted-note">Pour les clients réels, le formulaire d’inscription doit être ouvert sur le portail propre à l’entreprise.</div>}</div></section>}
     {mode==='order'&&order&&<section className="zw-flow"><button className="zw-back" type="button" onClick={()=>toMode('home')}><ArrowLeft size={17}/> Retour au portail</button><div className="zw-form-card zw-subscribe-card"><div className="zw-flow-icon"><CheckCircle2 size={27}/></div><span className="zw-overline">SOUSCRIPTION ENREGISTRÉE</span><h1>Votre demande est créée.</h1><p>Votre fiche client a été enregistrée auprès de {companyName}. L’abonnement sera activé seulement après vérification de votre paiement et connexion au réseau.</p><div className="zw-reference"><span>Référence de commande</span><strong>{order.reference}</strong></div><div className="zw-selection"><div><strong>{order.offer_name}</strong><span>En attente de paiement</span></div><b>{new Intl.NumberFormat('fr-FR').format(order.amount)} {order.currency==='MGA'?'Ar':order.currency}</b></div>{paymentDone?<div className="zw-notice" role="status"><CheckCircle2 size={19}/>{paymentNote} <Link href={'/paiement/'+order.reference}>Consulter le statut du paiement</Link></div>:paymentMethods.length?<><h2>Envoyer un justificatif de paiement</h2><form className="zw-form" onSubmit={sendPayment}><label htmlFor="zw-provider">Moyen de paiement<select id="zw-provider" value={provider} onChange={e=>setProvider(e.target.value)} required>{paymentMethods.map(m=><option value={m.provider} key={m.provider}>{m.provider==='mvola'?'MVola':'Orange Money'}</option>)}</select></label>{paymentMethods.filter(m=>m.provider===provider).map(m=><div className="zw-payment-info" key={m.provider}><strong>{m.accountNumber}</strong><span>Bénéficiaire : {m.accountName}</span><span>{m.instructions}</span></div>)}<label htmlFor="zw-sender">Numéro émetteur<input id="zw-sender" value={senderPhone} onChange={e=>setSenderPhone(e.target.value)} pattern="03[0-9]{8}" type="tel" placeholder="0341234567" required/></label><label htmlFor="zw-transaction">Référence de la transaction<input id="zw-transaction" value={transactionReference} onChange={e=>setTransactionReference(e.target.value)} minLength={2} maxLength={120} required/></label><label htmlFor="zw-proof">Justificatif JPG, PNG, WEBP ou PDF (5 Mo max.)<input id="zw-proof" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={e=>setProof(e.target.files?.[0]||null)} required/></label><button className="zw-cta zw-wide" disabled={submittingProof||!proof} type="submit">{submittingProof?'Envoi du justificatif…':'Soumettre mon justificatif'} <ArrowRight size={18}/></button></form></>:<div className="zw-notice">Aucun moyen de paiement n’est configuré pour cette entreprise. N’envoyez pas d’argent sans instructions officielles.</div>}{error&&<p className="zw-error" role="alert">{error}</p>}<Link className="zw-status-link" href={'/paiement/'+order.reference}>Consulter l’état de mon paiement <ArrowRight size={16}/></Link></div></section>}
    </main>
-   <footer className="zw-footer"><div><span className="zw-mark zw-small"><Wifi size={17}/></span><strong>ZARAY</strong><span>Connecter les personnes. Simplifier l’accès.</span></div><span><ShieldCheck size={16}/> Portail sécurisé · Propulsé par ZARAY</span></footer>
+   <footer className="zw-footer"><div><span className="zw-mark zw-small"><Wifi size={17}/></span><strong>{displayBrand}</strong><span>{demo?'Connecter les personnes. Simplifier l’accès.':'Votre fournisseur Internet'}</span></div><span><ShieldCheck size={16}/> {demo?'Portail de démonstration':'Portail sécurisé du fournisseur'}</span></footer>
   </div>
  </div>;
 }
