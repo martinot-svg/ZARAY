@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 const sections = [
-  { label: 'GESTION', items: [['/tableau-de-bord', 'Tableau de bord'], ['/sites', 'Sites'], ['/membres', 'Membres']] },
+  { label: 'GESTION', items: [['/tableau-de-bord', 'Tableau de bord'], ['/sites', 'Sites'], ['/membres', 'Membres'], ['/notifications', 'Notifications']] },
   { label: 'ACTIVITÉ', items: [['/clients', 'Clients'], ['/offres', 'Offres Internet'], ['/commandes', 'Commandes'], ['/abonnements', 'Abonnements résidentiels'], ['/tickets', 'Tickets Wi-Fi']] },
   { label: 'FINANCE & RÉSEAU', items: [['/paiements/verification', 'Paiements'], ['/parametres-paiement', 'Moyens de paiement'], ['/portail', 'Portail captif'], ['/gestion-reseau', 'Gestion réseau']] },
 ];
@@ -26,7 +26,7 @@ const navigationIcons = {
   '/tableau-de-bord': 'dashboard', '/entreprises': 'company', '/sites': 'site',
   '/membres': 'members', '/clients': 'customers', '/offres': 'wifi',
   '/commandes': 'orders', '/abonnements': 'wifi', '/tickets': 'ticket', '/paiements/verification': 'payment',
-  '/parametres-paiement': 'finance', '/portail': 'network', '/gestion-reseau': 'network',
+  '/parametres-paiement': 'finance', '/portail': 'network', '/gestion-reseau': 'network', '/notifications': 'notifications',
 } as const;
 const editorialChapters:Record<string,{accent:string}>={
   '/tableau-de-bord':{accent:'mint'},
@@ -40,7 +40,8 @@ const editorialChapters:Record<string,{accent:string}>={
   '/paiements/verification':{accent:'amber'},
   '/parametres-paiement':{accent:'amber'},
   '/portail':{accent:'mint'},
-  '/gestion-reseau':{accent:'cyan'}
+  '/gestion-reseau':{accent:'cyan'},
+  '/notifications':{accent:'mint'}
 };
 type WorkspaceCompany = { id:string; legal_name:string; role:string };
 type WorkspaceSite = { id:string; company_id:string; name:string };
@@ -234,6 +235,13 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
                 </Link>
               </div>
             </div>
+          </div>
+          <div className="topbar-icon-group">
+            <Link className="header-link"
+              href={'/notifications'+(activeCompany?'?companyId='+encodeURIComponent(activeCompany)+(activeSite?'&siteId='+encodeURIComponent(activeSite):''):'')}
+              aria-label="Notifications du site" title="Notifications du site">
+              <ZarayIcon name="notifications" size={22}/>
+            </Link>
           </div>
         </div>
       </header>
