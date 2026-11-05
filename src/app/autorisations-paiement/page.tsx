@@ -1,6 +1,7 @@
 'use client';
+import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
-import BrandLogo from '@/components/brand-logo';
+import AppShell from '@/components/app-shell';
 
 import { selectedCompany } from '@/lib/workspace-url';
 import { useEffect, useState } from 'react';
@@ -29,7 +30,7 @@ export default function AutorisationsPaiementPage() {
     let active = true;
     (async () => {
       try {
-        const response = await fetch('/api/sites', { cache: 'no-store' });
+        const response = await fetchWorkspaceDirectory();
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Impossible de charger les entreprises.');
         const owned = (data.companies ?? []).filter((company: Company) => company.role === 'owner');
@@ -67,11 +68,7 @@ export default function AutorisationsPaiementPage() {
     finally { setSaving(''); }
   }
 
-  return <main className="form-shell"><section className="form-card" style={{ maxWidth: 900, width: 'min(100%,900px)' }}>
-      <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
-    <p className="eyebrow">ZARAY · SÉCURITÉ FINANCIÈRE</p>
-    <h1>Autorisations des validateurs</h1>
-    <p>Le dirigeant conserve le droit de validation. Les autres administrateurs ne peuvent accéder aux justificatifs ni confirmer un paiement qu’après une autorisation explicite ici.</p>
+  return <AppShell activePath="/autorisations-paiement" title="Autorisations des validateurs" companyId={companyId}><section className="panel global-workspace-module">
     {companies.length > 0 && <span className="muted">Entreprise active : {companies.find(c=>c.id===companyId)?.legal_name ?? '—'}</span>}
     {!busy && companies.length === 0 && <p>Aucune entreprise dont vous êtes le dirigeant. Seul le dirigeant peut modifier ces autorisations.</p>}
     {busy ? null : reviewers.length ? <div className="module-grid" style={{ marginTop: 24 }}>
@@ -88,5 +85,5 @@ export default function AutorisationsPaiementPage() {
     </div> : !busy && companyId ? <p>Aucun administrateur actif dans cette entreprise. Ajoutez d’abord un administrateur depuis la gestion des membres.</p> : null}
     {notice && <p role="status">{notice}</p>}{error && <p role="alert">{error}</p>}
     <p style={{ marginTop: 28 }}><a href="/paiements/verification"><ZarayIcon name="payment" size={18} /> Vérification des paiements →</a> · <a href="/membres"><ZarayIcon name="members" size={18} /> Gestion des membres</a> · <a href="/tableau-de-bord"><ZarayIcon name="next" size={18} /> Tableau de bord</a></p>
-  </section></main>;
+  </section></AppShell>;
 }
