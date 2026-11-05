@@ -1,4 +1,5 @@
 'use client';
+import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import AppShell from '@/components/app-shell';
@@ -16,7 +17,7 @@ export default function OffresPage(){
  const [search,setSearch]=useState(''),[statusFilter,setStatusFilter]=useState('all'),[editing,setEditing]=useState<string|null>(null),[form,setForm]=useState(blank);
  const [busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState('');
  async function load(id:string){if(!id)return;setBusy(true);setError('');try{const r=await fetch('/api/offers?'+scopedQuery(id),{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les offres.');setOffers(d.offers??[]);}catch(e){setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{setBusy(false);}}
- useEffect(()=>{let active=true;(async()=>{try{const r=await fetch('/api/sites',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les entreprises.');if(active){setCompanies(d.companies??[]);if(d.companies?.[0])setCompanyId(selectedCompany(d.companies??[],d.sites??[]));}}catch(e){if(active)setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{if(active)setBusy(false);}})();return()=>{active=false};},[]);
+ useEffect(()=>{let active=true;(async()=>{try{const r=await fetchWorkspaceDirectory();const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les entreprises.');if(active){setCompanies(d.companies??[]);if(d.companies?.[0])setCompanyId(selectedCompany(d.companies??[],d.sites??[]));}}catch(e){if(active)setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{if(active)setBusy(false);}})();return()=>{active=false};},[]);
  useEffect(()=>{if(companyId)void load(companyId);},[companyId]);
  const filtered=useMemo(()=>offers.filter(o=>(statusFilter==='all'||o.status===statusFilter)&&o.name.toLowerCase().includes(search.toLowerCase().trim())),[offers,search,statusFilter]);
  function startEdit(o:Offer){const el=document.getElementById('offer-form') as HTMLDetailsElement|null;if(el)el.open=true;setEditing(o.id);setForm({name:o.name,description:o.description,durationMinutes:String(o.duration_minutes),validityDays:String(o.validity_days),priceAmount:String(o.price_amount),currency:o.currency,maxDevices:String(o.max_devices),status:o.status});setNotice('');setError('');}

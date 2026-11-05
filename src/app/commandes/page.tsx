@@ -1,4 +1,5 @@
 'use client';
+import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 
 import {useEffect,useMemo,useState,type FormEvent} from 'react';
 import Link from 'next/link';
@@ -79,7 +80,7 @@ export default function OrdersWorkspace(){
   let active=true;
   (async()=>{
    try{
-    const response=await fetch('/api/sites',{cache:'no-store'});
+    const response=await fetchWorkspaceDirectory();
     const data=await response.json();
     if(!response.ok)throw new Error(data.error||'Entreprises indisponibles.');
     if(!active)return;
@@ -191,7 +192,7 @@ export default function OrdersWorkspace(){
      {(search||status!=='all'||from||to)&&<button type="button" className="co-clear" onClick={clearFilters}><X size={15}/> Effacer</button>}
     </div>
     {error&&<div className="co-error" role="alert"><AlertCircle size={17}/>{error}</div>}
-    {busy||checking?<div className="co-empty" role="status">Chargement des commandes…</div>:!companyId?<div className="co-empty">Sélectionnez une entreprise accessible.</div>:orders.length===0?<div className="co-empty"><ShoppingCart size={29}/><strong>Aucune commande dans cette sélection.</strong><p>Les nouvelles demandes de souscription apparaîtront ici automatiquement depuis le portail client.</p>{(search||status!=='all'||from||to)&&<button type="button" onClick={clearFilters}>Réinitialiser les filtres</button>}</div>:<>
+    {busy||checking?<span className="motion-sr-only" role="status">Actualisation des commandes</span>:!companyId?<div className="co-empty">Sélectionnez une entreprise accessible.</div>:orders.length===0?<div className="co-empty"><ShoppingCart size={29}/><strong>Aucune commande dans cette sélection.</strong><p>Les nouvelles demandes de souscription apparaîtront ici automatiquement depuis le portail client.</p>{(search||status!=='all'||from||to)&&<button type="button" onClick={clearFilters}>Réinitialiser les filtres</button>}</div>:<>
       <div className="co-table-wrap"><table className="co-table"><thead><tr><th>Commande</th><th>Client</th><th>Offre</th><th>Montant</th><th>État</th><th>Date</th><th>Action</th></tr></thead><tbody>{orders.map(o=><tr key={o.id} className={selectedId===o.id?'co-selected':''}>
        <td><strong>{o.public_reference}</strong><small>{siteName(o.site_id)}</small></td>
        <td><strong>{o.customer_name}</strong><small>{o.customer_phone||o.customer_email}</small></td>

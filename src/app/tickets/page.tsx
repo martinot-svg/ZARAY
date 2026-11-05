@@ -1,4 +1,5 @@
 'use client';
+import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/app-shell';
@@ -30,7 +31,7 @@ export default function WifiTicketsPage() {
         const qs=new URLSearchParams(window.location.search);
         const companyId=qs.get('companyId')??'';
         if(!companyId){window.location.replace('/entreprises');return;}
-        const response=await fetch('/api/sites',{cache:'no-store'});
+        const response=await fetchWorkspaceDirectory();
         const data=await response.json();
         if(!response.ok)throw new Error(data.error||'Contexte entreprise indisponible.');
         const selected=(data.companies??[]).find((c:Company)=>c.id===companyId) as Company|undefined;
@@ -73,7 +74,7 @@ export default function WifiTicketsPage() {
     return()=>window.removeEventListener('popstate',listener);
   },[company]);
 
-  if(loading)return <main className="form-shell"><p role="status">Chargement des tickets Wi-Fi…</p></main>;
+  if(loading)return <AppShell activePath="/tickets" title="Tickets Wi-Fi"><span className="motion-sr-only" role="status">Préparation des tickets Wi-Fi</span></AppShell>;
   if(error||!company)return <main className="form-shell"><section className="form-card">
     <h1>Tickets Wi-Fi indisponibles</h1><p role="alert">{error||'Entreprise inaccessible.'}</p>
     <a href="/entreprises">Revenir à mes entreprises</a>

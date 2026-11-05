@@ -1,4 +1,5 @@
 'use client';
+import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import AppShell from '@/components/app-shell';
@@ -18,7 +19,7 @@ export default function ClientsPage(){
  const [busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState('');
 
  async function loadCustomers(id:string){if(!id)return;setBusy(true);setError('');try{const r=await fetch('/api/customers?companyId='+encodeURIComponent(id),{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les clients.');setCustomers(d.customers??[]);}catch(e){setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{setBusy(false);}}
- useEffect(()=>{let active=true;(async()=>{try{const r=await fetch('/api/sites',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les entreprises.');if(active){setCompanies(d.companies??[]);setSites(d.sites??[]);if(d.companies?.[0])setCompanyId(selectedCompany(d.companies??[],d.sites??[]));}}catch(e){if(active)setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{if(active)setBusy(false);}})();return()=>{active=false};},[]);
+ useEffect(()=>{let active=true;(async()=>{try{const r=await fetchWorkspaceDirectory();const d=await r.json();if(!r.ok)throw new Error(d.error||'Impossible de charger les entreprises.');if(active){setCompanies(d.companies??[]);setSites(d.sites??[]);if(d.companies?.[0])setCompanyId(selectedCompany(d.companies??[],d.sites??[]));}}catch(e){if(active)setError(e instanceof Error?e.message:'Erreur de chargement.');}finally{if(active)setBusy(false);}})();return()=>{active=false};},[]);
  useEffect(()=>{setEditing(null);if(companyId)void loadCustomers(companyId);},[companyId]);
  useEffect(()=>{if(activeSiteId())setForm(old=>({...old,siteId:activeSiteId()||''}));},[companyId]);
  const availableSites=sites.filter(s=>s.company_id===companyId&&(!activeSiteId()||s.id===activeSiteId()));
