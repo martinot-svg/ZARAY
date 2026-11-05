@@ -89,9 +89,10 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
     if (!menuOpen && !siteOpen) return;
     // Both icon menus remain keyboard accessible without hijacking toolbar focus.
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (siteOpen) { setSiteOpen(false); siteButton.current?.focus(); }
-      else { setMenuOpen(false); menuButton.current?.focus(); }
+      if (event.key === 'Escape') {
+        if (siteOpen) { setSiteOpen(false); siteButton.current?.focus(); }
+        else { setMenuOpen(false); menuButton.current?.focus(); }
+      }
     };
     const closeOutside = (event: PointerEvent) => {
       if (!(event.target instanceof Node)) return;
