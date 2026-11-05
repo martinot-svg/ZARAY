@@ -1,9 +1,9 @@
 'use client';
+import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
-import BrandLogo from '@/components/brand-logo';
+import AppShell from '@/components/app-shell';
 import { useEffect, useState } from 'react';
-import WorkspaceBreadcrumb from '@/components/workspace-breadcrumb';
-import { activeSiteId, scopedQuery, selectedCompany } from '@/lib/workspace-url';
+import { scopedQuery, selectedCompany } from '@/lib/workspace-url';
 import { MotionFeedback } from '@/components/motion';
 type Company = { id: string; legal_name: string; role: string };
 type Payment = { id: string; order_id: string; provider: string; provider_payment_id: string; amount: number | string; currency: string; status: string; confirmed_at: string | null; created_at: string };
@@ -19,7 +19,7 @@ export default function PaymentsPage() {
     let active=true;
     (async()=>{
       try {
-        const response=await fetch('/api/sites',{cache:'no-store'});
+        const response=await fetchWorkspaceDirectory();
         const data=await response.json();
         if(!response.ok) throw new Error(data.error || 'Impossible de charger les entreprises.');
         if(active){setCompanies(data.companies ?? []);setCompanyId(selectedCompany(data.companies??[],data.sites??[]));}
@@ -43,9 +43,7 @@ export default function PaymentsPage() {
     return()=>{active=false;};
   },[companyId]);
 
-  return <main className="form-shell"><section className="form-card" style={{maxWidth:1100,width:'min(100%,1100px)'}}>
-      <div className="workspace-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo /></a></div>
-    <WorkspaceBreadcrumb companyId={companyId}/><p className="eyebrow">ZARAY · PAIEMENTS</p><h1>Suivi des paiements</h1>
+  return <AppShell activePath="/paiements" title="Suivi des paiements" companyId={companyId}><section className="panel global-workspace-module">
     
     {companies.length>0&&<span className="muted">Entreprise active : {companies.find(c=>c.id===companyId)?.legal_name ?? '—'}</span>}
     {busy?null:payments.length?<div className="module-grid" style={{marginTop:24}}>
@@ -56,5 +54,5 @@ export default function PaymentsPage() {
     </div>:!busy?<p>Aucun paiement enregistré pour cette entreprise.</p>:null}
     <MotionFeedback message={error} kind="error"/>
     <p style={{marginTop:28}}><a href="/commandes"><ZarayIcon name="orders" size={18} /> Commandes →</a> · <a href="/tickets"><ZarayIcon name="next" size={18} /> Tickets Wi-Fi</a> · <a href="/tableau-de-bord"><ZarayIcon name="next" size={18} /> Tableau de bord</a></p>
-  </section></main>;
+  </section></AppShell>;
 }
