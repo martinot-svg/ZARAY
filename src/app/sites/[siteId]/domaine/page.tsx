@@ -6,7 +6,7 @@ import {useParams} from 'next/navigation';
 import {ZarayIcon} from '@/components/ui/zaray-icon';
 import AppShell from '@/components/app-shell';
 
-type PublicLink={alias:string;path:string};
+type PublicLink={alias:string;path:string;url?:string;publicHostname?:string|null};
 export default function SitePublicLinkSettings(){
  const {siteId}=useParams<{siteId:string}>();
  const [companyId,setCompanyId]=useState('');
@@ -48,7 +48,7 @@ export default function SitePublicLinkSettings(){
   }catch(e){setError(e instanceof Error?e.message:'Enregistrement impossible.');}
   finally{setBusy(false);}
  }
- const publicUrl=link&&origin?origin+link.path:'';
+ const publicUrl=link?(link.url?.startsWith('https://')?link.url:origin+link.path):'';
  async function copy(){
   if(!publicUrl)return;
   try{await navigator.clipboard.writeText(publicUrl);setNotice('Lien copié.');}
@@ -74,12 +74,12 @@ export default function SitePublicLinkSettings(){
    </form>
    {link&&<section className="panel" style={{display:'grid',gap:12}}>
     <strong>Lien public de votre site</strong>
-    <a href={link.path} target="_blank" rel="noopener noreferrer" style={{overflowWrap:'anywhere'}}>
+    <a href={publicUrl||link.path} target="_blank" rel="noopener noreferrer" style={{overflowWrap:'anywhere'}}>
      {publicUrl||link.path}
     </a>
     <p className="muted">Les clients qui ouvrent ce lien arrivent directement sur le formulaire de souscription du site.</p>
     <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
-     <a className="primary-link" href={link.path} target="_blank" rel="noopener noreferrer">
+     <a className="primary-link" href={publicUrl||link.path} target="_blank" rel="noopener noreferrer">
       <ZarayIcon name="next" size={17}/> Ouvrir le formulaire client
      </a>
      <button type="button" onClick={()=>void copy()} disabled={!publicUrl}>
