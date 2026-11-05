@@ -1,4 +1,5 @@
 'use client';
+import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 import {useEffect,useState,type FormEvent} from 'react';
 import Link from 'next/link';
 import {AlertCircle,ArrowRight,BadgeCheck,CalendarClock,CheckCircle2,ChevronLeft,ChevronRight,Clock3,House,RefreshCw,Search,Wifi,WifiOff,Wallet} from 'lucide-react';
@@ -49,7 +50,7 @@ export default function ResidentialPage(){
  const [error,setError]=useState('');
  const [notice,setNotice]=useState('');
  useEffect(()=>{let live=true;(async()=>{try{
-  const r=await fetch('/api/sites',{cache:'no-store'});const d=await r.json();
+  const r=await fetchWorkspaceDirectory();const d=await r.json();
   if(!r.ok)throw Error(d.error||'Entreprise indisponible.');
   if(live){setCompanies(d.companies||[]);setSites(d.sites||[]);setCompanyId(selectedCompany(d.companies||[],d.sites||[]));}
  }catch(e){if(live)setError(e instanceof Error?e.message:'Contexte indisponible.');}
