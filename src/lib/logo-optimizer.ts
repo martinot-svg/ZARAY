@@ -22,9 +22,9 @@ export function cleanLogoPixels(input:Raster):LogoCleanResult {
  for(let x=0;x<w;x+=step){border.push(x,(h-1)*w+x);}
  for(let y=0;y<h;y+=step){border.push(y*w,y*w+w-1);}
  const bins=new Map<number,{count:number,r:number,g:number,b:number}>();
- let visible=0;
+ let visible=0,transparentBorder=0;
  for(const p of border){
-  const i=p*4;if(data[i+3]<230)continue;
+  const i=p*4;if(data[i+3]<230){transparentBorder++;continue;}
   visible++;
   const key=((data[i]>>4)<<8)|((data[i+1]>>4)<<4)|(data[i+2]>>4);
   const bin=bins.get(key)||{count:0,r:0,g:0,b:0};
@@ -33,7 +33,7 @@ export function cleanLogoPixels(input:Raster):LogoCleanResult {
  const sorted=[...bins.values()].sort((a,b)=>b.count-a.count);
  const candidate=sorted[0];
  let removedBackground=false;
- if(candidate&&visible>=8&&candidate.count/visible>=.62){
+ if(candidate&&visible>=8&&transparentBorder/border.length<.02&&candidate.count/visible>=.62){
   const r=candidate.r/candidate.count,g=candidate.g/candidate.count,b=candidate.b/candidate.count;
   const match=(p:number,threshold:number)=>data[p*4+3]>=230&&distance(data,p*4,r,g,b)<=threshold;
   const seed:number[]=[];
