@@ -309,8 +309,14 @@ test('navigation has no fullscreen loading boundaries or placeholder skeletons',
  }
  const dashboard=source('src/components/dashboard-workspace.tsx');
  assert.doesNotMatch(dashboard,/if\(busy\)return null;/);
- assert.match(dashboard,/if\(busy\|\|error\|\|!payload\)return <AppShell/);
- assert.doesNotMatch(dashboard,/Chargement du tableau de bord|MotionSkeleton/);
+ assert.doesNotMatch(dashboard,/dashboard-availability|Le contexte entreprise est conservé|MotionSkeleton/);
+ assert.match(dashboard,/payload:DashboardPayload/);
+ const server=source('src/lib/dashboard-data.ts');
+ assert.match(server,/getDashboardData/);
+ const company=source('src/app/tableau-de-bord/page.tsx');
+ const site=source('src/app/sites/[siteId]/page.tsx');
+ for(const page of [company,site])assert.match(page,/await getDashboardData/);
+ assert.doesNotMatch(dashboard,/fetch\('\\/api\\/dashboard/);
  const shell=source('src/components/app-shell.tsx');
  assert.doesNotMatch(shell,/Chargement du contexte…/);
 });
