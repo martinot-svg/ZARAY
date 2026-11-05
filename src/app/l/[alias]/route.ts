@@ -14,7 +14,7 @@ export async function GET(request:NextRequest,{params}:Context){
   const service=createServiceClient();
   if(!service)return new NextResponse('Service momentanément indisponible.',{status:503});
   const {data:link,error}=await service.from('site_public_links')
-   .select('site_id,company_id').eq('alias',alias).maybeSingle();
+   .select('site_id,company_id,public_hostname').eq('alias',alias).maybeSingle();
   if(error)return new NextResponse('Service momentanément indisponible.',{status:503});
   if(!link)return unavailable();
   const {data:site,error:siteError}=await service.from('sites')
@@ -23,6 +23,12 @@ export async function GET(request:NextRequest,{params}:Context){
   const {data:company,error:companyError}=await service.from('companies')
    .select('slug,status').eq('id',link.company_id).maybeSingle();
   if(companyError||!company||!['active','trial'].includes(company.status))return unavailable();
+  // Previously shared ZARAY links now land on the site's branded hostname.
+  if(link.public_hostname){
+   return NextResponse.redirect('https://'+link.public_hostname,{
+    status:307,headers:{'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}
+   });
+  }
   const redirect=new URL('/wifi/'+encodeURIComponent(company.slug),request.url);
   redirect.searchParams.set('siteId',site.id);
   redirect.searchParams.set('inscription','1');
