@@ -509,7 +509,8 @@ test('personal topbar places logo first and company creation beside profile, wit
  assert.match(header,/href="\/entreprises\/nouvelle"/);
  assert.match(shell,/!home && email && active !== '\/entreprises'/);
  assert.doesNotMatch(page,/ESPACE PERSONNEL|Uniquement les organisations|href="\/entreprises\/nouvelle"/);
- assert.match(page,/personal-page-heading personal-enterprises-heading/);
+ assert.doesNotMatch(page,/personal-page-heading personal-enterprises-heading/);
+ assert.match(shell,/className="personal-topbar-module-title"/);
  assert.match(page,/company\.legal_name/);
  assert.match(css,/\.personal-no-sidebar \.personal-enterprises-heading\{/);
  assert.match(css,/\.personal-topbar-actions \.personal-profile-control\{margin-left:0\}/);
@@ -565,7 +566,8 @@ test('finance page has only its title above the existing payments and filters',(
  const page=source('src/app/finance-globale/page.tsx');
  const shell=source('src/components/personal-shell.tsx');
  const css=source('src/app/globals.css');
- assert.match(page,/<header className="personal-page-heading personal-finance-page-heading"><h1>Finance globale<\/h1><\/header>/);
+ assert.doesNotMatch(page,/personal-finance-page-heading/);
+ assert.match(shell,/className="personal-topbar-module-title"/);
  assert.doesNotMatch(page,/COMPTE PERSONNEL · FINANCE|Consolidation des paiements confirmés du registre uniquement/);
  assert.match(shell,/active !== '\/entreprises' && active !== '\/finance-globale'/);
  assert.match(page,/PersonalFinanceOverview/);
