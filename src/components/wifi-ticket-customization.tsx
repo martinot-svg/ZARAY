@@ -121,6 +121,9 @@ export default function WifiTicketCustomization(){
    const saved=await stored.json();
    if(!stored.ok)throw Error(saved.error||'Identité du site indisponible.');
    const base=saved.settings??initial;
+   const linkResponse=await fetch('/api/site-links?'+qs,{cache:'no-store'});
+   const linkData=await linkResponse.json().catch(()=>({}));
+   const localOnly=linkResponse.ok&&Boolean(linkData.link)&&!linkData.link.publicHostname;
    const snapshot={
     siteName:site?.name??'',
     brandName:String(base.brand_name||site?.name||companyName).slice(0,90),
@@ -134,12 +137,16 @@ export default function WifiTicketCustomization(){
    const safeBranding=encodeURIComponent(JSON.stringify(snapshot)).replace(/'/g,'%27');
    const customized=template.replaceAll('__ZARAY_SITE_ID__',siteId)
     .replaceAll('__ZARAY_COMPANY_SLUG__',companySlug)
-    .replaceAll('__ZARAY_BRANDING_JSON__',safeBranding);
+    .replaceAll('__ZARAY_BRANDING_JSON__',safeBranding)
+    .replaceAll('__ZARAY_LOCAL_ONLY__',localOnly?'true':'false')
+    .replaceAll('__ZARAY_PUBLIC_API_BASE__',localOnly?'':'https://zaray.vercel.app');
    const objectUrl=URL.createObjectURL(new Blob([customized],{type:'text/html;charset=utf-8'}));
    const a=document.createElement('a');a.href=objectUrl;a.download='login.html';
    document.body.appendChild(a);a.click();a.remove();
    setTimeout(()=>URL.revokeObjectURL(objectUrl),2000);
-   setNotice('Portail du site téléchargé avec son logo et ses couleurs enregistrés. Connexion d’abord, offres et abonnement sur demande. Installez login.html et md5.js dans le Hotspot ; autorisez les pages ZARAY nécessaires avant authentification.');
+   setNotice(localOnly
+    ?'Page HTML locale téléchargée : seule la connexion par ticket est autonome. Installez login.html et md5.js sur le MikroTik, puis configurez le nom DNS local. Pour inscrire de nouveaux abonnés sans service distant, un serveur local supplémentaire est nécessaire.'
+    :'Portail du site téléchargé avec son logo et ses couleurs. Installez login.html et md5.js sur le MikroTik ; configurez les autorisations réseau nécessaires aux services distants.');
   }catch(e){setError(e instanceof Error?e.message:'Téléchargement impossible.');}
   finally{setBusy(false);}
  }
