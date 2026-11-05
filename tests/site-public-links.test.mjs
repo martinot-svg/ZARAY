@@ -33,7 +33,7 @@ test('public link redirects to the linked site registration, not an unverified D
  assert.match(route,/NextResponse\.redirect\(redirect/);
  assert.doesNotMatch(route,/https:\/\/.*alias/);
  const portal=read('src/components/public-wifi-portal.tsx');
- assert.match(portal,/get\('inscription'\)==='1'\)setMode\('subscribe'\)/);
+ assert.match(portal,/startInSubscription\|\|new URLSearchParams\(window.location.search\).get\('inscription'\)==='1'/);
 });
 
 test('site UI shares a ZARAY URL rather than suggesting domain ownership',()=>{
