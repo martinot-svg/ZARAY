@@ -98,7 +98,24 @@ export async function optimizeLogo(uri:string):Promise<OptimizedLogo>{
  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
  ctx.drawImage(image,0,0,canvas.width,canvas.height);
  const pixels=ctx.getImageData(0,0,canvas.width,canvas.height);
- const cleaned=cleanLogoPixels({width:canvas.width,height:canvas.height,data:pixels.data});
+ let cleaned=cleanLogoPixels({width:canvas.width,height:canvas.height,data:pixels.data});
+ let modelUsed=false;
+ // Run AI only if the simpler transparent/uniform-background cleanup was
+ // insufficient. Transparent uploads are already valid and are left intact.
+ const hasTransparency=pixels.data.some((value,index)=>index%4===3&&value<250);
+ if(!cleaned.removedBackground&&!hasTransparency){
+  try{
+   const {removeComplexBackground}=await import('./logo-ai');
+   const segmented=await removeComplexBackground({width:canvas.width,height:canvas.height,data:pixels.data});
+   if(segmented){
+    cleaned=cleanLogoPixels(segmented);
+    modelUsed=true;
+   }
+  }catch{
+   // Offline browsers or WebAssembly-disabled devices keep the original logo.
+  }
+ }
+ const removedBackground=cleaned.removedBackground||modelUsed;
  const output=document.createElement('canvas');
  output.width=cleaned.raster.width;output.height=cleaned.raster.height;
  const target=output.getContext('2d');
@@ -116,7 +133,7 @@ export async function optimizeLogo(uri:string):Promise<OptimizedLogo>{
   rc.imageSmoothingEnabled=true;rc.imageSmoothingQuality='high';
   rc.drawImage(output,0,0,resized.width,resized.height);
   const candidate=resized.toDataURL('image/png');
-  if(candidate.length<=175_000)return {dataUri:candidate,removedBackground:cleaned.removedBackground,
+  if(candidate.length<=175_000)return {dataUri:candidate,removedBackground,
     cropped:cleaned.cropped,optimized:true};
  }
  throw Error('Logo trop détaillé pour ce format. Essayez une image plus simple.');
