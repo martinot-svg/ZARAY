@@ -22,6 +22,7 @@ async function access(companyId:string,siteId:string){
  return {service,userId:tenant.user.id};
 }
 const link=(alias:string)=>'/l/'+encodeURIComponent(alias);
+const publicLink=(alias:string,host?:string|null)=>host?'https://'+host:link(alias);
 export async function GET(request:NextRequest){
  const companyId=request.nextUrl.searchParams.get('companyId')||'';
  const siteId=request.nextUrl.searchParams.get('siteId')||'';
@@ -29,9 +30,9 @@ export async function GET(request:NextRequest){
   const permission=await access(companyId,siteId);
   if(permission.error)return permission.error;
   const {data,error}=await permission.service!.from('site_public_links')
-   .select('alias').eq('company_id',companyId).eq('site_id',siteId).maybeSingle();
+   .select('alias,public_hostname').eq('company_id',companyId).eq('site_id',siteId).maybeSingle();
   if(error)return json({error:'Impossible de charger le lien public.'},503);
-  return json({link:data?{alias:data.alias,path:link(data.alias)}:null});
+  return json({link:data?{alias:data.alias,path:link(data.alias),url:publicLink(data.alias,data.public_hostname),publicHostname:data.public_hostname}:null});
  }catch{return json({error:'Lien public indisponible.'},503);}
 }
 export async function PUT(request:NextRequest){
@@ -46,10 +47,10 @@ export async function PUT(request:NextRequest){
   const {data,error}=await permission.service!.from('site_public_links').upsert({
    site_id:siteId,company_id:companyId,alias,created_by:permission.userId,
    updated_at:new Date().toISOString()
-  },{onConflict:'site_id'}).select('alias').single();
+  },{onConflict:'site_id'}).select('alias,public_hostname').single();
   if(error)return json({error:error.code==='23505'
    ?'Ce nom est déjà utilisé par un autre site. Choisissez-en un autre.'
    :'Enregistrement du lien impossible.'},error.code==='23505'?409:503);
-  return json({link:{alias:data.alias,path:link(data.alias)},saved:true});
+  return json({link:{alias:data.alias,path:link(data.alias),url:publicLink(data.alias,data.public_hostname),publicHostname:data.public_hostname},saved:true});
  }catch{return json({error:'Enregistrement indisponible.'},503);}
 }
