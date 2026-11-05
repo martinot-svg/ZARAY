@@ -26,13 +26,14 @@ test('a branded vanity site only accepts subscriptions for its own site',()=>{
  assert.match(route,/siteId!==domainSite.siteId/);
 });
 
-test('site administrators share the branded domain rather than a ZARAY URL',()=>{
+test('site administrator now shows local router address rather than Vercel link',()=>{
  const ui=read('src/app/sites/[siteId]/domaine/page.tsx');
  const api=read('src/app/api/site-links/route.ts');
  assert.match(api,/public_hostname/);
  assert.match(api,/publicLink\(data\.alias,data\.public_hostname\)/);
- assert.match(ui,/link\.url\?\.startsWith\('https:\/\/'\)/);
- assert.match(ui,/navigator\.clipboard\.writeText\(publicUrl\)/);
+ assert.match(api,/host\?'https:\/\/'\+host:'http:\/\/'\+alias/);
+ assert.match(ui,/const localAddress=link\?'http:\/\/'\+link.alias/);
+ assert.match(ui,/navigator\.clipboard\.writeText\(localAddress\)/);
  const portal=read('src/components/public-wifi-portal.tsx');
  assert.match(portal,/startInSubscription/);
  assert.match(portal,/linkedSiteId/);
