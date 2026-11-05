@@ -21,7 +21,7 @@ test('personal workspace module names are beside the logo, without changing ZAcc
  const shell=read('src/components/personal-shell.tsx');
  const head=shell.slice(shell.indexOf('<header className="personal-topbar">'),shell.indexOf('</header>'));
  assert.ok(head.indexOf('personal-topbar-module-title')>head.indexOf('className="personal-logo"'));
- assert.match(shell,/!home && personalModuleTitle/);
+ assert.match(shell,/active !== '\/mon-compte' && personalModuleTitle/);
 });
 test('nonfunctional guides were deleted from JSX and obsolete rules removed',()=>{
  for(const [path,term] of [
