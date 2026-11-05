@@ -21,7 +21,24 @@ async function activeSiteForHostname(hostname:string):Promise<SiteDomain|null>{
  return {siteId:data.site_id,companySlug:company.slug};
 }
 
-function customHostResponse(request:NextRequest,site:SiteDomain|null){
+/** A free branded hostname must be explicitly mapped to an active tenant site. */
+async function activeSiteForPublicHostname(hostname:string):Promise<SiteDomain|null>{
+ const service=createServiceClient();
+ if(!service)throw new Error('Site link registry offline');
+ const {data,error}=await service.from('site_public_links')
+  .select('site_id,company_id').eq('public_hostname',hostname).maybeSingle();
+ if(error)throw new Error('Site link registry unavailable');
+ if(!data)return null;
+ const [{data:site,error:siteError},{data:company,error:companyError}]=await Promise.all([
+  service.from('sites').select('status').eq('id',data.site_id).eq('company_id',data.company_id).maybeSingle(),
+  service.from('companies').select('slug,status').eq('id',data.company_id).maybeSingle()
+ ]);
+ if(siteError||companyError)throw new Error('Site link identity unavailable');
+ if(!site||!company||site.status!=='active'||!['active','trial'].includes(company.status))return null;
+ return {siteId:data.site_id,companySlug:company.slug};
+}
+
+function customHostResponse(request:NextRequest,site:SiteDomain|null,vanity=false){
  const denied=()=>new NextResponse('Domaine non disponible.',{
   status:404,headers:{'Cache-Control':'no-store','X-Robots-Tag':'noindex'}
  });
@@ -29,6 +46,12 @@ function customHostResponse(request:NextRequest,site:SiteDomain|null){
  const path=request.nextUrl.pathname;
  const search=request.nextUrl.searchParams;
  const target=new URL(request.url);
+ // A branded free address opens its own subscription page, not the admin site.
+ if(vanity&&path==='/'){
+  target.pathname='/wifi/'+encodeURIComponent(site.companySlug);
+  target.search='?siteId='+encodeURIComponent(site.siteId)+'&inscription=1';
+  return NextResponse.rewrite(target,{request});
+ }
  if(path==='/'||path==='/compte'||path==='/mon-internet'){
   target.pathname='/mon-internet/'+site.siteId;
   target.search='';
@@ -109,7 +132,19 @@ export async function proxy(request:NextRequest){
   await supabase.auth.getUser();
  }
  let response:NextResponse;
- if(platformHost)response=NextResponse.next({request});
+ // Reserved ZARAY project hosts remain admin-only. Assigned vanity hosts
+ // are isolated to their tenant's public registration and account routes.
+ if(hostname.endsWith('.vercel.app')&&!['zaray.vercel.app','localhost'].includes(hostname)
+    &&hostname==='mlayconnexion.vercel.app'){
+  try{
+   const site=await activeSiteForPublicHostname(hostname);
+   response=customHostResponse(request,site,true);
+  }catch{
+   response=new NextResponse('Portail temporairement indisponible.',{
+    status:503,headers:{'Cache-Control':'no-store','X-Robots-Tag':'noindex'}
+   });
+  }
+ }else if(platformHost)response=NextResponse.next({request});
  else{
   try{
    const site=await activeSiteForHostname(hostname);
