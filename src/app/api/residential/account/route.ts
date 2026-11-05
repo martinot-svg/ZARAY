@@ -50,7 +50,8 @@ export async function GET(request:NextRequest){
   }
   const status=!first?'Aucun abonnement':!first.paid_cycles?'Paiement attendu'
    :!first.activated_cycles?'Activation en attente'
-   :first.expires_at&&Date.parse(first.expires_at)<Date.now()?'Expiré':'En cours';
+   :!first.expires_at?'Échéance à confirmer'
+   :Date.parse(first.expires_at)<Date.now()?'Expiré':'En cours';
   return reply({customer:{name:customer.full_name},site,
    subscriptions:subscriptions||[],orders:orders||[],cycles,status,
    usage:{available:false,downloadBytes:null,uploadBytes:null,rateDownBps:null,rateUpBps:null,
