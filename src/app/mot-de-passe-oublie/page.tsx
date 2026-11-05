@@ -1,7 +1,7 @@
 'use client';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 
-import BrandLogo from '@/components/brand-logo';
+import StandaloneModuleHeader from '@/components/standalone-module-header';
 
 import { useState, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -33,11 +33,8 @@ export default function MotDePasseOubliePage() {
     }
   }
 
-  return <main className="form-shell auth-motion"><section className="form-card">
-    <div className="auth-brand"><a href="/" aria-label="ZARAY · Accueil"><BrandLogo priority surface="light" /></a></div>
-    <p className="eyebrow">ZARAY · RÉCUPÉRATION DU COMPTE</p>
-    <h1>Mot de passe oublié</h1>
-    <p>Indiquez l’adresse e-mail associée à votre compte pour recevoir un lien de réinitialisation.</p>
+  return <main className="form-shell auth-motion"><section className="form-card zaray-utility-page">
+    <StandaloneModuleHeader title="Mot de passe oublié" homeHref="/" />
     <form className="form-stack" onSubmit={submit}>
       <label>Adresse e-mail<input name="email" type="email" autoComplete="email" required /></label>
       <button type="submit" disabled={busy} className="primary-link"><ZarayIcon name="send" size={18} /> {busy ? 'Envoi en cours…' : 'Recevoir le lien'}</button>
