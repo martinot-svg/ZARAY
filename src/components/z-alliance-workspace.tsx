@@ -152,14 +152,11 @@ export default function ZAllianceWorkspace({ companies, actorEmail, contextError
   return <section className="zalliance" aria-labelledby="zalliance-heading">
     <div className="zalliance-heading">
       <div>
-        <p className="eyebrow">COLLABORATION · ZARAY</p>
-        <h1 id="zalliance-heading"><ZarayIcon name="alliance" size={30} /> Z’Alliance</h1>
-        <p>Construisez votre équipe et partagez votre espace de travail en toute confiance.</p>
+        <h2 id="zalliance-heading"><ZarayIcon name="alliance" size={22} /> Collaboration</h2>
       </div>
       <Link href="/mon-compte" className="zalliance-close" aria-label="Fermer Z’Alliance et revenir à l’accueil"><ZarayIcon name="close" size={20}/><span>Fermer</span></Link>
     </div>
-    <p className="zalliance-info"><ZarayIcon name="help" size={20} />
-      Z’Alliance vérifie les droits et les invitations directement dans Supabase. L’envoi d’e-mails est activé uniquement si le fournisseur transactionnel est configuré ; en son absence, seules des invitations sans e-mail peuvent être enregistrées.</p>
+
     {error && <div className="alert alert-error" role="alert">{error}</div>}
     {notice && <div className="alert alert-success" role="status">{notice}</div>}
     {authorized.length ? <>
@@ -171,7 +168,7 @@ export default function ZAllianceWorkspace({ companies, actorEmail, contextError
       <div className="zalliance-sections">
         <section className="panel zalliance-invite" aria-labelledby="zalliance-invite-heading">
           <h2 id="zalliance-invite-heading"><ZarayIcon name="signup" size={20}/> Inviter un collaborateur</h2>
-          <p className="muted">Créez une invitation sécurisée, associée à une adresse e-mail vérifiée et à une seule entreprise.</p>
+
           <form className="form-stack" onSubmit={event => void createInvitation(event)}>
             <label>Adresse e-mail
               <input type="email" required autoComplete="email" maxLength={254} placeholder="collegue@exemple.com"
