@@ -44,6 +44,7 @@ jobs:
             tests/hotspot-captive-catalog.test.mjs \
             tests/logo-palette.test.mjs \
             tests/public-wifi-web-portal.test.mjs \
-            tests/residential-white-label.test.mjs
+            tests/residential-white-label.test.mjs \
+            tests/site-notifications.test.mjs
       - run: npm run typecheck
       - run: npm run build
