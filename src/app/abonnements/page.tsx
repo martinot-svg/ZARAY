@@ -123,8 +123,7 @@ export default function ResidentialPage(){
   }catch(e){setError(e instanceof Error?e.message:'Renouvellement indisponible.');}
   finally{setRenewing(false);}
  }
- return <AppShell activePath="/abonnements" eyebrow="CLIENTS · INTERNET RÉSIDENTIEL" title="Abonnements résidentiels"
-  description="Un dossier permanent par abonné, un suivi des échéances et des renouvellements, sans confondre paiement et accès Internet."
+ return <AppShell activePath="/abonnements" title="Abonnements résidentiels"
   actions={<button type="button" className="rs-refresh" disabled={!companyId||busy} onClick={()=>setRefresh(v=>v+1)}><RefreshCw size={16}/> Actualiser</button>}>
   <div className="rs-page">
    <div className="rs-context"><span>Entreprise : <strong>{company?.legal_name||'—'}</strong></span><span>Site : <strong>{activeSiteId()?siteName(activeSiteId()):'Tous les sites'}</strong></span></div>
