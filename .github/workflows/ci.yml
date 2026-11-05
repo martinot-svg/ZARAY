@@ -28,6 +28,7 @@ jobs:
             tests/premium-experience.test.mjs \
             tests/total-redesign.test.mjs \
             tests/workspace-art-direction.test.mjs \
+            tests/remove-module-numbering-dark-home.test.mjs \
             tests/ux-progressive-disclosure.test.mjs \
             tests/contrast-guardian-stability.test.mjs \
             tests/compact-forms.test.mjs \

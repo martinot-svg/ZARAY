@@ -93,7 +93,7 @@ export default function PersonalShell({
         </nav>
       </div>
       <div className="personal-topbar-actions">
-        <div className="topbar-icon-group topbar-theme-control">
+        {!home && <div className="topbar-icon-group topbar-theme-control">
           <ThemeSwitch buttonRef={themeButtonRef} hideNativeTitle />
           <div className="topbar-icon-curtain" aria-label="Thème de l'interface">
             <div className="topbar-icon-curtain-inner">
@@ -103,7 +103,7 @@ export default function PersonalShell({
               </button>
             </div>
           </div>
-        </div>
+        </div>}
         {active === '/entreprises' && (
           <div className="topbar-icon-group topbar-create-control">
             <Link href="/entreprises/nouvelle" className="primary-link personal-topbar-create"
