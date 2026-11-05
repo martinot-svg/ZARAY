@@ -54,7 +54,7 @@ test('customer workspace has real subscriptions, paid orders and no fabricated m
  const page=read('src/app/mon-internet/[siteId]/page.tsx');
  const css=read('src/components/residential-account-portal.css');
  assert.match(component,/verifyOtp\(\{email:email.trim\(\).toLowerCase\(\),token:code.trim\(\),type:'email'\}\)/);
- assert.match(component,/account\.subscriptions\[0\]/);
+ assert.match(component,/account\?\.subscriptions\[0\]/);
  assert.match(component,/account\.orders\.map/);
  assert.match(component,/Indisponible/);
  assert.match(component,/className="rp-root resident-portal"/);
