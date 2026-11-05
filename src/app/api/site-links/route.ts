@@ -22,7 +22,7 @@ async function access(companyId:string,siteId:string){
  return {service,userId:tenant.user.id};
 }
 const link=(alias:string)=>'/l/'+encodeURIComponent(alias);
-const publicLink=(alias:string,host?:string|null)=>host?'https://'+host:link(alias);
+const publicLink=(alias:string,host?:string|null)=>host?'https://'+host:'http://'+alias;
 export async function GET(request:NextRequest){
  const companyId=request.nextUrl.searchParams.get('companyId')||'';
  const siteId=request.nextUrl.searchParams.get('siteId')||'';
