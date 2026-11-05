@@ -59,6 +59,9 @@ export default function PublicWifiPortal({slug}: {slug?:string}){
  const [mobileMenu,setMobileMenu]=useState(false);
  const [enterpriseDialog,setEnterpriseDialog]=useState(false);
  const [offersDialog,setOffersDialog]=useState(false);
+ useEffect(()=>{
+  if(slug && new URLSearchParams(window.location.search).get('inscription')==='1')setMode('subscribe');
+ },[slug]);
  const [showPassword,setShowPassword]=useState(false);
 
  useEffect(()=>{
