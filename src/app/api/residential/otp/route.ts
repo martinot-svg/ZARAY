@@ -30,8 +30,8 @@ export async function POST(request:NextRequest){
     email,options:{shouldCreateUser:true}
    });
    if(otpError){
+    // Deliberately indistinguishable from unknown customer addresses.
     console.error('residential OTP dispatch failed',{code:otpError.code});
-    return reply({error:'Envoi temporairement indisponible. Réessayez plus tard.'},503);
    }
   }
   return reply({message:'Si cette adresse possède un abonnement sur ce site, un e-mail de connexion lui a été envoyé.'});
