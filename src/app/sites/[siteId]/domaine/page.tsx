@@ -77,6 +77,15 @@ export default function SiteLocalPortalAddress(){
     </button></div>
     <p className="muted">Cette adresse ne fonctionne que pour les appareils connectés au réseau Wi-Fi dont le DNS résout ce nom vers le portail. Elle n’est pas accessible depuis l’Internet public sans domaine enregistré.</p>
    </section>}
+   {link&&<details className="workspace-inline-disclosure">
+    <summary>Accès au compte à distance</summary>
+    <div style={{display:'grid',gap:9,paddingTop:12}}>
+     <strong>{'compte.'+link.alias}</strong>
+     <p className="muted">Adresse privée préparée, non activée. Elle nécessite un serveur local HTTPS et une connexion VPN WireGuard configurée sur le MikroTik et sur le téléphone du client.</p>
+     <p className="muted">Après connexion au VPN, le client pourra ouvrir son compte avec son adresse e-mail et un code de vérification. Aucune administration du routeur ne doit être accessible depuis le VPN client.</p>
+     <p className="muted" role="status">VPN, DNS privé, serveur et certificat : mise en service non confirmée.</p>
+    </div>
+   </details>}
    <details className="workspace-inline-disclosure">
     <summary>Installation sur le routeur MikroTik</summary>
     <div style={{display:'grid',gap:10,paddingTop:12}}>
