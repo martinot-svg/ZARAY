@@ -163,7 +163,7 @@ export default function WifiTicketGenerator(){
      </select></label>
     <label>Quantité<select value={count} onChange={e=>{setCount(Number(e.target.value));setTickets([]);}}>{[1,11,33,66,99].map(n=><option key={n} value={n}>{n} ticket{n>1?'s':''}</option>)}</select></label>
    </div>
-   <p className="muted">Chaque ticket possède un identifiant unique et un mot de passe numérique de 3 à 5 chiffres. La durée Internet est cumulée : une déconnexion interrompt le décompte. Les comptes sont préparés sur MikroTik avant la vente. Le client paie en espèces, reçoit son ticket imprimé, puis la première connexion réussie déclenche automatiquement sa comptabilisation.</p>
+   
    {!availableRouters.length&&<p className="alert" role="status">Aucun MikroTik autorisé n’est connecté à ce site. <a href={'/gestion-reseau?companyId='+encodeURIComponent(companyId)}>Associer et activer le routeur</a>.</p>}
    <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
     <button type="button" className="primary-link" disabled={!companyId||!siteId||!offerId||!selectedRouterId||busy||chosen?.status!=='active'} onClick={create}><ZarayIcon name="ticket" size={16}/>{busy?'Génération…':'Générer un lot unique'}</button>
@@ -173,7 +173,7 @@ export default function WifiTicketGenerator(){
   </section>
   <details className="workspace-disclosure"><summary>Lots et stock</summary><section className="panel" style={{padding:18,marginBottom:16}}>
    <h2>Lots et stock de tickets préimprimés</h2>
-   <p className="muted">Les lots sont préparés automatiquement sur MikroTik avant leur impression. Une réimpression nécessite l'autorisation d'un responsable et est journalisée.</p>
+   
    {batches.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Lot</th><th>Création</th><th>Stock prêt</th><th>Activés</th><th>En préparation</th><th>Exportés</th><th>Action</th></tr></thead>
    <tbody>{batches.map(b=><tr key={b.batchId}><td><strong>{b.batchId.slice(0,8)}</strong></td><td>{new Date(b.createdAt).toLocaleDateString('fr-FR')}</td>
     <td>{b.ready} / {b.count}</td><td>{b.activated}</td><td>{b.pending}</td><td>{b.printed}</td>
