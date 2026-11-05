@@ -69,8 +69,7 @@ export default function AcceptZAllianceInvitation() {
         <ZarayIcon name="next" size={18}/> Ouvrir mon entreprise
       </Link>
     </> : <>
-      <p>Cette invitation est personnelle. Connectez-vous ou inscrivez-vous avec <strong>l’adresse e-mail qui a reçu l’invitation</strong> pour consulter les droits proposés.</p>
-      <p>Une fois connecté et votre adresse confirmée, choisissez « Accepter l’invitation ». Aucun accès n’est accordé avant cette validation.</p>
+      <p>Connectez-vous avec <strong>l’adresse e-mail invitée</strong> pour accepter l’invitation.</p>
       {preview && <div className="panel" style={{margin:'18px 0'}}><p><strong>Entreprise :</strong> {preview.company_name}</p><p><strong>Rôle proposé :</strong> {({admin:'Administrateur',site_manager:'Responsable de site',support:'Support',technician:'Technicien',sales:'Commercial',finance:'Finance'} as Record<string,string>)[preview.role]??preview.role}</p><p><strong>Expiration :</strong> {new Date(preview.expires_at).toLocaleDateString('fr-FR')}</p></div>}
       {preview && token && <button type="button" className="primary-link" onClick={()=>void accept()} disabled={busy}>
         <ZarayIcon name="confirm" size={18}/> {busy?'Vérification en cours…':'Accepter l’invitation'}
