@@ -62,6 +62,7 @@ function customHostResponse(request:NextRequest,site:SiteDomain|null){
  const ownSiteRoutes=new Set([
   '/api/public/residential-site','/api/public/residential-icon',
   '/api/residential/account','/api/residential/notifications',
+  '/api/residential/notification-preferences',
   '/api/public/wifi-offers'
  ]);
  if(ownSiteRoutes.has(path)&&search.get('siteId')===site.siteId)

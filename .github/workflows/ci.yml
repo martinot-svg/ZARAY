@@ -47,6 +47,7 @@ jobs:
             tests/residential-white-label.test.mjs \
             tests/site-notifications.test.mjs \
             tests/site-custom-domains.test.mjs \
-            tests/site-notification-delegation.test.mjs
+            tests/site-notification-delegation.test.mjs \
+            tests/residential-email-notifications.test.mjs
       - run: npm run typecheck
       - run: npm run build

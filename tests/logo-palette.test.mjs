@@ -22,7 +22,7 @@ test('monochrome and transparent images are handled safely',()=>{
 });
 test('logo upload and manual override remain available per site',()=>{
  const ui=readFileSync('src/components/wifi-ticket-customization.tsx','utf8');
- assert.match(ui,/paletteFromLogo\(uri\)/);
+ assert.match(ui,/paletteFromLogo\((?:uri|targetUri)\)/);
  assert.match(ui,/Reprendre les couleurs du logo/);
  assert.match(ui,/\['primary_color','Principale'\]/);
  assert.match(ui,/\['accent_color','Accent \/ dégradé'\]/);
