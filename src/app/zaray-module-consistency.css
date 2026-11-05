@@ -100,3 +100,36 @@
     font-size:12px;
   }
 }
+
+/* Connection also follows logo + title, without disturbing the keyboard lift. */
+.login-shell > .login-brand {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:clamp(12px,2vw,20px);
+  max-width:100%;
+  min-width:0;
+}
+.login-shell > .login-brand a {
+  flex:0 0 clamp(100px,14vw,150px);
+  max-width:45%;
+}
+.login-shell > .login-brand #login-title {
+  margin:0 !important;
+  color:var(--zf-heading,#f1fff5);
+  font-size:clamp(17px,2vw,24px) !important;
+  font-weight:800;
+  line-height:1.2;
+  letter-spacing:-.035em;
+}
+[data-zaray-theme="light"] .login-shell > .login-brand #login-title {
+  color:#11271d;
+}
+@media(max-width:700px) {
+  .login-shell > .login-brand a {
+    flex-basis:clamp(88px,28vw,125px);
+  }
+  .login-shell > .login-brand #login-title {
+    font-size:clamp(16px,4.8vw,20px) !important;
+  }
+}
