@@ -44,7 +44,8 @@ function customHostResponse(request:NextRequest,site:SiteDomain|null){
   target.search='?siteId='+encodeURIComponent(site.siteId);
   return NextResponse.rewrite(target,{request});
  }
- if(/^\\/paiement\\/[A-Fa-f0-9]{12}$/.test(path)){
+ const paymentReference=path.startsWith('/paiement/')?path.slice('/paiement/'.length):'';
+ if(paymentReference.length===12&&/^[A-Fa-f0-9]+$/.test(paymentReference)){
   target.pathname='/mon-internet/'+site.siteId+'/paiement/'+path.split('/')[2].toUpperCase();
   target.search='';
   return NextResponse.rewrite(target,{request});
