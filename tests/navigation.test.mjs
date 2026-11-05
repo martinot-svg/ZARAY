@@ -31,7 +31,7 @@ test('personal navigation distinguishes home and enterprise dashboard without a 
  assert.match(nav,/event\.key !== 'Escape'/);
  assert.match(nav,/inert=\{!homeNavOpen\}/);
  assert.match(nav,/name\?\.trim\(\)/);
- assert.match(nav,/personal-profile-copy/);
+ assert.doesNotMatch(nav,/personal-profile-copy/);
  assert.match(nav,/Espace personnel/);
  const css=source('src/app/globals.css');
  assert.match(css,/\.personal-shell\.personal-no-sidebar\{/);
@@ -40,15 +40,15 @@ test('personal navigation distinguishes home and enterprise dashboard without a 
 test('personal profile stays top-right and the navigation works from the topbar on every page',()=>{
  const shell=source('src/components/personal-shell.tsx');
  const topbar=shell.slice(shell.indexOf('<header className="personal-topbar">'),shell.indexOf('</header>'));
- assert.match(topbar,/Mon espace Zaray/);
+ assert.match(topbar,/personal-topbar-module-title/);
  assert.match(topbar,/name="menu"/);
  assert.match(topbar,/aria-controls="personal-home-navigation-links" aria-expanded=\{homeNavOpen\}/);
  assert.match(topbar,/inert=\{!homeNavOpen\}/);
  assert.match(topbar,/navigationLinks\.map/);
  assert.match(topbar,/className="personal-topbar-profile"/);
  assert.match(topbar,/personal-profile-avatar/);
- assert.match(topbar,/\{displayName\}/);
- assert.match(topbar,/Espace personnel/);
+ assert.match(shell,/aria-label=\{'Options du profil de ' \+ displayName\}/);
+ assert.doesNotMatch(topbar,/personal-profile-copy/);
  assert.match(shell,/setHomeNavOpen\(value => !value\)/);
  assert.doesNotMatch(shell,/Mahasiloke Tinot/);
  const css=source('src/app/globals.css');
@@ -60,7 +60,7 @@ test('topbar menu replaces personal sidebar with outside-click, Escape and reduc
  const shell=source('src/components/personal-shell.tsx');
  const css=source('src/app/globals.css');
  assert.doesNotMatch(shell,/Mon compte ZARAY|personal-drawer-head|<nav id="personal-navigation"/);
- assert.equal((shell.match(/Mon espace Zaray/g)??[]).length,1);
+ assert.equal((shell.match(/Mon espace Zaray/g)??[]).length,0);
  assert.match(shell,/className="personal-home-nav-toggle"/);
  assert.match(shell,/className=\{'personal-home-nav-menu'/);
  assert.match(shell,/inert=\{!homeNavOpen\}/);
@@ -565,7 +565,9 @@ test('finance page has only its title above the existing payments and filters',(
  const page=source('src/app/finance-globale/page.tsx');
  const shell=source('src/components/personal-shell.tsx');
  const css=source('src/app/globals.css');
- assert.match(page,/<header className="personal-page-heading personal-finance-page-heading"><h1>Finance globale<\/h1><\/header>/);
+ assert.doesNotMatch(page,/personal-finance-page-heading/);
+ assert.match(shell,/personal-topbar-module-title/);
+ assert.match(shell,/\'\/finance-globale\': 'Finance globale'/);
  assert.doesNotMatch(page,/COMPTE PERSONNEL · FINANCE|Consolidation des paiements confirmés du registre uniquement/);
  assert.match(shell,/active !== '\/entreprises' && active !== '\/finance-globale'/);
  assert.match(page,/PersonalFinanceOverview/);
