@@ -17,8 +17,9 @@ export async function generateMetadata({params,searchParams}:Context):Promise<Me
   icons:allowed?{icon:[{url:'/api/public/residential-icon?siteId='+encodeURIComponent(allowed.siteId)}]}:undefined,
  };
 }
-export default async function WifiCompanyPage({params}:Context){
+export default async function WifiCompanyPage({params,searchParams}:Context){
  const {slug}=await params;
+ const {siteId,inscription}=await searchParams as {siteId?:string;inscription?:string};
  if(!/^[a-z0-9-]{2,80}$/i.test(slug))notFound();
- return <PublicWifiPortal slug={slug.toLowerCase()}/>;
+ return <PublicWifiPortal slug={slug.toLowerCase()} linkedSiteId={siteId||''} startInSubscription={inscription==='1'}/>;
 }
