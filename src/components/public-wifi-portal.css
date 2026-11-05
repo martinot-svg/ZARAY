@@ -348,3 +348,39 @@
  .zw-simple-screen{min-height:510px;padding:8px 0}
 }
 @media(prefers-reduced-motion:reduce){.zw-simple-connect,.zw-simple-subscribe{transition:none}}
+
+
+/* A live provider portal must use the site's configured colors and logo. */
+.zw-root[data-site-branded="true"]{
+ --zw-accent:var(--zw-site-primary,#167a46);
+ --zw-cyan:var(--zw-site-secondary,#0e9f6e);
+}
+.zw-root[data-site-branded="true"] .zw-mark,
+.zw-root[data-site-branded="true"] .zw-simple-emblem{
+ background:linear-gradient(135deg,var(--zw-site-primary),var(--zw-cyan));
+}
+.zw-root[data-site-branded="true"] :is(.zw-simple-connect,.zw-cta,.zw-hero-cta){
+ background:var(--zw-site-primary)!important;
+ border-color:var(--zw-site-primary)!important;
+}
+.zw-root[data-site-branded="true"] .zw-simple-brand .zw-site-logo{
+ display:block;width:auto;max-width:min(215px,55vw);height:72px;object-fit:contain;
+ background:transparent;border-radius:10px;
+}
+.zw-root[data-site-branded="true"] .zw-simple-brand .zw-site-name{
+ font-size:clamp(18px,3vw,30px);letter-spacing:-.03em;color:var(--zw-text);
+}
+.zw-root[data-site-branded="true"] .zw-simple-heading h1 span{
+ background:none;-webkit-background-clip:initial;background-clip:initial;
+ color:var(--zw-accent);
+}
+.zw-root[data-site-branded="true"] :is(.zw-simple-subscribe,.zw-simple-offers-link,.zw-status-link){
+ border-color:color-mix(in srgb,var(--zw-site-primary) 54%,transparent);
+}
+.zw-root[data-site-branded="true"] .zw-resident-account-link{
+ display:flex;align-items:center;justify-content:center;gap:8px;
+ text-decoration:none;
+}
+.zw-root[data-site-branded="true"] .zw-simple-brand{
+ flex-wrap:wrap;
+}
