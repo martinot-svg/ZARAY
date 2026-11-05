@@ -514,26 +514,27 @@ test('personal topbar places logo first and company creation beside profile, wit
 });
 
 
-test('Open enterprise is a client route and dashboard never returns a blank frame while awaiting data',()=>{
+test('Opening an enterprise sends its dashboard data in the first server response',()=>{
  const enterprises=source('src/app/entreprises/page.tsx');
  const route=source('src/app/tableau-de-bord/page.tsx');
  const site=source('src/app/sites/[siteId]/page.tsx');
  const dashboard=source('src/components/dashboard-workspace.tsx');
+ const server=source('src/lib/dashboard-data.ts');
  const shell=source('src/components/app-shell.tsx');
  const personal=source('src/components/personal-shell.tsx');
  const root=source('src/app/layout.tsx');
  const css=source('src/app/globals.css');
  assert.match(enterprises,/import Link from 'next\/link'/);
- assert.match(enterprises,/<Link prefetch=\{true\} className="primary-link" href=\{'\/tableau-de-bord\?companyId='/);
+ assert.match(enterprises,/prefetch=\{true\}/);
  assert.match(route,/authorizeTenant\(client, companyId\)/);
- assert.match(route,/<DashboardWorkspace companyId=\{companyId\} \/>/);
- assert.match(site,/<DashboardWorkspace companyId=\{companyId\} siteId=\{siteId\} \/>/);
- assert.doesNotMatch(dashboard,/if\(busy\)return null/);
- assert.match(dashboard,/if\(busy\|\|error\|\|!payload\)return <AppShell/);
- assert.match(dashboard,/aria-busy=\{busy\}/);
- assert.match(dashboard,/const query=new URLSearchParams\(\{companyId\}\)/);
- assert.match(dashboard,/fetch\('\/api\/dashboard\?'\+query\.toString\(\)/);
- assert.doesNotMatch(dashboard,/fetch\('\/api\/sites'/);
+ assert.match(route,/await getDashboardData\(client, companyId, null, permission\)/);
+ assert.match(site,/await getDashboardData\(client, companyId, siteId, permission\)/);
+ assert.match(route,/payload=\{payload\}/);
+ assert.match(site,/payload=\{payload\}/);
+ assert.match(dashboard,/payload:DashboardPayload/);
+ assert.doesNotMatch(dashboard,/Le contexte entreprise est conservé|dashboard-availability|aria-busy/);
+ assert.doesNotMatch(dashboard,/fetch\(/);
+ assert.match(server,/count:'exact'/);
  assert.doesNotMatch(dashboard,/window\.location\.replace\(/);
  assert.match(shell,/router\.push\(next\?/);
  assert.doesNotMatch(shell,/window\.location\.assign/);
