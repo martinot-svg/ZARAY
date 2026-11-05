@@ -10,15 +10,28 @@ const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]
 
 async function permission(companyId:string,siteId:string|null){
  const session=await createClient();
+ if(companyId==='all'){
+  if(siteId)return {response:json({error:'Choisissez une entreprise avant un site.'},400)};
+  const {data:{user},error}=await session.auth.getUser();
+  if(error||!user?.email_confirmed_at)return {response:json({error:'Connexion vérifiée requise.'},401)};
+  const {data:memberships,error:membershipError}=await session.from('company_members')
+   .select('company_id,role').eq('user_id',user.id).eq('status','active');
+  if(membershipError)return {response:json({error:'Autorisations indisponibles.'},503)};
+  const companyIds=(memberships||[]).filter(x=>['owner','admin'].includes(x.role)).map(x=>x.company_id);
+  if(!companyIds.length)return {response:json({error:'Aucune entreprise administrée.'},403)};
+  const service=createServiceClient();
+  if(!service)return {response:json({error:'Service indisponible.'},503)};
+  return {service,userId:user.id,companyIds};
+ }
  const access=await authorizeTenant(session,companyId,siteId);
  if(!access.ok)return {response:json({error:access.error},access.status)};
- // There is no verified site-manager assignment table yet. Do not grant
- // them company-wide notification visibility by merely passing a site id.
+ // Site-manager assignments are not verified yet: deny them rather than
+ // allowing a guessed siteId to reveal an entire company's notifications.
  if(!['owner','admin'].includes(access.member.role))
   return {response:json({error:'Notifications réservées aux administrateurs autorisés.'},403)};
  const service=createServiceClient();
  if(!service)return {response:json({error:'Service indisponible.'},503)};
- return {service,userId:access.user.id};
+ return {service,userId:access.user.id,companyIds:[companyId]};
 }
 
 export async function GET(request:NextRequest){
@@ -29,7 +42,7 @@ export async function GET(request:NextRequest){
   if(context.response)return context.response;
   let query=context.service!.from('site_notifications')
    .select('id,site_id,kind,site_title,details,created_at')
-   .eq('company_id',companyId).order('created_at',{ascending:false}).limit(80);
+   .in('company_id',context.companyIds!).order('created_at',{ascending:false}).limit(80);
   if(siteId)query=query.eq('site_id',siteId);
   const {data:items,error}=await query;
   if(error)return json({error:'Notifications indisponibles.'},503);
@@ -52,7 +65,7 @@ export async function POST(request:NextRequest){
  try{
   const context=await permission(companyId,siteId);
   if(context.response)return context.response;
-  let query=context.service!.from('site_notifications').select('id').eq('id',id).eq('company_id',companyId);
+  let query=context.service!.from('site_notifications').select('id').eq('id',id).in('company_id',context.companyIds!);
   if(siteId)query=query.eq('site_id',siteId);
   const {data:found,error}=await query.maybeSingle();
   if(error||!found)return json({error:'Notification inaccessible.'},404);
