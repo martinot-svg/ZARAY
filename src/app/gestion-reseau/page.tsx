@@ -1,4 +1,5 @@
 'use client';
+import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 import {useEffect,useMemo,useState,type FormEvent} from 'react';
 import AppShell from '@/components/app-shell';
 import {ZarayIcon} from '@/components/ui/zaray-icon';
@@ -56,7 +57,7 @@ export default function NetworkPage(){
   }catch(e){setError(e instanceof Error?e.message:'Erreur réseau');}
  }
  useEffect(()=>{(async()=>{try{
-  const r=await fetch('/api/sites',{cache:'no-store'});const data=await r.json();if(!r.ok)throw Error(data.error||'Sites indisponibles');
+  const r=await fetchWorkspaceDirectory();const data=await r.json();if(!r.ok)throw Error(data.error||'Sites indisponibles');
   const id=new URLSearchParams(location.search).get('companyId')||data.companies?.[0]?.id||'';
   const company=data.companies?.find((c:{id:string})=>c.id===id);
   if(!company)throw Error('Entreprise inaccessible.');
