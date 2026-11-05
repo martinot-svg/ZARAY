@@ -24,9 +24,7 @@ export default function DashboardWorkspace({ siteId, payload }: {
   if(site)params.set('siteId',site.id);
   const contextual=(path:string)=>path+'?'+params.toString();
   return <AppShell activePath={site?'/sites/'+site.id:'/tableau-de-bord'} companyId={company.id} siteId={site?.id}
-    eyebrow={site?'ENTREPRISE / SITE':'ENTREPRISE · VUE GÉNÉRALE'}
-    title={site?company.legal_name+' / '+site.name+' — Tableau de bord':company.legal_name+' — Tableau de bord'}
-    description={site?company.legal_name+' / '+site.name+' · Données de ce site exclusivement.': 'Vue globale de '+company.legal_name+' · données réelles issues de Supabase.'}
+    title="Tableau de bord"
     actions={site?<Link className="primary-link" href={companyLink}><ZarayIcon name="back" size={18} /> Retour à la vue générale</Link>:<Link className="primary-link" href={contextual('/sites')}><ZarayIcon name="site" size={18} /> Gérer les sites</Link>}>
     <section className="kpi-grid dashboard-metrics-grid" aria-label="Indicateurs réels">
       {metrics.map(({key,label})=><article className="kpi" key={key}>
