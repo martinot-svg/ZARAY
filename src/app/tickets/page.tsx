@@ -74,7 +74,7 @@ export default function WifiTicketsPage() {
     return()=>window.removeEventListener('popstate',listener);
   },[company]);
 
-  if(loading)return <main className="form-shell"><p role="status">Chargement des tickets Wi-Fi…</p></main>;
+  if(loading)return <AppShell activePath="/tickets" title="Tickets Wi-Fi"><span className="motion-sr-only" role="status">Préparation des tickets Wi-Fi</span></AppShell>;
   if(error||!company)return <main className="form-shell"><section className="form-card">
     <h1>Tickets Wi-Fi indisponibles</h1><p role="alert">{error||'Entreprise inaccessible.'}</p>
     <a href="/entreprises">Revenir à mes entreprises</a>
