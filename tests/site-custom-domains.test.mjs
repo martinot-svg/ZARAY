@@ -50,14 +50,14 @@ test('custom host routes are isolated and preserve refreshed auth cookies',()=>{
  assert.match(proxy,/getUser\(\)/);
 });
 
-test('site administrators can open domain management; clients retain white-label portal',()=>{
+test('site administrators can open local portal settings; existing verified DNS module remains separate',()=>{
  const sites=read('src/app/sites/page.tsx');
  const settings=read('src/app/sites/[siteId]/domaine/page.tsx');
  const residential=read('src/app/mon-internet/[siteId]/page.tsx');
  assert.match(sites,/\/domaine\?companyId=/);
- assert.match(settings,/\/api\/site-domains/);
  assert.match(settings,/\/api\/site-links/);
- assert.match(settings,/Aucun achat de domaine ni réglage DNS n’est nécessaire/);
+ assert.match(settings,/Adresse locale Wi-Fi/);
+ assert.match(settings,/Cette adresse ne fonctionne que pour les appareils connectés/);
  assert.doesNotMatch(settings,/Ouvrir la configuration Vercel/);
  assert.match(residential,/applicationName:name/);
 });
