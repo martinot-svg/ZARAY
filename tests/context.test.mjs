@@ -47,10 +47,12 @@ test('site-aware links preserve both tenant and site',()=>{
 });
 test('no site scoped metrics derived from company-global offers',()=>{
  const api=read('src/app/api/dashboard/route.ts');
- assert.match(api,/table === 'offers'\) return null/);
+ const server=read('src/lib/dashboard-data.ts');
+ assert.match(server,/table === 'offers'\) return null/);
  assert.match(api,/authorizeTenant/);
- assert.match(api,/subscription_orders\.site_id/);
- assert.match(api,/count:'exact'/);
+ assert.match(api,/getDashboardData\(client, companyId, siteId, access\)/);
+ assert.match(server,/subscription_orders\.site_id/);
+ assert.match(server,/count:'exact'/);
 });
 test('all high-volume operational reads validate tenant context',()=>{
  for (const path of ['customers','subscription-orders','payments','wifi-tickets','caisse','offers']){
