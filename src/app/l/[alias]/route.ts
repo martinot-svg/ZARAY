@@ -26,8 +26,8 @@ export async function GET(request:NextRequest,{params}:Context){
   const redirect=new URL('/wifi/'+encodeURIComponent(company.slug),request.url);
   redirect.searchParams.set('siteId',site.id);
   redirect.searchParams.set('inscription','1');
-  return NextResponse.redirect(redirect,307,{
-   headers:{'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}
+  return NextResponse.redirect(redirect,{
+   status:307,headers:{'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}
   });
  }catch{return new NextResponse('Lien public indisponible.',{status:503});}
 }
