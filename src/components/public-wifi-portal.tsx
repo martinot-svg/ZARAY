@@ -25,7 +25,7 @@ function displayPrice(o:Offer){return new Intl.NumberFormat('fr-FR',{maximumFrac
 function displayTime(minutes:number){if(minutes<60)return minutes+' min';const h=Math.floor(minutes/60),m=minutes%60;return h+' h'+(m?' '+m+' min':'');}
 function requestJson(url:string){return fetch(url,{cache:'no-store'}).then(async r=>{const data=await r.json();if(!r.ok)throw new Error(typeof data.error==='string'?data.error:'Service indisponible.');return data;});}
 
-export default function PublicWifiPortal({slug}: {slug?:string}){
+export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscription=false}: {slug?:string;linkedSiteId?:string;startInSubscription?:boolean}){
  const demo=!slug;
  const [mode,setMode]=useState<Mode>('home');
  const [companyName,setCompanyName]=useState(demo?'Votre fournisseur':'');
@@ -60,7 +60,7 @@ export default function PublicWifiPortal({slug}: {slug?:string}){
  const [enterpriseDialog,setEnterpriseDialog]=useState(false);
  const [offersDialog,setOffersDialog]=useState(false);
  useEffect(()=>{
-  if(slug && new URLSearchParams(window.location.search).get('inscription')==='1')setMode('subscribe');
+  if(slug && (startInSubscription||new URLSearchParams(window.location.search).get('inscription')==='1'))setMode('subscribe');
  },[slug]);
  const [showPassword,setShowPassword]=useState(false);
 
@@ -82,7 +82,7 @@ export default function PublicWifiPortal({slug}: {slug?:string}){
     setSelectedSubscription(list[0]?.id||'');
     const siteList:ResidentialSite[]=data.sites||[];
     setResidentialSites(siteList);
-    const linkedSite=new URLSearchParams(window.location.search).get('siteId')||'';
+    const linkedSite=new URLSearchParams(window.location.search).get('siteId')||linkedSiteId;
     setSelectedSiteId(siteList.some(s=>s.id===linkedSite)?linkedSite:siteList.length===1?siteList[0].id:'');
    }else{
     setError(catalog.reason instanceof Error?catalog.reason.message:'Catalogue d’abonnements indisponible.');
@@ -93,7 +93,7 @@ export default function PublicWifiPortal({slug}: {slug?:string}){
     setPaymentMethods(list);setProvider(list[0]?.provider||'');
    }
    const params=new URLSearchParams(window.location.search);
-   const siteId=params.get('siteId')||'';
+   const siteId=params.get('siteId')||linkedSiteId;
    if(/^[0-9a-f-]{36}$/i.test(siteId)){
     try{
      const data=await requestJson('/api/public/wifi-offers?siteId='+encodeURIComponent(siteId));
