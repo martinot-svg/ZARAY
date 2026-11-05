@@ -31,6 +31,14 @@ export default function PersonalShell({
   const [homeNavOpen, setHomeNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const displayName = name?.trim() || email?.split('@')[0] || 'Utilisateur ZARAY';
+  const personalModuleTitle = links.find(link => link.href === active)?.label
+    ?? ({
+      '/z-alliance':'Z’Alliance',
+      '/invitations':'Invitations',
+      '/entreprises/nouvelle':'Créer une entreprise',
+      '/z-alliance/accepter':'Invitation Z’Alliance',
+    } as Record<string, string>)[active]
+    ?? '';
 
   // The management dashboard requires an authorized enterprise context.
   const dashboardHref = dashboardCompanyId
@@ -73,6 +81,7 @@ export default function PersonalShell({
   return <div className={'personal-shell personal-no-sidebar' + (home ? ' personal-home-shell' : '') + (['/mon-compte', '/entreprises', '/finance-globale'].includes(active) ? ' personal-sticky-topbar' : '')}>
     <header className="personal-topbar">
       <Link href="/mon-compte" className="personal-logo" aria-label="Accueil personnel ZARAY"><BrandLogo priority /></Link>
+      {!home && personalModuleTitle && <h1 className="personal-topbar-module-title" title={personalModuleTitle}>{personalModuleTitle}</h1>}
       <div className="personal-home-nav-control" ref={homeNavRef}
         onMouseEnter={() => { if (hoverMenus()) { setHomeNavOpen(true); setProfileOpen(false); } }}
         onMouseLeave={() => { if (hoverMenus() && !homeNavRef.current?.contains(document.activeElement)) setHomeNavOpen(false); }}>
