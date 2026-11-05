@@ -10,7 +10,7 @@ body:has(.resident-portal){background:#f4f7f4!important}
 .rp-identity>div{display:flex;flex-direction:column;min-width:0;gap:2px}
 .rp-identity strong{font-size:18px;line-height:1.2;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rp-identity small{font-size:12px;opacity:.75}
-.rp-logo{max-width:140px;width:auto;height:48px;object-fit:contain;border-radius:9px}
+.rp-logo{max-width:100%;width:auto;height:auto;max-height:min(18dvh,150px);object-fit:contain;border-radius:9px}
 .rp-monogram{width:44px;height:44px;display:grid;place-items:center;flex:0 0 44px;border-radius:12px;color:var(--rp-primary-ink);background:var(--rp-primary);font-size:25px;font-weight:800}
 .rp-signout,.rp-header-caption{font-size:12px;color:var(--rp-ink)}
 .rp-signout{display:flex;align-items:center;gap:8px;border:1px solid color-mix(in srgb,var(--rp-ink) 23%,transparent);border-radius:10px;padding:10px 12px;min-height:44px;background:transparent;cursor:pointer}
@@ -57,7 +57,7 @@ body:has(.resident-portal){background:#f4f7f4!important}
 @media(max-width:540px){
  .rp-frame{padding:0 15px}
  .rp-header{min-height:75px}
- .rp-logo{max-width:90px;height:40px}
+ .rp-logo{max-width:100%;height:auto;max-height:90px}
  .rp-identity strong{font-size:15px}
  .rp-header-caption{display:none}
  .rp-welcome{flex-direction:column;align-items:flex-start}
