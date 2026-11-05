@@ -101,9 +101,9 @@ export async function PUT(request:NextRequest){
       if(logo!==null&&typeof logo!=='string')return fail('Logo invalide.',400);
       if(typeof logo==='string'){
         const matched=/^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/.exec(logo);
-        if(!matched||logo.length>180000)return fail('Logo trop volumineux ou format non autorisé.',400);
+        if(!matched||logo.length>2_700_000)return fail('Logo trop volumineux ou format non autorisé.',400);
         const bytes=Buffer.from(matched[2],'base64');
-        if(bytes.length>130000||bytes.length<12)return fail('Taille de logo invalide.',400);
+        if(bytes.length>2_000_000||bytes.length<12)return fail('Taille de logo invalide.',400);
         const png=bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]));
         const jpg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
         const webp=bytes.toString('ascii',0,4)==='RIFF'&&bytes.toString('ascii',8,12)==='WEBP';
