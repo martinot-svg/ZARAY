@@ -3,15 +3,15 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(p,'utf8');
 const shell=read('src/components/app-shell.tsx');
-test('module headers expose help on request instead of repeating lengthy descriptions',()=>{
- assert.match(shell,/className="workspace-help"/);
- assert.match(shell,/<summary>À propos du module<\/summary>/);
- assert.match(shell,/\{description\}/);
+test('module titles are in the topbar and informational help panels are deleted',()=>{
+ assert.match(shell,/className="app-topbar-title"/);
+ assert.match(shell,/className="workspace-page-actions"/);
+ assert.doesNotMatch(shell,/className="workspace-help"|À propos du module|className="page-header studio-page-header"/);
  assert.doesNotMatch(shell,/ZARAY EXPERIENCE · 2026/);
 });
 test('network cockpit shows router management first and preserves secondary operations',()=>{
  const s=read('src/app/gestion-reseau/page.tsx');
- for(const name of ['Cartographie et préparation','Sessions et appareils','Associer un abonnement',
+ for(const name of ['Cartographie','Sessions et appareils','Associer un abonnement',
   'Règles des impayés','Comptes et suspensions','Historique des commandes'])
   assert.ok(s.includes('<summary>'+name+'</summary>'),name);
  for(const action of ['/api/network','/api/network/access','/api/network/pair','/api/network/device-action'])
