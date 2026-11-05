@@ -58,6 +58,8 @@ jobs:
         run: node tests/galactic-global-visual.mjs
       - name: Verify site-specific MikroTik login-first branding
         run: node tests/hotspot-site-branding-visual.mjs
+      - name: Verify permanent Z'Accueil asteroid motion and first-paint geometry
+        run: node tests/zaccueil-asteroids-visual.mjs
       - name: Verify dynamic contrast on anonymous local routes
         env:
           BASE_URL: http://127.0.0.1:3000
