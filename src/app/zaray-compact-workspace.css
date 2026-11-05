@@ -29,16 +29,6 @@
   letter-spacing: .08em !important;
   margin-bottom: 5px !important;
 }
-.app-no-sidebar .studio-page-header .workspace-help {
-  margin-top: 5px !important;
-}
-.app-no-sidebar .studio-page-header .workspace-help > summary {
-  min-height: 28px;
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 0;
-  font-size: 11px;
-}
 .app-no-sidebar .studio-page-header .page-actions {
   margin: 0 !important;
   max-width: none;
