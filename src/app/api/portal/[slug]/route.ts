@@ -5,21 +5,40 @@ export const dynamic = 'force-dynamic';
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
 type Context = { params: Promise<{ slug: string }> };
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-/** Only a verified active custom hostname may lock a company portal to one site. */
+/** Hostname binding is server-side and only active for its own site. */
 async function customSiteOf(request:NextRequest){
  const hostname=request.nextUrl.hostname.toLowerCase();
  const brandedHost=hostname==='mlayconnexion.vercel.app';
  if(hostname==='localhost'||hostname==='127.0.0.1'||hostname.endsWith('.vercel.app')&&!brandedHost)return null;
  const service=createServiceClient();
- if(!service)throw new Error('Custom domain context unavailable');
- const registry=brandedHost?service.from('site_public_links'):service.from('site_custom_domains');
- const query=brandedHost?registry.select('site_id,company_id').eq('public_hostname',hostname):
-  registry.select('site_id,company_id').eq('hostname',hostname).eq('status','active');
- const {data:binding,error}=await query.maybeSingle();
- if(error||!binding)throw new Error('Custom domain not configured');
- const {data:company,error:companyError}=await service.from('companies').select('slug')
-  .eq('id',binding.company_id).maybeSingle();
- if(companyError||!company)throw new Error('Custom domain company unavailable');
+ if(!service)throw new Error('Site identity unavailable');
+ let binding:{site_id:string;company_id:string}|null=null;
+ if(brandedHost){
+  const result=await service.from('site_public_links')
+   .select('site_id,company_id').eq('public_hostname',hostname).maybeSingle();
+  if(result.error)throw new Error('Site hostname unavailable');
+  binding=result.data;
+ }else{
+  const verified=await service.from('site_custom_domains')
+   .select('site_id,company_id').eq('hostname',hostname).eq('status','active').maybeSingle();
+  if(verified.error)throw new Error('Domain binding unavailable');
+  binding=verified.data;
+  if(!binding){
+   const local=await service.from('site_public_links')
+    .select('site_id,company_id').eq('alias',hostname).maybeSingle();
+   if(local.error)throw new Error('Local hostname unavailable');
+   binding=local.data;
+  }
+ }
+ if(!binding)throw new Error('Site hostname unknown');
+ const [{data:company,error:companyError},{data:site,error:siteError}]=await Promise.all([
+  service.from('companies').select('slug,status').eq('id',binding.company_id).maybeSingle(),
+  service.from('sites').select('id,status').eq('id',binding.site_id)
+   .eq('company_id',binding.company_id).maybeSingle()
+ ]);
+ if(companyError||siteError||!company||!site||site.status!=='active'||
+    !['active','trial'].includes(company.status))
+  throw new Error('Site unavailable');
  return {siteId:binding.site_id,companySlug:company.slug};
 }
 
