@@ -1,6 +1,6 @@
 /* Client-facing white-label experience. All visual identity values originate from the site. */
 body:has(.resident-portal) .global-auth-theme,
-body:has(.resident-portal) .workspace-backdrop {display:none!important}
+body:has(.resident-portal) .zaray-galaxy-backdrop {display:none!important}
 body:has(.resident-portal){background:#f4f7f4!important}
 .rp-root{--rp-primary:#167a46;--rp-accent:#0e9f6e;--rp-page:#fff;--rp-ink:#102319;--rp-primary-ink:#fff;--rp-card:#fff;--rp-card-ink:#15271e;min-height:100svh;background:var(--rp-page);color:var(--rp-ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}
 .rp-root *{box-sizing:border-box}
