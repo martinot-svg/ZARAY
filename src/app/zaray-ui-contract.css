@@ -1,0 +1,78 @@
+/* ZARAY · Shared UI contract (brand values from the official transparent SVGs).
+   This layer is intentionally additive: it does not alter business state or the cosmic scene. */
+:root {
+  --zaray-brand-green: #21f728;
+  --zaray-brand-black: #111914;
+  --zaray-brand-white: #ffffff;
+  --zaray-space-1: 4px;
+  --zaray-space-2: 8px;
+  --zaray-space-3: 12px;
+  --zaray-space-4: 16px;
+  --zaray-space-6: 24px;
+  --zaray-space-8: 32px;
+  --zaray-radius-control: 12px;
+  --zaray-radius-panel: 20px;
+  --zaray-motion-ease: cubic-bezier(.22, 1, .36, 1);
+  --zaray-motion-fast: 160ms;
+  --zaray-motion-entry: 360ms;
+}
+:where(.app-shell, .personal-shell, .form-shell, .landing) {
+  font-family: Inter, "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+}
+:where(.app-shell, .personal-shell, .form-shell, .landing) :is(button, input, select, textarea) {
+  font: inherit;
+}
+:where(.app-shell, .personal-shell, .form-shell, .landing) :is(input, select, textarea) {
+  min-width: 0;
+}
+:where(.app-shell, .personal-shell, .form-shell, .landing) :is(button, [role="button"]) {
+  touch-action: manipulation;
+}
+:where(.app-shell, .personal-shell, .form-shell, .landing) :is(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--zf-focus, #69ff91);
+  outline-offset: 3px;
+}
+:where(.app-shell, .personal-shell) :is(.kpi-value, .data-table, .toolbar-meta, [data-financial-value]) {
+  font-variant-numeric: tabular-nums;
+}
+:where(.app-shell, .personal-shell) :is(.data-table, .table-wrap) {
+  max-width: 100%;
+}
+:where(.app-shell, .personal-shell) :is(.data-table, .table-wrap, .panel, .kpi) {
+  min-width: 0;
+}
+:where(.app-shell, .personal-shell) .table-wrap {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+:where(.app-shell, .personal-shell) :is(.data-table th, .data-table td) {
+  font-variant-numeric: tabular-nums;
+}
+:where(.app-shell, .personal-shell) .data-table :is(th, td):not(:first-child) {
+  overflow-wrap: anywhere;
+}
+:where(.app-shell, .personal-shell, .form-shell) :is(input, select, textarea) {
+  max-width: 100%;
+}
+:where(.app-shell, .personal-shell, .form-shell) :is(input:not([type="checkbox"]):not([type="radio"]), select, button) {
+  min-height: 44px;
+}
+@media (max-width: 639px) {
+  :where(.app-shell, .personal-shell, .form-shell) :is(input, select, textarea) {
+    font-size: max(16px, 1em);
+  }
+  :where(.app-shell, .personal-shell) :is(.page-header, .panel-head) {
+    min-width: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(.app-shell, .personal-shell, .form-shell, .landing) *,
+  :where(.app-shell, .personal-shell, .form-shell, .landing) *::before,
+  :where(.app-shell, .personal-shell, .form-shell, .landing) *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
