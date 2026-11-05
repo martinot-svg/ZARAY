@@ -163,8 +163,7 @@ export default function OrdersWorkspace(){
   finally{setRecordingId('');}
  }
 
- return <AppShell activePath="/commandes" eyebrow="COMMERCIAL · SOUSCRIPTIONS" title="Gestion des commandes"
-  description="Retrouvez les demandes d’abonnement créées automatiquement sur vos portails, suivez les paiements et l’activation, sans saisie manuelle."
+ return <AppShell activePath="/commandes" title="Gestion des commandes"
   actions={<button type="button" className="co-refresh" onClick={()=>setRefresh(v=>v+1)} disabled={checking||!companyId}><RefreshCw size={17}/> Actualiser</button>}>
   <div className="co-page">
    <div className="co-context"><span>Entreprise : <strong>{activeCompany?.legal_name||'—'}</strong></span><span>Site : <strong>{activeScope?siteName(activeScope):'Tous les sites'}</strong></span><span>Les chiffres concernent la période sélectionnée.</span></div>
