@@ -8,11 +8,14 @@ const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]
 /** Only a verified active custom hostname may lock a company portal to one site. */
 async function customSiteOf(request:NextRequest){
  const hostname=request.nextUrl.hostname.toLowerCase();
- if(hostname==='localhost'||hostname==='127.0.0.1'||hostname.endsWith('.vercel.app'))return null;
+ const brandedHost=hostname==='mlayconnexion.vercel.app';
+ if(hostname==='localhost'||hostname==='127.0.0.1'||hostname.endsWith('.vercel.app')&&!brandedHost)return null;
  const service=createServiceClient();
  if(!service)throw new Error('Custom domain context unavailable');
- const {data:binding,error}=await service.from('site_custom_domains')
-  .select('site_id,company_id').eq('hostname',hostname).eq('status','active').maybeSingle();
+ const registry=brandedHost?service.from('site_public_links'):service.from('site_custom_domains');
+ const query=brandedHost?registry.select('site_id,company_id').eq('public_hostname',hostname):
+  registry.select('site_id,company_id').eq('hostname',hostname).eq('status','active');
+ const {data:binding,error}=await query.maybeSingle();
  if(error||!binding)throw new Error('Custom domain not configured');
  const {data:company,error:companyError}=await service.from('companies').select('slug')
   .eq('id',binding.company_id).maybeSingle();
