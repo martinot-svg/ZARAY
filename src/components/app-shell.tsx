@@ -1,4 +1,5 @@
 'use client';
+import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
@@ -59,7 +60,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
     const requestedSite=siteId || params.get('siteId') || '';
     (async()=>{
       try{
-        const response=await fetch('/api/sites',{cache:'no-store'});
+        const response=await fetchWorkspaceDirectory();
         const data=await response.json();
         if(!response.ok)throw new Error(data.error||'Contexte indisponible.');
         if(!mounted)return;
