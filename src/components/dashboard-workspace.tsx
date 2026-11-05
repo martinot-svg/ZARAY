@@ -1,17 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import type { DashboardPayload } from '@/lib/dashboard-types';
 import Link from 'next/link';
 import AppShell from '@/components/app-shell';
 import { ZarayIcon, type ZarayIconName } from '@/components/ui/zaray-icon';
 
 
-type Company = { id:string; legal_name:string; slug:string; role:string };
-type Site = { id:string; company_id:string; name:string; status:string };
-type Order = { id:string; public_reference:string; customer_name:string; offer_name:string; status:string; created_at:string };
-type Metric = number|null;
-type Metrics = { sites:Metric;customers:Metric;offers:Metric;subscription_orders:Metric;payments:Metric;wifi_tickets:Metric;walkin_sales:Metric };
-type Payload = { company:Company; site:Site|null; metrics:Metrics; sites:Site[];recentOrders:Order[] };
+type Metrics = DashboardPayload['metrics'];
 const metricIcons: Partial<Record<keyof Metrics, ZarayIconName>> = { sites:'site', customers:'customers', subscription_orders:'orders', payments:'payment', wifi_tickets:'wifi', walkin_sales:'cash' };
 const metrics: {key:keyof Metrics;label:string}[]=[
   {key:'sites',label:'Sites'}, {key:'customers',label:'Clients'},
@@ -20,41 +15,9 @@ const metrics: {key:keyof Metrics;label:string}[]=[
 ];
 const statuses: Record<string,string> = { active:'Actif', planned:'Planifié',suspended:'Suspendu',archived:'Archivé',paid:'Payée',pending_payment:'En attente',cancelled:'Annulée' };
 
-export default function DashboardWorkspace({ companyId, siteId }: { companyId:string; siteId?:string }) {
-  const [payload,setPayload]=useState<Payload|null>(null);
-  const [busy,setBusy]=useState(true);
-  const [error,setError]=useState('');
-  useEffect(()=>{
-    let live=true;
-    // The route already checked the tenant. Fetch its dashboard directly rather than
-    // blocking all content behind a second /api/sites -> /api/dashboard waterfall.
-    setBusy(true);setError('');setPayload(null);
-    const query=new URLSearchParams({companyId});
-    if(siteId)query.set('siteId',siteId);
-    void (async()=>{
-      try{
-        const response=await fetch('/api/dashboard?'+query.toString(),{cache:'no-store'});
-        const data=await response.json();
-        if(!response.ok)throw new Error(data.error||'Impossible de charger le tableau de bord.');
-        if(live)setPayload(data as Payload);
-      }catch(e){if(live)setError(e instanceof Error?e.message:'Données momentanément indisponibles.');}
-      finally{if(live)setBusy(false);}
-    })();
-    return()=>{live=false};
-  },[companyId,siteId]);
-
-  // Never return null while fetching: keep navigation, background and the active
-  // enterprise scope on screen even on slow connections or failed requests.
-  if(busy||error||!payload)return <AppShell activePath={siteId?'/sites/'+siteId:'/tableau-de-bord'}
-      companyId={companyId} siteId={siteId} eyebrow={siteId?'ENTREPRISE / SITE':'ENTREPRISE · VUE GÉNÉRALE'}
-      title="Tableau de bord" description="Espace de gestion de l’entreprise sélectionnée.">
-      <section className="panel dashboard-availability" aria-busy={busy} aria-live="polite">
-        {error ? <><h2>Les données ne sont pas disponibles</h2><p role="alert">{error}</p>
-          <Link className="header-link" href="/entreprises"><ZarayIcon name="back" size={18}/> Revenir à mes entreprises</Link></>
-          : <><h2>Tableau de bord de votre entreprise</h2>
-          <p>Le contexte entreprise est conservé. Les données autorisées apparaîtront dès qu’elles seront disponibles.</p></>}
-      </section>
-    </AppShell>;
+export default function DashboardWorkspace({ siteId, payload }: {
+  companyId:string; siteId?:string; payload:DashboardPayload
+}) {
   const {company,site,sites,metrics:values,recentOrders}=payload;
   const companyLink='/tableau-de-bord?companyId='+encodeURIComponent(company.id);
   const params=new URLSearchParams({companyId:company.id});

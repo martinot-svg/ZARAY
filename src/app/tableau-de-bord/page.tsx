@@ -1,6 +1,8 @@
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import { redirect } from 'next/navigation';
 import DashboardWorkspace from '@/components/dashboard-workspace';
+import DashboardError from '@/components/dashboard-error';
+import { getDashboardData } from '@/lib/dashboard-data';
 import { createClient } from '@/lib/supabase/server';
 import { authorizeTenant } from '@/lib/tenant-context';
 
@@ -21,5 +23,10 @@ export default async function TableauDeBord({ searchParams }: { searchParams: Pr
       <a className="primary-link" href="/entreprises"><ZarayIcon name="back" size={18} /> Revenir à mes entreprises</a>
     </section></main>;
   }
-  return <DashboardWorkspace companyId={companyId} />;
+  try {
+    const payload = await getDashboardData(client, companyId, null, permission);
+    return <DashboardWorkspace companyId={companyId} payload={payload} />;
+  } catch (error) {
+    return <DashboardError companyId={companyId} message={error instanceof Error ? error.message : 'Données indisponibles.'} />;
+  }
 }

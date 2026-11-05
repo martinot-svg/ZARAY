@@ -48,7 +48,7 @@ test('Login retains its local ambient motion while the global galaxy is shared',
   assert.ok(css.includes('.auth-motion::before'));
 });
 
-test('Company and site dashboards use validated tenant context',()=>{const api=source('src/app/api/dashboard/route.ts');const auth=source('src/lib/tenant-context.ts');assert.ok(api.includes('authorizeTenant'));assert.ok(api.includes("count:'exact'"));assert.ok(api.includes("subscription_orders.site_id"));assert.ok(auth.includes(".eq('company_id',companyId)"));});
+test('Company and site dashboards use validated tenant context',()=>{const api=source('src/app/api/dashboard/route.ts');const data=source('src/lib/dashboard-data.ts');const auth=source('src/lib/tenant-context.ts');assert.ok(api.includes('authorizeTenant'));assert.ok(api.includes('getDashboardData'));assert.ok(data.includes("count:'exact'"));assert.ok(data.includes("subscription_orders.site_id"));assert.ok(auth.includes(".eq('company_id',companyId)"));});
 
 
 test('original animated stars and the shared route-local canvas use one persistent backdrop',()=>{
