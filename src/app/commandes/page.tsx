@@ -1,4 +1,5 @@
 'use client';
+import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 
 import {useEffect,useMemo,useState,type FormEvent} from 'react';
 import Link from 'next/link';
@@ -79,7 +80,7 @@ export default function OrdersWorkspace(){
   let active=true;
   (async()=>{
    try{
-    const response=await fetch('/api/sites',{cache:'no-store'});
+    const response=await fetchWorkspaceDirectory();
     const data=await response.json();
     if(!response.ok)throw new Error(data.error||'Entreprises indisponibles.');
     if(!active)return;
