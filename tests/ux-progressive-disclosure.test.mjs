@@ -27,7 +27,7 @@ test('creation forms are expandable and existing business actions remain callabl
   assert.ok(s.includes(method));
   assert.ok(s.includes('el.open=true'));
  }
- assert.match(read('src/app/clients/page.tsx'),/Origine des clients/);
+ assert.doesNotMatch(read('src/app/clients/page.tsx'),/Origine des clients/);
 });
 test('sensitive finance actions remain outside optional transaction metadata',()=>{
  const s=read('src/app/paiements/verification/page.tsx');
