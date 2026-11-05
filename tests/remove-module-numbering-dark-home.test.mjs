@@ -5,7 +5,7 @@ const read=path=>readFileSync(path,'utf8');
 test('enterprise chapter headings never render ornamental 01..12 numbering',()=>{
  const shell=read('src/components/app-shell.tsx');
  assert.doesNotMatch(shell,/studio-chapter-number|chapter\.number|number:'0[1-9]'|number:'1[0-2]'/);
- assert.match(shell,/studio-page-copy/);
+ assert.match(shell,/app-topbar-title/);
  assert.match(shell,/data-workspace-chapter=\{chapter.accent\}/);
  const css=read('src/app/zaray-total-redesign.css');
  assert.match(css,/\.app-no-sidebar \.studio-page-header \.studio-page-grid\{\s*display:block!important/);
