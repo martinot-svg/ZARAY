@@ -15,7 +15,9 @@ function pageSource(branding,id,slug){
  const snapshot=encodeURIComponent(JSON.stringify(branding)).replace(/'/g,'%27');
  return template.replaceAll('__ZARAY_SITE_ID__',id)
   .replaceAll('__ZARAY_COMPANY_SLUG__',slug)
-  .replaceAll('__ZARAY_BRANDING_JSON__',snapshot);
+  .replaceAll('__ZARAY_BRANDING_JSON__',snapshot)
+  .replaceAll('__ZARAY_LOCAL_ONLY__','false')
+  .replaceAll('__ZARAY_PUBLIC_API_BASE__','https://zaray.vercel.app');
 }
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 try{
