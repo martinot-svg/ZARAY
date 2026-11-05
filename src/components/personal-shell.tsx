@@ -7,6 +7,7 @@ import { ZarayIcon, type ZarayIconName } from '@/components/ui/zaray-icon';
 import Link from 'next/link';
 import SignOutButton from '@/components/sign-out-button';
 import RotatingEarthHorizon from '@/components/rotating-earth-horizon';
+import ZaccueilAsteroids from '@/components/zaccueil-asteroids';
 
 const links = [
   { href: '/mon-compte', label: 'Z’Accueil', icon: 'home' },
@@ -146,9 +147,10 @@ export default function PersonalShell({
         </div>
       </div>
     </header>
-    {home && (
+    {home && <>
       <RotatingEarthHorizon />
-    )}
+      <ZaccueilAsteroids />
+    </>}
     <main className="personal-content">
       {!home && email && active !== '/entreprises' && active !== '/finance-globale' && <p className="personal-email">Compte : {email}</p>}
       {children}

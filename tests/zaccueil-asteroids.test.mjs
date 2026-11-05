@@ -1,0 +1,43 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(p,'utf8');
+const source=read('src/components/zaccueil-asteroids.tsx');
+const shell=read('src/components/personal-shell.tsx');
+const css=read('src/app/galactic-system.css');
+test('Z’Accueil includes five unique rocky asteroids already in the first HTML response',()=>{
+ assert.match(shell,/import ZaccueilAsteroids from/);
+ assert.match(shell,/<ZaccueilAsteroids \/>/);
+ assert.match(source,/data-asteroid-presence="continuous"/);
+ assert.equal((source.match(/key:'distant-/g)||[]).length,5);
+ assert.match(source,/ROCKS\.map\(rock=>/);
+ assert.match(source,/const outer=ring/);
+ assert.match(source,/radialGradient/);
+ assert.match(source,/crater-/);
+ assert.doesNotMatch(source,/useEffect|useState|new Image\(|setTimeout|requestAnimationFrame|Math\.random|opacity:0/);
+});
+test('asteroids start mid-flight without pop-ins, fades or disappearing frames',()=>{
+ assert.match(source,/phase:'-127s'/);
+ assert.match(source,/phase:'-168s'/);
+ assert.match(source,/phase:'-93s'/);
+ assert.match(source,/animationDelay:rock\.phase/);
+ assert.match(source,/animationDelay:rock\.tumblePhase/);
+ const asteroidCSS=css.slice(css.indexOf('Z\'Accueil / deep-space asteroids'));
+ assert.match(asteroidCSS,/@keyframes zaray-asteroid-ancient-drift/);
+ assert.match(asteroidCSS,/0%,100%\{transform:translate3d/);
+ assert.match(asteroidCSS,/animation-timing-function:linear/);
+ assert.doesNotMatch(asteroidCSS,/@keyframes[^{}]*appear|opacity:0|visibility:hidden|fade-in/);
+ assert.match(asteroidCSS,/prefers-reduced-motion:reduce/);
+});
+test('asteroid layer does not interfere with globe, satellites, controls or other modules',()=>{
+ assert.match(css,/\.personal-no-sidebar\.personal-home-shell > \.zaray-asteroid-field\{/);
+ assert.match(css,/pointer-events:none/);
+ assert.match(css,/z-index:0/);
+ assert.match(css,/@media\(max-width:700px\)/);
+ assert.match(css,/@media print/);
+ assert.match(shell,/<RotatingEarthHorizon \/>/);
+ assert.match(read('src/components/rotating-earth-horizon.tsx'),/<StarlinkSatellites3D \/>/);
+ const root=read('src/app/layout.tsx');
+ assert.match(root,/<WorkspaceBackdrop \/>/);
+ assert.match(read('src/components/galaxy-backdrop.tsx'),/zaray-starfield/);
+});

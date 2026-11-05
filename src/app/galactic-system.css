@@ -1008,3 +1008,79 @@ body:has(.login-shell) .zaray-theme-radio-wave:nth-child(3) { width: 44px; heigh
 [data-zaray-theme="light"] .landing .landing-hero h1 span {
   background-image: linear-gradient(115deg, #10492d, #147c35);
 }
+
+
+/* Z'Accueil / deep-space asteroids — static from first HTML paint.
+   The same procedurally shaded rocks remain in place after hydration.
+   Negative phases make every orbit look like an uninterrupted old journey.
+   No opacity entrance, image decode, WebGL init or JS timers are involved. */
+.personal-no-sidebar.personal-home-shell > .zaray-asteroid-field{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  overflow:hidden;
+  isolation:isolate;
+  pointer-events:none;
+  user-select:none;
+  background:transparent;
+  contain:layout paint;
+}
+.personal-no-sidebar.personal-home-shell .zaray-asteroid-orbit{
+  display:block;
+  position:absolute;
+  width:48px;
+  aspect-ratio:1;
+  height:auto;
+  transform-origin:center;
+  animation-name:zaray-asteroid-ancient-drift;
+  animation-timing-function:linear;
+  animation-iteration-count:infinite;
+  animation-fill-mode:both;
+  pointer-events:none;
+}
+.personal-no-sidebar.personal-home-shell .zaray-asteroid-tumble{
+  display:block;
+  width:100%;
+  height:100%;
+  transform-origin:center;
+  animation-name:zaray-asteroid-ancient-tumble;
+  animation-timing-function:linear;
+  animation-iteration-count:infinite;
+  animation-fill-mode:both;
+}
+.personal-no-sidebar.personal-home-shell .zaray-asteroid-mesh{
+  display:block;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  filter:drop-shadow(2px 4px 5px rgba(0,0,0,.47));
+}
+@keyframes zaray-asteroid-ancient-drift{
+  0%,100%{transform:translate3d(-28px,8px,0)}
+  25%{transform:translate3d(5px,-11px,0)}
+  50%{transform:translate3d(28px,-7px,0)}
+  75%{transform:translate3d(-5px,12px,0)}
+}
+@keyframes zaray-asteroid-ancient-tumble{
+  0%,100%{transform:rotate(-11deg)}
+  25%{transform:rotate(-2deg)}
+  50%{transform:rotate(10deg)}
+  75%{transform:rotate(2deg)}
+}
+@media(max-width:700px){
+  .personal-no-sidebar.personal-home-shell .zaray-asteroid-orbit[data-asteroid="distant-one"]{left:85%!important;top:20%!important;width:43px!important}
+  .personal-no-sidebar.personal-home-shell .zaray-asteroid-orbit[data-asteroid="distant-two"]{left:7%!important;top:44%!important;width:29px!important}
+  .personal-no-sidebar.personal-home-shell .zaray-asteroid-orbit[data-asteroid="distant-three"]{left:84%!important;top:76%!important;width:34px!important}
+  .personal-no-sidebar.personal-home-shell .zaray-asteroid-orbit[data-asteroid="distant-four"]{left:22%!important;top:83%!important;width:21px!important}
+  .personal-no-sidebar.personal-home-shell .zaray-asteroid-orbit[data-asteroid="distant-five"]{left:62%!important;top:10%!important;width:23px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .personal-no-sidebar.personal-home-shell .zaray-asteroid-orbit,
+  .personal-no-sidebar.personal-home-shell .zaray-asteroid-tumble{
+    animation:none!important;
+    transform:none!important;
+  }
+}
+@media print{
+  .personal-no-sidebar.personal-home-shell > .zaray-asteroid-field{display:none!important}
+}

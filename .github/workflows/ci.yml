@@ -33,6 +33,7 @@ jobs:
             tests/contrast-guardian-stability.test.mjs \
             tests/compact-forms.test.mjs \
             tests/galactic-system.test.mjs \
+            tests/zaccueil-asteroids.test.mjs \
             tests/password-visibility.test.mjs \
             tests/daily-inspiration-curation.test.mjs \
             tests/network-preparation.test.mjs \
