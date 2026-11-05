@@ -52,11 +52,9 @@ function logoPaint(ctx:CanvasRenderingContext2D,img:HTMLImageElement|null,x:numb
  const scale=Math.min(w/img.naturalWidth,h/img.naturalHeight);
  const iw=img.naturalWidth*scale,ih=img.naturalHeight*scale;
  ctx.save();
- // A neutral tile plus a contour shadow keeps transparent, white and dark
- // logo artwork distinguishable in the 60×20 mm physical ticket format.
- ctx.fillStyle='rgba(210,226,233,.94)';
- ctx.fillRect(x-2,y-2,w+4,h+4);
- ctx.shadowColor='rgba(0,0,0,.66)';ctx.shadowBlur=2;
+ // Keep the processed transparent logo free of a forced rectangular tile.
+ // A subtle shadow retains contrast on white and dark ticket designs.
+ ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=2;
  ctx.shadowOffsetX=1;ctx.shadowOffsetY=1;
  ctx.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);
  ctx.restore();return true;
