@@ -123,7 +123,8 @@ export default function WifiTicketCustomization(){
    const base=saved.settings??initial;
    const linkResponse=await fetch('/api/site-links?'+qs,{cache:'no-store'});
    const linkData=await linkResponse.json().catch(()=>({}));
-   const localOnly=linkResponse.ok&&Boolean(linkData.link)&&!linkData.link.publicHostname;
+   if(!linkResponse.ok)throw Error('Impossible de confirmer le mode local du portail. Aucun export avec lien distant ne sera généré.');
+   const localOnly=Boolean(linkData.link)&&!linkData.link.publicHostname;
    const snapshot={
     siteName:site?.name??'',
     brandName:String(base.brand_name||site?.name||companyName).slice(0,90),
