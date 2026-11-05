@@ -137,12 +137,12 @@ export default function CaissePage() {
   return (
     <>
       <div className="screen-only">
-        <AppShell activePath="/caisse" eyebrow="VENTE RAPIDE · CLIENTS OCCASIONNELS" title="Caisse & tickets" description="Encaissez un client de passage, générez immédiatement son reçu et son ticket Wi-Fi imprimable.">
+        <AppShell activePath="/caisse" title="Caisse & tickets">
           {companies.length > 1 && <span className="muted">Entreprise active : {companies.find(c=>c.id===companyId)?.legal_name ?? '—'}</span>}
 
           <section className="module-grid" style={{ alignItems: 'start' }}>
             <article className="panel">
-              <div className="panel-head"><div><div className="panel-title">Nouvelle vente</div><div className="muted">Client occasionnel · paiement immédiat · ticket Wi-Fi</div></div><span className="status-pill">Caisse</span></div>
+              <div className="panel-head"><div><div className="panel-title">Nouvelle vente</div></div><span className="status-pill">Caisse</span></div>
               <div className="form-grid">
                 <label>Nom du client<input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Ex. Rakoto Jean" autoComplete="off" /></label>
                 <label>Téléphone <span className="muted">(facultatif)</span><input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="03x xx xxx xx" inputMode="tel" /></label>
@@ -156,7 +156,7 @@ export default function CaissePage() {
             </article>
 
             <article className="panel">
-              <div className="panel-head"><div><div className="panel-title">Dernier ticket</div><div className="muted">Prêt à imprimer ou à remettre au client.</div></div></div>
+              <div className="panel-head"><div><div className="panel-title">Dernier ticket</div></div></div>
               {generatedSale && generatedCode ? <div className="receipt-preview"><div id="receipt-print">
                 <div className="receipt-brand">ZARAY<span>.</span></div>
                 <div className="receipt-label">REÇU DE PAIEMENT · TICKET WI-FI</div>
@@ -187,7 +187,7 @@ export default function CaissePage() {
           </section>
 
           <details className="workspace-disclosure"><summary>Ventes récentes</summary><section className="panel" style={{ marginTop: 16 }}>
-            <div className="panel-head"><div><div className="panel-title">Ventes récentes</div><div className="muted">Historique des tickets générés pour les clients occasionnels.</div></div></div>
+            <div className="panel-head"><div><div className="panel-title">Ventes récentes</div></div></div>
             {busy ? null : sales.length ? <div className="data-list">{sales.slice(0, 20).map((sale) => <div className="data-row" key={sale.id}><div><strong>{sale.receipt_number}</strong><div className="muted">{sale.customer_name} · {sale.offer_name} · {paymentLabels[sale.payment_method] ?? sale.payment_method}</div></div><div style={{ textAlign: 'right' }}><strong>{Number(sale.amount).toLocaleString('fr-FR')} {sale.currency}</strong><div className="muted">{statusLabels[sale.ticket_status] ?? sale.ticket_status}</div></div></div>)}</div> : <div className="empty-state"><strong>Aucune vente occasionnelle</strong><p>Les encaissements réalisés depuis cette caisse apparaîtront ici.</p></div>}
           </section></details>
         </AppShell>

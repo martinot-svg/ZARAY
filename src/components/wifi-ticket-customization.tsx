@@ -185,13 +185,13 @@ export default function WifiTicketCustomization(){
       <h2>Couleurs et identité</h2>
       {!offerId?<div><label>Logo du site (PNG, JPEG, WebP)</label>
         <input type="file" accept="image/png,image/jpeg,image/webp" onChange={upload} disabled={analyzingLogo}/>
-        <p className="muted">À l'import, ZARAY détecte automatiquement les couleurs principales du logo dans le navigateur. Vous pouvez ensuite personnaliser librement chaque couleur.</p>
+        
         {form.logo_data_uri&&<div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:12,margin:'12px 0'}}>
          <img src={form.logo_data_uri} alt="Logo du site chargé" style={{width:148,height:74,objectFit:'contain',background:'#E8EDF1',borderRadius:10,padding:7,border:'1px solid #9BADBA'}}/>
          <button type="button" disabled={analyzingLogo} onClick={()=>void applyLogoPalette(form.logo_data_uri!,false)}>{analyzingLogo?'Analyse du logo…':'Reprendre les couleurs du logo'}</button>
          <button type="button" disabled={analyzingLogo} onClick={()=>{logoRequest.current++;change('logo_data_uri',null);}}>Retirer le logo</button>
         </div>}
-      </div>:<p className="muted">Le logo est hérité du site. La personnalisation d'une offre ne modifie pas le logo du site.</p>}
+      </div>:null}
       <div className="field-grid">
         {([['primary_color','Principale'],['secondary_color','Fond'],['accent_color','Accent / dégradé'],
            ['title_color','Texte'],['border_color','Bordure']] as const).map(([key,label])=>
@@ -217,13 +217,13 @@ export default function WifiTicketCustomization(){
             <input type="checkbox" checked={form[key]===true} onChange={e=>change(key,e.target.checked)}/> {label}
           </label>)}
       </div>
-      <p className="muted">La durée, le prix et l’état « Non activé » restent toujours visibles. Les détails facultatifs s’ajustent à l’espace disponible. Aucun QR code factice n’est imprimé.</p>
+      
       <h2>Codes d'accès — réglages existants</h2>
       <div className="field-grid">
         <label>Longueur du nom d’utilisateur (3–5)<input type="number" min={3} max={5} value={form.username_length} onChange={e=>change('username_length',Number(e.target.value))}/></label>
         <label>Longueur du mot de passe (3–5 chiffres)<input type="number" min={3} max={5} value={form.password_length} onChange={e=>change('password_length',Number(e.target.value))}/></label>
       </div>
-      <p className="muted">Les mots de passe des nouveaux tickets contiennent uniquement des chiffres (0–9). Pour réduire les tentatives de devinette, 5 chiffres sont recommandés.</p>
+      
 </details>
             <div className="wifi-template-actions">
         <button type="button" onClick={restore} disabled={saving}>Restaurer Classic</button>
@@ -242,7 +242,7 @@ export default function WifiTicketCustomization(){
       <p className="muted">Aperçu fictif · aucun accès réseau.</p>
 <details className="workspace-inline-disclosure"><summary>Aperçu et installation du portail captif</summary>      <div style={{margin:'20px 0',padding:16,border:'1px solid var(--line, #6c7d8a)',borderRadius:14}}>
        <h3>Portail captif personnalisé par site</h3>
-       <p className="muted">Identité du site et connexion par ticket.</p>
+       
        {!offerId?<div aria-label="Aperçu du portail captif du site" style={{margin:'14px auto',maxWidth:360,padding:20,borderRadius:20,background:'linear-gradient(140deg,#102436,#071522)',border:'1px solid '+(form.primary_color||'#40caff'),textAlign:'center',color:'#f2fbff'}}>
          {form.logo_data_uri?<img src={form.logo_data_uri} alt="Logo du site" style={{height:70,maxWidth:180,objectFit:'contain',marginBottom:8,padding:6,background:'#DDE8ED',borderRadius:10,filter:'drop-shadow(0 1px 1px rgba(0,0,0,.6))'}}/>:<div aria-hidden="true" style={{fontSize:25,fontWeight:800,color:form.accent_color||'#66eabe'}}>Wi-Fi</div>}
          <div style={{fontWeight:800,fontSize:16}}>{form.brand_name||site?.name||companyName}</div>
@@ -253,13 +253,13 @@ export default function WifiTicketCustomization(){
           <div style={{padding:10,borderRadius:9,background:'linear-gradient(90deg,'+(form.primary_color||'#40caff')+','+(form.accent_color||'#66eabe')+')',textAlign:'center',color:legibleInk('#081720',form.primary_color||'#40caff'),fontWeight:800}}>Se connecter</div>
          </div>
          <div style={{marginTop:10,fontSize:11,color:form.accent_color||'#66eabe',textDecoration:'underline'}}>Découvrir les offres</div>
-        </div>:<p className="muted">Pour personnaliser ce portail, choisissez « Tous les forfaits du site » : l'identité du Hotspot reste commune aux offres du même site.</p>}
-       <p className="muted">Enregistrez le modèle avant de télécharger le portail.</p>
+        </div>:null}
+       
        <button type="button" disabled={busy||!siteId} onClick={()=>void downloadPortal()}>
         <ZarayIcon name="download" size={17}/> Télécharger la page MikroTik pour ce site
        </button>
        <p className="muted"><a href={'/wifi/'+encodeURIComponent(companySlug)+(siteId?'?siteId='+encodeURIComponent(siteId):'')} target="_blank" rel="noopener noreferrer"><ZarayIcon name="next" size={17}/> Ouvrir la version web interactive du portail de ce site</a></p>
-       <p className="muted">La version web fonctionne avant connexion du MikroTik : les inscriptions résidentielles sont réelles, tandis que les tickets ne peuvent pas encore autoriser un accès Internet. Pour que le client ouvre automatiquement la page sur le Wi-Fi, le MikroTik doit autoriser les pages nécessaires et installer login.html.</p>
+       
       </div>
 </details>
             <a className="primary-link" href={'/tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)+'&tab=generate'}>

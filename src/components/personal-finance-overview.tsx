@@ -87,7 +87,7 @@ export default async function PersonalFinanceOverview({ client, companies, reque
       <div>
         <p className="eyebrow">TABLEAU DE BORD</p>
         <h2 id="personal-business-finance-title"><ZarayIcon name="finance" size={24} /> Entreprises &amp; Finance</h2>
-        <p className="muted">Suivi professionnel des entreprises liées à votre compte. Aucune finance privée.</p>
+        
       </div>
       <a className="header-link" href="/finance-globale"><ZarayIcon name="next" size={17} /> Finance globale</a>
     </div>

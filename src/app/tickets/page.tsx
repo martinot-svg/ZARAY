@@ -81,9 +81,7 @@ export default function WifiTicketsPage() {
   </section></main>;
 
   const manager=isManager(company.role);
-  return <AppShell activePath="/tickets" companyId={company.id} siteId={siteId||undefined}
-    eyebrow="ACTIVITÉ · WI-FI" title="Tickets Wi-Fi"
-    description="Préparez et imprimez les tickets avant vente. La première connexion Hotspot réussie déclenche leur comptabilisation automatique.">
+  return <AppShell activePath="/tickets" companyId={company.id} siteId={siteId||undefined} title="Tickets Wi-Fi">
     <nav className="panel" aria-label="Onglets du module Tickets Wi-Fi"
       style={{padding:10,display:'flex',gap:8,flexWrap:'wrap',marginBottom:18}}>
       {([['generate','Générer','ticket'],['sell','Stock & activations','payment'],['history','Historique','clipboard-list'],['customize','Personnalisation','settings']] as const)
@@ -97,7 +95,7 @@ export default function WifiTicketsPage() {
           </button>)}
     </nav>
     {visited.includes('generate')&&manager&&<section aria-label="Génération des tickets" hidden={tab!=='generate'}>
-      <details className="workspace-inline-disclosure"><summary>Impression des tickets</summary><p className="muted">Les tickets sont préparés sur MikroTik avant vente. Export PDF, JPEG et planches A4 de 33 tickets disponibles ici.</p></details>
+      
       <WifiTicketGenerator />
     </section>}
     {visited.includes('sell')&&(manager||company.role==='sales')&&<section aria-label="Stock et activations MikroTik" hidden={tab!=='sell'}>

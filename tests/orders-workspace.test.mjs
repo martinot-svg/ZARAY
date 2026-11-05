@@ -12,7 +12,7 @@ test('commands remain tenant-isolated and originate from subscription portal, no
  assert.match(api,/authorizeTenant\(supabase,companyId,siteId\)/);
  assert.match(api,/\.eq\('company_id',companyId\)/);
  assert.match(api,/if\(siteId\)q=q\.eq\('site_id',siteId\)/);
- assert.match(page,/créées automatiquement sur vos portails/);
+ assert.match(page,/subscription-orders/);
  assert.doesNotMatch(page,/Créer une commande|Nouvelle commande/);
  assert.match(api,/record_subscription_cash_payment/);
 });

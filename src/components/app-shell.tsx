@@ -28,25 +28,25 @@ const navigationIcons = {
   '/commandes': 'orders', '/abonnements': 'wifi', '/tickets': 'ticket', '/paiements/verification': 'payment',
   '/parametres-paiement': 'finance', '/portail': 'network', '/gestion-reseau': 'network',
 } as const;
-const editorialChapters:Record<string,{group:string;accent:string}>={
-  '/tableau-de-bord':{group:'Pilotage',accent:'mint'},
-  '/sites':{group:'Territoires',accent:'cyan'},
-  '/membres':{group:'Équipe et accès',accent:'violet'},
-  '/clients':{group:'Relation client',accent:'violet'},
-  '/offres':{group:'Catalogue',accent:'amber'},
-  '/commandes':{group:'Opérations',accent:'cyan'},
-  '/abonnements':{group:'Abonnements',accent:'violet'},
-  '/tickets':{group:'Accès Wi-Fi',accent:'amber'},
-  '/paiements/verification':{group:'Finance',accent:'amber'},
-  '/parametres-paiement':{group:'Configuration financière',accent:'amber'},
-  '/portail':{group:'Expérience client',accent:'mint'},
-  '/gestion-reseau':{group:'Infrastructure réseau',accent:'cyan'}
+const editorialChapters:Record<string,{accent:string}>={
+  '/tableau-de-bord':{accent:'mint'},
+  '/sites':{accent:'cyan'},
+  '/membres':{accent:'violet'},
+  '/clients':{accent:'violet'},
+  '/offres':{accent:'amber'},
+  '/commandes':{accent:'cyan'},
+  '/abonnements':{accent:'violet'},
+  '/tickets':{accent:'amber'},
+  '/paiements/verification':{accent:'amber'},
+  '/parametres-paiement':{accent:'amber'},
+  '/portail':{accent:'mint'},
+  '/gestion-reseau':{accent:'cyan'}
 };
 type WorkspaceCompany = { id:string; legal_name:string; role:string };
 type WorkspaceSite = { id:string; company_id:string; name:string };
-type AppShellProps = { children: ReactNode; activePath: string; companyId?:string; siteId?:string; eyebrow?: string; title?: string; description?: string; actions?: ReactNode };
+type AppShellProps = { children: ReactNode; activePath: string; companyId?:string; siteId?:string; title?: string; actions?: ReactNode };
 
-export default function AppShell({ children, activePath, companyId, siteId, eyebrow, title, description, actions }: AppShellProps) {
+export default function AppShell({ children, activePath, companyId, siteId, title, actions }: AppShellProps) {
   const router=useRouter();
   const [companies,setCompanies] = useState<WorkspaceCompany[]>([]);
   const [sites,setSites] = useState<WorkspaceSite[]>([]);
@@ -75,7 +75,10 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
     })();
     return()=>{mounted=false};
   },[companyId,siteId]);
-  const chapter=editorialChapters[activePath] ?? {group:'Espace de travail',accent:'mint'};
+  const chapter=editorialChapters[activePath] ?? {accent:'mint'};
+  const moduleTitle = title || (activePath.startsWith('/sites/')
+    ? 'Tableau de bord'
+    : sections.flatMap(section => section.items).find(([path]) => path === activePath)?.[1]) || 'Espace de travail';
   const [menuOpen, setMenuOpen] = useState(false);
   const [siteOpen, setSiteOpen] = useState(false);
   const siteButton = useRef<HTMLButtonElement>(null);
@@ -115,6 +118,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
     <div className="app-main">
       <header className="app-topbar zaray-icon-topbar">
         <Link className="app-topbar-brand" href="/mon-compte" aria-label="ZARAY · Espace personnel"><BrandLogo /></Link>
+        <h1 className="app-topbar-title" title={moduleTitle}>{moduleTitle}</h1>
         <div className="app-topbar-links">
         <div className="app-menu-container" ref={menuContainer}
           onMouseEnter={() => { if (hoverMenus()) { setMenuOpen(true); setSiteOpen(false); } }}
@@ -234,17 +238,7 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
         </div>
       </header>
       <main className="app-content">
-        {(eyebrow || title || description || actions) && <header className="page-header studio-page-header">
-          <div className="studio-page-grid">
-            <div className="studio-page-copy">
-              <p className="studio-kicker"><span className="studio-kicker-dot" aria-hidden="true"/>{chapter.group}</p>
-              {title && <h1 className="app-title">{title}</h1>}
-              {description && <details className="workspace-help"><summary>À propos du module</summary><p className="app-subtitle">{description}</p></details>}
-
-            </div>
-          </div>
-          {actions && <div className="page-actions">{actions}</div>}
-        </header>}
+        {actions && <div className="workspace-page-actions" aria-label="Actions du module">{actions}</div>}
         {children}
       </main>
     </div>

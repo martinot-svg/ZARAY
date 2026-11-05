@@ -213,3 +213,68 @@
     transform: none !important;
   }
 }
+
+
+/* The current module title is a real h1 next to the official ZARAY logo.
+   Long names are available to assistive technologies and via native tooltip. */
+.app-no-sidebar .zaray-icon-topbar .app-topbar-title {
+  order: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: #f0fff5;
+  font-size: clamp(14px, 1.32vw, 18px);
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: -.025em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-no-sidebar .zaray-icon-topbar .app-topbar-links {
+  flex-shrink: 0;
+}
+.personal-no-sidebar .personal-topbar .personal-topbar-module-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  color: #f0fff5;
+  font-size: clamp(14px, 1.32vw, 18px);
+  font-weight: 750;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-no-sidebar .workspace-page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 12px;
+  min-width: 0;
+}
+.app-no-sidebar .workspace-page-actions :is(a,button) {
+  min-height: 44px;
+}
+@media (max-width: 700px) {
+  .app-no-sidebar .zaray-icon-topbar .app-topbar-title {
+    font-size: 12px;
+    letter-spacing: -.015em;
+  }
+  .app-no-sidebar .zaray-icon-topbar .app-topbar-brand {
+    width: clamp(70px, 19vw, 90px);
+    max-width: clamp(70px, 19vw, 90px);
+  }
+  .personal-no-sidebar .personal-topbar .personal-topbar-module-title {
+    font-size: 12px;
+  }
+  .app-no-sidebar .workspace-page-actions {
+    justify-content: stretch;
+  }
+  .app-no-sidebar .workspace-page-actions > * {
+    flex: 1 1 100%;
+  }
+}

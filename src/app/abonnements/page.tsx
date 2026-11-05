@@ -123,8 +123,7 @@ export default function ResidentialPage(){
   }catch(e){setError(e instanceof Error?e.message:'Renouvellement indisponible.');}
   finally{setRenewing(false);}
  }
- return <AppShell activePath="/abonnements" eyebrow="CLIENTS · INTERNET RÉSIDENTIEL" title="Abonnements résidentiels"
-  description="Un dossier permanent par abonné, un suivi des échéances et des renouvellements, sans confondre paiement et accès Internet."
+ return <AppShell activePath="/abonnements" title="Abonnements résidentiels"
   actions={<button type="button" className="rs-refresh" disabled={!companyId||busy} onClick={()=>setRefresh(v=>v+1)}><RefreshCw size={16}/> Actualiser</button>}>
   <div className="rs-page">
    <div className="rs-context"><span>Entreprise : <strong>{company?.legal_name||'—'}</strong></span><span>Site : <strong>{activeSiteId()?siteName(activeSiteId()):'Tous les sites'}</strong></span></div>
@@ -138,7 +137,7 @@ export default function ResidentialPage(){
     ] as const).map(item=><article className="rs-stat" key={item.key}><div><span>{item.label}</span><item.icon size={17}/></div><strong>{summary[item.key].toLocaleString('fr-FR')}</strong><small>{item.note}</small></article>)}
    </section>
    <section className="rs-panel">
-    <div className="rs-panel-head"><div><h2>Répertoire des abonnés</h2><p>Issus des inscriptions et des renouvellements, sans création manuelle.</p></div><span className="rs-count">{total} résultat{total!==1?'s':''}</span></div>
+    <div className="rs-panel-head"><div><h2>Répertoire des abonnés</h2></div><span className="rs-count">{total} résultat{total!==1?'s':''}</span></div>
     <div className="rs-toolbar">
      <form className="rs-search" role="search" onSubmit={onSearch}><Search size={17}/><input aria-label="Rechercher un abonné" placeholder="Nom, e-mail, téléphone ou référence…" maxLength={100} value={input} onChange={e=>setInput(e.target.value)}/><button type="submit">Rechercher</button></form>
      <div className="rs-tabs" role="tablist" aria-label="Filtrer les abonnements">{groups.map(g=><button type="button" role="tab" aria-selected={status===g.key} key={g.key} onClick={()=>switchStatus(g.key)}>{g.label}</button>)}</div>
