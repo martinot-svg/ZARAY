@@ -60,3 +60,23 @@ test('site administrators can open domain management; clients retain white-label
  assert.match(settings,/L’automatisation Vercel n’est pas encore configurée/);
  assert.match(residential,/applicationName:name/);
 });
+
+
+test('custom-domain subscriptions and payment links cannot escape the linked site',()=>{
+ const proxy=read('proxy.ts');
+ const portal=read('src/app/api/portal/[slug]/route.ts');
+ const status=read('src/app/api/manual-payments/status/route.ts');
+ const payment=read('src/components/residential-payment-status.tsx');
+ const page=read('src/app/mon-internet/[siteId]/paiement/[reference]/page.tsx');
+ assert.match(proxy,/paymentReference\.length===12/);
+ assert.match(proxy,/target\.pathname='\/mon-internet\/'\+site\.siteId\+'\/paiement\/'/);
+ assert.match(proxy,/path==='\/api\/manual-payments\/status'/);
+ assert.match(portal,/customSiteOf\(request\)/);
+ assert.match(portal,/domainSite\.siteId/);
+ assert.match(portal,/allowedSites/);
+ assert.match(status,/if\(siteId&&order\.site_id!==siteId\)/);
+ assert.match(payment,/siteId:site.siteId/);
+ assert.match(payment,/site\.logoDataUri/);
+ assert.doesNotMatch(payment,/>ZARAY</);
+ assert.match(page,/publicResidentialSite\(siteId\)/);
+});
