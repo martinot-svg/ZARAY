@@ -1,13 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 export const dynamic = 'force-dynamic';
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
 type Context = { params: Promise<{ slug: string }> };
+const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+/** Only a verified active custom hostname may lock a company portal to one site. */
+async function customSiteOf(request:NextRequest){
+ const hostname=request.nextUrl.hostname.toLowerCase();
+ if(hostname==='localhost'||hostname==='127.0.0.1'||hostname.endsWith('.vercel.app'))return null;
+ const service=createServiceClient();
+ if(!service)throw new Error('Custom domain context unavailable');
+ const {data:binding,error}=await service.from('site_custom_domains')
+  .select('site_id,company_id').eq('hostname',hostname).eq('status','active').maybeSingle();
+ if(error||!binding)throw new Error('Custom domain not configured');
+ const {data:company,error:companyError}=await service.from('companies').select('slug')
+  .eq('id',binding.company_id).maybeSingle();
+ if(companyError||!company)throw new Error('Custom domain company unavailable');
+ return {siteId:binding.site_id,companySlug:company.slug};
+}
 
-export async function GET(_request: NextRequest, { params }: Context) {
+
+export async function GET(request: NextRequest, { params }: Context) {
   const { slug } = await params;
   if (!/^[a-z0-9-]{2,80}$/i.test(slug)) return json({ error: 'Portail introuvable.' }, 404);
   try {
+    const domainSite=await customSiteOf(request);
+    const siteId=request.nextUrl.searchParams.get('siteId')||'';
+    if(siteId&&!uuid.test(siteId))return json({error:'Site invalide.'},400);
+    if(domainSite&&(domainSite.companySlug!==slug||siteId&&siteId!==domainSite.siteId))
+      return json({error:'Site indisponible.'},404);
+    const requestedSite=domainSite?.siteId||siteId;
     const supabase = await createClient();
     const [{ data, error }, sitesResult] = await Promise.all([
       supabase.rpc('get_public_offer_catalog', { p_company_slug: slug }),
@@ -19,7 +42,9 @@ export async function GET(_request: NextRequest, { params }: Context) {
     }
     const rows = (data ?? []) as Array<{ company_name: string; company_slug: string; offer_id: string; offer_name: string; description: string; duration_minutes: number; validity_days: number; price_amount: number | string; currency: string; max_devices: number }>;
     if (!rows.length) return json({ error: 'Aucune offre active pour ce portail.' }, 404);
-    return json({ companyName: rows[0].company_name, slug: rows[0].company_slug, sites: (sitesResult.data ?? []).map((site: {site_id:string;site_name:string;site_status:string}) => ({id:site.site_id,name:site.site_name,status:site.site_status})), offers: rows.map((o) => ({ id: o.offer_id, name: o.offer_name, description: o.description, durationMinutes: o.duration_minutes, validityDays: o.validity_days, priceAmount: Number(o.price_amount), currency: o.currency, maxDevices: o.max_devices })) });
+    const allowedSites=(sitesResult.data??[]).filter((site:{site_id:string})=>!requestedSite||site.site_id===requestedSite);
+    if(requestedSite&&!allowedSites.length)return json({error:'Site indisponible.'},404);
+    return json({ companyName: rows[0].company_name, slug: rows[0].company_slug, sites: allowedSites.map((site: {site_id:string;site_name:string;site_status:string}) => ({id:site.site_id,name:site.site_name,status:site.site_status})), offers: rows.map((o) => ({ id: o.offer_id, name: o.offer_name, description: o.description, durationMinutes: o.duration_minutes, validityDays: o.validity_days, priceAmount: Number(o.price_amount), currency: o.currency, maxDevices: o.max_devices })) });
   } catch { return json({ error: 'Le catalogue est temporairement indisponible.' }, 503); }
 }
 
@@ -35,6 +60,9 @@ export async function POST(request: NextRequest, { params }: Context) {
   const customerPhone = typeof body.customerPhone === 'string' ? body.customerPhone.trim() : '';
   if (customerName.length < 2 || customerName.length > 160 || customerEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) || customerPhone.length > 32 || (customerPhone && customerPhone.length < 5)) return json({ error: 'Vérifiez le nom, l’adresse e-mail et le téléphone.' }, 400);
   try {
+    const domainSite=await customSiteOf(request);
+    if(domainSite&&(domainSite.companySlug!==slug||siteId!==domainSite.siteId))
+      return json({error:'Ce domaine accepte uniquement les inscriptions de son site.'},403);
     const supabase = await createClient();
     const { data, error } = await supabase.rpc('create_public_subscription_order_at_site', { p_company_slug: slug, p_offer_id: body.offerId, p_customer_name: customerName, p_customer_email: customerEmail, p_customer_phone: customerPhone || null, p_site_id: siteId });
     if (error) {

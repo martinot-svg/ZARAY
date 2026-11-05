@@ -4,14 +4,20 @@ import { createServiceClient } from '@/lib/supabase/service';
 export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const reference = (request.nextUrl.searchParams.get('reference') ?? '').trim().toUpperCase();
+  const siteId = (request.nextUrl.searchParams.get('siteId') ?? '').trim();
+  if(siteId&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(siteId))
+    return NextResponse.json({error:'Site invalide.'},{status:400,headers:{'Cache-Control':'no-store'}});
   if (!/^[A-F0-9]{12}$/.test(reference)) return NextResponse.json({ error: 'Référence invalide.' }, { status: 400, headers: { 'Cache-Control': 'no-store' } });
   const service = createServiceClient();
   if (!service) return NextResponse.json({ error: 'Service indisponible.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
   const { data: order, error } = await service.from('subscription_orders')
-    .select('id,company_id,public_reference,offer_name,amount,currency,status,paid_at')
+    .select('id,company_id,site_id,public_reference,offer_name,amount,currency,status,paid_at')
     .eq('public_reference', reference).maybeSingle();
   if (error) { console.error('manual payment status order lookup failed', { code: error.code }); return NextResponse.json({ error: 'Service indisponible.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } }); }
   if (!order) return NextResponse.json({ error: 'Commande introuvable.' }, { status: 404, headers: { 'Cache-Control': 'no-store' } });
+  // Branded payment pages can only show orders belonging to their site.
+  if(siteId&&order.site_id!==siteId)
+    return NextResponse.json({error:'Commande introuvable.'},{status:404,headers:{'Cache-Control':'no-store'}});
   const { data: company, error: companyError } = await service.from('companies')
     .select('slug,legal_name').eq('id',order.company_id).maybeSingle();
   if (companyError||!company) return NextResponse.json({error:'Fournisseur indisponible.'},{status:503,headers:{'Cache-Control':'no-store'}});
