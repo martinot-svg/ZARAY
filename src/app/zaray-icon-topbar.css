@@ -1,0 +1,215 @@
+/* Enterprise workspace header: official logo left, all other controls right.
+   Textual company/site context lives inside the menus, never in the toolbar.
+   Keep the existing dark galactic surface, menus, and functional icon controls. */
+.app-shell.app-no-sidebar .app-topbar.zaray-icon-topbar {
+  display: flex;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72px !important;
+  height: 72px !important;
+  gap: 14px !important;
+  padding: 8px clamp(14px, 3vw, 44px) !important;
+  overflow: visible;
+}
+.app-no-sidebar .zaray-icon-topbar .app-topbar-brand {
+  order: 0;
+  flex: 0 0 auto !important;
+  width: 126px;
+  max-width: 126px;
+  min-width: 0;
+  margin: 0 auto 0 0;
+  padding: 0 !important;
+}
+.app-no-sidebar .zaray-icon-topbar .app-topbar-brand .brand-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 126px;
+}
+.app-no-sidebar .zaray-icon-topbar .app-topbar-links {
+  order: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  gap: 8px !important;
+  margin: 0 0 0 auto;
+  min-width: 0;
+  white-space: nowrap;
+}
+.app-no-sidebar .zaray-icon-topbar .app-site-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--zaray-header-icon-size);
+  width: var(--zaray-header-icon-size);
+  min-width: 0;
+}
+.app-no-sidebar .zaray-icon-topbar .app-site-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: var(--zaray-header-icon-size) !important;
+  min-width: var(--zaray-header-icon-size) !important;
+  height: var(--zaray-header-icon-size) !important;
+  min-height: var(--zaray-header-icon-size) !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #ddffe8 !important;
+  cursor: pointer;
+}
+.app-no-sidebar .zaray-icon-topbar .app-site-button:hover,
+.app-no-sidebar .zaray-icon-topbar .app-site-button[aria-expanded="true"] {
+  color: #64ff9a !important;
+}
+.app-no-sidebar .zaray-icon-topbar .app-site-button svg {
+  width: 22px;
+  height: 22px;
+  color: currentColor !important;
+}
+.app-no-sidebar .zaray-icon-topbar .app-site-active-indicator {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  right: 7px;
+  bottom: 7px;
+  border-radius: 50%;
+  background: #21f728;
+}
+.app-no-sidebar .zaray-icon-topbar .app-nav-dropdown {
+  left: auto !important;
+  right: 0 !important;
+}
+.app-no-sidebar .zaray-icon-topbar .app-nav-current-context {
+  display: grid;
+  gap: 3px;
+  padding: 7px 10px 12px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid rgba(137,249,173,.16);
+  overflow-wrap: anywhere;
+}
+.app-no-sidebar .zaray-icon-topbar .app-nav-current-context .app-nav-label {
+  padding: 0;
+  letter-spacing: .1em;
+}
+.app-no-sidebar .zaray-icon-topbar .app-nav-current-context strong {
+  color: #ebfff1;
+  font-size: 14px;
+  font-weight: 750;
+}
+.app-no-sidebar .zaray-icon-topbar .app-nav-current-context > span:last-child:not(.app-nav-label) {
+  color: #a7dfbe;
+  font-size: 12px;
+}
+.app-no-sidebar .zaray-icon-topbar .app-site-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 100;
+  width: min(310px, calc(100vw - 24px));
+  max-height: min(70dvh, 520px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 11px;
+  border: 1px solid rgba(137,249,173,.27);
+  border-radius: 16px;
+  background: #0b201a;
+  color: #e9fff0;
+  box-shadow: 0 24px 60px rgba(0,0,0,.38);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-8px);
+  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
+}
+.app-no-sidebar .zaray-icon-topbar .app-site-dropdown.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.app-no-sidebar .zaray-icon-topbar .app-site-heading {
+  color: #a8d7bc;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: .06em;
+  margin: 3px 8px 10px;
+}
+.app-no-sidebar .zaray-icon-topbar .app-site-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #e9fff0;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.app-no-sidebar .zaray-icon-topbar .app-site-option:hover,
+.app-no-sidebar .zaray-icon-topbar .app-site-option:focus-visible {
+  background: rgba(65,255,133,.13);
+}
+.app-no-sidebar .zaray-icon-topbar .app-site-option.is-active {
+  background: linear-gradient(105deg,#21f728,#51e6b5);
+  color: #04180d;
+}
+.app-no-sidebar .zaray-icon-topbar .app-site-feedback {
+  color: #d5e9dc;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 6px 8px;
+}
+/* No prose in the bar, even on wide screens. Popover labels remain visible. */
+.app-no-sidebar .zaray-icon-topbar .topbar-icon-label,
+.app-no-sidebar .zaray-icon-topbar .zaray-theme-switch-label {
+  display: none !important;
+}
+@media (max-width: 700px) {
+  .app-shell.app-no-sidebar .app-topbar.zaray-icon-topbar {
+    --zaray-header-icon-size: clamp(40px, 10vw, 44px);
+    height: 66px !important;
+    min-height: 66px !important;
+    gap: 4px !important;
+    padding: 8px 10px !important;
+  }
+  .app-no-sidebar .zaray-icon-topbar .app-topbar-brand {
+    width: clamp(74px, 22vw, 105px);
+    max-width: clamp(74px, 22vw, 105px);
+  }
+  .app-no-sidebar .zaray-icon-topbar .app-topbar-links {
+    gap: 2px !important;
+  }
+  .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown {
+    position: fixed !important;
+    top: 68px !important;
+    left: 10px !important;
+    right: 10px !important;
+    width: auto !important;
+    max-height: calc(100dvh - 88px) !important;
+  }
+  .app-no-sidebar .zaray-icon-topbar .app-site-dropdown {
+    position: fixed;
+    top: 68px;
+    right: 10px;
+    max-height: calc(100dvh - 88px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-no-sidebar .zaray-icon-topbar .app-site-dropdown {
+    transition: none !important;
+    transform: none !important;
+  }
+}
