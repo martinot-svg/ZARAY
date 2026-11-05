@@ -31,7 +31,7 @@ test('brand identity is present on public, workspace and all auth screens',()=>{
  'src/app/reinitialiser-mot-de-passe/page.tsx',
  'src/app/paiement/[reference]/page.tsx','src/app/portail/[slug]/page.tsx'
  ]){
-  assert.match(read(path),/<BrandLogo\b/,path);
+  assert.match(read(path),/<(?:BrandLogo|StandaloneModuleHeader)\b/,path);
  }
  assert.doesNotMatch(read('src/app/page.tsx'),/ZARAY<span className="dot"/);
  assert.doesNotMatch(read('src/components/app-shell.tsx'),/ZARAY<span>/);
@@ -82,8 +82,13 @@ test('light auth card contains black/green transparent logo without an artificia
  for (const path of ['src/app/inscription/page.tsx',
  'src/app/mot-de-passe-oublie/page.tsx','src/app/reinitialiser-mot-de-passe/page.tsx',
  'src/app/entreprises/nouvelle/page.tsx']) {
-  assert.match(read(path),/BrandLogo priority surface="light"/,path);
+  assert.match(read(path),/<StandaloneModuleHeader\b/,path);
  }
+ const shared=read('src/components/standalone-module-header.tsx');
+ assert.match(shared,/BrandLogo priority surface=\{surface\}/);
+ const moduleCss=read('src/app/zaray-module-consistency.css');
+ assert.match(moduleCss,/zaray-logo-on-light\.svg/);
+ assert.match(moduleCss,/zaray-logo\.svg/);
  // Login places the official logo OUTSIDE the card and swaps assets with the theme.
  assert.match(read('src/app/connexion/page.tsx'),/BrandLogo priority surface="dark"/);
  const loginCss=read('src/app/form-proportions.css');
