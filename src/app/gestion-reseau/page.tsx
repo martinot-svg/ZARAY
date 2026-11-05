@@ -83,7 +83,7 @@ export default function NetworkPage(){
   if(!reason)return;
   await run('/api/network/device-action',{routerId:d.router_id,mac:d.mac_address,action:blocked?'block':'unblock',reason});
  }
- return <AppShell activePath="/gestion-reseau" eyebrow="INFRASTRUCTURE RÉSEAU" title="Gestion réseau" description="Routeurs MikroTik, sessions Internet, inventaire des appareils et droits d’accès — avec synchronisation depuis le réseau local.">
+ return <AppShell activePath="/gestion-reseau" title="Gestion réseau">
   <div className="workspace-grid">
    <section className="panel"><div className="panel-head"><div><h2 className="panel-title">Ajouter un MikroTik</h2><p className="muted">Rattachez un routeur à son site, puis associez le connecteur local.</p></div></div>
     <form onSubmit={add} className="form-stack compact-form">
