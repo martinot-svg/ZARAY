@@ -316,7 +316,7 @@ test('navigation has no fullscreen loading boundaries or placeholder skeletons',
  const company=source('src/app/tableau-de-bord/page.tsx');
  const site=source('src/app/sites/[siteId]/page.tsx');
  for(const page of [company,site])assert.match(page,/await getDashboardData/);
- assert.doesNotMatch(dashboard,/fetch\('\\/api\\/dashboard/);
+ assert.doesNotMatch(dashboard,/fetch\(['"]\/api\/dashboard/);
  const shell=source('src/components/app-shell.tsx');
  assert.doesNotMatch(shell,/Chargement du contexte…/);
 });
