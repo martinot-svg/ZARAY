@@ -132,7 +132,7 @@ export default function CaptivePortalPage() {
       </div>
       {!order && <>
         <h2>Inscription du client résidentiel</h2>
-        <p className="muted">Vos coordonnées seront ajoutées au répertoire Clients de votre fournisseur. Si vous avez déjà effectué une demande avec la même adresse, votre fiche sera réutilisée.</p>
+        <p className="muted">Vos coordonnées seront transmises à votre fournisseur pour traiter l’abonnement.</p>
         <form className="form-stack" onSubmit={subscribe}>
           {sites.length>1?<label>Site de raccordement<select value={siteId} onChange={e=>setSiteId(e.target.value)} required><option value="">Choisir un site</option>{sites.map(site=><option key={site.id} value={site.id}>{site.name}</option>)}</select></label>:sites.length===1?<p>Site de raccordement : <strong>{sites[0].name}</strong></p>:<p className="muted">Aucun site n'est encore enregistré. Votre fournisseur devra affecter votre dossier à un site avant l'activation.</p>}
           <label>Nom complet<input value={customerName} onChange={(e) => setCustomerName(e.target.value)} minLength={2} maxLength={160} required /></label>
