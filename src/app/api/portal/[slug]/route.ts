@@ -25,7 +25,7 @@ async function customSiteOf(request:NextRequest){
   binding=verified.data;
   if(!binding){
    const local=await service.from('site_public_links')
-    .select('site_id,company_id').eq('alias',hostname).maybeSingle();
+    .select('site_id,company_id').eq('alias',hostname.startsWith('compte.')?hostname.slice(7):hostname).maybeSingle();
    if(local.error)throw new Error('Local hostname unavailable');
    binding=local.data;
   }
