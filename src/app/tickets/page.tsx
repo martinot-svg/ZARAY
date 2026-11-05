@@ -1,4 +1,5 @@
 'use client';
+import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/app-shell';
@@ -30,7 +31,7 @@ export default function WifiTicketsPage() {
         const qs=new URLSearchParams(window.location.search);
         const companyId=qs.get('companyId')??'';
         if(!companyId){window.location.replace('/entreprises');return;}
-        const response=await fetch('/api/sites',{cache:'no-store'});
+        const response=await fetchWorkspaceDirectory();
         const data=await response.json();
         if(!response.ok)throw new Error(data.error||'Contexte entreprise indisponible.');
         const selected=(data.companies??[]).find((c:Company)=>c.id===companyId) as Company|undefined;
