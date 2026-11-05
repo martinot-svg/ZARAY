@@ -31,14 +31,14 @@ export default function PersonalShell({
   const [homeNavOpen, setHomeNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const displayName = name?.trim() || email?.split('@')[0] || 'Utilisateur ZARAY';
-  const personalModuleTitle = links.find(link => link.href === active)?.label
-    ?? ({
-      '/z-alliance':'Z’Alliance',
-      '/invitations':'Invitations',
-      '/entreprises/nouvelle':'Créer une entreprise',
-      '/z-alliance/accepter':'Invitation Z’Alliance',
-    } as Record<string, string>)[active]
-    ?? '';
+  const personalModuleTitle = ({
+    '/entreprises': 'Mes entreprises',
+    '/finance-globale': 'Finance globale',
+    '/z-alliance': 'Z’Alliance',
+    '/invitations': 'Invitations',
+    '/entreprises/nouvelle': 'Créer une entreprise',
+    '/z-alliance/accepter': 'Invitation Z’Alliance',
+  } as Record<string,string>)[active] ?? links.find(link => link.href === active)?.label ?? '';
 
   // The management dashboard requires an authorized enterprise context.
   const dashboardHref = dashboardCompanyId
@@ -81,7 +81,7 @@ export default function PersonalShell({
   return <div className={'personal-shell personal-no-sidebar' + (home ? ' personal-home-shell' : '') + (['/mon-compte', '/entreprises', '/finance-globale'].includes(active) ? ' personal-sticky-topbar' : '')}>
     <header className="personal-topbar">
       <Link href="/mon-compte" className="personal-logo" aria-label="Accueil personnel ZARAY"><BrandLogo priority /></Link>
-      {!home && personalModuleTitle && <h1 className="personal-topbar-module-title" title={personalModuleTitle}>{personalModuleTitle}</h1>}
+      {active !== '/mon-compte' && personalModuleTitle && <h1 className="personal-topbar-module-title" title={personalModuleTitle}>{personalModuleTitle}</h1>}
       <div className="personal-home-nav-control" ref={homeNavRef}
         onMouseEnter={() => { if (hoverMenus()) { setHomeNavOpen(true); setProfileOpen(false); } }}
         onMouseLeave={() => { if (hoverMenus() && !homeNavRef.current?.contains(document.activeElement)) setHomeNavOpen(false); }}>
@@ -89,7 +89,7 @@ export default function PersonalShell({
           aria-controls="personal-home-navigation-links" aria-expanded={homeNavOpen}
           aria-label="Ouvrir la navigation de mon espace ZARAY"
           onClick={() => { setHomeNavOpen(value => !value); setProfileOpen(false); }}>
-          <ZarayIcon name="menu" size={22}/><span className="topbar-icon-label">Mon espace Zaray</span>
+          <ZarayIcon name="menu" size={22}/>
         </button>
         <nav id="personal-home-navigation-links" aria-label="Navigation du compte personnel"
           className={'personal-home-nav-menu' + (homeNavOpen ? ' is-open' : '')}
@@ -137,7 +137,7 @@ export default function PersonalShell({
           aria-controls="personal-profile-actions" aria-expanded={profileOpen}
           onClick={() => { setProfileOpen(value => !value); setHomeNavOpen(false); }}>
           <span className="personal-profile-avatar" aria-hidden="true"><ZarayIcon name="profile" size={22}/></span>
-          <span className="personal-profile-copy"><strong title={displayName}>{displayName}</strong><span>Espace personnel</span></span>
+
         </button>
         <div id="personal-profile-actions"
           className={'personal-profile-dropdown' + (profileOpen ? ' is-open' : '')}
