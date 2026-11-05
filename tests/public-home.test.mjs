@@ -13,9 +13,10 @@ test('public home starts with sign-in and sign-up, never sends visitors to the d
 });
 test('public page contains structured, factual, user-oriented SaaS content',()=>{
  const home=read('src/app/page.tsx');
- for(const anchor of ['id="fonctionnalites"','id="fonctionnement"','id="avantages"','landing-final','landing-footer','aria-label="Navigation publique"'])assert.ok(home.includes(anchor),anchor);
+ for(const anchor of ['id="fonctionnalites"','id="avantages"','landing-final','landing-footer','aria-label="Navigation publique"'])assert.ok(home.includes(anchor),anchor);
  for(const feature of ['Entreprises et sites','Gestion des clients','Offres Internet','Commandes','Tickets Wi-Fi','Paiements','Tableaux de bord'])assert.ok(home.includes(feature),feature);
  assert.match(home,/configuration effective des équipements/);
+ assert.doesNotMatch(home,/id="fonctionnement"|landing-step-grid|feature\.number/);
  assert.doesNotMatch(home,/1 248|12 450 000|faker|Math\.random|entreprise de démonstration/i);
 });
 test('all identified company and site modules navigate without route skeleton screens',()=>{
