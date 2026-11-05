@@ -57,6 +57,6 @@ export default function DashboardWorkspace({ siteId, payload }: {
         </div>
       </section>
     </div>
-    {site && <p className="muted" style={{marginTop:14}}>Le catalogue d’offres appartient à l’entreprise, car le schéma actuel ne possède pas de relation offre–site. Aucune offre n’est présentée comme spécifique à ce site.</p>}
+    
   </AppShell>;
 }
