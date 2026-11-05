@@ -1,7 +1,7 @@
 'use client';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 
-import BrandLogo from '@/components/brand-logo';
+import StandaloneModuleHeader from '@/components/standalone-module-header';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -35,11 +35,8 @@ export default function NouvelleEntreprise() {
     }
   }
 
-  return <main className="form-shell auth-motion"><section className="form-card">
-    <div className="auth-brand"><Link href="/" aria-label="ZARAY · Accueil"><BrandLogo priority surface="light" /></Link></div>
-    <p className="eyebrow">ZARAY · GESTION DES ENTREPRISES</p>
-    <h1>Enregistrer mon entreprise</h1>
-    <p>Votre entreprise est enregistrée dans Supabase après vérification de la session et de l’adresse e-mail. La période d’essai est de 31 jours.</p>
+  return <main className="form-shell auth-motion"><section className="form-card zaray-utility-page">
+    <StandaloneModuleHeader title="Enregistrer mon entreprise" />
     {created ? <div role="status">
       <h2>Entreprise créée</h2>
       <p>{created.legal_name} · {created.slug} · {created.status}</p>
