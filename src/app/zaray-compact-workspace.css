@@ -330,9 +330,6 @@
 .personal-no-sidebar:not(.personal-home-shell) .personal-content .personal-business-list {
   margin-top: 0;
 }
-.personal-no-sidebar:not(.personal-home-shell) .personal-content .personal-finance-page-heading {
-  display: none;
-}
 @media (max-width: 700px) {
   .app-no-sidebar .global-workspace-module .module-grid {
     grid-template-columns: minmax(0,1fr) !important;
