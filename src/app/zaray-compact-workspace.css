@@ -1,0 +1,313 @@
+/* ZARAY — compact workspace density
+   Presentation only: preserve data, access, form behavior, dark/light contrast,
+   printed ticket geometry, and Z'Accueil's full-screen celestial experience. */
+:root {
+  --zaray-dense-gap: 10px;
+  --zaray-dense-pad: clamp(13px, 1.35vw, 18px);
+  --zaray-dense-radius: 13px;
+}
+
+/* A shorter title bar and less blank canvas across every enterprise module. */
+.app-no-sidebar .app-content {
+  padding: 18px clamp(14px, 2.2vw, 30px) 64px !important;
+}
+.app-no-sidebar .page-header.studio-page-header {
+  min-height: 0 !important;
+  padding: clamp(15px, 1.65vw, 22px) clamp(17px, 2vw, 27px) !important;
+  margin-bottom: 13px !important;
+  gap: 12px !important;
+  border-radius: 12px 20px 12px 20px !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,.12) !important;
+}
+.app-no-sidebar .studio-page-header .app-title {
+  font-size: clamp(22px, 2.25vw, 32px) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -.045em !important;
+}
+.app-no-sidebar .studio-page-header .studio-kicker {
+  font-size: 9px !important;
+  letter-spacing: .08em !important;
+  margin-bottom: 5px !important;
+}
+.app-no-sidebar .studio-page-header .workspace-help {
+  margin-top: 5px !important;
+}
+.app-no-sidebar .studio-page-header .workspace-help > summary {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 11px;
+}
+.app-no-sidebar .studio-page-header .page-actions {
+  margin: 0 !important;
+  max-width: none;
+  align-self: center !important;
+  gap: 7px;
+}
+.app-no-sidebar .studio-page-header .page-actions .primary-link {
+  min-height: 44px;
+  padding: 8px 13px !important;
+  border-radius: 9px !important;
+  font-size: 12px;
+  box-shadow: none;
+}
+.app-no-sidebar .studio-page-header .studio-page-grid {
+  min-width: 0;
+}
+
+/* Shared panels and dashboard-like grids: compress whitespace, not text or data. */
+.app-no-sidebar .app-content .panel {
+  min-width: 0;
+  min-height: 0;
+  padding: var(--zaray-dense-pad) !important;
+  border-radius: var(--zaray-dense-radius) !important;
+  box-shadow: 0 8px 26px rgba(0,0,0,.09) !important;
+}
+.app-no-sidebar .app-content .panel .panel-head {
+  padding-bottom: 9px !important;
+  margin-bottom: 10px !important;
+  gap: 8px;
+}
+.app-no-sidebar .app-content .panel .panel-title {
+  font-size: clamp(14px, 1.2vw, 17px) !important;
+  line-height: 1.3;
+  letter-spacing: -.025em;
+}
+.app-no-sidebar .module-grid,
+.app-no-sidebar .workspace-grid {
+  gap: var(--zaray-dense-gap) !important;
+}
+.app-no-sidebar .app-content .module {
+  min-height: 0 !important;
+  padding: var(--zaray-dense-pad) !important;
+  border-radius: var(--zaray-dense-radius) !important;
+}
+.app-no-sidebar .app-content .module h3 {
+  font-size: clamp(15px, 1.3vw, 19px);
+  margin: 8px 0 5px;
+}
+.app-no-sidebar .app-content .module-status {
+  margin-top: 8px;
+  padding-top: 6px;
+}
+.app-no-sidebar .toolbar.panel {
+  gap: 10px !important;
+  padding: 12px 15px !important;
+}
+.app-no-sidebar .toolbar-main,
+.app-no-sidebar .field-grid {
+  gap: 9px;
+}
+.app-no-sidebar .app-content .empty-state {
+  min-height: 0;
+  padding: 15px 14px !important;
+  border-radius: 11px !important;
+}
+.app-no-sidebar .app-content .empty-state p {
+  margin: 5px 0 0;
+}
+.app-no-sidebar .app-content .data-row {
+  padding: 10px 6px !important;
+  gap: 10px;
+}
+.app-no-sidebar .app-content .data-list {
+  gap: 3px;
+}
+.app-no-sidebar .app-content .data-table :is(th,td) {
+  padding: 10px 12px !important;
+  vertical-align: middle;
+  line-height: 1.4;
+}
+.app-no-sidebar .app-content .status-pill {
+  padding: 4px 8px;
+}
+.app-no-sidebar .app-content .workspace-disclosure,
+.app-no-sidebar .app-content .workspace-inline-disclosure {
+  margin-block: 9px;
+}
+.app-no-sidebar .app-content .workspace-disclosure > summary,
+.app-no-sidebar .app-content .workspace-inline-disclosure > summary {
+  min-height: 44px;
+  padding: 9px 13px;
+}
+.app-no-sidebar .app-content .form-stack {
+  gap: 12px;
+}
+
+/* KPI blocks are information strips rather than empty decorative cards. */
+.app-no-sidebar .app-content .kpi-grid {
+  gap: 9px !important;
+  margin: 11px 0 14px !important;
+}
+.app-no-sidebar .app-content .kpi-grid .kpi {
+  padding: 13px 14px 12px !important;
+  min-height: 99px !important;
+  height: auto !important;
+  border-radius: 10px 15px 10px 15px !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,.08) !important;
+}
+.app-no-sidebar .app-content .kpi-grid .kpi:before {
+  left: 14px;
+  width: 28px;
+  height: 2px;
+}
+.app-no-sidebar .app-content .kpi-grid .kpi:after {
+  width: 74px;
+  height: 74px;
+  right: -26px;
+  top: -24px;
+}
+.app-no-sidebar .app-content .kpi-grid .kpi-label {
+  font-size: 9px !important;
+  gap: 6px !important;
+  line-height: 1.25;
+  letter-spacing: .04em !important;
+}
+.app-no-sidebar .app-content .kpi-grid .kpi-label svg {
+  width: 15px;
+  height: 15px;
+}
+.app-no-sidebar .app-content .kpi-grid .kpi .kpi-value {
+  font-size: clamp(25px, 2.25vw, 32px) !important;
+  margin-top: 7px !important;
+  line-height: 1.05 !important;
+  overflow-wrap: anywhere;
+}
+.app-no-sidebar .app-content .kpi-note {
+  font-size: 10px !important;
+  line-height: 1.35;
+  margin-top: 3px;
+}
+.app-no-sidebar .app-content .quick-grid {
+  gap: 8px !important;
+}
+.app-no-sidebar .app-content .quick-action {
+  min-height: 44px !important;
+  padding: 10px 12px !important;
+  gap: 8px !important;
+  border-radius: 10px !important;
+  font-size: 12px;
+}
+.app-no-sidebar .app-content .quick-action svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Dashboard-specific two equal work zones, with no fake minimum panel height. */
+@media (min-width: 801px) {
+  .app-no-sidebar .dashboard-operations-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    gap: 11px !important;
+    align-items: start;
+  }
+}
+@media (min-width: 1200px) {
+  .app-no-sidebar .dashboard-metrics-grid {
+    grid-template-columns: repeat(6, minmax(0,1fr)) !important;
+  }
+}
+@media (min-width: 801px) and (max-width: 1199px) {
+  .app-no-sidebar .dashboard-metrics-grid {
+    grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  }
+}
+
+/* Personal workspace pages get the same density; Z'Accueil remains untouched. */
+.personal-no-sidebar:not(.personal-home-shell) .personal-content {
+  padding: clamp(18px,2.2vw,29px) !important;
+  padding-bottom: max(45px, env(safe-area-inset-bottom, 0px)) !important;
+}
+.personal-no-sidebar:not(.personal-home-shell) .personal-content .panel {
+  min-height: 0;
+  padding: var(--zaray-dense-pad) !important;
+  margin-block: 10px !important;
+  border-radius: var(--zaray-dense-radius) !important;
+}
+.personal-no-sidebar:not(.personal-home-shell) .personal-content :is(.personal-business-card,.personal-business-item) {
+  padding: 14px !important;
+  border-radius: var(--zaray-dense-radius) !important;
+  min-height: 0;
+}
+.personal-no-sidebar:not(.personal-home-shell) .personal-business-list,
+.personal-no-sidebar:not(.personal-home-shell) :is(.personal-finance-charts,.personal-finance-kpis,.zalliance-sections) {
+  gap: 10px !important;
+}
+.personal-no-sidebar:not(.personal-home-shell) .personal-finance-kpis .kpi {
+  min-height: 100px !important;
+  padding: 14px !important;
+  border-radius: var(--zaray-dense-radius) !important;
+}
+.personal-no-sidebar:not(.personal-home-shell) .personal-finance-kpis .kpi-value {
+  font-size: clamp(23px,2.3vw,31px) !important;
+}
+.personal-no-sidebar:not(.personal-home-shell) .personal-page-heading {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+}
+.personal-no-sidebar:not(.personal-home-shell) .personal-page-heading h1 {
+  font-size: clamp(25px,3vw,35px);
+  margin-block: 5px 8px;
+}
+
+/* Viewport-specific density: never trade it for clipped data or tiny controls. */
+@media (max-width: 800px) {
+  .app-no-sidebar .app-content {
+    padding: 14px 13px calc(94px + env(safe-area-inset-bottom,0px)) !important;
+  }
+  .app-no-sidebar .page-header.studio-page-header {
+    padding: 14px 15px !important;
+    margin-bottom: 10px !important;
+  }
+  .app-no-sidebar .studio-page-header .app-title {
+    font-size: clamp(22px,4vw,29px) !important;
+  }
+  .app-no-sidebar .dashboard-operations-grid {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .app-no-sidebar .dashboard-metrics-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .app-no-sidebar .app-content .panel {
+    padding: 13px !important;
+  }
+}
+@media (max-width: 700px) {
+  .app-no-sidebar .page-header.studio-page-header {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px !important;
+  }
+  .app-no-sidebar .studio-page-header .page-actions {
+    width: 100%;
+  }
+  .app-no-sidebar .studio-page-header .page-actions .primary-link {
+    width: 100%;
+  }
+  .app-no-sidebar .app-content .kpi-grid .kpi {
+    padding: 11px 12px !important;
+    min-height: 91px !important;
+  }
+  .app-no-sidebar .app-content .quick-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .personal-no-sidebar:not(.personal-home-shell) .personal-content {
+    padding: 15px 12px calc(100px + env(safe-area-inset-bottom,0px)) !important;
+  }
+}
+@media (max-width: 380px) {
+  .app-no-sidebar .app-content .quick-grid {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .app-no-sidebar .dashboard-metrics-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media print {
+  /* Printed receipts and Wi-Fi ticket grids retain their existing dimensions. */
+  .app-no-sidebar :is(.receipt-preview,.wifi-voucher-print-canvas,.zaray-voucher-print-canvas) {
+    break-inside: avoid;
+  }
+}

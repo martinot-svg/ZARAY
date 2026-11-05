@@ -28,7 +28,7 @@ export default function DashboardWorkspace({ siteId, payload }: {
     title={site?company.legal_name+' / '+site.name+' — Tableau de bord':company.legal_name+' — Tableau de bord'}
     description={site?company.legal_name+' / '+site.name+' · Données de ce site exclusivement.': 'Vue globale de '+company.legal_name+' · données réelles issues de Supabase.'}
     actions={site?<Link className="primary-link" href={companyLink}><ZarayIcon name="back" size={18} /> Retour à la vue générale</Link>:<Link className="primary-link" href={contextual('/sites')}><ZarayIcon name="site" size={18} /> Gérer les sites</Link>}>
-    <section className="kpi-grid" aria-label="Indicateurs réels">
+    <section className="kpi-grid dashboard-metrics-grid" aria-label="Indicateurs réels">
       {metrics.map(({key,label})=><article className="kpi" key={key}>
         <div className="kpi-label"><ZarayIcon name={metricIcons[key] ?? "dashboard"} size={18} /> {label.toUpperCase()}</div>
         <div className="kpi-value">{values[key]===null?<span className="muted">Indisponible</span>:values[key]!.toLocaleString('fr-FR')}</div>
@@ -41,7 +41,7 @@ export default function DashboardWorkspace({ siteId, payload }: {
         <strong><ZarayIcon name="site" size={18} /> {s.name}</strong><span className="status-pill">{statuses[s.status]??s.status}</span>
       </Link>)}</div>:<div className="empty-state"><strong>Entreprise créée.</strong><p>Vous pouvez maintenant créer votre premier site.</p><Link className="primary-link" href={contextual('/sites')}><ZarayIcon name="add" size={18} /> Créer un site</Link></div>}
     </section>}
-    <div className="module-grid">
+    <div className="module-grid dashboard-operations-grid">
       <section className="panel"><div className="panel-head"><div className="panel-title">Activité récente</div></div>
         {recentOrders.length?<div className="data-list">{recentOrders.map(o=><div className="data-row" key={o.id}>
           <div><strong>{o.offer_name}</strong><div className="muted">{o.customer_name} · {o.public_reference}</div></div>

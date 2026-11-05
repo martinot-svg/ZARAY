@@ -22,6 +22,7 @@ jobs:
             tests/context.test.mjs \
             tests/navigation.test.mjs \
             tests/enterprise-icon-topbar.test.mjs \
+            tests/compact-workspace-density.test.mjs \
             tests/brand.test.mjs \
             tests/wifi-key-rotation.test.mjs \
             tests/network-connector-security.test.mjs \
