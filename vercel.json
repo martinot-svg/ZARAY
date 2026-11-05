@@ -6,5 +6,11 @@
       "*": false,
       "main": true
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/residential-notifications",
+      "schedule": "0 6 * * *"
+    }
+  ]
 }
