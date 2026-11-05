@@ -116,8 +116,10 @@ test('company and site URLs are server-authorized before any dashboard data is s
 test('company dashboard scope stays visible, navigation remains compact and mobile-friendly',()=>{
  const dashboard=source('src/components/dashboard-workspace.tsx');
  const css=source('src/app/globals.css');
- assert.match(dashboard,/company\.legal_name\+' — Tableau de bord'/);
- assert.match(dashboard,/site\.name\+' — Tableau de bord'/);
+ assert.match(dashboard,/title="Tableau de bord"/);
+ const shell=source('src/components/app-shell.tsx');
+ assert.match(shell,/className="app-topbar-title"/);
+ assert.match(shell,/companies\.find\(c => c.id === activeCompany\)/);
  assert.match(css,/\.app-shell \.app-main\{margin-left:0\}/);
  assert.match(css,/\.app-shell \.app-nav\.is-open/);
  assert.match(css,/@media\(max-width:700px\)/);
