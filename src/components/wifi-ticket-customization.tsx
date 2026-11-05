@@ -78,8 +78,8 @@ export default function WifiTicketCustomization(){
  }
  async function upload(e:ChangeEvent<HTMLInputElement>){
    const file=e.target.files?.[0];if(!file)return;
-   if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>130000){
-     setError('Logo PNG, JPEG ou WebP, maximum 130 Ko.');return;
+   if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>2_000_000){
+     setError('Logo PNG, JPEG ou WebP, maximum technique 2 Mo.');return;
    }
    const reader=new FileReader();
    reader.onload=()=>{if(typeof reader.result==='string')void applyLogoPalette(reader.result,true);};
@@ -187,7 +187,7 @@ export default function WifiTicketCustomization(){
         <input type="file" accept="image/png,image/jpeg,image/webp" onChange={upload} disabled={analyzingLogo}/>
         
         {form.logo_data_uri&&<div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:12,margin:'12px 0'}}>
-         <img src={form.logo_data_uri} alt="Logo du site chargé" style={{width:148,height:74,objectFit:'contain',background:'#E8EDF1',borderRadius:10,padding:7,border:'1px solid #9BADBA'}}/>
+         <img src={form.logo_data_uri} alt="Logo du site chargé" style={{maxWidth:'100%',width:'auto',height:'auto',maxHeight:180,objectFit:'contain',background:'#E8EDF1',borderRadius:10,padding:7,border:'1px solid #9BADBA'}}/>
          <button type="button" disabled={analyzingLogo} onClick={()=>void applyLogoPalette(form.logo_data_uri!,false)}>{analyzingLogo?'Analyse du logo…':'Reprendre les couleurs du logo'}</button>
          <button type="button" disabled={analyzingLogo} onClick={()=>{logoRequest.current++;change('logo_data_uri',null);}}>Retirer le logo</button>
         </div>}
@@ -244,7 +244,7 @@ export default function WifiTicketCustomization(){
        <h3>Portail captif personnalisé par site</h3>
        
        {!offerId?<div aria-label="Aperçu du portail captif du site" style={{margin:'14px auto',maxWidth:360,padding:20,borderRadius:20,background:'linear-gradient(140deg,#102436,#071522)',border:'1px solid '+(form.primary_color||'#40caff'),textAlign:'center',color:'#f2fbff'}}>
-         {form.logo_data_uri?<img src={form.logo_data_uri} alt="Logo du site" style={{height:70,maxWidth:180,objectFit:'contain',marginBottom:8,padding:6,background:'#DDE8ED',borderRadius:10,filter:'drop-shadow(0 1px 1px rgba(0,0,0,.6))'}}/>:<div aria-hidden="true" style={{fontSize:25,fontWeight:800,color:form.accent_color||'#66eabe'}}>Wi-Fi</div>}
+         {form.logo_data_uri?<img src={form.logo_data_uri} alt="Logo du site" style={{height:'auto',maxHeight:'min(24vh,180px)',maxWidth:'100%',width:'auto',objectFit:'contain',marginBottom:8,padding:6,background:'#DDE8ED',borderRadius:10,filter:'drop-shadow(0 1px 1px rgba(0,0,0,.6))'}}/>:<div aria-hidden="true" style={{fontSize:25,fontWeight:800,color:form.accent_color||'#66eabe'}}>Wi-Fi</div>}
          <div style={{fontWeight:800,fontSize:16}}>{form.brand_name||site?.name||companyName}</div>
          <p style={{fontSize:11,color:'#b8d3d9'}}>{form.welcome_message||'Chaque connexion ouvre votre univers.'}</p>
          <div style={{display:'grid',gap:8,textAlign:'left',fontSize:11,marginTop:14}}>
