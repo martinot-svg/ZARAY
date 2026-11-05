@@ -364,7 +364,7 @@
  border-color:var(--zw-site-primary)!important;
 }
 .zw-root[data-site-branded="true"] .zw-simple-brand .zw-site-logo{
- display:block;width:auto;max-width:min(215px,55vw);height:72px;object-fit:contain;
+ display:block;width:auto;max-width:100%;height:auto;max-height:min(28dvh,240px);object-fit:contain;
  background:transparent;border-radius:10px;
 }
 .zw-root[data-site-branded="true"] .zw-simple-brand .zw-site-name{
