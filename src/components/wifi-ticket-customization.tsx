@@ -5,6 +5,7 @@ import VoucherCanvas from '@/components/voucher-canvas';
 import type { TicketVisual,TicketStyle,PrintableVoucher } from '@/lib/ticket-pdf';
 import {legibleInk} from '@/lib/ticket-pdf';
 import {paletteFromLogo} from '@/lib/logo-palette';
+import {optimizeLogo} from '@/lib/logo-optimizer';
 
 type Site={id:string;company_id:string;name:string};
 type Offer={id:string;name:string;status:string;duration_minutes:number;validity_days:number;price_amount:number|string;currency:string};
@@ -66,14 +67,16 @@ export default function WifiTicketCustomization(){
   const request=++logoRequest.current;
   setAnalyzingLogo(true);setError('');setNotice('');
   try{
-   const palette=await paletteFromLogo(uri);
+   const cleaned=replaceLogo?await optimizeLogo(uri):null;
+   const targetUri=cleaned?.dataUri??uri;
+   const palette=await paletteFromLogo(targetUri);
    if(request!==logoRequest.current)return;
-   setForm(previous=>({...previous,...(palette??{}),...(replaceLogo?{logo_data_uri:uri}:{})}));
-   setNotice(palette
-    ?'Couleurs détectées dans le logo : ajustez-les librement, puis enregistrez ce site.'
-    :'Logo chargé. Les couleurs ne peuvent pas être détectées : choisissez-les manuellement.');
+   setForm(previous=>({...previous,...(palette??{}),...(replaceLogo?{logo_data_uri:targetUri}:{})}));
+   setNotice(replaceLogo
+    ?(cleaned?.removedBackground?'Arrière-plan retiré, marges rognées et logo optimisé.':'Logo optimisé ; les fonds ambigus sont conservés pour protéger ses détails.')
+    :(palette?'Couleurs du logo actualisées.':'Logo conservé.'));
   }catch{
-   if(request===logoRequest.current)setError('Impossible d’analyser les couleurs du logo.');
+   if(request===logoRequest.current)setError('Le traitement du logo a échoué. Vérifiez son format et sa taille.');
   }finally{if(request===logoRequest.current)setAnalyzingLogo(false);}
  }
  async function upload(e:ChangeEvent<HTMLInputElement>){
@@ -185,6 +188,7 @@ export default function WifiTicketCustomization(){
       <h2>Couleurs et identité</h2>
       {!offerId?<div><label>Logo du site (PNG, JPEG, WebP)</label>
         <input type="file" accept="image/png,image/jpeg,image/webp" onChange={upload} disabled={analyzingLogo}/>
+        <p className="muted">Détourage automatique des fonds uniformes, rognage et optimisation sans retouche manuelle.</p>
         
         {form.logo_data_uri&&<div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:12,margin:'12px 0'}}>
          <img src={form.logo_data_uri} alt="Logo du site chargé" style={{maxWidth:'100%',width:'auto',height:'auto',maxHeight:180,objectFit:'contain',background:'#E8EDF1',borderRadius:10,padding:7,border:'1px solid #9BADBA'}}/>
