@@ -147,8 +147,9 @@ export async function proxy(request:NextRequest){
  }else if(platformHost)response=NextResponse.next({request});
  else{
   try{
+   const accountAlias=hostname.startsWith('compte.')?hostname.slice('compte.'.length):null;
    const site=await activeSiteForHostname(hostname)
-    ?? await activeSiteForPublicHostname(hostname,'alias');
+    ?? await activeSiteForPublicHostname(accountAlias||hostname,'alias');
    response=customHostResponse(request,site);
   }catch{
    response=new NextResponse('Domaine temporairement indisponible.',{
