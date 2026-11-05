@@ -77,37 +77,61 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
   },[companyId,siteId]);
   const chapter=editorialChapters[activePath] ?? {group:'Espace de travail',accent:'mint'};
   const [menuOpen, setMenuOpen] = useState(false);
+  const [siteOpen, setSiteOpen] = useState(false);
+  const siteButton = useRef<HTMLButtonElement>(null);
+  const siteContainer = useRef<HTMLDivElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
   const firstMenuLink = useRef<HTMLAnchorElement>(null);
   const menuContainer = useRef<HTMLDivElement>(null);
   const themeButtonRef = useRef<HTMLButtonElement>(null);
   const hoverMenus = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   useEffect(() => {
-    if (!menuOpen) return;
-    // Hover opening must not steal keyboard focus from the toolbar.
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') { setMenuOpen(false); menuButton.current?.focus(); } };
+    if (!menuOpen && !siteOpen) return;
+    // Both icon menus remain keyboard accessible without hijacking toolbar focus.
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (siteOpen) { setSiteOpen(false); siteButton.current?.focus(); }
+      else { setMenuOpen(false); menuButton.current?.focus(); }
+    };
     const closeOutside = (event: PointerEvent) => {
-      if (event.target instanceof Node && !menuContainer.current?.contains(event.target)) setMenuOpen(false);
+      if (!(event.target instanceof Node)) return;
+      if (menuOpen && !menuContainer.current?.contains(event.target)) setMenuOpen(false);
+      if (siteOpen && !siteContainer.current?.contains(event.target)) setSiteOpen(false);
     };
     window.addEventListener('keydown', closeOnEscape);
     document.addEventListener('pointerdown', closeOutside);
     return () => { window.removeEventListener('keydown', closeOnEscape); document.removeEventListener('pointerdown', closeOutside); };
-  }, [menuOpen]);
+  }, [menuOpen, siteOpen]);
+
+  function selectSite(next: string) {
+    setSiteOpen(false);
+    if (!activeCompany) return;
+    router.push(next
+      ? '/sites/' + encodeURIComponent(next) + '?companyId=' + encodeURIComponent(activeCompany)
+      : '/tableau-de-bord?companyId=' + encodeURIComponent(activeCompany));
+  }
   return <div className="app-shell app-no-sidebar" data-workspace-chapter={chapter.accent} data-workspace-path={activePath}>
     <div className="app-main">
-      <header className="app-topbar">
+      <header className="app-topbar zaray-icon-topbar">
+        <Link className="app-topbar-brand" href="/mon-compte" aria-label="ZARAY · Espace personnel"><BrandLogo /></Link>
+        <div className="app-topbar-links">
         <div className="app-menu-container" ref={menuContainer}
-          onMouseEnter={() => { if (hoverMenus()) setMenuOpen(true); }}
+          onMouseEnter={() => { if (hoverMenus()) { setMenuOpen(true); setSiteOpen(false); } }}
           onMouseLeave={() => { if (hoverMenus() && !menuContainer.current?.contains(document.activeElement)) setMenuOpen(false); }}>
           <button ref={menuButton} className="app-menu-button" type="button"
             aria-controls="zaray-app-nav" aria-expanded={menuOpen}
             aria-label="Ouvrir la navigation de l’entreprise"
-            onClick={() => setMenuOpen(value => !value)}>
+            onClick={() => { setMenuOpen(value => !value); setSiteOpen(false); }}>
             <ZarayIcon name="menu" size={22} /><span className="topbar-icon-label">Menu</span>
           </button>
           <nav id="zaray-app-nav"
             className={'app-nav-dropdown' + (menuOpen ? ' is-open' : '')}
             aria-label="Navigation de l’entreprise" inert={!menuOpen} aria-hidden={!menuOpen}>
+            <div className="app-nav-current-context" aria-label="Contexte de travail">
+              <span className="app-nav-label">ENTREPRISE</span>
+              <strong>{companies.find(c => c.id === activeCompany)?.legal_name ?? (contextError || 'Sélectionner une entreprise')}</strong>
+              {activeSite && <span>{sites.find(site => site.id === activeSite)?.name ?? 'Site actif'}</span>}
+            </div>
             {activeSite && activeCompany && <div className="app-nav-group">
               <span className="app-nav-label">SITE ACTIF</span>
               <Link className="app-nav-link" href={'/sites/'+encodeURIComponent(activeSite)+'?companyId='+encodeURIComponent(activeCompany)}
@@ -143,20 +167,31 @@ export default function AppShell({ children, activePath, companyId, siteId, eyeb
             </div>
           </nav>
         </div>
-        <Link className="app-topbar-brand" href="/mon-compte" aria-label="ZARAY · Espace personnel"><BrandLogo /></Link>
-        <div className="workspace-context">
-          <strong>Compte ZARAY</strong><span className="muted"> / </span>
-          {companies.length>0 && activeCompany ? <>
-            <strong aria-label="Entreprise active">{companies.find(c=>c.id===activeCompany)?.legal_name ?? 'Entreprise'}</strong>
-            <label>Site <select aria-label="Site actif" value={activeSite} onChange={e=>{
-              const next=e.target.value;
-              router.push(next?'/sites/'+encodeURIComponent(next)+'?companyId='+encodeURIComponent(activeCompany):'/tableau-de-bord?companyId='+encodeURIComponent(activeCompany));
-            }}>
-              <option value="">Vue générale</option>{sites.filter(s=>s.company_id===activeCompany).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
-            </select></label>
-          </>:<span className="muted">{contextError||null}</span>}
+        <div className="app-site-container" ref={siteContainer}>
+          <button ref={siteButton} type="button" className="app-site-button"
+            aria-label={activeSite ? 'Changer de site : ' + (sites.find(s => s.id === activeSite)?.name ?? 'Site actif') : 'Choisir un site'}
+            title="Changer de site" aria-controls="zaray-site-picker" aria-expanded={siteOpen}
+            onClick={() => { setSiteOpen(value => !value); setMenuOpen(false); }}>
+            <ZarayIcon name="site" size={22} />
+            {activeSite && <span className="app-site-active-indicator" aria-hidden="true" />}
+          </button>
+          <div id="zaray-site-picker" className={'app-site-dropdown' + (siteOpen ? ' is-open' : '')}
+            role="group" aria-label="Choix du site" inert={!siteOpen} aria-hidden={!siteOpen}>
+            <p className="app-site-heading">Site actif</p>
+            {activeCompany ? <>
+              <button type="button" className={'app-site-option' + (!activeSite ? ' is-active' : '')}
+                aria-current={!activeSite ? 'page' : undefined} onClick={() => selectSite('')}>
+                <ZarayIcon name="dashboard" size={18} /> Vue générale
+              </button>
+              {sites.filter(s => s.company_id === activeCompany).map(site => (
+                <button key={site.id} type="button" className={'app-site-option' + (activeSite === site.id ? ' is-active' : '')}
+                  aria-current={activeSite === site.id ? 'page' : undefined} onClick={() => selectSite(site.id)}>
+                  <ZarayIcon name="site" size={18} /> {site.name}
+                </button>
+              ))}
+            </> : <p className="app-site-feedback">{contextError || 'Aucune entreprise sélectionnée.'}</p>}
+          </div>
         </div>
-        <div className="app-topbar-links">
           <div className="topbar-icon-group topbar-theme-control">
             <ThemeSwitch buttonRef={themeButtonRef} hideNativeTitle />
             <div className="topbar-icon-curtain" aria-label="Thème de l'interface">
