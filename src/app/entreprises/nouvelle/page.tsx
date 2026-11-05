@@ -40,7 +40,6 @@ export default function NouvelleEntreprise() {
     {created ? <div role="status">
       <h2>Entreprise créée</h2>
       <p>{created.legal_name} · {created.slug} · {created.status}</p>
-      <p>Votre compte est maintenant propriétaire de cette entreprise. Vous pouvez ouvrir le tableau de bord ou créer votre premier site.</p>
       <p><Link className="primary-link" href={'/tableau-de-bord?companyId='+encodeURIComponent(created.id)}><ZarayIcon name="add" size={18} /> Ouvrir le tableau de bord →</Link></p>
       <p><Link href={'/sites?companyId='+encodeURIComponent(created.id)}><ZarayIcon name="add" size={18} /> Créer ou gérer un site</Link></p>
     </div> : <form onSubmit={submit} className="form-stack">
