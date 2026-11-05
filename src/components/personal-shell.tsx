@@ -103,6 +103,9 @@ export default function PersonalShell({
         </nav>
       </div>
       <div className="personal-topbar-actions">
+        <Link href="/notifications" className="personal-home-nav-toggle" aria-label="Notifications générales" title="Notifications générales">
+          <ZarayIcon name="notifications" size={22}/>
+        </Link>
         {!home && <div className="topbar-icon-group topbar-theme-control">
           <ThemeSwitch buttonRef={themeButtonRef} hideNativeTitle />
           <div className="topbar-icon-curtain" aria-label="Thème de l'interface">
