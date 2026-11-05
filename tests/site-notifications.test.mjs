@@ -32,7 +32,7 @@ test('company notifications are restricted to verified owner/admin accounts',()=
  const route=read('src/app/api/notifications/route.ts');
  assert.match(route,/authorizeTenant\(session,companyId,siteId\)/);
  assert.match(route,/\['owner','admin'\]\.includes\(access.member.role\)/);
- assert.match(route,/\.eq\('company_id',companyId\)/);
+ assert.match(route,/\.in\('company_id',context.companyIds!\)/);
  assert.match(route,/\.eq\('user_id',context.userId!\)/);
 });
 
