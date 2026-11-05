@@ -28,19 +28,19 @@ const navigationIcons = {
   '/commandes': 'orders', '/abonnements': 'wifi', '/tickets': 'ticket', '/paiements/verification': 'payment',
   '/parametres-paiement': 'finance', '/portail': 'network', '/gestion-reseau': 'network',
 } as const;
-const editorialChapters:Record<string,{group:string;accent:string}>={
-  '/tableau-de-bord':{group:'Pilotage',accent:'mint'},
-  '/sites':{group:'Territoires',accent:'cyan'},
-  '/membres':{group:'Équipe et accès',accent:'violet'},
-  '/clients':{group:'Relation client',accent:'violet'},
-  '/offres':{group:'Catalogue',accent:'amber'},
-  '/commandes':{group:'Opérations',accent:'cyan'},
-  '/abonnements':{group:'Abonnements',accent:'violet'},
-  '/tickets':{group:'Accès Wi-Fi',accent:'amber'},
-  '/paiements/verification':{group:'Finance',accent:'amber'},
-  '/parametres-paiement':{group:'Configuration financière',accent:'amber'},
-  '/portail':{group:'Expérience client',accent:'mint'},
-  '/gestion-reseau':{group:'Infrastructure réseau',accent:'cyan'}
+const editorialChapters:Record<string,{accent:string}>={
+  '/tableau-de-bord':{accent:'mint'},
+  '/sites':{accent:'cyan'},
+  '/membres':{accent:'violet'},
+  '/clients':{accent:'violet'},
+  '/offres':{accent:'amber'},
+  '/commandes':{accent:'cyan'},
+  '/abonnements':{accent:'violet'},
+  '/tickets':{accent:'amber'},
+  '/paiements/verification':{accent:'amber'},
+  '/parametres-paiement':{accent:'amber'},
+  '/portail':{accent:'mint'},
+  '/gestion-reseau':{accent:'cyan'}
 };
 type WorkspaceCompany = { id:string; legal_name:string; role:string };
 type WorkspaceSite = { id:string; company_id:string; name:string };
@@ -75,7 +75,7 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
     })();
     return()=>{mounted=false};
   },[companyId,siteId]);
-  const chapter=editorialChapters[activePath] ?? {group:'Espace de travail',accent:'mint'};
+  const chapter=editorialChapters[activePath] ?? {accent:'mint'};
   const moduleTitle = title || (activePath.startsWith('/sites/')
     ? 'Tableau de bord'
     : sections.flatMap(section => section.items).find(([path]) => path === activePath)?.[1]) || 'Espace de travail';
