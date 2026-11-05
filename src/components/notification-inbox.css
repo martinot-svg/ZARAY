@@ -1,0 +1,21 @@
+
+.zaray-notification-inbox{width:100%;color:inherit}
+.zni-heading,.zni-heading>div{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.zni-heading{padding:0 0 12px;border-bottom:1px solid color-mix(in srgb,currentColor 15%,transparent)}
+.zni-heading h2{display:flex;align-items:center;gap:8px;margin:0;font-size:clamp(16px,1.65vw,20px);letter-spacing:-.02em}
+.zni-heading span{font-size:12px;opacity:.72}
+.zni-heading button,.zni-mark{border:1px solid color-mix(in srgb,currentColor 23%,transparent);border-radius:9px;display:flex;align-items:center;justify-content:center;gap:6px;color:inherit;background:transparent;cursor:pointer;min-height:40px;padding:8px 11px}
+.zni-list{display:grid;gap:0}
+.zni-item{display:flex;align-items:start;gap:12px;padding:15px 0;border-bottom:1px solid color-mix(in srgb,currentColor 13%,transparent)}
+.zni-item.is-read{opacity:.66}
+.zni-dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex:0 0 8px;margin-top:9px}
+.zni-dot.is-important{background:#f5aa30}
+.zni-dot.is-critical{background:#e05a5a}
+.zni-text{display:flex;flex-direction:column;flex:1;min-width:0;gap:5px}
+.zni-text strong{font-size:13px}
+.zni-text p{font-size:13px;line-height:1.5;margin:0;opacity:.84}
+.zni-text small{font-size:11px;opacity:.63}
+.zni-mark{align-self:center;font-size:12px;flex-shrink:0}
+.zni-empty{padding:20px 0;margin:0;font-size:13px;opacity:.74}
+.zni-error{margin:10px 0 0;padding:10px 12px;border-radius:8px;background:#612d2d;color:#fff;font-size:12px}
+@media(max-width:520px){.zni-heading>div{flex-direction:column;align-items:flex-start;gap:2px}.zni-item{gap:9px}.zni-mark{padding:7px 9px}}
