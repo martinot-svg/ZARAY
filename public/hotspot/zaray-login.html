@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="color-scheme" content="dark"/>
-<title>ZARAY Wi-Fi — Connexion</title>
+<title>Connexion Wi-Fi</title>
 <style>
 :root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
  --site-primary:#40caff;--site-accent:#66eabe;--site-primary-ink:#061723}
@@ -118,9 +118,9 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
 </section>
 <section class="panel" id="credentials" aria-labelledby="formTitle">
  <header>
-  <div class="logo"><span class="logo-mark" id="siteLogo" aria-hidden="true">Z</span><span>ZARAY <small>WIFI</small></span></div>
+  <div class="logo"><span class="logo-mark" id="siteLogo" aria-hidden="true">Wi</span><span id="siteBrand">Mon réseau</span></div>
   <p class="eyebrow" id="siteName">Portail d'accès Wi-Fi</p>
-  <h1 id="formTitle">Bienvenue chez <span id="companyHeading">ZARAY WIFI</span></h1>
+  <h1 id="formTitle">Bienvenue chez <span id="companyHeading">votre fournisseur</span></h1>
   <p class="tagline" id="welcomeText">Chaque connexion ouvre votre univers.</p>
  </header>
  <p id="selectedOffer" class="subtle" aria-live="polite" hidden></p>
@@ -150,9 +150,9 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
  </form>
  <button type="button" class="secondary" id="back" aria-controls="catalog" aria-expanded="false">Découvrir les offres</button>
  <p class="fineprint">Fournisseur : <strong id="companyLabel">Votre réseau</strong></p>
- <p class="fineprint">Accès Internet sécurisé par MikroTik · Votre abonnement est soumis à validation.</p>
+ <p class="fineprint">Accès Internet du fournisseur · Votre abonnement est soumis à validation.</p>
 </section>
-<footer>ZARAY · Portail captif</footer>
+<footer id="portalFooter">Portail Wi-Fi du fournisseur</footer>
 </main>
 <script>
 (function(){
@@ -162,6 +162,8 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
  // URL-encoded, JSON-serialized public site branding; no credentials or keys.
  // Snapshot keeps the portal branded before a blocked/offline catalog API request.
  var EMBEDDED_BRANDING='__ZARAY_BRANDING_JSON__';
+ var LOCAL_ONLY='__ZARAY_LOCAL_ONLY__'==='true';
+ var PUBLIC_API_BASE='__ZARAY_PUBLIC_API_BASE__';
  function readEmbeddedBranding(){
   try{return JSON.parse(decodeURIComponent(EMBEDDED_BRANDING));}
   catch(e){return {};}
@@ -184,6 +186,9 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
   if(typeof branding.brandName==='string'&&branding.brandName.trim()){
    document.getElementById('companyHeading').textContent=branding.brandName.trim().slice(0,90);
    document.getElementById('companyLabel').textContent=branding.brandName.trim().slice(0,90);
+    document.getElementById('siteBrand').textContent=branding.brandName.trim().slice(0,90);
+    document.getElementById('portalFooter').textContent=branding.brandName.trim().slice(0,90)+' · Portail Wi-Fi';
+    document.title=branding.brandName.trim().slice(0,90)+' — Connexion Wi-Fi';
   }
   if(typeof branding.welcomeMessage==='string'&&branding.welcomeMessage.trim())
    document.getElementById('welcomeText').textContent=branding.welcomeMessage.trim().slice(0,120);
@@ -197,15 +202,15 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
   }
  }
  applyBranding(readEmbeddedBranding());
- var api='https://zaray.vercel.app/api/public/wifi-offers?siteId='+encodeURIComponent(SITE_ID);
+ var api=PUBLIC_API_BASE?PUBLIC_API_BASE+'/api/public/wifi-offers?siteId='+encodeURIComponent(SITE_ID):'';
  var offers=document.getElementById('offers'),catalog=document.getElementById('catalog'),credentials=document.getElementById('credentials');
  var inputError=document.getElementById('inputError'),feedError=document.getElementById('feedError');
  function showSubscription(companyName,slug){
-  if(typeof slug!=='string'||!(/^[a-z0-9-]{2,80}$/i).test(slug))return;
+  if(LOCAL_ONLY||!PUBLIC_API_BASE||typeof slug!=='string'||!(/^[a-z0-9-]{2,80}$/i).test(slug))return;
   var link=document.getElementById('subscribeLink');
   var name=typeof companyName==='string'?companyName.trim():'';
   link.textContent='Devenir un abonné'+(name?' de '+name:' de notre fournisseur');
-  link.href='https://zaray.vercel.app/portail/'+encodeURIComponent(slug)
+  link.href=PUBLIC_API_BASE+'/portail/'+encodeURIComponent(slug)
     +(/^[0-9a-f-]{36}$/i.test(SITE_ID)?'?siteId='+encodeURIComponent(SITE_ID):'');
   link.hidden=false;
   document.getElementById('subscribeNotice').hidden=true;
@@ -230,7 +235,10 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
  $(endif)
  document.getElementById('already').addEventListener('click',function(){showLogin(null);});
  document.getElementById('back').addEventListener('click',function(){credentials.hidden=true;catalog.hidden=false;this.setAttribute('aria-expanded','true');});
- fetch(api,{mode:'cors',credentials:'omit',cache:'no-store'})
+ if(LOCAL_ONLY){
+   offers.textContent='Les tickets sont disponibles auprès du point de vente.';
+   document.getElementById('subscribeNotice').textContent='Inscription en ligne indisponible sur ce portail local. Contactez votre fournisseur.';
+  }else fetch(api,{mode:'cors',credentials:'omit',cache:'no-store'})
   .then(function(r){if(!r.ok)throw new Error('catalogue');return r.json();})
   .then(function(data){
    if(data.siteName)document.getElementById('siteName').textContent='Réseau '+data.siteName;
@@ -272,7 +280,7 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
    return false;
   }
   form.username.value=user;
-  // This form authenticates with the local MikroTik, not with ZARAY servers.
+  // This form authenticates with the local router, without a remote login service.
   $(if chap-id)
   if(typeof hexMD5!=='function'){
    inputError.hidden=false;inputError.textContent='Méthode sécurisée de connexion indisponible.';return false;
