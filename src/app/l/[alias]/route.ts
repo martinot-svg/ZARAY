@@ -29,11 +29,10 @@ export async function GET(request:NextRequest,{params}:Context){
     status:307,headers:{'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}
    });
   }
-  const redirect=new URL('/wifi/'+encodeURIComponent(company.slug),request.url);
-  redirect.searchParams.set('siteId',site.id);
-  redirect.searchParams.set('inscription','1');
-  return NextResponse.redirect(redirect,{
-   status:307,headers:{'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}
+  // A local-only hostname must not silently redirect the client to ZARAY.
+  // It is reachable only after the owner's MikroTik DNS/HotSpot is configured.
+  return new NextResponse('Cette adresse fonctionne uniquement sur le Wi-Fi du fournisseur une fois son portail local configuré.',{
+   status:410,headers:{'Cache-Control':'no-store','X-Robots-Tag':'noindex'}
   });
  }catch{return new NextResponse('Lien public indisponible.',{status:503});}
 }
