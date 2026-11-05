@@ -22,11 +22,11 @@ async function activeSiteForHostname(hostname:string):Promise<SiteDomain|null>{
 }
 
 /** A free branded hostname must be explicitly mapped to an active tenant site. */
-async function activeSiteForPublicHostname(hostname:string):Promise<SiteDomain|null>{
+async function activeSiteForPublicHostname(hostname:string,field:'public_hostname'|'alias'='public_hostname'):Promise<SiteDomain|null>{
  const service=createServiceClient();
  if(!service)throw new Error('Site link registry offline');
  const {data,error}=await service.from('site_public_links')
-  .select('site_id,company_id').eq('public_hostname',hostname).maybeSingle();
+  .select('site_id,company_id').eq(field,hostname).maybeSingle();
  if(error)throw new Error('Site link registry unavailable');
  if(!data)return null;
  const [{data:site,error:siteError},{data:company,error:companyError}]=await Promise.all([
@@ -147,7 +147,8 @@ export async function proxy(request:NextRequest){
  }else if(platformHost)response=NextResponse.next({request});
  else{
   try{
-   const site=await activeSiteForHostname(hostname);
+   const site=await activeSiteForHostname(hostname)
+    ?? await activeSiteForPublicHostname(hostname,'alias');
    response=customHostResponse(request,site);
   }catch{
    response=new NextResponse('Domaine temporairement indisponible.',{
