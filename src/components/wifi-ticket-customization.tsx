@@ -65,7 +65,7 @@ export default function WifiTicketCustomization(){
  function change<K extends keyof Settings>(key:K,value:Settings[K]){setForm(previous=>({...previous,[key]:value}));}
  async function applyLogoPalette(uri:string,replaceLogo:boolean){
   const request=++logoRequest.current;
-  setAnalyzingLogo(true);setError('');setNotice('');
+  setAnalyzingLogo(true);setError('');setNotice(replaceLogo?'Analyse et détourage du logo en cours…':'');
   try{
    const cleaned=replaceLogo?await optimizeLogo(uri):null;
    const targetUri=cleaned?.dataUri??uri;
@@ -73,7 +73,7 @@ export default function WifiTicketCustomization(){
    if(request!==logoRequest.current)return;
    setForm(previous=>({...previous,...(palette??{}),...(replaceLogo?{logo_data_uri:targetUri}:{})}));
    setNotice(replaceLogo
-    ?(cleaned?.removedBackground?'Arrière-plan retiré, marges rognées et logo optimisé.':'Logo optimisé ; les fonds ambigus sont conservés pour protéger ses détails.')
+    ?(cleaned?.removedBackground?'Arrière-plan retiré, marges rognées et logo optimisé.':'Logo optimisé. Le détourage complexe n’a pas pu être appliqué sans risque de perte.')
     :(palette?'Couleurs du logo actualisées.':'Logo conservé.'));
   }catch{
    if(request===logoRequest.current)setError('Le traitement du logo a échoué. Vérifiez son format et sa taille.');
@@ -188,7 +188,7 @@ export default function WifiTicketCustomization(){
       <h2>Couleurs et identité</h2>
       {!offerId?<div><label>Logo du site (PNG, JPEG, WebP)</label>
         <input type="file" accept="image/png,image/jpeg,image/webp" onChange={upload} disabled={analyzingLogo}/>
-        <p className="muted">Détourage automatique des fonds uniformes, rognage et optimisation sans retouche manuelle.</p>
+        <p className="muted">Détourage intelligent : fonds unis et multicolores avec traitement IA local, puis rognage automatique.</p>
         
         {form.logo_data_uri&&<div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:12,margin:'12px 0'}}>
          <img src={form.logo_data_uri} alt="Logo du site chargé" style={{maxWidth:'100%',width:'auto',height:'auto',maxHeight:180,objectFit:'contain',background:'#E8EDF1',borderRadius:10,padding:7,border:'1px solid #9BADBA'}}/>
