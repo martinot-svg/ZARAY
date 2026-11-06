@@ -48,7 +48,7 @@ test('one native MikroTik page serves both ticket and residential subscription j
  assert.match(portal,/id="subscribeLink"/);
  assert.match(portal,/Accès Wi-Fi occasionnel/);
  assert.match(portal,/Devenir un abonné/);
- assert.match(portal,/https:\/\/zaray\.vercel\.app\/portail\//);
+ assert.match(portal,/link\.href=PUBLIC_API_BASE\+'\/wifi\/'/);
  assert.match(portal,/COMPANY_SLUG='__ZARAY_COMPANY_SLUG__'/);
 });
 test('subscription destination and display name are server-derived from the site company',()=>{
@@ -110,4 +110,12 @@ test('site colors, logo and welcome text are applied as safe values, not HTML in
  assert.match(portal,/image.length<=180000/);
  assert.match(portal,/png\|jpeg\|webp/);
  assert.doesNotMatch(portal,/innerHTML\s*=/);
+});
+
+test('MikroTik HTML exposes only the current site subscriber account when backend is available',()=>{
+ assert.match(portal,/id="accountLink" class="account-link" href="#" hidden/);
+ assert.match(portal,/accountLink\.href=PUBLIC_API_BASE\+'\/mon-internet\/'\+encodeURIComponent\(SITE_ID\)/);
+ assert.match(portal,/if\(!LOCAL_ONLY&&PUBLIC_API_BASE&&/);
+ assert.match(portal,/\?siteId='\+encodeURIComponent\(SITE_ID\)\+'&inscription=1'/);
+ assert.doesNotMatch(portal,/href="https:\/\/zaray\.vercel\.app\/mon-internet\//);
 });
