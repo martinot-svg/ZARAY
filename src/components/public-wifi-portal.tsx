@@ -37,6 +37,12 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
  const [subscriptionOffers,setSubscriptionOffers]=useState<Offer[]>(demo?sampleSubscriptions:[]);
  const [residentialSites,setResidentialSites]=useState<ResidentialSite[]>([]);
  const [selectedSiteId,setSelectedSiteId]=useState('');
+ const [siteBrandedHost,setSiteBrandedHost]=useState(false);
+ useEffect(()=>{
+  const host=window.location.hostname.toLowerCase();
+  setSiteBrandedHost(host==='mlayconnexion.vercel.app'
+   ||(!['localhost','127.0.0.1'].includes(host)&&!host.endsWith('.vercel.app')));
+ },[]);
  const [siteIdentity,setSiteIdentity]=useState<PublicIdentity|null>(null);
  const [paymentMethods,setPaymentMethods]=useState<Method[]>([]);
  const [selectedTicket,setSelectedTicket]=useState<Offer|null>(null);
@@ -226,7 +232,7 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
       </form>
       {ticketMessage&&<p className="zw-simple-alert" role="status">{ticketMessage}</p>}
       <button type="button" className="zw-simple-subscribe" onClick={()=>toMode('subscribe')}><House size={18}/> Devenir un abonné de {companyName} <ArrowRight size={18}/></button>
-      {!demo&&selectedSiteId&&<Link className="zw-simple-offers-link zw-resident-account-link" href={'/mon-internet/'+encodeURIComponent(selectedSiteId)}><ShieldCheck size={17}/> {subscriberAccountName({brandName:siteIdentity?.brandName||displayBrand,siteName:siteIdentity?.siteName||siteName||displayBrand})} <ArrowRight size={14}/></Link>}
+      {!demo&&selectedSiteId&&<Link className="zw-simple-offers-link zw-resident-account-link" href={siteBrandedHost?'/mycompte/me':'/mon-internet/'+encodeURIComponent(selectedSiteId)}><ShieldCheck size={17}/> {subscriberAccountName({brandName:siteIdentity?.brandName||displayBrand,siteName:siteIdentity?.siteName||siteName||displayBrand})} <ArrowRight size={14}/></Link>}
       <button type="button" className="zw-simple-offers-link" onClick={()=>setOffersDialog(true)}>Voir les offres Wi-Fi {ticketCount>0?'('+ticketCount+')':''} <ArrowRight size={14}/></button>
       <div className="zw-simple-footer">
        <span>Fournisseur : <strong>{companyName}</strong></span>
