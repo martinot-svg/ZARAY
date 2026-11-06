@@ -50,6 +50,8 @@ jobs:
             tests/site-notification-delegation.test.mjs \
             tests/residential-email-notifications.test.mjs \
             tests/residential-site-account-names.test.mjs \
-            tests/site-friendly-account-path.test.mjs
+            tests/site-friendly-account-path.test.mjs \
+            tests/residential-alarm-schedule.test.mjs \
+            tests/residential-android-companion.test.mjs
       - run: npm run typecheck
       - run: npm run build
