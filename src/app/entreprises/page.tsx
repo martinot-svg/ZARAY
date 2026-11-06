@@ -15,7 +15,10 @@ export default async function EnterprisesPage() {
         {companies.map(company => <article className="panel personal-business-card" key={company.id}>
           <div><p className="eyebrow">ENTREPRISE</p><h2>{company.legal_name}</h2><p className="muted">{company.slug}</p>
             <span className="status-pill">Rôle : {company.role}</span></div>
-          <Link prefetch={true} className="primary-link" href={'/tableau-de-bord?companyId=' + encodeURIComponent(company.id)}><ZarayIcon name="company" size={18} /> Ouvrir l'entreprise</Link>
+          <div style={{display:'flex',flexWrap:'wrap',gap:10,alignItems:'center'}}>
+           <Link prefetch={true} className="primary-link" href={'/tableau-de-bord?companyId=' + encodeURIComponent(company.id)}><ZarayIcon name="company" size={18} /> Ouvrir l'entreprise</Link>
+           {['owner','admin'].includes(company.role)&&<Link className="header-link" href={'/sites?companyId='+encodeURIComponent(company.id)}><ZarayIcon name="settings" size={18} /> Gérer les sites</Link>}
+          </div>
         </article>)}
       </section>
       : <section className="empty-state"><strong>Aucune entreprise accessible</strong><p>Créez votre première entreprise pour commencer.</p></section>}
