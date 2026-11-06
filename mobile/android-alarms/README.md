@@ -34,7 +34,7 @@ Prérequis : Android Studio / SDK Android 35, JDK 17, Gradle **8.11.1**, Android
 
 ```sh
 cd mobile/android-alarms
-gradle :app:assembleDebug :app:lintDebug
+gradle :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 # Résultat : app/build/outputs/apk/debug/app-debug.apk
 ```
 
@@ -68,7 +68,7 @@ Créer et conserver sa clé via `keytool`/Android Studio en lieu sûr, sans la c
 | Dissociation sur portail et dans l'app | Ancien jeton rejeté ; nettoyage au prochain contact |
 | Plusieurs sites et plusieurs appareils | Isolation et révocation indépendante |
 
-Les tests Node du dépôt contrôlent des invariants structurels ; **ils ne remplacent pas l'intégration avec Supabase réel, les tests instrumentés Android ni un appareil réel**.
+Les tests Node vérifient les invariants structurels. Les tests Android Robolectric exercent effectivement l'idempotence, le remplacement après renouvellement, l'isolation entre sites, les doublons et la restauration simulée. **Ni les tests Node ni Robolectric ne remplacent l'intégration avec Supabase réel, les tests Android instrumentés ou un appareil physique.**
 
 ## Limitations connues
 
