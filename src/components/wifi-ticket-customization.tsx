@@ -136,6 +136,8 @@ export default function WifiTicketCustomization(){
     logoDataUri:typeof base.logo_data_uri==='string'?base.logo_data_uri:null,
     primaryColor:base.primary_color||'#40caff',
     accentColor:base.accent_color||'#66eabe',
+    secondaryColor:base.secondary_color||'#ffffff',
+    titleColor:base.title_color||'#10251a',
     welcomeMessage:String(base.welcome_message||'').slice(0,120),
     contactPhone:String(base.phone||'').slice(0,32),
     contactEmail:String(base.email||'').slice(0,254),
