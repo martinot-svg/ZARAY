@@ -3,7 +3,7 @@ import 'server-only';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
-export type PersonalCompany = { id: string; legal_name: string; slug: string; role: string };
+export type PersonalCompany = { id: string; legal_name: string; slug: string; role: string; status: string; lifecycle_previous_status: string | null };
 export async function loadPersonalContext() {
   const client = await createClient();
   const { data: { user }, error: userError } = await client.auth.getUser();
@@ -20,7 +20,7 @@ export async function loadPersonalContext() {
   const ids = [...roleById.keys()];
   if (!ids.length) return { client, identity, companies: [] as PersonalCompany[], error: null };
   const { data: companies, error: companiesError } = await client.from('companies')
-    .select('id,legal_name,slug').in('id', ids).order('legal_name');
+    .select('id,legal_name,slug,status,lifecycle_previous_status').in('id', ids).order('legal_name');
   if (companiesError) return { client, identity, companies: [] as PersonalCompany[], error: 'Impossible de charger vos entreprises.' };
   return { client, identity, companies: (companies ?? []).map(c => ({ ...c, role: roleById.get(c.id) ?? '' })), error: null };
 }
