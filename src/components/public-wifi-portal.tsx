@@ -6,6 +6,7 @@ import {ArrowLeft,ArrowRight,Check,CheckCircle2,Clock3,CreditCard,House,LockKeyh
 import './public-wifi-portal.css';
 import BrandLogo from '@/components/brand-logo';
 import {subscriberAccountName} from '@/lib/residential-site-labels';
+import {legibleInk} from '@/lib/ticket-pdf';
 
 type Offer={id:string;name:string;description?:string;durationMinutes:number;validityDays?:number;priceAmount:number;currency:string;maxDevices?:number};
 type ResidentialSite={id:string;name:string;status:string};
@@ -181,8 +182,11 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
  const displayBrand=demo?'ZARAY WIFI':siteIdentity?.brandName||siteName||companyName;
  const realBrandStyle=slug&&siteIdentity?{
   '--zw-accent':siteIdentity.primaryColor,'--zw-cyan':siteIdentity.accentColor,
-  '--zw-site-primary':siteIdentity.primaryColor,'--zw-site-secondary':siteIdentity.secondaryColor,
+  '--zw-site-primary':siteIdentity.primaryColor,
+  '--zw-site-accent':siteIdentity.accentColor,
+  '--zw-site-secondary':siteIdentity.secondaryColor,
   '--zw-site-title':siteIdentity.titleColor,
+  '--zw-site-button-ink':legibleInk('#10251a',siteIdentity.primaryColor),
  } as CSSProperties:undefined;
  return <div className={mode==='home'?'zw-root zw-landing':'zw-root'} data-site-branded={slug?'true':undefined} style={realBrandStyle}>
   <div className="zw-sky" aria-hidden="true"/><div className="zw-mesh" aria-hidden="true"/>
