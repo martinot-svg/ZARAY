@@ -1,38 +1,90 @@
-# Compagnon Android — alarmes résidentielles ZARAY
+# Compagnon Android — Rappels Internet par fournisseur
 
-Cette application **Android native (projet source Android Studio)** est un premier socle de synchronisation. Aucun APK signé n'est encore publié. Elle est distincte du portail HTML MikroTik et ne remplace pas la connexion par tickets Wi-Fi.
+Version de développement 0.2.0. Le projet natif Java existant est conservé : Android SDK 26–35, AlarmManager, notifications locales et page de compte WebView. **Aucun APK Release signé n'est publié.** Un build vert ne remplace pas les essais sur téléphones physiques.
 
-## Flux client
+## Architecture
 
-1. Un abonné ouvre son compte `/mon-internet/<siteId>` (ou `/mycompte/me` sur un hôte de site web relié à ZARAY), se connecte avec son e-mail et code OTP.
-2. Dans **Alarmes de mon abonnement**, il choisit 7, 3, 1 jour avant et/ou le jour de l'expiration, une heure (Madagascar), puis enregistre son consentement.
-3. Une application Android installée et associée au même site ouvre le compte sur l'URL technique HTTPS ZARAY (sans domaine acheté). Elle réutilise la session web authentifiée et appelle `GET /api/residential/alarm-schedule?siteId=<siteId>` via les cookies de ce même hôte.
-4. Le téléphone demande **Notifications** (Android 13+) et **Alarmes et rappels** (Android 12+) avant de programmer des alarmes exactes. Si les alarmes exactes sont refusées, le code utilise une programmation **approximative** ; si les notifications sont refusées, l'alerte visible n'est pas garantie.
-5. Après synchronisation réussie, `AlarmManager` programme les événements locaux, identifiés par leur site et abonnement. Les anciennes dates sont annulées avant la programmation des nouvelles. Les alarmes locales restantes peuvent fonctionner hors ligne.
-6. Un redémarrage Android restaure les alarmes futures stockées localement.
-7. En cas de renouvellement, les nouvelles échéances sont reçues **lors de la prochaine synchronisation**. Cette première version synchronise quand l'application est au premier plan et au clic du client, pas de manière continue en arrière-plan.
+- ZARAY/Supabase fournit exclusivement une échéance de forfait **payé et activé**, les quatre rappels choisis, l'heure de Madagascar (`Indian/Antananarivo`) et le nom commercial du site.
+- Le client ouvre son espace résidentiel, active/enregistre les rappels et crée un **code d'association aléatoire de 256 bits, à usage unique, valable dix minutes**.
+- Le téléphone utilise le lien `compteinternet-alarmes://pair/<site-uuid>/<code>` ou saisit le code. Le client confirme l'association dans l'app native.
+- L'API `POST /api/residential/alarm-devices/claim` consomme ce code et remet un **jeton d'appareil aléatoire** limité au site + au client. Les codes et jetons sont hachés en SHA-256 dans la table `residential_alarm_devices` protégée par RLS et sans droits Data API pour les rôles publics.
+- Android stocke le jeton en **AES-GCM via Android Keystore**, avec sauvegarde Android désactivée. Les accès sont indépendants de la WebView et des cookies. Aucun identifiant administrateur ni clé Supabase privilégiée n'est embarqué.
+- `WorkManager` effectue le rapprochement en ligne toutes les **six heures approximativement**, avec une fenêtre flexible d'une heure, réseau requis et reprise exponentielle. L'ouverture de l'app déclenche aussi un travail immédiat non dupliqué. Aucune exécution à heure exacte n'est promise.
+- `AlarmManager` conserve jusqu'à quatre alarmes locales par site, à 7, 3, 1 et 0 jour avant l'échéance, avec l'heure choisie dans le compte. Les instants sont calculés par le serveur et exprimés en UTC ; changer de fuseau sur le téléphone ne déplace pas l'heure de Madagascar.
+- Si les alarmes exactes ne sont pas autorisées, `setAndAllowWhileIdle` constitue une solution **approximative**. Android 13+ demande la permission de notification ; Android 12+ peut demander l'autorisation d'alarme exacte.
+- Au renouvellement, les anciennes alarmes sont annulées et les nouvelles programmées au **prochain contact réseau**. Le récepteur Android n'affiche que des rappels présents dans le plan local encore valide. Si la dernière validation remonte à plus de 24 heures, le message mentionne une échéance conservée hors ligne.
+- Révocation sur le site : le jeton est rejeté, puis les alarmes sont supprimées à la prochaine synchronisation du téléphone. Un téléphone durablement hors ligne peut encore déclencher les anciennes alarmes. La révocation locale dans l'app requiert Internet.
+- Plusieurs sites peuvent être associés à un même téléphone ; jusqu'à cinq appareils par abonné/site. Le nom du fournisseur apparaît dans les rappels, pas le nom du logiciel de gestion.
 
-## Build Android
+## Backend requis
 
-Ouvrir `mobile/android-alarms/` dans **Android Studio**, avec SDK Android 35 et JDK 17, synchroniser Gradle puis construire une application de développement sur un téléphone autorisé. Le projet ne contient ni clé Resend, ni clé de service Supabase, ni identifiants clients.
+La migration `supabase/migrations/20261106100000_residential_alarm_devices.sql` doit être appliquée **avant** le déploiement de l'API du compagnon. Le code ajoute :
 
-La version de développement accepte un deep link `compteinternet-alarmes://site/<uuid>` pour choisir le site, ou la saisie de son UUID. La vérification du client s'effectue **toujours dans l'API ZARAY** à partir de son compte et de la session e-mail validée : le deep link seul n'accorde aucun droit.
+- `GET/POST/DELETE /api/residential/alarm-devices` : liste, création de code et révocation via **session résidentielle vérifiée** et contrôle d'origine pour les écritures.
+- `POST/DELETE /api/residential/alarm-devices/claim` : consommation du code et révocation native par jeton.
+- `GET /api/residential/alarm-schedule?siteId=<uuid>` : vérification `Authorization: Device <token>` pour WorkManager, sans changer l'accès navigateur OTP.
 
-**À faire avant distribution publique :** signer l'APK/AAB, tester l'installation, les autorisations, les alarmes et les redémarrages sur plusieurs versions Android, ajouter une interface d'association du téléphone plus simple (QR code ou bouton de jumelage) et vérifier les politiques Google Play. Un URL deep link avec seulement le siteId ne contient aucune autorisation de connexion. Une synchronisation réseau en arrière-plan nécessiterait une stratégie d'authentification et de tâches périodiques supplémentaires.
+Un `401`/`403`/`410` à la synchronisation fait supprimer le lien local ; les réponses temporaires (`429`, `5xx`, erreurs réseau) sont réessayées sans détruire les alarmes déjà enregistrées. Les réponses sont limitées à 64 Kio, sans redirections automatiques. Les jetons expirent après 90 jours sans synchronisation réussie, avec prolongation lors d'un contact valide.
 
-## iPhone
+**Attention :** aucun schéma de production n'est modifié par la seule présence de cette migration dans GitHub. Il faut valider la migration et la configuration Vercel/Supabase avant de pouvoir tester l'association réelle.
 
-Le code iOS n'est pas inclus dans ce premier projet. Une application iOS dédiée doit demander l'autorisation AlarmKit, programmer les mêmes événements, les supprimer/recréer aux renouvellements et préserver le site de chacun. Un site HTML/PWA ne peut pas silencieusement installer des alarmes natives dans l'application Horloge.
+## Compilation et signature
 
-## Solution immédiatement disponible, sans application native
+Prérequis : Android Studio / SDK Android 35, JDK 17, Gradle **8.11.1**, Android Gradle Plugin **8.9.2**. WorkManager Java `2.11.2` est la seule nouvelle dépendance Android directe ; Room/Kotlin/FCM ne sont pas nécessaires à ce petit cache local.
 
-Dans l'espace abonné, **Ajouter les rappels à mon calendrier** télécharge un `.ics` avec des alertes `VALARM` relatives aux véritables échéances. Le téléphone peut les importer dans son calendrier après action explicite de l'utilisateur. **L'importation dépend de l'application de calendrier et n'équivaut pas à une alarme native de l'application Horloge.**
+```sh
+cd mobile/android-alarms
+gradle :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
+# Résultat : app/build/outputs/apk/debug/app-debug.apk
+```
 
-## Sécurité / limites
+Le workflow `.github/workflows/android-companion.yml` compile un APK Debug non signé pour distribution (signé uniquement avec la clé Android de développement si Gradle l'utilise), sans publication. **Pas d'APK Release signé dans Git.**
 
-- Seules les données de l'abonné authentifié appartenant à l'entreprise et au site sont servies par l'API. Le téléphone vérifie que l'identifiant du site retourné est celui demandé.
-- Les autorisations sont séparées : consentement ZARAY dans Supabase et permissions du système Android.
-- Les notifications ont le nom du **fournisseur/site**, pas celui du SaaS. Les dates ne sont ni inventées ni extrapolées d'une commande impayée.
-- Un abonnement sans paiement confirmé, sans activation et sans date d'expiration ne génère aucune alarme.
-- Un alias local non enregistré comme `monsite.mg` reste limité au DNS du fournisseur et n'est pas un serveur de compte. Le compagnon utilise l'application HTTPS existante.
-- Une annulation des préférences dans ZARAY ne peut désactiver les alarmes déjà enregistrées sur un téléphone **hors ligne** qu'après la prochaine synchronisation. L'utilisateur peut également désactiver les alertes dans les paramètres Android.
+Pour préparer une release *localement*, après validation sur téléphones, avec une clé privée protégée hors du dépôt :
+
+```sh
+gradle :app:assembleRelease
+zipalign -p 4 app/build/outputs/apk/release/app-release-unsigned.apk app-aligned.apk
+apksigner sign --ks /chemin-prive/cle-release.jks --out app-release-signed.apk app-aligned.apk
+apksigner verify --verbose --print-certs app-release-signed.apk
+adb install -r app-release-signed.apk
+```
+
+Créer et conserver sa clé via `keytool`/Android Studio en lieu sûr, sans la commiter ni l'envoyer à un service web. Conserver le même certificat pour les mises à jour et augmenter `versionCode` à chaque publication. Examiner permissions, taille, SDK et rapport de lint avant distribution. La première distribution doit recevoir une **autorisation explicite**.
+
+## Matrice de validation avant distribution
+
+| Scénario | Vérification requise |
+| --- | --- |
+| Première installation et consentement | Android 8, 10, 12, 13, 14, 15/16 si disponibles |
+| Association simple et code expiré/réutilisé | Essai avec deux téléphones, deux sites et deux comptes |
+| Connexion initiale, serveur indisponible, retour Internet | Vérifier WorkManager, statut et absence de doublons |
+| Renouvellement, changement d'heure/date, annulation | Comparer les IDs et instants AlarmManager avant/après |
+| Sans Internet et mode économie d'énergie | Tester le rappel préprogrammé, sans promettre une heure exacte |
+| Redémarrage du téléphone / mise à jour de l'APK | Vérifier les alarmes futures restaurées |
+| Fermeture, suppression des applications récentes, arrêt forcé | **Scénarios distincts** : un arrêt forcé empêche le travail jusqu'à réouverture |
+| Refus puis accord des permissions | Exact vs approximatif ; notification désactivée |
+| Changement de fuseau | Vérifier les instants UTC serveur (Madagascar) |
+| Dissociation sur portail et dans l'app | Ancien jeton rejeté ; nettoyage au prochain contact |
+| Plusieurs sites et plusieurs appareils | Isolation et révocation indépendante |
+
+Les tests Node vérifient les invariants structurels. Les tests Android Robolectric exercent effectivement l'idempotence, le remplacement après renouvellement, l'isolation entre sites, les doublons et la restauration simulée. **Ni les tests Node ni Robolectric ne remplacent l'intégration avec Supabase réel, les tests Android instrumentés ou un appareil physique.**
+
+## Limitations connues
+
+- Un WorkManager périodique n'est pas une connexion permanente ; Android gère la cadence, la batterie et les quotas.
+- Les notifications déjà programmées peuvent sonner sans Internet ; le téléphone ne connaît pas une annulation reçue uniquement par le serveur avant la prochaine synchronisation.
+- Une interruption longue rend l'échéance potentiellement obsolète ; l'UI/notification l'indique sans déclarer que le serveur vient de la confirmer.
+- Une fermeture normale et la suppression des applications récentes ne sont pas un `force-stop` ; ce dernier empêche les traitements attendus jusqu'à réouverture.
+- L'identité visuelle du compte demeure celle du site ; l'application compagnon installée reste générique. Un véritable logo/icône Android différent par fournisseur nécessiterait des builds/package IDs distincts.
+- Le lien personnalisé `.mg` doit être réellement routé et servi en HTTPS pour ouvrir le compte hors du hotspot ; l'app technique utilise l'origine HTTPS actuelle.
+
+## Étude iPhone (aucun code iOS produit)
+
+**Option A — Swift/SwiftUI + AlarmKit (iOS 26+) :** intégration native d'alarmes locales avec autorisation `NSAlarmKitUsageDescription`, synchronisation d'échéances et stockage Keychain. Meilleure expérience iPhone compatible, mais nécessite Xcode/macOS, une application iOS à maintenir et la revue App Store. Le programme Apple Developer coûte habituellement 99 USD/an pour distribuer via l'App Store (prix local éventuel).
+
+**Option B — Swift/SwiftUI + notifications locales UNUserNotificationCenter :** plus large compatibilité iOS, mais ce sont des **notifications**, pas des alarmes AlarmKit pouvant outrepasser le mode silencieux. Synchronisation de fond sous contrôle du système, jamais garantie à heure exacte.
+
+**Option C — PWA/calendrier .ics :** coût logiciel très faible, déjà en partie disponible ; dépend de l'import manuel et n'apporte pas d'AlarmKit natif.
+
+Recommandation : conserver le contrat JSON de l'API et l'isolation des appareils, puis prototyper une version Swift dédiée seulement si les abonnés iPhone justifient la maintenance supplémentaire. Une réécriture multiplateforme du compagnon Android existant n'est pas justifiée pour l'instant.

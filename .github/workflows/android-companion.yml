@@ -1,0 +1,52 @@
+name: Android companion debug build
+on:
+  push:
+    paths:
+      - 'mobile/android-alarms/**'
+      - '.github/workflows/android-companion.yml'
+  pull_request:
+    paths:
+      - 'mobile/android-alarms/**'
+      - 'src/app/api/residential/alarm-*/**'
+      - 'src/lib/residential-alarm-device-access.ts'
+      - 'src/components/residential-alarm-preferences.tsx'
+      - 'supabase/migrations/*residential_alarm*'
+      - '.github/workflows/android-companion.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Prepare Android SDK 35 using hosted runner
+        run: |
+          test -n "$ANDROID_HOME"
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort | tail -n 1)"
+          test -x "$SDKMANAGER"
+          "$SDKMANAGER" --install "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Compile unsigned Android debug APK and run Android lint
+        run: gradle -p mobile/android-alarms :app:testDebugUnitTest :app:assembleDebug :app:lintDebug --no-daemon --stacktrace
+      - name: Check debug APK exists
+        run: test -s mobile/android-alarms/app/build/outputs/apk/debug/app-debug.apk
+      - name: Verify debug APK signature and size
+        run: |
+          APK="mobile/android-alarms/app/build/outputs/apk/debug/app-debug.apk"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK"
+          du -h "$APK"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zaray-android-debug-for-device-testing
+          path: mobile/android-alarms/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 3
+          if-no-files-found: error
+      # Artifact is a DEBUG test build only; no production release keystore is used.
