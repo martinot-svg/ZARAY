@@ -298,7 +298,7 @@ export default function SitePortalStudio(){
         <button type="button" aria-pressed={device==='desktop'} onClick={()=>setDevice('desktop')}><Monitor size={17}/> Ordinateur</button>
        </div>
       </div>
-      <div className={'ps-preview-frame is-'+device}>
+      <div className={'ps-preview-frame '+(device==='mobile'?'is-mobile':'is-desktop')}>
        <div className={'ps-demo-portal ps-style-'+form.template+' align-'+form.align}
         style={previewCss(form)}>
         {form.coverImageDataUri&&<img className="ps-cover" alt="" src={form.coverImageDataUri}/>}
