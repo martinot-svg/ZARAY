@@ -2,7 +2,7 @@ import type { ComponentProps } from 'react';
 import {
   ArrowLeft, ArrowRight, Bell, Check, CircleHelp, Download, Eye, EyeOff,
   House, LayoutDashboard, LogIn, LogOut, Pencil, Plus, Printer, RefreshCw,
-  Save, Search, Settings, Trash2, Upload, UserRound, UserRoundPlus, Wallet, X,
+  Save, Search, Settings, Trash2, Upload, UserRound, UserRoundPlus, Wallet, X, PauseCircle,
   Building2, Users, UsersRound, ChevronDown, PanelLeft, CreditCard, Wifi, Ticket, Receipt, MapPin, KeyRound, Copy, Mail, Menu, ClipboardList, FileText, Router, ShieldCheck, Send, Store,
   type LucideIcon
 } from 'lucide-react';
@@ -11,7 +11,7 @@ import {
 export const zarayIcons = {
   home: House, close: X, login: LogIn, signup: UserRoundPlus,
   logout: LogOut, sidebar: PanelLeft, dashboard: LayoutDashboard, settings: Settings,
-  finance: Wallet, add: Plus, edit: Pencil, delete: Trash2,
+  finance: Wallet, add: Plus, edit: Pencil, delete: Trash2, pause: PauseCircle,
   save: Save, search: Search, download: Download, upload: Upload,
   print: Printer, back: ArrowLeft, next: ArrowRight,
   refresh: RefreshCw, confirm: Check, cancel: X,
