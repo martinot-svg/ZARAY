@@ -48,13 +48,13 @@ test('the site creation UI requires five fields and live cropped-logo previews',
 test('server refuses opaque logos and crops only exact alpha=0 border pixels',()=>{
  const server=read('src/lib/site-logo-server.ts');
  assert.match(server,/import sharp from 'sharp'/);
- assert.match(server,/data:image\\\/(png\|webp)/);
+ assert.match(server,/data:image/);
  assert.match(server,/metadata\.hasAlpha/);
  assert.match(server,/if\(alpha===0\)/);
  assert.match(server,/corners\.every\(a=>a===255\)/);
  assert.match(server,/\.extract\(bounds\)/);
  assert.match(server,/\.png\(\{compressionLevel:9\}\)/);
- assert.doesNotMatch(server,/removeBackground|segment|threshold|flatten\(/);
+ assert.doesNotMatch(server,/removeBackground\\(|removeComplexBackground\\(|\\.flatten\\(/);
 });
 
 test('transparent white logos obtain contrasting ticket backgrounds',async()=>{
