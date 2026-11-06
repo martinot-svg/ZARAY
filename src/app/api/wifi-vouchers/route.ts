@@ -42,6 +42,10 @@ export async function POST(request:NextRequest){
     if(!access.ok)return fail(access.error,access.status);
     if(!['owner','admin','site_manager'].includes(access.member.role))return fail('Rôle non autorisé pour créer des tickets.',403);
     if(access.site?.status!=='active')return fail('Activez le site avant de préparer les tickets.',409);
+    const {data:company,error:companyError}=await supabase.from('companies')
+      .select('status').eq('id',companyId).maybeSingle();
+    if(companyError||!company)return fail('Statut de l’entreprise indisponible.',503);
+    if(!['trial','active'].includes(company.status))return fail('L’entreprise est suspendue ou indisponible : aucun nouveau ticket ne peut être préparé.',409);
     const service=createServiceClient();
     if(!service)return fail('Service sécurisé de tickets indisponible.',503);
     const {data:router,error:routerError}=await service.from('network_routers')
