@@ -17,10 +17,14 @@ function hueOf(r:number,g:number,b:number,max:number,min:number){
 }
 export function paletteFromPixels(pixels:Uint8ClampedArray):LogoPalette|null{
  const chromatic=new Map<number,WeightedColor>(),neutral=new Map<number,WeightedColor>();
+ let brightness=0,visibleWeight=0;
  for(let i=0;i+3<pixels.length;i+=4){
   const alpha=pixels[i+3]/255;
   if(alpha<.38)continue;
   const r=pixels[i],g=pixels[i+1],b=pixels[i+2],max=Math.max(r,g,b),min=Math.min(r,g,b);
+  // The ticket surface must contrast with the visible artwork, including white logos.
+  brightness+=(.2126*r+.7152*g+.0722*b)*alpha;
+  visibleWeight+=alpha;
   if(max<25||(min>245&&max>245))continue;
   const sat=max===0?0:(max-min)/max,hue=hueOf(r,g,b,max,min);
   const isColor=sat>=.17&&max>=45;
@@ -32,7 +36,15 @@ export function paletteFromPixels(pixels:Uint8ClampedArray):LogoPalette|null{
   target.set(key,row);
  }
  const rows=chromatic.size?chromatic:neutral;
- if(!rows.size)return null;
+ if(!visibleWeight)return null;
+ const darkBackground=brightness/visibleWeight>165;
+ if(!rows.size)return {
+  primary_color:darkBackground?'#65D8B6':'#167A46',
+  accent_color:darkBackground?'#A3E8FF':'#0E9F6E',
+  secondary_color:darkBackground?'#102334':'#FFFFFF',
+  title_color:darkBackground?'#F6FAFE':'#10251A',
+  border_color:darkBackground?'#486C7C':'#A5B9AD'
+ };
  const sorted=[...rows.values()].sort((a,b)=>b.weight-a.weight);
  const color=(c:WeightedColor)=>hex(c.r/c.weight,c.g/c.weight,c.b/c.weight);
  const primary=color(sorted[0]),top=sorted[0];
@@ -40,7 +52,9 @@ export function paletteFromPixels(pixels:Uint8ClampedArray):LogoPalette|null{
   &&Math.min(Math.abs(c.hue-top.hue),360-Math.abs(c.hue-top.hue))>=30
   &&c.weight>=top.weight*.08);
  return {primary_color:primary,accent_color:secondary?color(secondary):mixed(primary,'#FFFFFF',.32),
-  secondary_color:'#FFFFFF',title_color:'#10251A',border_color:mixed(primary,'#FFFFFF',.58)};
+  secondary_color:darkBackground?'#102334':'#FFFFFF',
+  title_color:darkBackground?'#F6FAFE':'#10251A',
+  border_color:darkBackground?mixed(primary,'#FFFFFF',.42):mixed(primary,'#FFFFFF',.58)};
 }
 /** Decode the selected logo locally; sample no more than 96x96 pixels. */
 export async function paletteFromLogo(uri:string):Promise<LogoPalette|null>{
