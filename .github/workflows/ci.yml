@@ -48,6 +48,7 @@ jobs:
             tests/site-notifications.test.mjs \
             tests/site-custom-domains.test.mjs \
             tests/site-notification-delegation.test.mjs \
-            tests/residential-email-notifications.test.mjs
+            tests/residential-email-notifications.test.mjs \
+            tests/residential-site-account-names.test.mjs
       - run: npm run typecheck
       - run: npm run build
