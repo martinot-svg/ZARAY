@@ -92,6 +92,7 @@ function customHostResponse(request:NextRequest,site:SiteDomain|null){
   '/api/public/residential-app-icon',
   '/api/residential/account','/api/residential/notifications',
   '/api/residential/notification-preferences',
+  '/api/residential/alarm-schedule',
   '/api/public/wifi-offers'
  ]);
  if(ownSiteRoutes.has(path)&&search.get('siteId')===site.siteId)
