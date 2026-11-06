@@ -10,6 +10,7 @@ import './zaray-ui-contract.css';
 import './zaray-icon-topbar.css';
 import './zaray-compact-workspace.css';
 import './zaray-module-consistency.css';
+import './zaray-dashboard-refinement.css';
 import { ContrastGuardian } from '@/components/contrast-guardian';
 import WorkspaceBackdrop from '@/components/workspace-backdrop';
 import ThemeSwitch from '@/components/theme-switch';
