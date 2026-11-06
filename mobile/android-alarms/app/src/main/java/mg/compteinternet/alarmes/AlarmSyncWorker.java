@@ -23,17 +23,21 @@ public final class AlarmSyncWorker extends Worker {
   boolean retry=false;
   for(String siteId:DeviceStore.sites(ctx)){
    if(isStopped())return Result.retry();
+   JSONObject device;
    try{
-    JSONObject device=DeviceStore.read(ctx,siteId);
+    device=DeviceStore.read(ctx,siteId);
     if(device==null)continue;
-    String token=device.optString("token");
-    if(!token.matches("^[A-Za-z0-9_-]{43}$"))throw new SecurityException("Jeton local invalide");
-    if(!syncOne(ctx,siteId,token))retry=true;
-   }catch(SecurityException e){
+    if(!device.optString("token").matches("^[A-Za-z0-9_-]{43}$"))
+     throw new SecurityException("Jeton local invalide");
+   }catch(Exception corruptLocalCredential){
     SiteAlarmScheduler.clearSite(ctx,siteId);
     DeviceStore.remove(ctx,siteId);
-   }catch(Exception e){
-    // Cannot distinguish network interruption and transient server failure here.
+    continue;
+   }
+   try{
+    if(!syncOne(ctx,siteId,device.getString("token")))retry=true;
+   }catch(Exception temporaryNetworkOrPayloadError){
+    // A malformed/unavailable HTTP response must NEVER revoke a still-valid device.
     retry=true;
    }
   }
