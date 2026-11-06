@@ -78,7 +78,7 @@ export default function SitePortalStudio(){
  const company=companies.find(c=>c.id===companyId);
  const site=sites.find(s=>s.id===siteId);
  const peers=sites.filter(s=>s.company_id===companyId&&s.id!==siteId&&s.status==='active');
- const canEdit=!!company&&['owner','admin','site_manager'].includes(company.role);
+ const canEdit=!!company&&['owner','admin'].includes(company.role);
  const dirty=JSON.stringify(form)!==JSON.stringify(state.draft);
  const publishedLink=company&&site?
   '/wifi/'+encodeURIComponent(company.slug)+'?siteId='+encodeURIComponent(site.id):'';
