@@ -81,6 +81,7 @@ public final class SiteAlarmScheduler {
   if(items!=null&&items.length()>4)throw new IllegalArgumentException("Trop de rappels");
   JSONArray valid=new JSONArray();
   Set<String> seen=new HashSet<>();
+  Set<Integer> usedDays=new HashSet<>();
   long now=System.currentTimeMillis();
   if(enabled&&items!=null)for(int i=0;i<items.length();i++){
    JSONObject item=items.optJSONObject(i);
@@ -89,7 +90,8 @@ public final class SiteAlarmScheduler {
    if(!id.startsWith("residential:")||id.length()>220||!seen.add(id))
     throw new IllegalArgumentException("Identifiant de rappel invalide");
    int days=item.optInt("daysBefore",-1);
-   if(days!=7&&days!=3&&days!=1&&days!=0)throw new IllegalArgumentException("Jour de rappel invalide");
+   if((days!=7&&days!=3&&days!=1&&days!=0)||!usedDays.add(days))
+    throw new IllegalArgumentException("Jour de rappel invalide ou déjà programmé");
    long when;
    try{when=Instant.parse(item.optString("scheduledAt")).toEpochMilli();}
    catch(Exception ex){throw new IllegalArgumentException("Date de rappel invalide");}
@@ -115,13 +117,15 @@ public final class SiteAlarmScheduler {
   JSONObject stored=new JSONObject();
   stored.put("site",site);stored.put("enabled",true);stored.put("reminders",valid);
   stored.put("lastVerifiedAt",localRestore?schedule.optLong("lastVerifiedAt",0):now);
+  stored.put("scheduleComplete",false);
   if(!prefs(ctx).edit().putString(PREFIX+siteId,stored.toString()).commit())
    throw new IllegalStateException("Stockage local indisponible");
   AlarmManager mgr=(AlarmManager)ctx.getSystemService(Context.ALARM_SERVICE);
   for(int i=0;i<valid.length();i++){
    JSONObject item=valid.getJSONObject(i);
    JSONObject oldItem=before.get(item.getString("id"));
-   if(!force&&oldItem!=null&&oldItem.optString("scheduledAt")
+   if(!force&&(old==null||old.optBoolean("scheduleComplete",false))
+    &&oldItem!=null&&oldItem.optString("scheduledAt")
     .equals(item.optString("scheduledAt")))continue;
    long when=Instant.parse(item.getString("scheduledAt")).toEpochMilli();
    PendingIntent pi=pending(ctx,siteId,item);
@@ -131,6 +135,11 @@ public final class SiteAlarmScheduler {
     catch(SecurityException noPermission){mgr.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,when,pi);}
    }else mgr.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,when,pi);
   }
+  // If Android or the process interrupts scheduling, the next sync retries every
+  // intended alarm instead of incorrectly treating an incomplete commit as done.
+  stored.put("scheduleComplete",true);
+  if(!prefs(ctx).edit().putString(PREFIX+siteId,stored.toString()).commit())
+   throw new IllegalStateException("Fin de programmation non enregistrée");
   return valid.length();
  }
 
