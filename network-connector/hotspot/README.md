@@ -2,6 +2,22 @@
 
 Le fichier `public/hotspot/zaray-login.html` est un modèle natif RouterOS Hotspot.
 
+## Adresses du portail et du compte par site
+
+Pour chaque site, le propriétaire choisit une adresse locale (exemple : `monsite.mg`).
+Les chemins publics souhaités sont :
+
+| Adresse | Rôle |
+| --- | --- |
+| `http://monsite.mg/` | Portail captif natif `login.html` servi par le MikroTik sur son Wi-Fi, après configuration DNS/HotSpot |
+| `http://monsite.mg/mycompte/me` | Chemin privé **préparé**, réservé à l’espace du client du même site |
+
+**Point de déploiement indispensable :** ce second chemin ne fonctionne pas simplement en créant `login.html` sur le MikroTik. Il exige un serveur HTTPS local/reverse proxy qui dessert `/mycompte/me` et rejoint l’application d’abonnements ZARAY, ou un domaine de site public vérifié et connecté à cette application. En l’absence d’un tel serveur, ZARAY affiche l’adresse comme préparée et **masque le lien de connexion non fonctionnel** sur le HotSpot natif. La prise en charge de chemins arbitraires sous la racine HotSpot ne doit pas être supposée acquise.
+
+Sur un **hôte web de site vraiment raccordé à ZARAY**, la racine `/` montre la version web du portail Wi-Fi du site et `/mycompte/me` ouvre son compte résidentiel. Ces deux pages sont alors routées côté serveur par l’hôte vers le `site_id` associé, et l’accès aux dossiers reste soumis à une session e-mail vérifiée. Le portail Wi-Fi web ne remplace pas l’authentification native du MikroTik.
+
+Un alias privé `.mg` non enregistré sur l’Internet public ne sera pas accessible depuis le réseau mobile. Pour un accès distant sans domaine acheté, un serveur HTTPS privé et un VPN avec DNS interne sont nécessaires ; aucun lien HTML seul ne crée ce serveur, certificat ou tunnel.
+
 ## Parcours client unique
 
 1. Le client rejoint le SSID du site et le MikroTik affiche automatiquement sa même page Hotspot `login.html` (si le Hotspot est correctement configuré ; certains terminaux demandent d’ouvrir le navigateur).
