@@ -2,6 +2,7 @@ import {NextRequest,NextResponse} from 'next/server';
 import {createClient} from '@/lib/supabase/server';
 import {createServiceClient} from '@/lib/supabase/service';
 import {publicResidentialSite} from '@/lib/residential-site-identity';
+import {deviceResident,touchDevice} from '@/lib/residential-alarm-device-access';
 import {
  buildResidentAlarms,buildAlarmCalendar,validateAlarmDays,DEFAULT_ALARM_DAYS,
  RESIDENT_ALARM_TIME_ZONE
@@ -73,9 +74,24 @@ export async function GET(request:NextRequest){
  const siteId=request.nextUrl.searchParams.get('siteId')||'';
  if(!uuid.test(siteId))return json({error:'Site invalide.'},400);
  try{
-  const ctx=await resolveResident(request,siteId);
+  // Background WorkManager uses a revocable site-scoped device credential.
+  // OTP/browser access remains unchanged for existing residential customers.
+  const authorization=request.headers.get('authorization')||'';
+  let ctx:Resident|null=null;
+  let deviceId:string|null=null;
+  if(authorization.startsWith('Device ')){
+   const device=await deviceResident(siteId,authorization.slice(7));
+   if(device.state==='gone')return json({error:'Appareil dissocié ou accès expiré.'},410);
+   if(device.state!=='ok')return json({error:'Appareil non autorisé.'},401);
+   ctx={service:device.service,site:device.site,siteId:device.siteId,
+    companyId:device.companyId,customerId:device.customerId};
+   deviceId=device.deviceId;
+  }else{
+   ctx=await resolveResident(request,siteId);
+  }
   if(!ctx)return json({error:'Compte abonné non autorisé pour ce site.'},401);
   const result=await schedule(ctx);
+  if(deviceId)await touchDevice(ctx.service,deviceId);
   if(request.nextUrl.searchParams.get('format')==='ics'){
    if(!result.subscription||!result.reminders.length)
     return json({error:'Aucune échéance future confirmée pour ce site.'},409);
