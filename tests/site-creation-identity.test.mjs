@@ -88,3 +88,18 @@ test('ticket and both captive portals display the same cropped logo on their sur
  assert.match(web,/\.zw-site-logo\{/);
  assert.match(identity,/contactEmail:String\(site\.contact_email/);
 });
+
+test('site logo stays centered and compact in editor, MikroTik HTML and web portal',()=>{
+ const editor=read('src/components/wifi-ticket-customization.tsx');
+ const html=read('public/hotspot/zaray-login.html');
+ const web=read('src/components/public-wifi-portal.css');
+ assert.match(editor,/Emplacement centré du logo/);
+ assert.match(editor,/maxHeight:76,objectFit:'contain'/);
+ assert.match(editor,/maxWidth:'min\(62%,180px\)'/);
+ assert.match(html,/\.logo-mark\.has-site-logo\{display:flex;align-items:center;justify-content:center/);
+ assert.match(html,/max-height:min\(11dvh,76px\)/);
+ assert.match(html,/max-height:46px/);
+ assert.match(web,/\.zw-root\[data-site-branded="true"\] \.zw-simple-brand \.zw-site-logo\{/);
+ assert.match(web,/max-height:clamp\(42px,10dvh,76px\)/);
+ assert.match(web,/object-fit:contain/);
+});
