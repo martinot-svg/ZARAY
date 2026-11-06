@@ -71,7 +71,7 @@ export default function SiteLifecyclePanel({site,onChanged,onDeleted,onClose}:{
     </button>}
     {site.status!=='active'&&<button type="button" className="primary-link"
      disabled={busy} onClick={()=>void statusAction('reactivate')}>
-     <ZarayIcon name="check" size={17}/> Réactiver le site
+     <ZarayIcon name="confirm" size={17}/> Réactiver le site
     </button>}
    </div>
    <p className="muted">La désactivation suspend le site dans ZARAY et bloque les nouveaux accès aux portails publics du site. Elle ne désactive pas automatiquement le routeur MikroTik ni les sessions Wi-Fi déjà ouvertes.</p>
@@ -93,7 +93,7 @@ export default function SiteLifecyclePanel({site,onChanged,onDeleted,onClose}:{
          Je comprends que cette suppression est définitive et que les données du site ne pourront pas être restaurées automatiquement.
         </label>
         <button type="submit" disabled={busy||!acknowledged||typedName!==site.name}>
-         <ZarayIcon name="trash" size={17}/> {busy?'Suppression…':'Confirmer la suppression définitive'}
+         <ZarayIcon name="delete" size={17}/> {busy?'Suppression…':'Confirmer la suppression définitive'}
         </button>
        </form>}
     </div>
