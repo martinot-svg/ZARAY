@@ -55,7 +55,7 @@ export default function SiteLifecyclePanel({site,onChanged,onDeleted,onClose}:{
   finally{setBusy(false);}
  }
  return <section className="panel" aria-label={'Paramètres de gestion du site '+site.name}
-   style={{display:'grid',gap:14,marginTop:16}}>
+   style={{display:'grid',gap:14,marginTop:16,gridColumn:'1 / -1'}}>
    <div className="panel-head">
     <div><div className="panel-title">Gérer le site : {site.name}</div>
      <p className="muted">{site.company_name} · {site.status==='active'?'Actif':site.status==='suspended'?'Désactivé':site.status==='archived'?'Archivé':'Planifié'}</p>
@@ -65,7 +65,7 @@ export default function SiteLifecyclePanel({site,onChanged,onDeleted,onClose}:{
     </button>
    </div>
    <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
-    {site.status!=='suspended'&&<button type="button" disabled={busy}
+    {['active','planned'].includes(site.status)&&<button type="button" disabled={busy}
      onClick={()=>void statusAction('deactivate')}>
      <ZarayIcon name="pause" size={17}/> Désactiver le site
     </button>}
