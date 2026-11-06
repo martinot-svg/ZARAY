@@ -11,7 +11,12 @@ export async function GET(_request:NextRequest,{params}:Context){
  if(!identity)return NextResponse.json({error:'Site indisponible.'},{status:404,
   headers:{'Cache-Control':'no-store','X-Robots-Tag':'noindex'}});
  const name=subscriberAccountName(identity);
- const entry='/mon-internet/'+identity.siteId;
+ // On an authenticated, site-mapped host the human-facing account URL is stable.
+ // Built-in admin hosts retain the unique, site-ID-based URL for safe sharing.
+ const hostname=_request.nextUrl.hostname.toLowerCase();
+ const branded=hostname==='mlayconnexion.vercel.app'
+  || (!['localhost','127.0.0.1'].includes(hostname)&&!hostname.endsWith('.vercel.app'));
+ const entry=branded?'/mycompte/me':'/mon-internet/'+identity.siteId;
  const icon='/api/public/residential-app-icon?siteId='+encodeURIComponent(identity.siteId);
  return NextResponse.json({
   id:entry,
