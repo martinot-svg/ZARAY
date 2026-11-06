@@ -46,7 +46,9 @@ test('account link remains tied to the site selected on the wifi and hotspot por
  const account=read('src/app/api/residential/account/route.ts');
  assert.match(web,/subscriberAccountName\(\{brandName:siteIdentity\?\.brandName/);
  assert.match(web,/\/mon-internet\/'\+encodeURIComponent\(selectedSiteId\)/);
- assert.match(hotspot,/accountLink\.href=PUBLIC_API_BASE\+'\/mon-internet\/'\+encodeURIComponent\(SITE_ID\)/);
+ assert.match(hotspot,/SITE_HOSTED/);
+ assert.match(hotspot,/PUBLIC_API_BASE\+'\/mycompte\/me'/);
+ assert.match(hotspot,/PUBLIC_API_BASE\+'\/mon-internet\/'\+encodeURIComponent\(SITE_ID\)/);
  assert.match(proxy,/path==='\/mon-internet\/'\+site.siteId\+'\/manifest.webmanifest'/);
  assert.match(proxy,/\/api\/public\/residential-app-icon/);
  assert.match(account,/\.eq\('company_id',siteRow.company_id\)\.eq\('site_id',siteId\)/);
