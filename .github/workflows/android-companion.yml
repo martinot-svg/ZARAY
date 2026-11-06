@@ -1,5 +1,9 @@
 name: Android companion debug build
 on:
+  push:
+    paths:
+      - 'mobile/android-alarms/**'
+      - '.github/workflows/android-companion.yml'
   pull_request:
     paths:
       - 'mobile/android-alarms/**'
