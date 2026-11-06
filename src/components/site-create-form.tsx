@@ -80,6 +80,8 @@ export default function SiteCreateForm({companyId,companyName,onCreated}:{
    onCreated(data.site);
    setName('');setAddress('');setEmail('');setPhone('');
    setLogoDataUri('');setCropped(false);setPalette(defaultPalette);
+   const selected=document.getElementById('site-new-logo') as HTMLInputElement|null;
+   if(selected)selected.value='';
    setNotice('Site créé avec ses coordonnées et son logo. Le ticket et le portail captif utilisent déjà son identité graphique.');
   }catch(e){setError(e instanceof Error?e.message:'Création impossible.');}
   finally{setSaving(false);}
@@ -124,7 +126,7 @@ export default function SiteCreateForm({companyId,companyName,onCreated}:{
        <strong>{previewName}</strong>
       </div>
      </div>
-     <div style={{flex:'1 1 180px',minWidth:0,background:'linear-gradient(135deg,#122c38,#071b29)',border:'1px solid '+previewColor,borderRadius:12,padding:12,color:'#f5fafc',textAlign:'center'}}>
+     <div style={{flex:'1 1 180px',minWidth:0,background:previewBackground,border:'1px solid '+previewColor,borderRadius:12,padding:12,color:legibleInk(palette.title_color,previewBackground),textAlign:'center'}}>
       <div style={{fontSize:11,fontWeight:750,marginBottom:7}}>APERÇU PORTAIL CAPTIF</div>
       <img src={logoDataUri} alt="" style={{maxHeight:77,maxWidth:'100%',width:'auto',height:'auto',objectFit:'contain'}}/>
       <div style={{fontWeight:700,marginTop:5}}>{previewName}</div>
