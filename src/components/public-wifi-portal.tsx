@@ -134,7 +134,7 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
   if(!slug||!selectedSiteId){setPortalDesign(null);return;}
   let active=true;
   setPortalDesign(null);
-  requestJson('/api/public/site-portal?siteId=+encodeURIComponent(selectedSiteId))
+  requestJson('/api/public/site-portal?siteId='+encodeURIComponent(selectedSiteId))
    .then(result=>{
     if(!active)return;
     setPortalDesign(result.companySlug===slug&&result.siteId===selectedSiteId
