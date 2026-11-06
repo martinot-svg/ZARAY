@@ -124,7 +124,12 @@ export default function WifiTicketCustomization(){
    const linkResponse=await fetch('/api/site-links?'+qs,{cache:'no-store'});
    const linkData=await linkResponse.json().catch(()=>({}));
    if(!linkResponse.ok)throw Error('Impossible de confirmer le mode local du portail. Aucun export avec lien distant ne sera généré.');
-   const localOnly=Boolean(linkData.link)&&!linkData.link.publicHostname;
+   // A mere local DNS alias does not make the account app reachable on MikroTik.
+   const siteWebHost=typeof linkData.link?.publicHostname==='string'
+    &&/^[a-z0-9]+(?:[.-][a-z0-9]+)*\.[a-z]{2,}$/i.test(linkData.link.publicHostname)
+     ?linkData.link.publicHostname:'';
+   const localOnly=Boolean(linkData.link)&&!siteWebHost;
+   const publicBase=localOnly?'':siteWebHost?'https://'+siteWebHost:'https://zaray.vercel.app';
    const snapshot={
     siteName:site?.name??'',
     brandName:String(base.brand_name||site?.name||companyName).slice(0,90),
@@ -140,7 +145,8 @@ export default function WifiTicketCustomization(){
     .replaceAll('__ZARAY_COMPANY_SLUG__',companySlug)
     .replaceAll('__ZARAY_BRANDING_JSON__',safeBranding)
     .replaceAll('__ZARAY_LOCAL_ONLY__',localOnly?'true':'false')
-    .replaceAll('__ZARAY_PUBLIC_API_BASE__',localOnly?'':'https://zaray.vercel.app');
+    .replaceAll('__ZARAY_SITE_HOSTED__',siteWebHost?'true':'false')
+    .replaceAll('__ZARAY_PUBLIC_API_BASE__',publicBase);
    const objectUrl=URL.createObjectURL(new Blob([customized],{type:'text/html;charset=utf-8'}));
    const a=document.createElement('a');a.href=objectUrl;a.download='login.html';
    document.body.appendChild(a);a.click();a.remove();
