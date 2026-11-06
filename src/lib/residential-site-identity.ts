@@ -20,7 +20,7 @@ export async function publicResidentialSite(siteId:string):Promise<ResidentialSi
  const {data:site,error:siteError}=await service.from('sites')
   .select('id,company_id,name,status').eq('id',siteId).maybeSingle();
  if(siteError)throw new Error('Site lookup unavailable');
- if(!site||!['active','planned'].includes(site.status))return null;
+ if(!site||site.status!=='active')return null;
  const [{data:company,error:companyError},{data:template,error:templateError}]=await Promise.all([
   service.from('companies').select('id,slug,status').eq('id',site.company_id).maybeSingle(),
   service.from('ticket_templates')
