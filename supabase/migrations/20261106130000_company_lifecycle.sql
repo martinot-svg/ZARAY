@@ -99,15 +99,3 @@ $$;
 revoke all on function public.manage_company_lifecycle(uuid,text,text) from public,anon,authenticated;
 grant execute on function public.manage_company_lifecycle(uuid,text,text) to authenticated;
 
--- Lock status down: no unreviewed company status changes via Data API.
-create or replace function public.guard_company_status_change()
-returns trigger language plpgsql security definer set search_path='' as $$
-begin
- if new.status is distinct from old.status then
-  if auth.uid() is not null and coalesce(current_setting('app.company_lifecycle_mutation',true),'')<>'allowed' then
-   raise exception 'company_status_lifecycle_only' using errcode='42501';
-  end if;
- end if;
- return new;
-end; $$;
--- The lifecycle RPC explicitly marks its own changes, restored below.
