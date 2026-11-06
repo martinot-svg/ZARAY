@@ -59,7 +59,7 @@ export async function DELETE(request:NextRequest){
   if(error){
    const code=error.message||'';
    if(code.includes('site_has_business_records')||error.code==='23503')
-    return json({error:'Suppression bloquée : ce site possède des clients, tickets, paiements, historiques ou équipements associés. Désactivez-le pour conserver ces données.'},409);
+    return json({error:'Suppression bloquée : ce site possède des clients, tickets, paiements, historiques, équipements ou domaines actifs associés. Désactivez-le pour conserver ces données.'},409);
    if(code.includes('site_must_be_inactive'))
     return json({error:'Désactivez d’abord ce site.'},409);
    if(code.includes('site_name_confirmation_mismatch'))
