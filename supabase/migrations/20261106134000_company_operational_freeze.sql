@@ -26,15 +26,14 @@ create or replace function public.guard_company_new_service()
 returns trigger language plpgsql set search_path='' as $$
 declare v_status text;
 begin
+ -- Suspension / revocation commands must remain possible while paused.
+ if tg_table_name='network_commands'
+  and new.action not in ('resume_account','provision_voucher','unblock_hotspot_mac')
+ then return new; end if;
  select c.status into v_status from public.companies c
   where c.id=new.company_id for share;
  if v_status is null or v_status in ('suspended','closed') then
   raise exception 'company_suspended' using errcode='23514';
- end if;
- if tg_table_name='network_commands' then
-  if new.action not in ('resume_account','provision_voucher','unblock_hotspot_mac') then
-   return new;
-  end if;
  end if;
  return new;
 end;
