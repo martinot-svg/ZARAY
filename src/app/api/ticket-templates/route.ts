@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { authorizeTenant } from '@/lib/tenant-context';
+import sharp from 'sharp';
 export const dynamic = 'force-dynamic';
 const headers = { 'Cache-Control': 'no-store' };
 const fail = (error: string, status: number) => NextResponse.json({ error }, { status, headers });
@@ -108,6 +109,27 @@ export async function PUT(request:NextRequest){
         const jpg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
         const webp=bytes.toString('ascii',0,4)==='RIFF'&&bytes.toString('ascii',8,12)==='WEBP';
         if(!(matched[1]==='png'&&png||matched[1]==='jpeg'&&jpg||matched[1]==='webp'&&webp))return fail('Signature du logo non valide.',400);
+        // Existing logos, including historical opaque JPEGs, may be kept while
+        // editing other site settings. New uploads must be genuinely transparent.
+        const {data:stored,error:storedError}=await supabase.from('ticket_templates')
+          .select('logo_data_uri').eq('company_id',companyId).eq('site_id',siteId)
+          .is('offer_id',null).maybeSingle();
+        if(storedError)return fail('Vérification du logo indisponible.',503);
+        if(stored?.logo_data_uri!==logo){
+          if(matched[1]==='jpeg')return fail('Importez un logo PNG ou WebP avec fond transparent.',400);
+          if(logo.length>175_000)return fail('Logo trop volumineux après rognage. Réduisez son poids.',400);
+          try{
+            const decoder=sharp(bytes,{limitInputPixels:16_000_000,failOn:'error'});
+            const metadata=await decoder.metadata();
+            if(!metadata.width||!metadata.height||!metadata.hasAlpha)
+              return fail('Le logo doit avoir un véritable fond transparent.',400);
+            const stats=await decoder.stats();
+            if(stats.channels.length<4||stats.channels[3].min>=255)
+              return fail('Le logo est entièrement opaque. Importez un PNG ou WebP transparent.',400);
+          }catch{
+            return fail('Logo illisible ou transparence non prise en charge.',400);
+          }
+        }
       }
       values.logo_data_uri=logo as string|null;
     }
