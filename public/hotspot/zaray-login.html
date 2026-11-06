@@ -171,6 +171,7 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
  var EMBEDDED_BRANDING='__ZARAY_BRANDING_JSON__';
  var LOCAL_ONLY='__ZARAY_LOCAL_ONLY__'==='true';
  var PUBLIC_API_BASE='__ZARAY_PUBLIC_API_BASE__';
+ var SITE_HOSTED='__ZARAY_SITE_HOSTED__'==='true';
  function readEmbeddedBranding(){
   try{return JSON.parse(decodeURIComponent(EMBEDDED_BRANDING));}
   catch(e){return {};}
@@ -228,7 +229,10 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
  // Only show the site-bound web account when a reachable backend is configured.
  if(!LOCAL_ONLY&&PUBLIC_API_BASE&&/^[0-9a-f-]{36}$/i.test(SITE_ID)){
   var accountLink=document.getElementById('accountLink');
-  accountLink.href=PUBLIC_API_BASE+'/mon-internet/'+encodeURIComponent(SITE_ID);
+  // Friendly account URL only when the site web host really serves it.
+  accountLink.href=SITE_HOSTED
+   ?PUBLIC_API_BASE+'/mycompte/me'
+   :PUBLIC_API_BASE+'/mon-internet/'+encodeURIComponent(SITE_ID);
   accountLink.hidden=false;
  }
  function showLogin(offer){

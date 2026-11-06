@@ -38,7 +38,7 @@ async function activeSiteForPublicHostname(hostname:string,field:'public_hostnam
  return {siteId:data.site_id,companySlug:company.slug};
 }
 
-function customHostResponse(request:NextRequest,site:SiteDomain|null,vanity=false){
+function customHostResponse(request:NextRequest,site:SiteDomain|null){
  const denied=()=>new NextResponse('Domaine non disponible.',{
   status:404,headers:{'Cache-Control':'no-store','X-Robots-Tag':'noindex'}
  });
@@ -46,13 +46,16 @@ function customHostResponse(request:NextRequest,site:SiteDomain|null,vanity=fals
  const path=request.nextUrl.pathname;
  const search=request.nextUrl.searchParams;
  const target=new URL(request.url);
- // A branded free address opens its own subscription page, not the admin site.
- if(vanity&&path==='/'){
+ // The public root is the site's branded Wi-Fi portal; never the admin dashboard.
+ // On a local RouterOS DNS alias the actual login.html is still served by the router.
+ if(path==='/'||path==='/login'){
   target.pathname='/wifi/'+encodeURIComponent(site.companySlug);
-  target.search='?siteId='+encodeURIComponent(site.siteId)+'&inscription=1';
+  target.search='?siteId='+encodeURIComponent(site.siteId);
   return NextResponse.rewrite(target,{request});
  }
- if(path==='/'||path==='/compte'||path==='/mon-internet'){
+ // This is a tenant-host alias, not an identity parameter supplied by the caller.
+ // The account API still checks a verified e-mail against company + site + customer.
+ if(path==='/mycompte/me'||path==='/compte'||path==='/mon-internet'){
   target.pathname='/mon-internet/'+site.siteId;
   target.search='';
   return NextResponse.rewrite(target,{request});
@@ -141,7 +144,7 @@ export async function proxy(request:NextRequest){
     &&hostname==='mlayconnexion.vercel.app'){
   try{
    const site=await activeSiteForPublicHostname(hostname);
-   response=customHostResponse(request,site,true);
+   response=customHostResponse(request,site);
   }catch{
    response=new NextResponse('Portail temporairement indisponible.',{
     status:503,headers:{'Cache-Control':'no-store','X-Robots-Tag':'noindex'}
