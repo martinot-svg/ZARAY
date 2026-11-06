@@ -103,10 +103,13 @@ export async function POST(request:NextRequest){
   if(!router.control_enabled)return json({commands:[],controlEnabled:false});
   // Keep observations and accounting working when suspended, but never
   // provision, resume or unblock clients for a site that is no longer active.
-  const {data:siteState,error:siteError}=await service.from('sites')
-   .select('status').eq('id',router.site_id).eq('company_id',router.company_id).maybeSingle();
-  if(siteError||!siteState)return json({error:'Statut du site indisponible.'},503);
-  const siteActive=siteState.status==='active';
+  const [{data:siteState,error:siteError},{data:companyState,error:companyError}]=await Promise.all([
+   service.from('sites').select('status').eq('id',router.site_id).eq('company_id',router.company_id).maybeSingle(),
+   service.from('companies').select('status').eq('id',router.company_id).maybeSingle()
+  ]);
+  if(siteError||!siteState||companyError||!companyState)
+   return json({error:'Statut du site ou de l’entreprise indisponible.'},503);
+  const siteActive=siteState.status==='active'&&['trial','active'].includes(companyState.status);
   const {data,error}=await service.from('network_commands').select('id,account_id,voucher_id,action,protocol,username,session_id,mac_address,expires_at')
     .eq('router_id',routerId).eq('status','queued').gt('expires_at',new Date().toISOString())
     .order('created_at').limit(10);
@@ -116,7 +119,7 @@ export async function POST(request:NextRequest){
 
    if(!siteActive&&['provision_voucher','resume_account','unblock_hotspot_mac'].includes(cmd.action)){
     await service.from('network_commands')
-     .update({status:'cancelled',outcome:'Site désactivé : activation réseau refusée',completed_at:new Date().toISOString()})
+     .update({status:'cancelled',outcome:'Site ou entreprise désactivé : activation réseau refusée',completed_at:new Date().toISOString()})
      .eq('id',cmd.id).eq('router_id',routerId).eq('status','queued');
     continue;
    }
