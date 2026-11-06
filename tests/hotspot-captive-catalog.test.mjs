@@ -117,7 +117,8 @@ test('MikroTik HTML exposes only the current site subscriber account when backen
  assert.match(portal,/SITE_HOSTED/);
  assert.match(portal,/PUBLIC_API_BASE\+'\/mycompte\/me'/);
  assert.match(portal,/PUBLIC_API_BASE\+'\/mon-internet\/'\+encodeURIComponent\(SITE_ID\)/);
- assert.match(portal,/if\(!LOCAL_ONLY&&PUBLIC_API_BASE&&/);
+ assert.match(portal,/!LOCAL_ONLY&&PUBLIC_API_BASE&&/);
+ assert.match(portal,/PORTAL\.showAccount!==false/);
  assert.match(portal,/\?siteId='\+encodeURIComponent\(SITE_ID\)\+'&inscription=1'/);
  assert.doesNotMatch(portal,/href="https:\/\/zaray\.vercel\.app\/mon-internet\//);
 });
