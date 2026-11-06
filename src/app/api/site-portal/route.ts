@@ -15,7 +15,7 @@ async function context(companyId:string,siteId:string,write:boolean){
  const session=await createClient();
  const access=await authorizeTenant(session,companyId,siteId);
  if(!access.ok)return {error:json({error:access.error},access.status)};
- if(write&&!['owner','admin','site_manager'].includes(access.member.role))
+ if(write&&!['owner','admin'].includes(access.member.role))
   return {error:json({error:'Publication réservée aux responsables autorisés.'},403)};
  const service=createServiceClient();
  if(!service)return {error:json({error:'Service indisponible.'},503)};
