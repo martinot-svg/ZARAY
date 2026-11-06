@@ -107,6 +107,22 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
 @media(max-height:570px){.logo-mark.has-site-logo{width:auto;height:auto;max-height:72px}.logo-mark.has-site-logo img{max-height:72px;padding:0}}
 @media(prefers-reduced-motion:reduce){body:before{animation:none}}
 
+/* Published portal variants keep RouterOS native login and offline page light. */
+body[data-portal-template]{background:var(--portal-background,#04101d)}
+body[data-portal-template] .panel{border-radius:var(--portal-radius,22px)}
+body[data-portal-template] .field input,body[data-portal-template] button.primary{border-radius:min(var(--portal-radius,20px),12px)}
+body[data-portal-align="left"] header{text-align:left}
+body[data-portal-align="left"] .logo{align-items:flex-start}
+body[data-portal-template="minimal"] .panel{box-shadow:none;border:1px solid rgba(174,208,216,.4)}
+body[data-portal-template="corporate"] .panel{border-radius:7px;border-top:5px solid var(--site-primary)}
+body[data-portal-template="modern-tech"] .panel{border-radius:3px;box-shadow:0 0 0 4px rgba(91,219,195,.1),0 20px 60px #020c16}
+body[data-portal-template="residential"] .panel{border-radius:28px 28px 12px 12px}
+body[data-portal-template="commercial"] .panel{border:2px solid var(--site-primary)}
+body[data-portal-template="elegant"] .panel{border-radius:2px;border:1px solid var(--site-accent)}
+body[data-portal-template="elegant"] h1{font-family:Georgia,serif;font-weight:600}
+body[data-portal-template] footer details{font-size:10px;max-width:100%;margin:6px 0}
+body[data-portal-template] footer details summary{cursor:pointer;text-decoration:underline}
+body[data-portal-template] footer details p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
 </style>
 </head>
 <body>
@@ -165,7 +181,9 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
  <p class="fineprint">Fournisseur : <strong id="companyLabel">Votre réseau</strong></p>
  <p class="fineprint">Accès Internet du fournisseur · Votre abonnement est soumis à validation.</p>
 </section>
-<footer><span id="portalFooter">Portail Wi-Fi du fournisseur</span><span id="siteContact" style="display:block;overflow-wrap:anywhere;margin-top:3px"></span></footer>
+<footer><span id="portalFooter">Portail Wi-Fi du fournisseur</span><span id="siteContact" style="display:block;overflow-wrap:anywhere;margin-top:3px"></span>
+<details id="portalTerms" hidden><summary>Conditions d'utilisation</summary><p id="portalTermsText"></p></details>
+<details id="portalPrivacy" hidden><summary>Confidentialité</summary><p id="portalPrivacyText"></p></details></footer>
 </main>
 <script>
 (function(){
@@ -175,6 +193,7 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
  // URL-encoded, JSON-serialized public site branding; no credentials or keys.
  // Snapshot keeps the portal branded before a blocked/offline catalog API request.
  var EMBEDDED_BRANDING='__ZARAY_BRANDING_JSON__';
+ var EMBEDDED_PORTAL='__ZARAY_PORTAL_JSON__';
  var LOCAL_ONLY='__ZARAY_LOCAL_ONLY__'==='true';
  var PUBLIC_API_BASE='__ZARAY_PUBLIC_API_BASE__';
  var SITE_HOSTED='__ZARAY_SITE_HOSTED__'==='true';
