@@ -65,7 +65,7 @@ export default function WifiTicketCustomization(){
  function change<K extends keyof Settings>(key:K,value:Settings[K]){setForm(previous=>({...previous,[key]:value}));}
  async function applyLogoPalette(uri:string,replaceLogo:boolean){
   const request=++logoRequest.current;
-  setAnalyzingLogo(true);setError('');setNotice(replaceLogo?'Analyse et détourage du logo en cours…':'');
+  setAnalyzingLogo(true);setError('');setNotice(replaceLogo?'Chargement du logo original…':'');
   try{
    const cleaned=replaceLogo?await optimizeLogo(uri):null;
    const targetUri=cleaned?.dataUri??uri;
@@ -73,7 +73,7 @@ export default function WifiTicketCustomization(){
    if(request!==logoRequest.current)return;
    setForm(previous=>({...previous,...(palette??{}),...(replaceLogo?{logo_data_uri:targetUri}:{})}));
    setNotice(replaceLogo
-    ?(cleaned?.removedBackground?'Arrière-plan retiré, marges rognées et logo optimisé.':'Logo optimisé. Le détourage complexe n’a pas pu être appliqué sans risque de perte.')
+    ?(cleaned?.optimized?'Logo redimensionné sans supprimer son arrière-plan.':'Logo original conservé, avec son arrière-plan et ses marges.')
     :(palette?'Couleurs du logo actualisées.':'Logo conservé.'));
   }catch{
    if(request===logoRequest.current)setError('Le traitement du logo a échoué. Vérifiez son format et sa taille.');
@@ -196,10 +196,10 @@ export default function WifiTicketCustomization(){
       <h2>Couleurs et identité</h2>
       {!offerId?<div><label>Logo du site (PNG, JPEG, WebP)</label>
         <input type="file" accept="image/png,image/jpeg,image/webp" onChange={upload} disabled={analyzingLogo}/>
-        <p className="muted">Détourage intelligent : fonds unis et multicolores avec traitement IA local, puis rognage automatique.</p>
+        <p className="muted">Le fond, les couleurs et les marges du logo sont conservés. Aucun détourage automatique. Seules les images trop volumineuses peuvent être réduites proportionnellement.</p>
         
         {form.logo_data_uri&&<div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:12,margin:'12px 0'}}>
-         <img src={form.logo_data_uri} alt="Logo du site chargé" style={{maxWidth:'100%',width:'auto',height:'auto',maxHeight:180,objectFit:'contain',background:'#E8EDF1',borderRadius:10,padding:7,border:'1px solid #9BADBA'}}/>
+         <img src={form.logo_data_uri} alt="Logo du site chargé" style={{maxWidth:'100%',width:'auto',height:'auto',maxHeight:180,objectFit:'contain',borderRadius:10,border:'1px solid #9BADBA'}}/>
          <button type="button" disabled={analyzingLogo} onClick={()=>void applyLogoPalette(form.logo_data_uri!,false)}>{analyzingLogo?'Analyse du logo…':'Reprendre les couleurs du logo'}</button>
          <button type="button" disabled={analyzingLogo} onClick={()=>{logoRequest.current++;change('logo_data_uri',null);}}>Retirer le logo</button>
         </div>}
@@ -256,7 +256,7 @@ export default function WifiTicketCustomization(){
        <h3>Portail captif personnalisé par site</h3>
        
        {!offerId?<div aria-label="Aperçu du portail captif du site" style={{margin:'14px auto',maxWidth:360,padding:20,borderRadius:20,background:'linear-gradient(140deg,#102436,#071522)',border:'1px solid '+(form.primary_color||'#40caff'),textAlign:'center',color:'#f2fbff'}}>
-         {form.logo_data_uri?<img src={form.logo_data_uri} alt="Logo du site" style={{height:'auto',maxHeight:'min(24vh,180px)',maxWidth:'100%',width:'auto',objectFit:'contain',marginBottom:8,padding:6,background:'#DDE8ED',borderRadius:10,filter:'drop-shadow(0 1px 1px rgba(0,0,0,.6))'}}/>:<div aria-hidden="true" style={{fontSize:25,fontWeight:800,color:form.accent_color||'#66eabe'}}>Wi-Fi</div>}
+         {form.logo_data_uri?<img src={form.logo_data_uri} alt="Logo du site" style={{height:'auto',maxHeight:'min(24vh,180px)',maxWidth:'100%',width:'auto',objectFit:'contain',marginBottom:8,filter:'drop-shadow(0 1px 1px rgba(0,0,0,.6))'}}/>:<div aria-hidden="true" style={{fontSize:25,fontWeight:800,color:form.accent_color||'#66eabe'}}>Wi-Fi</div>}
          <div style={{fontWeight:800,fontSize:16}}>{form.brand_name||site?.name||companyName}</div>
          <p style={{fontSize:11,color:'#b8d3d9'}}>{form.welcome_message||'Chaque connexion ouvre votre univers.'}</p>
          <div style={{display:'grid',gap:8,textAlign:'left',fontSize:11,marginTop:14}}>
