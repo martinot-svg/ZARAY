@@ -266,10 +266,12 @@ export default function WifiTicketCustomization(){
 <details className="workspace-inline-disclosure"><summary>Aperçu et installation du portail captif</summary>      <div style={{margin:'20px 0',padding:16,border:'1px solid var(--line, #6c7d8a)',borderRadius:14}}>
        <h3>Portail captif personnalisé par site</h3>
        
-       {!offerId?<div aria-label="Aperçu du portail captif du site" style={{margin:'14px auto',maxWidth:360,padding:20,borderRadius:20,background:'linear-gradient(140deg,#102436,#071522)',border:'1px solid '+(form.primary_color||'#40caff'),textAlign:'center',color:'#f2fbff'}}>
-         {form.logo_data_uri?<img src={form.logo_data_uri} alt="Logo du site" style={{height:'auto',maxHeight:'min(24vh,180px)',maxWidth:'100%',width:'auto',objectFit:'contain',marginBottom:8,filter:'drop-shadow(0 1px 1px rgba(0,0,0,.6))'}}/>:<div aria-hidden="true" style={{fontSize:25,fontWeight:800,color:form.accent_color||'#66eabe'}}>Wi-Fi</div>}
+       {!offerId?<div aria-label="Aperçu du portail captif du site" style={{margin:'14px auto',maxWidth:360,padding:16,borderRadius:20,background:form.secondary_color||'#102334',border:'1px solid '+(form.primary_color||'#40caff'),textAlign:'center',color:legibleInk(form.title_color||'#f2fbff',form.secondary_color||'#102334')}}>
+         <div aria-label="Emplacement centré du logo" style={{display:'flex',justifyContent:'center',alignItems:'center',maxWidth:'100%',margin:'0 auto 8px'}}>
+          {form.logo_data_uri?<img src={form.logo_data_uri} alt="Logo du site" style={{display:'block',width:'auto',height:'auto',maxWidth:'min(62%,180px)',maxHeight:76,objectFit:'contain',margin:'0 auto'}}/>:<div aria-hidden="true" style={{fontSize:25,fontWeight:800,color:form.accent_color||'#66eabe'}}>Wi-Fi</div>}
+         </div>
          <div style={{fontWeight:800,fontSize:16}}>{form.brand_name||site?.name||companyName}</div>
-         <p style={{fontSize:11,color:'#b8d3d9'}}>{form.welcome_message||'Chaque connexion ouvre votre univers.'}</p>
+         <p style={{fontSize:11,color:legibleInk(form.title_color||'#f2fbff',form.secondary_color||'#102334'),opacity:.82}}>{form.welcome_message||'Chaque connexion ouvre votre univers.'}</p>
          <div style={{display:'grid',gap:8,textAlign:'left',fontSize:11,marginTop:14}}>
           <span>Nom d’utilisateur<input readOnly tabIndex={-1} value="" aria-label="Aperçu utilisateur" placeholder="Identifiant du ticket" style={{width:'100%',padding:9,borderRadius:8,background:'#142b3b',border:'1px solid #476071',color:'#ffffff'}}/></span>
           <span>Mot de passe<input readOnly tabIndex={-1} type="password" value="" aria-label="Aperçu mot de passe" placeholder="PIN" style={{width:'100%',padding:9,borderRadius:8,background:'#142b3b',border:'1px solid #476071',color:'#ffffff'}}/></span>
