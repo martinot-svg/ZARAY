@@ -4,6 +4,7 @@ import {useCallback,useEffect,useMemo,useState,type CSSProperties,type FormEvent
 import {Bell,CalendarClock,CheckCircle2,ChevronRight,Clock3,LogOut,Mail,ShieldCheck,Wifi,WifiOff} from 'lucide-react';
 import {createClient} from '@/lib/supabase/client';
 import NotificationInbox from '@/components/notification-inbox';
+import {subscriberAccountName} from '@/lib/residential-site-labels';
 import ResidentialNotificationPreferences from '@/components/residential-notification-preferences';
 import './residential-account-portal.css';
 
@@ -96,6 +97,7 @@ export default function ResidentialAccountPortal({siteId}:{siteId:string}){
   await createClient().auth.signOut();
   setAccount(null);setPhase('login');setCode('');setError('');
  }
+ const accountLabel=site?subscriberAccountName(site):'Mon compte Internet';
  const current=account?.subscriptions[0];
  const from=site?.companySlug;
  return <div className="rp-root resident-portal" style={style}>
@@ -103,7 +105,7 @@ export default function ResidentialAccountPortal({siteId}:{siteId:string}){
    <header className="rp-header">
     <div className="rp-identity">
      {site?<SubscriberMark site={site}/>:<span className="rp-monogram"><Wifi size={22}/></span>}
-     <div><strong>{site?.brandName||'Mon Internet'}</strong><small>{site?.siteName||'Espace abonné'}</small></div>
+     <div><strong>{accountLabel}</strong><small>{site?.siteName||'Espace abonné'}</small></div>
     </div>
     {account?<button className="rp-signout" type="button" onClick={()=>void signOut()}><LogOut size={17}/> Déconnexion</button>:<span className="rp-header-caption">Espace résidentiel</span>}
    </header>
@@ -111,7 +113,7 @@ export default function ResidentialAccountPortal({siteId}:{siteId:string}){
     {phase==='loading'&&<p role="status">Ouverture de votre espace…</p>}
     {phase==='login'&&<section className="rp-panel rp-auth">
      <span className="rp-overline"><ShieldCheck size={15}/> Accès privé</span>
-     <h1>Mon Internet</h1>
+     <h1>{accountLabel}</h1>
      <p>Connectez-vous avec l'adresse e-mail de votre abonnement.</p>
      <form onSubmit={requestCode}>
       <label>Adresse e-mail<input type="email" value={email} onChange={e=>setEmail(e.target.value)} autoComplete="email" required maxLength={254} placeholder="vous@exemple.mg"/></label>
@@ -120,7 +122,8 @@ export default function ResidentialAccountPortal({siteId}:{siteId:string}){
     </section>}
     {phase==='otp'&&<section className="rp-panel rp-auth">
      <span className="rp-overline"><Mail size={15}/> Vérification</span>
-     <h1>Vérifier mon e-mail</h1>
+     <h1>{accountLabel}</h1>
+     <p>Vérifiez votre adresse e-mail pour accéder à votre compte.</p>
      <p>Si votre adresse est enregistrée sur ce site, vous recevrez les instructions de connexion.</p>
      {notice&&<p className="rp-notice" role="status">{notice}</p>}
      <form onSubmit={verifyCode}>
@@ -130,13 +133,13 @@ export default function ResidentialAccountPortal({siteId}:{siteId:string}){
      </form>
     </section>}
     {phase==='denied'&&<section className="rp-panel rp-auth">
-     <h1>Compte non associé</h1><p>Cette adresse ne possède pas de dossier résidentiel actif sur ce site.</p>
+     <h1>{accountLabel} — Accès indisponible</h1><p>Cette adresse ne possède pas de dossier résidentiel actif sur ce site.</p>
      <button type="button" onClick={()=>void signOut()}>Utiliser une autre adresse</button>
     </section>}
     {phase==='account'&&account&&<>
      <div className="rp-welcome">
       <div><span className="rp-overline"><Wifi size={16}/> Mon abonnement</span>
-       <h1>Bonjour, {account.customer.name}</h1><p>{site?.welcomeMessage||'Consultez les informations de votre connexion Internet.'}</p>
+       <h1>Bonjour, {account.customer.name}</h1><p className="rp-account-context">{accountLabel}</p><p>{site?.welcomeMessage||'Consultez les informations de votre connexion Internet.'}</p>
       </div>
       <span className="rp-status"><span className="rp-dot"/>{account.status}</span>
      </div>
