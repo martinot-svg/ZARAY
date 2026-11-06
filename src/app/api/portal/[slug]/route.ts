@@ -86,13 +86,20 @@ export async function POST(request: NextRequest, { params }: Context) {
     if(domainSite&&(domainSite.companySlug!==slug||siteId!==domainSite.siteId))
       return json({error:'Ce domaine accepte uniquement les inscriptions de son site.'},403);
     const supabase = await createClient();
+    const {data:availableSites,error:availabilityError}=await supabase.rpc(
+      'get_public_residential_sites',{p_company_slug:slug}
+    );
+    if(availabilityError)return json({error:'Disponibilité des sites momentanément indisponible.'},503);
+    const eligible=(availableSites??[]) as Array<{site_id:string}>;
+    if(!eligible.length||(siteId&&!eligible.some(s=>s.site_id===siteId)))
+      return json({error:'Le site est désactivé ou indisponible pour une nouvelle souscription.'},409);
     const { data, error } = await supabase.rpc('create_public_subscription_order_at_site', { p_company_slug: slug, p_offer_id: body.offerId, p_customer_name: customerName, p_customer_email: customerEmail, p_customer_phone: customerPhone || null, p_site_id: siteId });
     if (error) {
       console.error('portal order creation failed', { code: error.code, message: error.message });
       if (error.message?.includes('too_many_orders')) return json({ error: 'Trop de commandes récentes pour cette adresse. Réessayez dans 15 minutes.' }, 429);
       if (error.message?.includes('offer_not_available') || error.message?.includes('company_not_found')) return json({ error: 'Cette offre n’est plus disponible.' }, 409);
       if (error.message?.includes('site_required')) return json({ error: 'Choisissez le site de votre abonnement.' }, 400);
-      if (error.message?.includes('site_not_available')) return json({ error: 'Ce site n’est pas disponible pour cette entreprise.' }, 409);
+      if (error.message?.includes('site_not_available')||error.code==='23514') return json({ error: 'Ce site n’est pas disponible pour cette entreprise.' }, 409);
       if (error.message?.includes('customer_already_assigned_to_site')) return json({ error: 'Ce client est déjà rattaché à un autre site. Contactez le fournisseur pour demander un transfert.' }, 409);
       if (error.code === '22023') return json({ error: 'Les informations fournies sont invalides.' }, 400);
       return json({ error: 'Impossible de créer la commande pour le moment.' }, 503);
