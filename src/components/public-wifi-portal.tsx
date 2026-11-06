@@ -9,7 +9,7 @@ import {subscriberAccountName} from '@/lib/residential-site-labels';
 
 type Offer={id:string;name:string;description?:string;durationMinutes:number;validityDays?:number;priceAmount:number;currency:string;maxDevices?:number};
 type ResidentialSite={id:string;name:string;status:string};
-type PublicIdentity={brandName:string;siteName:string;logoDataUri:string|null;primaryColor:string;secondaryColor:string;accentColor:string;titleColor:string};
+type PublicIdentity={brandName:string;siteName:string;logoDataUri:string|null;primaryColor:string;secondaryColor:string;accentColor:string;titleColor:string;contactPhone?:string;contactEmail?:string;siteAddress?:string};
 type Method={provider:'orange_money'|'mvola';accountNumber:string;accountName:string;instructions:string};
 type Order={reference:string;status:string;amount:number;currency:string;offer_name:string};
 type Mode='home'|'ticket'|'subscribe'|'order';
@@ -236,6 +236,7 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
       <button type="button" className="zw-simple-offers-link" onClick={()=>setOffersDialog(true)}>Voir les offres Wi-Fi {ticketCount>0?'('+ticketCount+')':''} <ArrowRight size={14}/></button>
       <div className="zw-simple-footer">
        <span>Fournisseur : <strong>{companyName}</strong></span>
+       {!demo&&(siteIdentity?.contactPhone||siteIdentity?.contactEmail)&&<span>{[siteIdentity.contactPhone,siteIdentity.contactEmail].filter(Boolean).join(' · ')}</span>}
        <span>{demo?'Démonstration : aucun accès Internet activé':'Vérification du ticket par MikroTik après installation'}</span>
       </div>
      </div>
