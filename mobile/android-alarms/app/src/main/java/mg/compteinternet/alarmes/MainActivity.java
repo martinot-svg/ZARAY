@@ -240,7 +240,7 @@ public final class MainActivity extends Activity {
   super.onResume();
   handler.removeCallbacks(displayUpdates);handler.post(displayUpdates);
   boolean exact=hasExactPermission();
-  if(exact&&!lastExactPermission)SiteAlarmScheduler.restoreAfterReboot(this);
+  if(exact!=lastExactPermission)SiteAlarmScheduler.restoreAfterReboot(this);
   lastExactPermission=exact;
   AlarmSyncScheduler.enqueueNow(this);
  }
