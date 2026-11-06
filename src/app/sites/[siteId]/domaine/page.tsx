@@ -47,6 +47,12 @@ export default function SiteLocalPortalAddress(){
   finally{setBusy(false);}
  }
  const localAddress=link?'http://'+link.alias:'';
+ const accountAddress=localAddress?localAddress+'/mycompte/me':'';
+ async function copyAccount(){
+  if(!accountAddress)return;
+  try{await navigator.clipboard.writeText(accountAddress);setNotice('Adresse du compte copiée.');}
+  catch{setError('Copie impossible. Sélectionnez et copiez l’adresse affichée.');}
+ }
  async function copy(){
   if(!localAddress)return;
   try{await navigator.clipboard.writeText(localAddress);setNotice('Adresse locale copiée.');}
@@ -70,20 +76,26 @@ export default function SiteLocalPortalAddress(){
     </button>
    </form>
    {link&&<section className="panel" style={{display:'grid',gap:12}}>
-    <strong>Adresse à configurer sur MikroTik</strong>
+    <strong>Portail captif · Adresse locale</strong>
     <code style={{overflowWrap:'anywhere',fontSize:17}}>{localAddress}</code>
     <div><button type="button" onClick={()=>void copy()}>
      <ZarayIcon name="copy" size={17}/> Copier l’adresse
     </button></div>
     <p className="muted">Cette adresse ne fonctionne que pour les appareils connectés au réseau Wi-Fi dont le DNS résout ce nom vers le portail. Elle n’est pas accessible depuis l’Internet public sans domaine enregistré.</p>
+    <strong>Espace abonné · Chemin souhaité</strong>
+    <code style={{overflowWrap:'anywhere',fontSize:17}}>{accountAddress}</code>
+    <div><button type="button" onClick={()=>void copyAccount()}>
+     <ZarayIcon name="copy" size={17}/> Copier l’adresse du compte
+    </button></div>
+    <p className="muted">Le chemin /mycompte/me ouvre le compte sur un hôte web du site réellement relié à ZARAY. Sur l’adresse locale MikroTik, la page login.html ne fournit pas ce service à elle seule : un serveur HTTPS privé / proxy applicatif et son routage doivent encore être configurés. Ne communiquez pas cette adresse aux abonnés comme active avant sa mise en service.</p>
    </section>}
    {link&&<details className="workspace-inline-disclosure">
     <summary>Accès au compte à distance</summary>
     <div style={{display:'grid',gap:9,paddingTop:12}}>
-     <strong>{'compte.'+link.alias}</strong>
-     <p className="muted">Adresse privée préparée, non activée. Elle nécessite un serveur local HTTPS et une connexion VPN WireGuard configurée sur le MikroTik et sur le téléphone du client.</p>
-     <p className="muted">Après connexion au VPN, le client pourra ouvrir son compte avec son adresse e-mail et un code de vérification. Aucune administration du routeur ne doit être accessible depuis le VPN client.</p>
-     <p className="muted" role="status">VPN, DNS privé, serveur et certificat : mise en service non confirmée.</p>
+     <strong>{accountAddress}</strong>
+     <p className="muted">Adresse locale privée préparée, non activée. Le chemin /mycompte/me nécessite un service web local accessible en HTTPS avec un routage vers l’application du site. Une connexion VPN autorisée peut donner accès à ce service depuis l’extérieur, sans publier le nom sur Internet.</p>
+     <p className="muted">Après connexion au VPN et accès au serveur, le client pourra s’authentifier avec son e-mail et un code. Aucune administration du routeur ne doit être exposée au VPN client.</p>
+     <p className="muted" role="status">VPN, DNS privé, routage /mycompte/me, serveur et certificat : mise en service non confirmée.</p>
     </div>
    </details>}
    <details className="workspace-inline-disclosure">
@@ -91,6 +103,7 @@ export default function SiteLocalPortalAddress(){
     <div style={{display:'grid',gap:10,paddingTop:12}}>
      <p>Dans <strong>IP → Hotspot → Server Profiles</strong>, choisissez le profil du site et indiquez <strong>{link?.alias||'le nom local choisi'}</strong> dans <strong>DNS Name</strong>. Les appareils clients doivent utiliser le DNS du réseau MikroTik.</p>
      <p>Installez votre fichier <code>login.html</code> personnalisé dans le répertoire HotSpot du routeur. Vous pouvez le préparer dans le module Tickets Wi-Fi → Personnalisation.</p>
+     <p>Pour disposer de <code>{'/mycompte/me'}</code> sur le même nom local, prévoyez un serveur ou proxy capable de distinguer ce chemin du HotSpot. L'enregistrement du nom dans ZARAY ne modifie pas le routage du MikroTik.</p>
      <p>Pour l’adresse locale sans certificat TLS reconnu, l’accès peut nécessiter <code>http://</code> ; les navigateurs privilégiant HTTPS peuvent afficher un avertissement ou refuser la navigation.</p>
      <p><strong>Inscription des nouveaux clients :</strong> la page HTML locale seule ne stocke pas de comptes. Le formulaire d’inscription nécessite un service applicatif accessible depuis le réseau ; celui-ci doit être installé/configuré séparément pour fonctionner sans hébergement externe.</p>
      <Link href={'/tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)+'&tab=customize'}>
