@@ -11,18 +11,25 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import org.json.JSONObject;
 
-/** Offline, local, user-visible phone alert; never depends on a live Wi-Fi session. */
+/** Offline local reminder. Its content must still exist in the current site schedule. */
 public final class PhoneAlarmReceiver extends BroadcastReceiver {
  @Override public void onReceive(Context ctx,Intent intent){
+  if(intent==null)return;
   String siteId=intent.getStringExtra("siteId");
-  if(siteId==null||!siteId.matches("(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))return;
-  String title=intent.getStringExtra("title");
-  String message=intent.getStringExtra("message");
   String reminderId=intent.getStringExtra("reminderId");
-  if(title==null||message==null||reminderId==null)return;
+  if(siteId==null||reminderId==null)return;
+  JSONObject current=SiteAlarmScheduler.currentReminder(ctx,siteId,reminderId);
+  if(current==null)return; // revoked, renewed, canceled or superseded alarm
   if(Build.VERSION.SDK_INT>=33&&ctx.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
    !=PackageManager.PERMISSION_GRANTED)return;
+  String title=current.optString("title","Mon abonnement Internet");
+  String message=current.optString("message","Rappel d'échéance");
+  long lastVerified=current.optLong("lastVerifiedAt",0);
+  // Never present an offline cached date as freshly confirmed by the provider.
+  if(lastVerified<=0||System.currentTimeMillis()-lastVerified>24*3600000L)
+   message="Rappel hors connexion : échéance enregistrée lors de la dernière synchronisation. Vérifiez votre compte.";
   NotificationManager manager=(NotificationManager)ctx.getSystemService(Context.NOTIFICATION_SERVICE);
   String channelId="internet_reminders_v1";
   if(Build.VERSION.SDK_INT>=26){
@@ -38,7 +45,8 @@ public final class PhoneAlarmReceiver extends BroadcastReceiver {
    PendingIntent.FLAG_IMMUTABLE|PendingIntent.FLAG_UPDATE_CURRENT);
   Notification note=new Notification.Builder(ctx,channelId)
    .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-   .setContentTitle(title).setContentText(message).setStyle(new Notification.BigTextStyle().bigText(message))
+   .setContentTitle(title).setContentText(message)
+   .setStyle(new Notification.BigTextStyle().bigText(message))
    .setContentIntent(open).setAutoCancel(true)
    .setCategory(Notification.CATEGORY_REMINDER).build();
   manager.notify(reminderId.hashCode(),note);
