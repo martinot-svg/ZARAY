@@ -65,7 +65,7 @@ export async function GET(request: NextRequest, { params }: Context) {
     const rows = (data ?? []) as Array<{ company_name: string; company_slug: string; offer_id: string; offer_name: string; description: string; duration_minutes: number; validity_days: number; price_amount: number | string; currency: string; max_devices: number }>;
     if (!rows.length) return json({ error: 'Aucune offre active pour ce portail.' }, 404);
     const allowedSites=(sitesResult.data??[]).filter((site:{site_id:string})=>!requestedSite||site.site_id===requestedSite);
-    if(requestedSite&&!allowedSites.length)return json({error:'Site indisponible.'},404);
+    if(!allowedSites.length)return json({error:'Aucun site actif disponible pour ce portail.'},404);
     return json({ companyName: rows[0].company_name, slug: rows[0].company_slug, sites: allowedSites.map((site: {site_id:string;site_name:string;site_status:string}) => ({id:site.site_id,name:site.site_name,status:site.site_status})), offers: rows.map((o) => ({ id: o.offer_id, name: o.offer_name, description: o.description, durationMinutes: o.duration_minutes, validityDays: o.validity_days, priceAmount: Number(o.price_amount), currency: o.currency, maxDevices: o.max_devices })) });
   } catch { return json({ error: 'Le catalogue est temporairement indisponible.' }, 503); }
 }
