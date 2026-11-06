@@ -65,7 +65,7 @@ export default function WifiTicketCustomization(){
  function change<K extends keyof Settings>(key:K,value:Settings[K]){setForm(previous=>({...previous,[key]:value}));}
  async function applyLogoPalette(uri:string,replaceLogo:boolean){
   const request=++logoRequest.current;
-  setAnalyzingLogo(true);setError('');setNotice(replaceLogo?'Chargement du logo original…':'');
+  setAnalyzingLogo(true);setError('');setNotice(replaceLogo?'Vérification de la transparence et rognage des marges…':'');
   try{
    const cleaned=replaceLogo?await optimizeLogo(uri):null;
    const targetUri=cleaned?.dataUri??uri;
@@ -73,16 +73,16 @@ export default function WifiTicketCustomization(){
    if(request!==logoRequest.current)return;
    setForm(previous=>({...previous,...(palette??{}),...(replaceLogo?{logo_data_uri:targetUri}:{})}));
    setNotice(replaceLogo
-    ?(cleaned?.optimized?'Logo redimensionné sans supprimer son arrière-plan.':'Logo original conservé, avec son arrière-plan et ses marges.')
+    ?(cleaned?.cropped?'Marges transparentes rognées. Aucun élément du logo n’a été supprimé.':cleaned?.optimized?'Logo transparent redimensionné sans détourage.':'Logo transparent conservé sans rognage inutile.')
     :(palette?'Couleurs du logo actualisées.':'Logo conservé.'));
-  }catch{
-   if(request===logoRequest.current)setError('Le traitement du logo a échoué. Vérifiez son format et sa taille.');
+  }catch(e){
+   if(request===logoRequest.current)setError(e instanceof Error?e.message:'Impossible de traiter le logo transparent.');
   }finally{if(request===logoRequest.current)setAnalyzingLogo(false);}
  }
  async function upload(e:ChangeEvent<HTMLInputElement>){
    const file=e.target.files?.[0];if(!file)return;
-   if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>2_000_000){
-     setError('Logo PNG, JPEG ou WebP, maximum technique 2 Mo.');return;
+   if(!['image/png','image/webp'].includes(file.type)||!file.size||file.size>2_000_000){
+     setError('Importez un PNG ou WebP transparent, de 2 Mo maximum. Les JPEG ne sont pas acceptés.');return;
    }
    const reader=new FileReader();
    reader.onload=()=>{if(typeof reader.result==='string')void applyLogoPalette(reader.result,true);};
@@ -200,9 +200,9 @@ export default function WifiTicketCustomization(){
         </button>)}
       </div>
       <h2>Couleurs et identité</h2>
-      {!offerId?<div><label>Logo du site (PNG, JPEG, WebP)</label>
-        <input type="file" accept="image/png,image/jpeg,image/webp" onChange={upload} disabled={analyzingLogo}/>
-        <p className="muted">Le fond, les couleurs et les marges du logo sont conservés. Aucun détourage automatique. Seules les images trop volumineuses peuvent être réduites proportionnellement. Pour restaurer un fond déjà supprimé, réimportez le fichier original.</p>
+      {!offerId?<div><label>Logo du site avec fond transparent (PNG ou WebP)</label>
+        <input type="file" accept="image/png,image/webp" onChange={upload} disabled={analyzingLogo}/>
+        <p className="muted">Importez un logo dont le fond est déjà transparent. ZARAY rogne uniquement les marges entièrement transparentes, sans effacer le fond ni les détails du dessin. Aucun détourage IA.</p>
         
         {form.logo_data_uri&&<div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:12,margin:'12px 0'}}>
          <img src={form.logo_data_uri} alt="Logo du site chargé" style={{maxWidth:'100%',width:'auto',height:'auto',maxHeight:180,objectFit:'contain',borderRadius:10,border:'1px solid #9BADBA'}}/>
