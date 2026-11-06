@@ -14,7 +14,7 @@ export type TicketVisual={
  username_length:number;password_length:number;
  template_key?:TicketStyle;accent_color?:string;gradient_enabled?:boolean;
  decorations_enabled?:boolean;brand_name?:string;wifi_ssid?:string;
- phone?:string;address?:string;welcome_message?:string;footer_text?:string;
+ phone?:string;address?:string;email?:string;welcome_message?:string;footer_text?:string;
  show_price?:boolean;show_duration?:boolean;show_ticket_id?:boolean;show_wifi_ssid?:boolean;
 };
 export type TicketSheet={siteName:string;design:TicketVisual;tickets:PrintableVoucher[]};
@@ -108,7 +108,9 @@ export function paintVoucher(ctx:CanvasRenderingContext2D,x:number,y:number,tick
    fit(ctx,'User: '+ticket.username,left,y+61,available,15,ink,font);
    fit(ctx,'Pass: '+ticket.password,left,y+82,available,15,ink,font);
    const metadata=ticket.duration_minutes+' min · '+ticket.price_amount+' '+ticket.currency+' · Non activé';
-   fit(ctx,metadata,left,y+103,available,12,ink,font);
+   fit(ctx,metadata,left,y+101,available,12,ink,font);
+   const contact=[design.phone?.trim(),design.email?.trim()].filter(Boolean).join(' · ').slice(0,95);
+   if(contact)fit(ctx,contact,left,y+115,available,9,ink,font);
  }else{
    const split=x+w*.76,mainX=x+11,mainWidth=split-mainX-8,sideX=split+7,sideWidth=x+w-sideX-9;
    if(kind==='corporate'&&!darkTheme){
@@ -146,7 +148,7 @@ export function paintVoucher(ctx:CanvasRenderingContext2D,x:number,y:number,tick
    fit(ctx,String(ticket.price_amount)+' '+ticket.currency,sideX,infoY,sideWidth,12,rightSub,font);infoY+=18;
    const sideNote=design.show_ticket_id===true?'N° '+ticket.id.slice(0,8).toUpperCase():
       design.show_wifi_ssid===true&&design.wifi_ssid?design.wifi_ssid:
-      design.phone?.trim()||design.address?.trim()||'';
+      design.phone?.trim()||design.email?.trim()||design.address?.trim()||'';
    if(sideNote)fit(ctx,sideNote,sideX,y+103,sideWidth,10,rightSub,font);
  }
  ctx.strokeStyle=border;ctx.lineWidth=1.5;ctx.strokeRect(x+.8,y+.8,w-1.6,h-1.6);
