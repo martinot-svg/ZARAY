@@ -15,6 +15,9 @@ android {
   sourceCompatibility JavaVersion.VERSION_17
   targetCompatibility JavaVersion.VERSION_17
  }
+ testOptions {
+  unitTests.includeAndroidResources = true
+ }
  buildTypes {
   release {
    // Signing key intentionally absent from source control.
@@ -25,4 +28,7 @@ android {
 dependencies {
  // Java API; pinned stable release, no Kotlin rewrite or unnecessary Room database.
  implementation 'androidx.work:work-runtime:2.11.2'
+ // JVM-based Android scheduler regression tests; never bundled into the APK.
+ testImplementation 'junit:junit:4.13.2'
+ testImplementation 'org.robolectric:robolectric:4.17'
 }
