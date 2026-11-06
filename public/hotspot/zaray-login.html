@@ -159,7 +159,7 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
  <p class="fineprint">Fournisseur : <strong id="companyLabel">Votre réseau</strong></p>
  <p class="fineprint">Accès Internet du fournisseur · Votre abonnement est soumis à validation.</p>
 </section>
-<footer id="portalFooter">Portail Wi-Fi du fournisseur</footer>
+<footer><span id="portalFooter">Portail Wi-Fi du fournisseur</span><span id="siteContact" style="display:block;overflow-wrap:anywhere;margin-top:3px"></span></footer>
 </main>
 <script>
 (function(){
@@ -198,6 +198,15 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
     document.getElementById('portalFooter').textContent=branding.brandName.trim().slice(0,90)+' · Portail Wi-Fi';
     document.title=branding.brandName.trim().slice(0,90)+' — Connexion Wi-Fi';
   }
+  var contacts=[];
+  if(typeof branding.contactPhone==='string'&&branding.contactPhone.trim())
+   contacts.push(branding.contactPhone.trim().slice(0,32));
+  if(typeof branding.contactEmail==='string'&&branding.contactEmail.trim())
+   contacts.push(branding.contactEmail.trim().slice(0,90));
+  var contact=document.getElementById('siteContact');
+  if(contact)contact.textContent=contacts.join(' · ');
+  if(contact&&typeof branding.siteAddress==='string')
+   contact.title=branding.siteAddress.trim().slice(0,160);
   if(typeof branding.welcomeMessage==='string'&&branding.welcomeMessage.trim())
    document.getElementById('welcomeText').textContent=branding.welcomeMessage.trim().slice(0,120);
   var image=branding.logoDataUri;
