@@ -11,9 +11,7 @@ export type OptimizedLogo={dataUri:string;optimized:boolean};
 export async function optimizeLogo(uri:string):Promise<OptimizedLogo>{
  if(!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/i.test(uri))
   throw Error('Format de logo non pris en charge.');
- // Original logo (including its background) is preserved without re-encoding
- // whenever it already fits in the site's existing database field.
- if(uri.length<=175_000)return {dataUri:uri,optimized:false};
+ // Validate the image before preserving or resizing it.
  const image=new Image();
  image.decoding='async';image.src=uri;
  await new Promise<void>((resolve,reject)=>{
@@ -23,6 +21,8 @@ export async function optimizeLogo(uri:string):Promise<OptimizedLogo>{
  if(!image.naturalWidth||!image.naturalHeight||
     image.naturalWidth*image.naturalHeight>16_000_000)
   throw Error('Dimensions du logo non prises en charge.');
+ // Preserve the original bytes, colors, alpha and any background if it fits.
+ if(uri.length<=175_000)return {dataUri:uri,optimized:false};
  // No cropping and no background processing; simply shrink to fit.
  for(const maxSide of [1024,768,576,448,320,240,160]){
   const factor=Math.min(1,maxSide/Math.max(image.naturalWidth,image.naturalHeight));
