@@ -124,7 +124,7 @@ export async function PUT(request:NextRequest){
             if(!metadata.width||!metadata.height||!metadata.hasAlpha)
               return fail('Le logo doit avoir un véritable fond transparent.',400);
             const stats=await decoder.stats();
-            if(stats.channels.length<4||stats.channels[3].min>=255)
+            if(stats.isOpaque)
               return fail('Le logo est entièrement opaque. Importez un PNG ou WebP transparent.',400);
           }catch{
             return fail('Logo illisible ou transparence non prise en charge.',400);
