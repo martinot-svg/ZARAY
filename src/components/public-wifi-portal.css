@@ -353,7 +353,7 @@
 /* A live provider portal must use the site's configured colors and logo. */
 .zw-root[data-site-branded="true"]{
  --zw-accent:var(--zw-site-primary,#167a46);
- --zw-cyan:var(--zw-site-secondary,#0e9f6e);
+ --zw-cyan:var(--zw-site-accent,#0e9f6e);
 }
 .zw-root[data-site-branded="true"] .zw-mark,
 .zw-root[data-site-branded="true"] .zw-simple-emblem{
@@ -383,4 +383,28 @@
 }
 .zw-root[data-site-branded="true"] .zw-simple-brand{
  flex-wrap:wrap;
+}
+
+/* The full site card adopts the same logo-friendly background as its tickets.
+   The transparent logo blends directly into it, never into an extra tile. */
+.zw-root[data-site-branded="true"] .zw-simple-card{
+ background:var(--zw-site-secondary,#102334);
+ color:var(--zw-site-title,#f6fafe);
+ border-color:color-mix(in srgb,var(--zw-site-primary) 45%,transparent);
+}
+.zw-root[data-site-branded="true"] .zw-simple-heading h1,
+.zw-root[data-site-branded="true"] .zw-simple-heading p,
+.zw-root[data-site-branded="true"] .zw-simple-login>label,
+.zw-root[data-site-branded="true"] .zw-simple-eyebrow,
+.zw-root[data-site-branded="true"] .zw-simple-footer,
+.zw-root[data-site-branded="true"] .zw-simple-footer strong{
+ color:var(--zw-site-title,#f6fafe);
+}
+.zw-root[data-site-branded="true"] .zw-simple-subscribe,
+.zw-root[data-site-branded="true"] .zw-simple-offers-link{
+ color:var(--zw-site-title,#f6fafe);
+ background:color-mix(in srgb,var(--zw-site-primary) 9%,transparent);
+}
+.zw-root[data-site-branded="true"] .zw-simple-connect{
+ color:var(--zw-site-button-ink,#10251a);
 }
