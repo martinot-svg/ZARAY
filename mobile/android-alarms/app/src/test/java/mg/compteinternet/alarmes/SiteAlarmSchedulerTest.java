@@ -86,7 +86,8 @@ public class SiteAlarmSchedulerTest {
   SharedPreferences preferences=ctx.getSharedPreferences("site_alarms_v1",Context.MODE_PRIVATE);
   long verified=new JSONObject(preferences.getString("schedule:"+SITE_A,"{}")).getLong("lastVerifiedAt");
   assertTrue(verified>0);
-  alarms.reset();
+  // Simulate Android dropping the pending wakeup alarm on reboot.
+  assertNotNull(alarms.getNextScheduledAlarm());
   assertEquals(0,alarms.getScheduledAlarms().size());
   SiteAlarmScheduler.restoreAfterReboot(ctx);
   assertEquals(1,alarms.getScheduledAlarms().size());
