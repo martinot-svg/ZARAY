@@ -49,6 +49,12 @@ footer{text-align:center;margin-top:28px;color:#93a9b6;font-size:12px}
 @media(prefers-reduced-motion:reduce){body:before{animation:none}.offer{transition:none}}
 
 /* Premium one-screen captive login; RouterOS page does not rely on external assets. */
+/* The entire login card, not a tile behind the logo, adopts the
+   logo-friendly ticket background configured for this site. */
+.panel{background:var(--site-panel-bg,linear-gradient(135deg,#122c41,#06172a));color:var(--site-panel-ink,#f5fffd)}
+.panel h1,.panel .tagline,.panel .field,.panel .fineprint,.panel .fineprint strong,
+.panel .subscribe-link,.panel .notice{color:var(--site-panel-ink,#f5fffd)}
+
 html,body{min-height:100%;height:auto}
 body{display:flex;align-items:center;justify-content:center;padding:15px 11px;color:#f5fffd;background:
  radial-gradient(ellipse at 80% 10%,rgba(20,116,162,.34),transparent 50%),
@@ -183,6 +189,10 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
    document.documentElement.style.setProperty('--site-primary',branding.primaryColor);
   if(validHex(branding.accentColor))
    document.documentElement.style.setProperty('--site-accent',branding.accentColor);
+  if(validHex(branding.secondaryColor))
+   document.documentElement.style.setProperty('--site-panel-bg',branding.secondaryColor);
+  if(validHex(branding.titleColor))
+   document.documentElement.style.setProperty('--site-panel-ink',branding.titleColor);
   var color=validHex(branding.primaryColor)?branding.primaryColor:'#40caff';
   var rgb=[1,3,5].map(function(i){var c=parseInt(color.slice(i,i+2),16)/255;
    return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);
