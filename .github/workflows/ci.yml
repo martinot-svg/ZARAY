@@ -54,6 +54,7 @@ jobs:
             tests/residential-site-account-names.test.mjs \
             tests/site-friendly-account-path.test.mjs \
             tests/residential-alarm-schedule.test.mjs \
-            tests/residential-android-companion.test.mjs
+            tests/residential-android-companion.test.mjs \
+            tests/dashboard-visual-refinement.test.mjs
       - run: npm run typecheck
       - run: npm run build
