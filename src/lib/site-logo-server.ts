@@ -28,7 +28,7 @@ export async function normalizeTransparentSiteLogo(dataUri:string){
   throw Error('Le logo doit avoir un arrière-plan transparent, et non opaque.');
  let raw:Buffer;
  try{raw=await sharp(source,{limitInputPixels:16_000_000,failOn:'error'})
-  .ensureAlpha().raw().toBuffer();}
+  .toColourspace('srgb').ensureAlpha().raw().toBuffer();}
  catch{throw Error('Impossible de vérifier la transparence du logo.');}
  let left=w,right=-1,top=h,bottom=-1,transparent=false;
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
