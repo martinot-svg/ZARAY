@@ -42,6 +42,10 @@ export async function POST(req:NextRequest){
   c.service!.from('network_company_policies').select('grace_hours').eq('company_id',companyId).maybeSingle()
  ]);
  if(!router||!order||router.site_id!==order.site_id)return json({error:'Le routeur et la commande doivent appartenir au même site.'},409);
+ const {data:site,error:siteError}=await c.service!.from('sites')
+  .select('status').eq('id',router.site_id).eq('company_id',companyId).maybeSingle();
+ if(siteError||!site)return json({error:'État du site indisponible.'},503);
+ if(site.status!=='active')return json({error:'Ce site est désactivé : association réseau impossible.'},409);
  let expiry:string|null=null,grace:string|null=null;
  if(order.status==='paid'&&order.paid_at){
   const until=new Date(Math.max(Date.now(),new Date(order.paid_at).getTime())+Math.max(1,Number(order.validity_days))*86400000);
