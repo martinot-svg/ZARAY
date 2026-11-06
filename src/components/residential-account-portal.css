@@ -70,3 +70,7 @@ body:has(.resident-portal){background:#f4f7f4!important}
  .rp-section-heading{align-items:flex-start}
 }
 @media(prefers-reduced-motion:reduce){.rp-root *{scroll-behavior:auto}}
+
+/* Multi-site labels remain readable without introducing a shared vendor identity. */
+.rp-identity strong{white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.rp-account-context{font-weight:700;opacity:.87;overflow-wrap:anywhere}

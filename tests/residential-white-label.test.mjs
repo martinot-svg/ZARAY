@@ -60,7 +60,8 @@ test('customer workspace has real subscriptions, paid orders and no fabricated m
  assert.match(component,/className="rp-root resident-portal"/);
  assert.doesNotMatch(component,/>ZARAY</);
  assert.match(page,/applicationName:name/);
- assert.match(page,/residential-icon/);
+ assert.match(page,/residential-app-icon/);
+ assert.match(page,/manifest:'\/mon-internet\/'\+encodeURIComponent\(siteId\)/);
  assert.match(css,/--rp-primary/);
  assert.match(css,/@media\(max-width:540px\)/);
 });

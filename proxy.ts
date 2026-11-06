@@ -74,6 +74,8 @@ function customHostResponse(request:NextRequest,site:SiteDomain|null,vanity=fals
   return NextResponse.rewrite(target,{request});
  }
  if(path==='/mon-internet/'+site.siteId)return NextResponse.next({request});
+ if(path==='/mon-internet/'+site.siteId+'/manifest.webmanifest')
+  return NextResponse.next({request});
  if(path==='/wifi/'+site.companySlug
   &&(!search.has('siteId')||search.get('siteId')===site.siteId)){
   if(!search.has('siteId')){
@@ -84,6 +86,7 @@ function customHostResponse(request:NextRequest,site:SiteDomain|null,vanity=fals
  }
  const ownSiteRoutes=new Set([
   '/api/public/residential-site','/api/public/residential-icon',
+  '/api/public/residential-app-icon',
   '/api/residential/account','/api/residential/notifications',
   '/api/residential/notification-preferences',
   '/api/public/wifi-offers'

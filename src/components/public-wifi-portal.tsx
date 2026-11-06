@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {ArrowLeft,ArrowRight,Check,CheckCircle2,Clock3,CreditCard,House,LockKeyhole,Menu,Router,ShieldCheck,Ticket,Wifi,WifiOff,X} from 'lucide-react';
 import './public-wifi-portal.css';
 import BrandLogo from '@/components/brand-logo';
+import {subscriberAccountName} from '@/lib/residential-site-labels';
 
 type Offer={id:string;name:string;description?:string;durationMinutes:number;validityDays?:number;priceAmount:number;currency:string;maxDevices?:number};
 type ResidentialSite={id:string;name:string;status:string};
@@ -225,7 +226,7 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
       </form>
       {ticketMessage&&<p className="zw-simple-alert" role="status">{ticketMessage}</p>}
       <button type="button" className="zw-simple-subscribe" onClick={()=>toMode('subscribe')}><House size={18}/> Devenir un abonné de {companyName} <ArrowRight size={18}/></button>
-      {!demo&&selectedSiteId&&<Link className="zw-simple-offers-link zw-resident-account-link" href={'/mon-internet/'+encodeURIComponent(selectedSiteId)}><ShieldCheck size={17}/> Mon espace abonné <ArrowRight size={14}/></Link>}
+      {!demo&&selectedSiteId&&<Link className="zw-simple-offers-link zw-resident-account-link" href={'/mon-internet/'+encodeURIComponent(selectedSiteId)}><ShieldCheck size={17}/> {subscriberAccountName({brandName:siteIdentity?.brandName||displayBrand,siteName:siteIdentity?.siteName||siteName||displayBrand})} <ArrowRight size={14}/></Link>}
       <button type="button" className="zw-simple-offers-link" onClick={()=>setOffersDialog(true)}>Voir les offres Wi-Fi {ticketCount>0?'('+ticketCount+')':''} <ArrowRight size={14}/></button>
       <div className="zw-simple-footer">
        <span>Fournisseur : <strong>{companyName}</strong></span>
