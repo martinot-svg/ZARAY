@@ -9,6 +9,7 @@ const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]
 
 export type ResidentialSiteIdentity={
  siteId:string;siteName:string;companySlug:string;brandName:string;
+ siteAddress:string;contactPhone:string;contactEmail:string;
  logoDataUri:string|null;primaryColor:string;secondaryColor:string;
  accentColor:string;titleColor:string;welcomeMessage:string;
 };
@@ -18,7 +19,7 @@ export async function publicResidentialSite(siteId:string):Promise<ResidentialSi
  const service=createServiceClient();
  if(!service)throw new Error('Site identity backend unavailable');
  const {data:site,error:siteError}=await service.from('sites')
-  .select('id,company_id,name,status').eq('id',siteId).maybeSingle();
+  .select('id,company_id,name,status,address,contact_phone,contact_email').eq('id',siteId).maybeSingle();
  if(siteError)throw new Error('Site lookup unavailable');
  if(!site||site.status!=='active')return null;
  const [{data:company,error:companyError},{data:template,error:templateError}]=await Promise.all([
@@ -31,6 +32,9 @@ export async function publicResidentialSite(siteId:string):Promise<ResidentialSi
  if(!company||!['active','trial'].includes(company.status))return null;
  return {
   siteId:site.id,siteName:site.name,companySlug:company.slug,
+  siteAddress:String(site.address||'').slice(0,160),
+  contactPhone:String(site.contact_phone||'').slice(0,32),
+  contactEmail:String(site.contact_email||'').slice(0,254),
   brandName:(template?.brand_name||'').trim().slice(0,90)||site.name,
   logoDataUri:logo(template?.logo_data_uri),
   primaryColor:hex(template?.primary_color,'#167a46'),
