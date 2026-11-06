@@ -4,6 +4,7 @@ import {useEffect,useState,type CSSProperties,type FormEvent} from 'react';
 import Link from 'next/link';
 import {ArrowLeft,ArrowRight,Check,CheckCircle2,Clock3,CreditCard,House,LockKeyhole,Menu,Router,ShieldCheck,Ticket,Wifi,WifiOff,X} from 'lucide-react';
 import './public-wifi-portal.css';
+import './public-wifi-portal-themes.css';
 import BrandLogo from '@/components/brand-logo';
 import {subscriberAccountName} from '@/lib/residential-site-labels';
 import {legibleInk} from '@/lib/ticket-pdf';
