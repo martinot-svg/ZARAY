@@ -35,7 +35,18 @@ jobs:
         with:
           gradle-version: '8.11.1'
       - name: Compile unsigned Android debug APK and run Android lint
-        run: gradle -p mobile/android-alarms :app:assembleDebug :app:lintDebug --no-daemon --stacktrace
+        run: gradle -p mobile/android-alarms :app:testDebugUnitTest :app:assembleDebug :app:lintDebug --no-daemon --stacktrace
       - name: Check debug APK exists
         run: test -s mobile/android-alarms/app/build/outputs/apk/debug/app-debug.apk
-      # Deliberately no release keystore and no public APK publication.
+      - name: Verify debug APK signature and size
+        run: |
+          APK="mobile/android-alarms/app/build/outputs/apk/debug/app-debug.apk"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK"
+          du -h "$APK"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zaray-android-debug-for-device-testing
+          path: mobile/android-alarms/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 3
+          if-no-files-found: error
+      # Artifact is a DEBUG test build only; no production release keystore is used.
