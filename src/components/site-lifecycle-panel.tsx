@@ -79,7 +79,7 @@ export default function SiteLifecyclePanel({site,onChanged,onDeleted,onClose}:{
     <summary>Supprimer définitivement ce site</summary>
     <div style={{display:'grid',gap:12,paddingTop:12,maxWidth:650}}>
      <p>Cette action efface définitivement la fiche du site et sa configuration associée. Elle est irréversible. Les autres sites de l’entreprise restent inchangés.</p>
-     <p className="muted">Par sécurité, la suppression est refusée si le site possède des clients, des abonnements, des paiements, des tickets, des historiques ou des routeurs associés. Dans ce cas, laissez-le désactivé.</p>
+     <p className="muted">Par sécurité, la suppression est refusée si le site possède des clients, des abonnements, des paiements, des tickets, des historiques, des routeurs ou des domaines actifs associés. Dans ce cas, laissez-le désactivé.</p>
      {site.status==='active'
       ?<p role="status">Désactivez ce site avant de pouvoir demander sa suppression.</p>
       :<form onSubmit={event=>void removeSite(event)} className="form-stack">
