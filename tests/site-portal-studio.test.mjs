@@ -40,7 +40,7 @@ test('public portal endpoint never exposes drafts or cross-company data',()=>{
 
 test('the administration only saves and publishes with verified tenant membership',()=>{
  assert.match(admin,/authorizeTenant\(session,companyId,siteId\)/);
- assert.match(admin,/\['owner','admin','site_manager'\]/);
+ assert.match(admin,/\['owner','admin'\]/);
  assert.match(admin,/originAllowed\(request\)/);
  assert.match(admin,/\.eq\('draft_revision',expectedRevision\)/);
  assert.match(admin,/publish_site_portal/);
