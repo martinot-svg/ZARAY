@@ -113,7 +113,7 @@ export default function WifiTicketCustomization(){
    if(!response.ok)throw Error('Modèle de portail indisponible.');
    const template=await response.text();
    if(!template.includes('__ZARAY_SITE_ID__')||!template.includes('__ZARAY_COMPANY_SLUG__')
-      ||!template.includes('__ZARAY_BRANDING_JSON__'))throw Error('Modèle de portail incomplet.');
+      ||!template.includes('__ZARAY_BRANDING_JSON__')||!template.includes('__ZARAY_PORTAL_JSON__'))throw Error('Modèle de portail incomplet.');
    // Always fetch the SITE default, never an offer override: Hotspot identity
    // belongs to the site, independently of whichever ticket is being edited.
    const qs=new URLSearchParams({companyId,siteId});
@@ -143,12 +143,19 @@ export default function WifiTicketCustomization(){
     contactEmail:String(base.email||'').slice(0,254),
     siteAddress:String(base.address||'').slice(0,160)
    };
+   // Fetch the public snapshot: never embed an administrator's unapproved draft.
+   const publishedResponse=await fetch('/api/public/site-portal?siteId='+encodeURIComponent(siteId),{cache:'no-store'});
+   const publishedData=await publishedResponse.json().catch(()=>({}));
+   if(!publishedResponse.ok||publishedData.siteId!==siteId||publishedData.companySlug!==companySlug)
+    throw Error('Impossible de confirmer la version publiée du portail.');
+   const safePortal=encodeURIComponent(JSON.stringify(publishedData.published??null)).replace(/'/g,'%27');
    // encodeURIComponent leaves apostrophes unescaped, which must not be
    // injected into a single-quoted JavaScript string in the RouterOS page.
    const safeBranding=encodeURIComponent(JSON.stringify(snapshot)).replace(/'/g,'%27');
    const customized=template.replaceAll('__ZARAY_SITE_ID__',siteId)
     .replaceAll('__ZARAY_COMPANY_SLUG__',companySlug)
     .replaceAll('__ZARAY_BRANDING_JSON__',safeBranding)
+    .replaceAll('__ZARAY_PORTAL_JSON__',safePortal)
     .replaceAll('__ZARAY_LOCAL_ONLY__',localOnly?'true':'false')
     .replaceAll('__ZARAY_SITE_HOSTED__',siteWebHost?'true':'false')
     .replaceAll('__ZARAY_PUBLIC_API_BASE__',publicBase);
@@ -158,7 +165,7 @@ export default function WifiTicketCustomization(){
    setTimeout(()=>URL.revokeObjectURL(objectUrl),2000);
    setNotice(localOnly
     ?'Page HTML locale téléchargée : seule la connexion par ticket est autonome. Installez login.html et md5.js sur le MikroTik, puis configurez le nom DNS local. Pour inscrire de nouveaux abonnés sans service distant, un serveur local supplémentaire est nécessaire.'
-    :'Portail du site téléchargé avec son logo et ses couleurs. Installez login.html et md5.js sur le MikroTik ; configurez les autorisations réseau nécessaires aux services distants.');
+    :'Portail du site téléchargé avec son design publié. Installez login.html et md5.js sur le MikroTik ; configurez les autorisations réseau nécessaires aux services distants.');
   }catch(e){setError(e instanceof Error?e.message:'Téléchargement impossible.');}
   finally{setBusy(false);}
  }

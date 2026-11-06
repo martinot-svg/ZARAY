@@ -30,7 +30,8 @@ test('MikroTik template never advertises an invented local account server',()=>{
  const exporter=read('src/components/wifi-ticket-customization.tsx');
  assert.match(portal,/var LOCAL_ONLY='__ZARAY_LOCAL_ONLY__'/);
  assert.match(portal,/var SITE_HOSTED='__ZARAY_SITE_HOSTED__'/);
- assert.match(portal,/if\(!LOCAL_ONLY&&PUBLIC_API_BASE/);
+ assert.match(portal,/PORTAL\.showAccount!==false/);
+ assert.match(portal,/!LOCAL_ONLY&&PUBLIC_API_BASE/);
  assert.match(portal,/SITE_HOSTED\s*\?PUBLIC_API_BASE\+'\/mycompte\/me'/);
  assert.match(exporter,/const localOnly=Boolean\(linkData\.link\)&&!siteWebHost/);
  assert.match(exporter,/\.replaceAll\('__ZARAY_SITE_HOSTED__',siteWebHost\?'true':'false'\)/);
