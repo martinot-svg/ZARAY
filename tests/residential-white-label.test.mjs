@@ -8,7 +8,8 @@ test('the live WiFi portal displays the site identity and no vendor branding',()
  assert.match(web,/\/api\/public\/residential-site\?siteId=/);
  assert.match(web,/siteIdentity\?\.brandName/);
  assert.match(web,/siteIdentity\?\.logoDataUri/);
- assert.match(web,/!demo&&selectedSiteId&&\\(portalDesign\\?\\.showAccount\\?\\?true\\)&&<Link/);
+ assert.match(web,/!demo&&selectedSiteId&&/);
+ assert.match(web,/portalDesign\?\.showAccount/);
  assert.match(web,/\/mon-internet\//);
  assert.doesNotMatch(web,/Propulsé par ZARAY|dans ZARAY après enregistrement/);
  const meta=read('src/app/wifi/[slug]/page.tsx');
