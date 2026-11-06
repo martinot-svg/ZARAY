@@ -6,6 +6,7 @@ import {createClient} from '@/lib/supabase/client';
 import NotificationInbox from '@/components/notification-inbox';
 import {subscriberAccountName} from '@/lib/residential-site-labels';
 import ResidentialNotificationPreferences from '@/components/residential-notification-preferences';
+import ResidentialAlarmPreferences from '@/components/residential-alarm-preferences';
 import './residential-account-portal.css';
 
 type Identity={
@@ -151,6 +152,7 @@ export default function ResidentialAccountPortal({siteId}:{siteId:string}){
      </div>
      <NotificationInbox siteId={siteId} compact />
      <ResidentialNotificationPreferences siteId={siteId} />
+     <ResidentialAlarmPreferences siteId={siteId} />
      <section className="rp-panel">
       <div className="rp-section-heading"><h2>Paiements et renouvellements</h2>{from&&<a href={'/wifi/'+encodeURIComponent(from)+'?siteId='+encodeURIComponent(siteId)}>Voir les offres <ChevronRight size={15}/></a>}</div>
       {account.orders.length?<div className="rp-list">{account.orders.map(order=><div className="rp-list-row" key={order.id}><div><strong>{order.offer_name}</strong><small>{order.public_reference} · {date(order.created_at)}</small></div><div className="rp-list-value"><strong>{money(order.amount,order.currency)}</strong><small>{order.status==='paid'?'Payé':order.status==='pending_payment'?'Paiement attendu':order.status}</small></div></div>)}</div>:<p>Aucune opération enregistrée pour ce site.</p>}
