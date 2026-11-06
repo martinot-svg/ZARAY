@@ -196,7 +196,7 @@ export default function WifiTicketCustomization(){
       <h2>Couleurs et identité</h2>
       {!offerId?<div><label>Logo du site (PNG, JPEG, WebP)</label>
         <input type="file" accept="image/png,image/jpeg,image/webp" onChange={upload} disabled={analyzingLogo}/>
-        <p className="muted">Le fond, les couleurs et les marges du logo sont conservés. Aucun détourage automatique. Seules les images trop volumineuses peuvent être réduites proportionnellement.</p>
+        <p className="muted">Le fond, les couleurs et les marges du logo sont conservés. Aucun détourage automatique. Seules les images trop volumineuses peuvent être réduites proportionnellement. Pour restaurer un fond déjà supprimé, réimportez le fichier original.</p>
         
         {form.logo_data_uri&&<div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:12,margin:'12px 0'}}>
          <img src={form.logo_data_uri} alt="Logo du site chargé" style={{maxWidth:'100%',width:'auto',height:'auto',maxHeight:180,objectFit:'contain',borderRadius:10,border:'1px solid #9BADBA'}}/>
