@@ -19,7 +19,7 @@ test('network cockpit shows router management first and preserves secondary oper
 });
 test('creation forms are expandable and existing business actions remain callable',()=>{
  for(const [file,id,method] of [
- ['src/app/sites/page.tsx','site-form','onSubmit={create}'],
+ ['src/app/sites/page.tsx','site-form','<SiteCreateForm'],
  ['src/app/offres/page.tsx','offer-form','onSubmit={save}']
  ]){
   const s=read(file);
@@ -27,6 +27,7 @@ test('creation forms are expandable and existing business actions remain callabl
   assert.ok(s.includes(method));
   assert.ok(s.includes('el.open=true'));
  }
+ assert.match(read('src/components/site-create-form.tsx'),/onSubmit=\{event=>void submit\(event\)\}/);
  assert.doesNotMatch(read('src/app/clients/page.tsx'),/Origine des clients/);
 });
 test('sensitive finance actions remain outside optional transaction metadata',()=>{
