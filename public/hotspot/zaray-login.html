@@ -69,8 +69,8 @@ header{text-align:center;margin:0 0 13px}
 .logo small{font-size:10px;color:#7af1c0;letter-spacing:.25em}
 .logo-mark{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--site-primary),var(--site-accent));color:var(--site-primary-ink);font-weight:900;font-size:37px;border:1px solid rgba(108,238,188,.7);box-shadow:0 0 21px rgba(40,209,169,.21);overflow:hidden}
 .logo-mark img{display:block;width:100%;height:100%;object-fit:contain;padding:7px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.66))}
-.logo-mark.has-site-logo{width:auto;height:auto;max-width:100%;max-height:min(24dvh,180px);border-radius:0;background:transparent;border:0;box-shadow:none}
-.logo-mark.has-site-logo img{width:auto;height:auto;max-width:100%;max-height:min(24dvh,180px);object-fit:contain;padding:0}
+.logo-mark.has-site-logo{display:flex;align-items:center;justify-content:center;width:auto;height:auto;max-width:min(100%,180px);max-height:min(11dvh,76px);border-radius:0;background:transparent;border:0;box-shadow:none;overflow:visible}
+.logo-mark.has-site-logo img{display:block;width:auto;height:auto;max-width:100%;max-height:min(11dvh,76px);object-fit:contain;padding:0;margin:auto}
 h1{font-size:clamp(19px,5vw,24px);letter-spacing:-.03em;line-height:1.17;margin:7px 0 4px;color:#f3fcfc}
 h1 span{color:var(--site-accent)}
 .eyebrow{color:var(--site-accent);letter-spacing:.13em;text-transform:uppercase;font-size:10px;margin:8px 0 0}
@@ -104,7 +104,7 @@ footer{margin:9px 0 0;font-size:10px;color:#96b8c9}
 #already{margin-top:8px}
 @media(min-height:570px){.panel{padding:24px}.field input{padding:14px}}
 @media(max-height:570px){body{align-items:flex-start;padding:6px}.panel{padding:11px 17px}.logo-mark{width:36px;height:36px;font-size:25px}.logo{gap:3px;font-size:13px}header{margin:0 0 6px}h1{font-size:18px;margin:2px}.eyebrow{font-size:8px;margin:3px}.tagline{font-size:10px}.field{margin:6px 0}.field input{padding:9px;font-size:13px}button.primary{min-height:35px;padding:6px}.subscribe-link{padding:8px}.enroll{margin:6px 0 0}.fineprint{font-size:9px}}
-@media(max-height:570px){.logo-mark.has-site-logo{width:auto;height:auto;max-height:72px}.logo-mark.has-site-logo img{max-height:72px;padding:0}}
+@media(max-height:570px){.logo-mark.has-site-logo,.logo-mark.has-site-logo img{max-height:46px}}
 @media(prefers-reduced-motion:reduce){body:before{animation:none}}
 
 </style>
