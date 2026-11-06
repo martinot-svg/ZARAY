@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 
 const SITE_NAME = /^[\p{L}\p{N} .,'’()&-]{2,120}$/u;
-const STATUSES = new Set(['planned', 'active', 'suspended', 'archived']);
 
 function json(message: string, status: number) {
   return NextResponse.json({ error: message }, { status, headers: { 'Cache-Control': 'no-store' } });
@@ -94,12 +93,12 @@ export async function PATCH(request: NextRequest) {
     const input = body as Record<string, unknown>;
     const siteId = typeof input.siteId === 'string' ? input.siteId : '';
     const name = typeof input.name === 'string' ? input.name.trim() : '';
-    const status = typeof input.status === 'string' ? input.status : '';
-    if (!siteId || !SITE_NAME.test(name) || !STATUSES.has(status)) return json('Données de site invalides.', 400);
+    if (input.status !== undefined) return json('Le statut d’un site se modifie uniquement depuis les paramètres de gestion.', 400);
+    if (!siteId || !SITE_NAME.test(name)) return json('Données de site invalides.', 400);
 
     const { data: site, error } = await supabase
       .from('sites')
-      .update({ name, status })
+      .update({ name })
       .eq('id', siteId)
       .select('id, company_id, name, status, created_at')
       .maybeSingle();
