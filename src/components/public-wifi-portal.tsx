@@ -133,7 +133,8 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
  useEffect(()=>{
   if(!slug||!selectedSiteId){setPortalDesign(null);return;}
   let active=true;
-  requestJson('/api/public/site-portal?siteId='+encodeURIComponent(selectedSiteId))
+  setPortalDesign(null);
+  requestJson('/api/public/site-portal?siteId=+encodeURIComponent(selectedSiteId))
    .then(result=>{
     if(!active)return;
     setPortalDesign(result.companySlug===slug&&result.siteId===selectedSiteId
