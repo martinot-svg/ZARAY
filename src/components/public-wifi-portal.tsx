@@ -7,6 +7,7 @@ import './public-wifi-portal.css';
 import BrandLogo from '@/components/brand-logo';
 import {subscriberAccountName} from '@/lib/residential-site-labels';
 import {legibleInk} from '@/lib/ticket-pdf';
+import {readPortalConfig,type PortalConfig} from '@/lib/site-portal-config';
 
 type Offer={id:string;name:string;description?:string;durationMinutes:number;validityDays?:number;priceAmount:number;currency:string;maxDevices?:number};
 type ResidentialSite={id:string;name:string;status:string};
@@ -45,6 +46,7 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
    ||(!['localhost','127.0.0.1'].includes(host)&&!host.endsWith('.vercel.app')));
  },[]);
  const [siteIdentity,setSiteIdentity]=useState<PublicIdentity|null>(null);
+ const [portalDesign,setPortalDesign]=useState<PortalConfig|null>(null);
  const [paymentMethods,setPaymentMethods]=useState<Method[]>([]);
  const [selectedTicket,setSelectedTicket]=useState<Offer|null>(null);
  const [selectedSubscription,setSelectedSubscription]=useState('');
@@ -127,6 +129,18 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
    .catch(()=>{if(active)setSiteIdentity(null);});
   return()=>{active=false};
  },[slug,selectedSiteId]);
+ useEffect(()=>{
+  if(!slug||!selectedSiteId){setPortalDesign(null);return;}
+  let active=true;
+  requestJson('/api/public/site-portal?siteId='+encodeURIComponent(selectedSiteId))
+   .then(result=>{
+    if(!active)return;
+    setPortalDesign(result.companySlug===slug&&result.siteId===selectedSiteId
+     ?readPortalConfig(result.published):null);
+   })
+   .catch(()=>{if(active)setPortalDesign(null);});
+  return()=>{active=false;};
+ },[slug,selectedSiteId]);
  function toMode(next:Mode){setMode(next);setTicketMessage('');setError('');setMobileMenu(false);window.scrollTo?.({top:0,behavior:'smooth'});}
  function openTicket(offer:Offer|null){setSelectedTicket(offer);setTicketUser('');setTicketPassword('');toMode('ticket');}
  function previewTicket(e:FormEvent<HTMLFormElement>){
@@ -180,15 +194,18 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
  const destination=validSlug?'/wifi/'+encodeURIComponent(slugEntry.trim().toLowerCase()):'';
  const ticketCount=ticketOffers.length;
  const displayBrand=demo?'ZARAY WIFI':siteIdentity?.brandName||siteName||companyName;
- const realBrandStyle=slug&&siteIdentity?{
-  '--zw-accent':siteIdentity.primaryColor,'--zw-cyan':siteIdentity.accentColor,
-  '--zw-site-primary':siteIdentity.primaryColor,
-  '--zw-site-accent':siteIdentity.accentColor,
-  '--zw-site-secondary':siteIdentity.secondaryColor,
-  '--zw-site-title':siteIdentity.titleColor,
-  '--zw-site-button-ink':legibleInk('#10251a',siteIdentity.primaryColor),
+ const realBrandStyle=slug&&(siteIdentity||portalDesign)?{
+  '--zw-accent':portalDesign?.primaryColor||siteIdentity?.primaryColor||'#167a46',
+  '--zw-cyan':portalDesign?.accentColor||siteIdentity?.accentColor||'#0e9f6e',
+  '--zw-site-primary':portalDesign?.primaryColor||siteIdentity?.primaryColor||'#167a46',
+  '--zw-site-accent':portalDesign?.accentColor||siteIdentity?.accentColor||'#0e9f6e',
+  '--zw-site-secondary':portalDesign?.panelColor||siteIdentity?.secondaryColor||'#102334',
+  '--zw-site-title':portalDesign?.textColor||siteIdentity?.titleColor||'#f6fafe',
+  '--zw-site-background':portalDesign?.backgroundColor||'#071528',
+  '--zw-site-corners':(portalDesign?.cornerRadius??21)+'px',
+  '--zw-site-button-ink':legibleInk('#10251a',portalDesign?.primaryColor||siteIdentity?.primaryColor||'#167a46'),
  } as CSSProperties:undefined;
- return <div className={mode==='home'?'zw-root zw-landing':'zw-root'} data-site-branded={slug?'true':undefined} style={realBrandStyle}>
+ return <div className={mode==='home'?'zw-root zw-landing':'zw-root'} data-site-branded={slug?'true':undefined} data-portal-template={portalDesign?.template} data-portal-align={portalDesign?.align} style={realBrandStyle}>
   <div className="zw-sky" aria-hidden="true"/><div className="zw-mesh" aria-hidden="true"/>
   <div className="zw-shell">
    <header className="zw-nav">
@@ -213,6 +230,7 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
 
     {mode==='home'&&<section className="zw-simple-screen" aria-labelledby="zw-welcome-title">
      <div className="zw-simple-card">
+      {portalDesign?.coverImageDataUri&&<img className="zw-studio-cover" src={portalDesign.coverImageDataUri} alt="" aria-hidden="true"/>}
       <div className="zw-simple-brand" aria-label={displayBrand}>
        {slug&&siteIdentity?.logoDataUri
          ?<img className="zw-simple-logo zw-site-logo" src={siteIdentity.logoDataUri} alt={'Logo '+displayBrand}/>
@@ -221,9 +239,9 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
        {slug&&!siteIdentity?.logoDataUri&&<strong className="zw-site-name">{displayBrand}</strong>}
       </div>
       <div className="zw-simple-heading">
-       <span className="zw-simple-eyebrow">PORTAIL WIFI · {siteName||'CONNEXION'}</span>
-       <h1 id="zw-welcome-title">Bienvenue chez <span>{displayBrand}</span></h1>
-       <p>Chaque connexion ouvre votre univers.</p>
+       <span className="zw-simple-eyebrow">{portalDesign?.welcomeMessage||'PORTAIL WIFI · '+(siteName||'CONNEXION')}</span>
+       <h1 id="zw-welcome-title">{portalDesign?<span>{portalDesign.headline||'Bienvenue chez '+displayBrand}</span>:<>Bienvenue chez <span>{displayBrand}</span></>}</h1>
+       <p>{portalDesign?.subtitle||'Chaque connexion ouvre votre univers.'}</p>
       </div>
       <form className="zw-simple-login" onSubmit={previewTicket}>
        <label htmlFor="zw-simple-user">Nom d’utilisateur
@@ -232,16 +250,18 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
        <label htmlFor="zw-simple-password">Mot de passe
         <span className="zw-simple-field"><LockKeyhole size={17} aria-hidden="true"/><input id="zw-simple-password" type={showPassword?'text':'password'} value={ticketPassword} onChange={e=>setTicketPassword(e.target.value)} autoComplete="off" placeholder="Mot de passe du ticket" minLength={3} maxLength={32} required/><button type="button" className="zw-simple-eye" onClick={()=>setShowPassword(!showPassword)} aria-label={showPassword?'Masquer le mot de passe':'Afficher le mot de passe'}>{showPassword?'Masquer':'Afficher'}</button></span>
        </label>
-       <button type="submit" className="zw-simple-connect"><Wifi size={18}/> Se connecter <ArrowRight size={18}/></button>
+       <button type="submit" className="zw-simple-connect"><Wifi size={18}/> {portalDesign?.buttonLabel||'Se connecter'} <ArrowRight size={18}/></button>
       </form>
       {ticketMessage&&<p className="zw-simple-alert" role="status">{ticketMessage}</p>}
-      <button type="button" className="zw-simple-subscribe" onClick={()=>toMode('subscribe')}><House size={18}/> Devenir un abonné de {companyName} <ArrowRight size={18}/></button>
-      {!demo&&selectedSiteId&&<Link className="zw-simple-offers-link zw-resident-account-link" href={siteBrandedHost?'/mycompte/me':'/mon-internet/'+encodeURIComponent(selectedSiteId)}><ShieldCheck size={17}/> {subscriberAccountName({brandName:siteIdentity?.brandName||displayBrand,siteName:siteIdentity?.siteName||siteName||displayBrand})} <ArrowRight size={14}/></Link>}
-      <button type="button" className="zw-simple-offers-link" onClick={()=>setOffersDialog(true)}>Voir les offres Wi-Fi {ticketCount>0?'('+ticketCount+')':''} <ArrowRight size={14}/></button>
+      {(portalDesign?.showSubscribe??true)&&<button type="button" className="zw-simple-subscribe" onClick={()=>toMode('subscribe')}><House size={18}/> Devenir un abonné de {companyName} <ArrowRight size={18}/></button>}
+      {!demo&&selectedSiteId&&(portalDesign?.showAccount??true)&&<Link className="zw-simple-offers-link zw-resident-account-link" href={siteBrandedHost?'/mycompte/me':'/mon-internet/'+encodeURIComponent(selectedSiteId)}><ShieldCheck size={17}/> {subscriberAccountName({brandName:siteIdentity?.brandName||displayBrand,siteName:siteIdentity?.siteName||siteName||displayBrand})} <ArrowRight size={14}/></Link>}
+      {(portalDesign?.showOffers??true)&&<button type="button" className="zw-simple-offers-link" onClick={()=>setOffersDialog(true)}>Voir les offres Wi-Fi {ticketCount>0?'('+ticketCount+')':''} <ArrowRight size={14}/></button>}
       <div className="zw-simple-footer">
-       <span>Fournisseur : <strong>{companyName}</strong></span>
-       {!demo&&(siteIdentity?.contactPhone||siteIdentity?.contactEmail)&&<span>{[siteIdentity.contactPhone,siteIdentity.contactEmail].filter(Boolean).join(' · ')}</span>}
-       <span>{demo?'Démonstration : aucun accès Internet activé':'Vérification du ticket par MikroTik après installation'}</span>
+       {(portalDesign?.showContact??true)&&<span>Fournisseur : <strong>{companyName}</strong></span>}
+       {!demo&&(portalDesign?.showContact??true)&&(siteIdentity?.contactPhone||siteIdentity?.contactEmail)&&<span>{[siteIdentity.contactPhone,siteIdentity.contactEmail].filter(Boolean).join(' · ')}</span>}
+       <span>{demo?'Démonstration : aucun accès Internet activé':'Connexion effective via le portail MikroTik du site'}</span>
+       {portalDesign?.termsText&&<details className="zw-portal-legal"><summary>Conditions d’utilisation</summary><p>{portalDesign.termsText}</p></details>}
+       {portalDesign?.privacyText&&<details className="zw-portal-legal"><summary>Confidentialité</summary><p>{portalDesign.privacyText}</p></details>}
       </div>
      </div>
      {offersDialog&&<div className="zw-enterprise-shade" role="presentation" onClick={()=>setOffersDialog(false)}>
