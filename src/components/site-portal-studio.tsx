@@ -323,6 +323,9 @@ export default function SitePortalStudio(){
       {publishedLink&&<Link className="ps-external" href={publishedLink} target="_blank">
        Ouvrir le portail public <ChevronRight size={16}/>
       </Link>}
+      {site&&<Link className="ps-external" href={'/personnalisation-tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)}>
+       Préparer le fichier login.html du MikroTik <ChevronRight size={16}/>
+      </Link>}}
       <p className="ps-hint">Cette prévisualisation ne tente aucune authentification. Les changements deviennent publics seulement après « Publier ». La page native MikroTik devra être téléchargée puis installée sur le routeur pour refléter les changements locaux.</p>
      </aside>
     </div>
