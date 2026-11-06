@@ -52,8 +52,8 @@ function logoPaint(ctx:CanvasRenderingContext2D,img:HTMLImageElement|null,x:numb
  const scale=Math.min(w/img.naturalWidth,h/img.naturalHeight);
  const iw=img.naturalWidth*scale,ih=img.naturalHeight*scale;
  ctx.save();
- // Keep the processed transparent logo free of a forced rectangular tile.
- // A subtle shadow retains contrast on white and dark ticket designs.
+ // Draw the entire supplied logo, including any built-in background.
+ // A subtle shadow retains contrast without cropping the image.
  ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=2;
  ctx.shadowOffsetX=1;ctx.shadowOffsetY=1;
  ctx.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);
