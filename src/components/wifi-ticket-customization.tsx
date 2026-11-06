@@ -14,7 +14,7 @@ const initial:Settings={
  logo_data_uri:null,primary_color:'#167a46',secondary_color:'#ffffff',title_color:'#10251a',
  border_color:'#a5b9ad',font_family:'Arial',username_length:5,password_length:5,
  template_key:'classic',accent_color:'#0e9f6e',gradient_enabled:false,decorations_enabled:true,
- brand_name:'',wifi_ssid:'',phone:'',address:'',welcome_message:'',footer_text:'',
+ brand_name:'',wifi_ssid:'',phone:'',address:'',email:'',welcome_message:'',footer_text:'',
  show_price:true,show_duration:true,show_ticket_id:false,show_wifi_ssid:false
 };
 const styles:{key:TicketStyle;label:string;detail:string}[]=[
@@ -136,7 +136,10 @@ export default function WifiTicketCustomization(){
     logoDataUri:typeof base.logo_data_uri==='string'?base.logo_data_uri:null,
     primaryColor:base.primary_color||'#40caff',
     accentColor:base.accent_color||'#66eabe',
-    welcomeMessage:String(base.welcome_message||'').slice(0,120)
+    welcomeMessage:String(base.welcome_message||'').slice(0,120),
+    contactPhone:String(base.phone||'').slice(0,32),
+    contactEmail:String(base.email||'').slice(0,254),
+    siteAddress:String(base.address||'').slice(0,160)
    };
    // encodeURIComponent leaves apostrophes unescaped, which must not be
    // injected into a single-quoted JavaScript string in the RouterOS page.
@@ -171,7 +174,7 @@ export default function WifiTicketCustomization(){
  };
  const names=[
   ['brand_name','Nom commercial',90],['wifi_ssid','Nom du réseau / SSID',64],
-  ['phone','Téléphone',60],['address','Localisation',160],
+  ['phone','Téléphone',60],['address','Localisation',160],['email','Adresse e-mail',254],
   ['welcome_message','Message de bienvenue',120],['footer_text','Pied du ticket',100]
  ] as const;
  return <>
