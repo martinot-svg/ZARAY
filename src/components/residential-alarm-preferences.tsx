@@ -19,13 +19,6 @@ export default function ResidentialAlarmPreferences({siteId}:{siteId:string}){
  const [busy,setBusy]=useState(false),[loading,setLoading]=useState(true);
  const [error,setError]=useState(''),[notice,setNotice]=useState('');
  const endpoint='/api/residential/alarm-schedule?siteId='+encodeURIComponent(siteId);
- async function reload(){
-  const result=await fetch(endpoint,{cache:'no-store'});
-  const json=await result.json();
-  if(!result.ok)throw Error(json.error||'Rappels indisponibles.');
-  const data=json as Schedule;
-  setSchedule(data);setDays(data.days);setHour(data.hour);setEnabled(data.enabled);
- }
  useEffect(()=>{
   let mounted=true;
   (async()=>{
