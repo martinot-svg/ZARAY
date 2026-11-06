@@ -382,7 +382,12 @@
  text-decoration:none;
 }
 .zw-root[data-site-branded="true"] .zw-simple-brand{
- flex-wrap:wrap;
+ flex-wrap:wrap;justify-content:center;align-items:center;min-width:0;
+}
+.zw-root[data-site-branded="true"] .zw-simple-brand .zw-site-logo{
+ display:block;width:auto;height:auto;max-width:min(62%,180px);
+ max-height:clamp(42px,10dvh,76px);object-fit:contain;
+ margin-inline:auto;flex-shrink:1;background:transparent;border:0;padding:0;
 }
 
 /* The full site card adopts the same logo-friendly background as its tickets.
