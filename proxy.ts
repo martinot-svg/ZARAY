@@ -55,7 +55,14 @@ function customHostResponse(request:NextRequest,site:SiteDomain|null){
  }
  // This is a tenant-host alias, not an identity parameter supplied by the caller.
  // The account API still checks a verified e-mail against company + site + customer.
- if(path==='/mycompte/me'||path==='/compte'||path==='/mon-internet'){
+ // Canonical resident account path on the verified, site-specific hostname.
+ // Former account URLs redirect to the same host without ever changing tenant.
+ if(path==='/mycompte/me'){
+  target.pathname='/kaotiko/me';
+  target.search='';
+  return NextResponse.redirect(target,308);
+ }
+ if(path==='/kaotiko/me'||path==='/compte'||path==='/mon-internet'){
   target.pathname='/mon-internet/'+site.siteId;
   target.search='';
   return NextResponse.rewrite(target,{request});

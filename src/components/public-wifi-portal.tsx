@@ -269,7 +269,7 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
       </form>
       {ticketMessage&&<p className="zw-simple-alert" role="status">{ticketMessage}</p>}
       {(portalDesign?.showSubscribe??true)&&<button type="button" className="zw-simple-subscribe" onClick={()=>toMode('subscribe')}><House size={18}/> Devenir un abonné de {companyName} <ArrowRight size={18}/></button>}
-      {!demo&&selectedSiteId&&(portalDesign?.showAccount??true)&&<Link className="zw-simple-offers-link zw-resident-account-link" href={siteBrandedHost?'/mycompte/me':'/mon-internet/'+encodeURIComponent(selectedSiteId)}><ShieldCheck size={17}/> {subscriberAccountName({brandName:currentIdentity?.brandName||displayBrand,siteName:currentIdentity?.siteName||siteName||displayBrand})} <ArrowRight size={14}/></Link>}
+      {!demo&&selectedSiteId&&(portalDesign?.showAccount??true)&&<Link className="zw-simple-offers-link zw-resident-account-link" href={siteBrandedHost?'/kaotiko/me':'/mon-internet/'+encodeURIComponent(selectedSiteId)}><ShieldCheck size={17}/> {subscriberAccountName({brandName:currentIdentity?.brandName||displayBrand,siteName:currentIdentity?.siteName||siteName||displayBrand})} <ArrowRight size={14}/></Link>}
       {(portalDesign?.showOffers??true)&&<button type="button" className="zw-simple-offers-link" onClick={()=>setOffersDialog(true)}>Voir les offres Wi-Fi {ticketCount>0?'('+ticketCount+')':''} <ArrowRight size={14}/></button>}
       <div className="zw-simple-footer">
        {(portalDesign?.showContact??true)&&<span>Fournisseur : <strong>{companyName}</strong></span>}

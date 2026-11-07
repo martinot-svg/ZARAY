@@ -48,7 +48,7 @@ test('account link remains tied to the site selected on the wifi and hotspot por
  assert.match(web,/subscriberAccountName\(\{brandName:currentIdentity\?\.brandName/);
  assert.match(web,/\/mon-internet\/'\+encodeURIComponent\(selectedSiteId\)/);
  assert.match(hotspot,/SITE_HOSTED/);
- assert.match(hotspot,/PUBLIC_API_BASE\+'\/mycompte\/me'/);
+ assert.match(hotspot,/PUBLIC_API_BASE\+'\/kaotiko\/me'/);
  assert.match(hotspot,/PUBLIC_API_BASE\+'\/mon-internet\/'\+encodeURIComponent\(SITE_ID\)/);
  assert.match(proxy,/path==='\/mon-internet\/'\+site.siteId\+'\/manifest.webmanifest'/);
  assert.match(proxy,/\/api\/public\/residential-app-icon/);

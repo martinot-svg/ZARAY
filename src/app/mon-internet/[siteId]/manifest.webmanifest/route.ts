@@ -16,7 +16,7 @@ export async function GET(_request:NextRequest,{params}:Context){
  const hostname=_request.nextUrl.hostname.toLowerCase();
  const branded=hostname==='mlayconnexion.vercel.app'
   || (!['localhost','127.0.0.1'].includes(hostname)&&!hostname.endsWith('.vercel.app'));
- const entry=branded?'/mycompte/me':'/mon-internet/'+identity.siteId;
+ const entry=branded?'/kaotiko/me':'/mon-internet/'+identity.siteId;
  const icon='/api/public/residential-app-icon?siteId='+encodeURIComponent(identity.siteId);
  return NextResponse.json({
   id:entry,
