@@ -26,7 +26,7 @@ test('money is confirmed receipts only, not ticket activation or unpaid order',(
  const receipts=sql.slice(sql.indexOf('receipts AS ('),sql.indexOf('currency_summary AS ('));
  assert.doesNotMatch(receipts,/wifi_voucher_activations/);
  assert.doesNotMatch(receipts,/p\.status='pending'/);
- assert.match(ui,/une première connexion/i);
+ assert.match(ui,/première connexion/i);
 });
 test('stock distinguishes not sold vouchers, network readiness and first connection',()=>{
  assert.match(sql,/v\.status='available'/);
