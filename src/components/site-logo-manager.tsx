@@ -1,7 +1,6 @@
 'use client';
 import {useEffect,useState,type ChangeEvent} from 'react';
 import {uploadOriginalSiteLogo,validateLogoFile} from '@/lib/site-logo-upload';
-import {siteLogoForSurface} from '@/lib/site-logo-variants';
 
 type Pair={configured:boolean;lightDataUri:string|null;darkDataUri:string|null;updatedAt:string|null};
 type Variant='light'|'dark';
