@@ -110,14 +110,15 @@ subscriptions AS (
   count(*) FILTER(WHERE s.paid_cycles>0 AND s.expires_at<=b.observed_at) AS overdue,
   count(*) FILTER(WHERE s.activated_cycles=0 OR s.expires_at<=b.observed_at) AS inactive,
   count(*) FILTER(WHERE s.paid_cycles>s.activated_cycles) AS waiting_activation,
-  count(*) FILTER(WHERE o.status='failed'
-   OR (EXISTS (
-     SELECT 1 FROM public.payments fp
-     WHERE fp.company_id=p_company_id AND fp.order_id=s.latest_order_id AND fp.status='failed'
-   ) AND NOT EXISTS(
+  count(*) FILTER(WHERE (
+     o.status='failed' OR EXISTS (
+      SELECT 1 FROM public.payments fp
+      WHERE fp.company_id=p_company_id AND fp.order_id=s.latest_order_id AND fp.status='failed'
+     )
+   ) AND NOT EXISTS (
      SELECT 1 FROM public.payments ok
      WHERE ok.company_id=p_company_id AND ok.order_id=s.latest_order_id AND ok.status='succeeded'
-   ))) AS payment_failure
+   )) AS payment_failure
  FROM public.residential_subscriptions s
  LEFT JOIN public.subscription_orders o
   ON o.id=s.latest_order_id AND o.company_id=s.company_id
