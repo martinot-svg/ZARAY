@@ -35,6 +35,18 @@ RLS activée, aucune permission directe `anon`/`authenticated`, service_role uni
 
 Les options d'affichage désactivent les liens visibles, **pas les autorisations réseau ou l'accès aux API métiers**. Le constructeur visuel n'a aucun accès au routeur ni à ses secrets.
 
+## Mode préparation sans MikroTik
+
+En l'absence de routeur, ZARAY fonctionne comme outil de préparation :
+- chaque entreprise et chaque site peut configurer et publier son portail web ;
+- la page publique du site peut présenter les offres et l'inscription résidentielle (sans prétendre authentifier un ticket sur un routeur absent) ;
+- dans **Tickets > Générer**, le choix de l'entreprise, du site, de l'offre et du modèle existant affiche un **aperçu fictif** ; le même écran permet un PDF de démonstration de 1 à 99 tickets ;
+- les identifiants de démonstration sont fixes (`DEMO / 0000`) et tous les visuels, y compris les pages PDF, portent la mention **DÉMO — NON VALABLE** ;
+- aucun ticket réel ni aucune commande réseau n'est créé par cet aperçu, et aucun stock ni abonnement n'est altéré ;
+- la génération de vrais tickets, leur vente et leur authentification restent strictement liées à un MikroTik actif et à son connecteur.
+
+Cet aperçu ne remplace pas l'activation sur MikroTik, ne crée pas de client et ne confère aucun droit d'accès Internet. Il reste intégré au module **Tickets**, sans créer de module Planche A4 indépendant.
+
 ## Préparation de l'installation MikroTik
 
 Le Studio des portails contient désormais un volet **Installation MikroTik · état du site** :
