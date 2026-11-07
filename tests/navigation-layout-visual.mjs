@@ -142,7 +142,16 @@ try {
         }
         const outcome=await page.locator(openSelector).evaluate(el=>{
           const root=el.getBoundingClientRect();
-          const labels=[...el.querySelectorAll('strong,.zaray-nav-label-text,.app-site-option,.app-site-heading,.app-nav-flyout-heading')];
+          const labels=[...el.querySelectorAll('strong,.zaray-nav-label-text,.app-site-option,.app-site-heading,.app-nav-flyout-heading')]
+            .filter(node => {
+              // Desktop keeps a noninteractive inline fallback in the DOM; its real
+              // links are rendered by the visible portal. Never fail invisible nodes.
+              for(let ancestor=node;ancestor&&ancestor!==el;ancestor=ancestor.parentElement){
+                const css=getComputedStyle(ancestor);
+                if(css.display==='none'||css.visibility==='hidden')return false;
+              }
+              return true;
+            });
           const result=labels.map(node=>{
             const box=node.getBoundingClientRect();
             const parent=node.closest('.app-nav-link,.app-nav-flyout-trigger,.app-site-option,.personal-nav-link,.personal-profile-action,.account-signout button')||node.parentElement;
