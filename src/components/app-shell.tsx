@@ -1,6 +1,6 @@
 'use client';
 import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
-import { ZarayIcon } from '@/components/ui/zaray-icon';
+import { ZarayIcon, type ZarayIconName } from '@/components/ui/zaray-icon';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import SignOutButton from '@/components/sign-out-button';
@@ -15,6 +15,40 @@ const sections = [
   { label: 'FINANCE & RÉSEAU', items: [['/paiements/verification', 'Paiements'], ['/parametres-paiement', 'Moyens de paiement'], ['/portail', 'Portail captif'], ['/gestion-reseau', 'Gestion réseau']] },
 ];
 
+type FlyoutItem = { href: string; label: string; siteOnly?: boolean };
+const flyoutSections: { label: string; icon: ZarayIconName; items: FlyoutItem[] }[] = [
+  { label: 'Pilotage', icon: 'dashboard', items: [
+    { href: '/tableau-de-bord', label: 'Vue générale' },
+    { href: '/sites', label: 'Sites de l’entreprise' },
+  ] },
+  { label: 'Clients & abonnements', icon: 'customers', items: [
+    { href: '/clients', label: 'Clients' },
+    { href: '/abonnements', label: 'Abonnements résidentiels' },
+    { href: '/offres', label: 'Offres Internet' },
+  ] },
+  { label: 'Ventes & commandes', icon: 'orders', items: [
+    { href: '/commandes', label: 'Commandes' },
+    { href: '/tickets', label: 'Tickets Wi-Fi' },
+    { href: '/caisse', label: 'Caisse' },
+  ] },
+  { label: 'Finances', icon: 'finance', items: [
+    { href: '/paiements/verification', label: 'Paiements' },
+    { href: '/parametres-paiement', label: 'Moyens de paiement' },
+    { href: '/parametres-paiement/fiveonepay', label: 'FiveOne Pay' },
+  ] },
+  { label: 'Portail & réseau', icon: 'network', items: [
+    { href: '/portail', label: 'Portail captif' },
+    { href: '/gestion-reseau', label: 'Gestion réseau' },
+    { href: 'site-domain', label: 'Adresse du site', siteOnly: true },
+  ] },
+  { label: 'Administration', icon: 'settings', items: [
+    { href: '/membres', label: 'Membres et autorisations' },
+    { href: '/notifications', label: 'Notifications' },
+    { href: 'site-notifications', label: 'Notifications du site', siteOnly: true },
+    { href: '/sites', label: 'Paramètres des sites' },
+  ] },
+];
+
 const mobileDockItems = [
   { href: '/tableau-de-bord', label: 'Accueil', icon: 'dashboard', scoped: false },
   { href: '/clients', label: 'Clients', icon: 'customers', scoped: true },
@@ -26,7 +60,9 @@ const navigationIcons = {
   '/tableau-de-bord': 'dashboard', '/entreprises': 'company', '/sites': 'site', '/notifications': 'notifications',
   '/membres': 'members', '/clients': 'customers', '/offres': 'wifi',
   '/commandes': 'orders', '/abonnements': 'wifi', '/tickets': 'ticket', '/paiements/verification': 'payment',
-  '/parametres-paiement': 'finance', '/portail': 'network', '/gestion-reseau': 'network',
+  '/parametres-paiement': 'finance', '/parametres-paiement/fiveonepay': 'payment', '/caisse': 'cash',
+  'site-dashboard': 'dashboard', 'site-domain': 'network', 'site-notifications': 'notifications',
+  '/portail': 'network', '/gestion-reseau': 'network',
 } as const;
 const editorialChapters:Record<string,{accent:string}>={
   '/tableau-de-bord':{accent:'mint'},
@@ -80,13 +116,13 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
     ? 'Tableau de bord'
     : sections.flatMap(section => section.items).find(([path]) => path === activePath)?.[1]) || 'Espace de travail';
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeFlyout, setActiveFlyout] = useState<number | null>(null);
   const [siteOpen, setSiteOpen] = useState(false);
   const siteButton = useRef<HTMLButtonElement>(null);
   const siteContainer = useRef<HTMLDivElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
   const firstMenuLink = useRef<HTMLAnchorElement>(null);
   const menuContainer = useRef<HTMLDivElement>(null);
-  const themeButtonRef = useRef<HTMLButtonElement>(null);
   const hoverMenus = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   useEffect(() => {
     if (!menuOpen && !siteOpen) return;
@@ -94,18 +130,19 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         if (siteOpen) { setSiteOpen(false); siteButton.current?.focus(); }
+        else if (activeFlyout !== null) { setActiveFlyout(null); menuButton.current?.focus(); }
         else { setMenuOpen(false); menuButton.current?.focus(); }
       }
     };
     const closeOutside = (event: PointerEvent) => {
       if (!(event.target instanceof Node)) return;
-      if (menuOpen && !menuContainer.current?.contains(event.target)) setMenuOpen(false);
+      if (menuOpen && !menuContainer.current?.contains(event.target)) { setMenuOpen(false); setActiveFlyout(null); }
       if (siteOpen && !siteContainer.current?.contains(event.target)) setSiteOpen(false);
     };
     window.addEventListener('keydown', closeOnEscape);
     document.addEventListener('pointerdown', closeOutside);
     return () => { window.removeEventListener('keydown', closeOnEscape); document.removeEventListener('pointerdown', closeOutside); };
-  }, [menuOpen, siteOpen]);
+  }, [menuOpen, siteOpen, activeFlyout]);
 
   function selectSite(next: string) {
     setSiteOpen(false);
@@ -113,6 +150,19 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
     router.push(next
       ? '/sites/' + encodeURIComponent(next) + '?companyId=' + encodeURIComponent(activeCompany)
       : '/tableau-de-bord?companyId=' + encodeURIComponent(activeCompany));
+  }
+  function scopedHref(href: string) {
+    if (href === 'site-dashboard' && activeCompany && activeSite)
+      return '/sites/' + encodeURIComponent(activeSite) + '?companyId=' + encodeURIComponent(activeCompany);
+    if (href === 'site-domain' && activeCompany && activeSite)
+      return '/sites/' + encodeURIComponent(activeSite) + '/domaine?companyId=' + encodeURIComponent(activeCompany);
+    if (href === 'site-notifications' && activeCompany && activeSite)
+      return '/sites/' + encodeURIComponent(activeSite) + '/notifications?companyId=' + encodeURIComponent(activeCompany);
+    const operational = ['/clients', '/commandes', '/abonnements', '/tickets', '/caisse', '/paiements/verification'];
+    return activeCompany
+      ? href + (href.includes('?') ? '&' : '?') + 'companyId=' + encodeURIComponent(activeCompany)
+        + (activeSite && operational.includes(href) ? '&siteId=' + encodeURIComponent(activeSite) : '')
+      : href;
   }
   return <div className="app-shell app-no-sidebar" data-workspace-chapter={chapter.accent} data-workspace-path={activePath}>
     <div className="app-main">
@@ -122,11 +172,11 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
         <div className="app-topbar-links">
         <div className="app-menu-container" ref={menuContainer}
           onMouseEnter={() => { if (hoverMenus()) { setMenuOpen(true); setSiteOpen(false); } }}
-          onMouseLeave={() => { if (hoverMenus() && !menuContainer.current?.contains(document.activeElement)) setMenuOpen(false); }}>
+          onMouseLeave={() => { if (hoverMenus() && !menuContainer.current?.contains(document.activeElement)) { setMenuOpen(false); setActiveFlyout(null); } }}>
           <button ref={menuButton} className="app-menu-button" type="button"
             aria-controls="zaray-app-nav" aria-expanded={menuOpen}
             aria-label="Ouvrir la navigation de l’entreprise"
-            onClick={() => { setMenuOpen(value => !value); setSiteOpen(false); }}>
+            onClick={() => { setMenuOpen(value => !value); setActiveFlyout(null); setSiteOpen(false); }}>
             <ZarayIcon name="menu" size={22} /><span className="topbar-icon-label">Menu</span>
           </button>
           <nav id="zaray-app-nav"
@@ -137,37 +187,51 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
               <strong>{companies.find(c => c.id === activeCompany)?.legal_name ?? (contextError || 'Sélectionner une entreprise')}</strong>
               {activeSite && <span>{sites.find(site => site.id === activeSite)?.name ?? 'Site actif'}</span>}
             </div>
-            {activeSite && activeCompany && <div className="app-nav-group">
-              <span className="app-nav-label">SITE ACTIF</span>
-              <Link className="app-nav-link" href={'/sites/'+encodeURIComponent(activeSite)+'?companyId='+encodeURIComponent(activeCompany)}
-                onClick={() => setMenuOpen(false)}>
-                <ZarayIcon name="dashboard" size={18} /> Tableau de bord du site
-              </Link>
-            </div>}
-            {sections.map(section => <div className="app-nav-group" key={section.label}>
-              <span className="app-nav-label">{section.label}</span>
-              {section.items.map(([href, label]) => {
-                const siteOperational = ['/clients','/commandes','/abonnements','/tickets','/paiements/verification'].includes(href);
-                const scoped=href === '/entreprises' ? href : activeCompany
-                  ? href+(href.includes('?')?'&':'?')+'companyId='+encodeURIComponent(activeCompany)+(activeSite && siteOperational ? '&siteId='+encodeURIComponent(activeSite) : '')
-                  : href;
-                return <Link key={href}
-                  ref={href === '/tableau-de-bord' ? firstMenuLink : undefined}
-                  href={scoped}
-                  className={'app-nav-link' + (activePath === href ? ' active' : '')}
-                  aria-current={activePath === href ? 'page' : undefined}
-                  onClick={() => setMenuOpen(false)}>
-                  <ZarayIcon name={navigationIcons[href as keyof typeof navigationIcons] ?? 'next'} size={18} /> {label}
-                </Link>;
+            <div className="app-nav-rail" aria-label="Rubriques principales">
+              {flyoutSections.map((section, index) => {
+                const items: FlyoutItem[] = section.label === 'Pilotage' && activeSite
+                  ? [{ href: 'site-dashboard', label: 'Tableau de bord du site' }, ...section.items]
+                  : section.items;
+                return <div className="app-nav-flyout" key={section.label}
+                  onMouseEnter={() => { if (hoverMenus()) setActiveFlyout(index); }}>
+                  <button type="button"
+                    className={'app-nav-flyout-trigger' + (activeFlyout === index ? ' is-active' : '')}
+                    aria-controls={'zaray-nav-flyout-' + index} aria-expanded={activeFlyout === index}
+                    onClick={() => setActiveFlyout(previous => previous === index ? null : index)}>
+                    <ZarayIcon name={section.icon} size={19} />
+                    <span>{section.label}</span>
+                    <ZarayIcon name="next" size={16} />
+                  </button>
+                  <div id={'zaray-nav-flyout-' + index}
+                    className={'app-nav-flyout-panel' + (activeFlyout === index ? ' is-open' : '')}
+                    aria-hidden={activeFlyout !== index} inert={activeFlyout !== index || !menuOpen}>
+                    <div className="app-nav-flyout-heading">{section.label}</div>
+                    {items.filter(item => !item.siteOnly || activeSite).map(item => {
+                      const href = scopedHref(item.href);
+                      return <Link key={item.href} href={href}
+                        ref={item.href === '/tableau-de-bord' ? firstMenuLink : undefined}
+                        className={'app-nav-link' + (activePath === item.href ? ' active' : '')}
+                        aria-current={activePath === item.href ? 'page' : undefined}
+                        onClick={() => { setMenuOpen(false); setActiveFlyout(null); }}>
+                        <ZarayIcon name={navigationIcons[item.href as keyof typeof navigationIcons] ?? 'next'} size={17} />
+                        {item.label}
+                      </Link>;
+                    })}
+                  </div>
+                </div>;
               })}
-            </div>)}
+            </div>
             <div className="app-nav-footer">
-              <Link className="app-nav-link" href="/mon-compte" onClick={() => setMenuOpen(false)}>
-                <ZarayIcon name="back" size={18} /> Retour au compte personnel
+              <Link className="app-nav-link" href={scopedHref('/tableau-de-bord')} onClick={() => { setMenuOpen(false); setActiveFlyout(null); }}>
+                <ZarayIcon name="dashboard" size={18} /> Vue générale
               </Link>
-              <Link className="app-nav-link" href="/entreprises" onClick={() => setMenuOpen(false)}>
+              <Link className="app-nav-link" href="/mon-compte" onClick={() => { setMenuOpen(false); setActiveFlyout(null); }}>
+                <ZarayIcon name="profile" size={18} /> Mon compte
+              </Link>
+              <Link className="app-nav-link" href="/entreprises" onClick={() => { setMenuOpen(false); setActiveFlyout(null); }}>
                 <ZarayIcon name="company" size={18} /> Changer d’entreprise
               </Link>
+              <ThemeSwitch className="app-nav-theme-switch" />
               <SignOutButton />
             </div>
           </nav>
@@ -183,7 +247,7 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
           <button ref={siteButton} type="button" className="app-site-button"
             aria-label={activeSite ? 'Changer de site : ' + (sites.find(s => s.id === activeSite)?.name ?? 'Site actif') : 'Choisir un site'}
             title="Changer de site" aria-controls="zaray-site-picker" aria-expanded={siteOpen}
-            onClick={() => { setSiteOpen(value => !value); setMenuOpen(false); }}>
+            onClick={() => { setSiteOpen(value => !value); setMenuOpen(false); setActiveFlyout(null); }}>
             <ZarayIcon name="site" size={22} />
             {activeSite && <span className="app-site-active-indicator" aria-hidden="true" />}
           </button>
@@ -204,44 +268,7 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
             </> : <p className="app-site-feedback">{contextError || 'Aucune entreprise sélectionnée.'}</p>}
           </div>
         </div>
-          <div className="topbar-icon-group topbar-theme-control">
-            <ThemeSwitch buttonRef={themeButtonRef} hideNativeTitle />
-            <div className="topbar-icon-curtain" aria-label="Thème de l'interface">
-              <div className="topbar-icon-curtain-inner">
-                <button type="button" className="topbar-icon-menu-action"
-                  onClick={() => themeButtonRef.current?.click()}>
-                  <ZarayIcon name="settings" size={18} /> Changer le thème
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="topbar-icon-group">
-            <Link className="header-link" href="/mon-compte" aria-label="Mon compte">
-              <ZarayIcon name="profile" size={22} /><span className="topbar-icon-label">Mon compte</span>
-            </Link>
-            <div className="topbar-icon-curtain" aria-label="Mon compte">
-              <div className="topbar-icon-curtain-inner">
-                <Link className="topbar-icon-menu-action" href="/mon-compte">
-                  <ZarayIcon name="profile" size={18} /> Retour au compte personnel
-                </Link>
-              </div>
-            </div>
-          </div>
-          <div className="topbar-icon-group">
-            <Link className="header-link"
-              href={activeCompany ? '/tableau-de-bord?companyId=' + encodeURIComponent(activeCompany) : '/entreprises'}
-              aria-label="Vue générale">
-              <ZarayIcon name="dashboard" size={22} /><span className="topbar-icon-label">Vue générale</span>
-            </Link>
-            <div className="topbar-icon-curtain" aria-label="Vue générale">
-              <div className="topbar-icon-curtain-inner">
-                <Link className="topbar-icon-menu-action"
-                  href={activeCompany ? '/tableau-de-bord?companyId=' + encodeURIComponent(activeCompany) : '/entreprises'}>
-                  <ZarayIcon name="dashboard" size={18} /> Vue générale
-                </Link>
-              </div>
-            </div>
-          </div>
+
         </div>
       </header>
       <main className="app-content">
