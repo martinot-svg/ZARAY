@@ -297,3 +297,163 @@
     transform: none !important;
   }
 }
+
+
+/*
+ * ZARAY navigation theme contract.
+ * Both menus use OPAQUE computed backgroundColor values. ContrastGuardian relies
+ * on those values to measure text contrast; gradient-only backgrounds previously
+ * made it treat a dark curtain as white and paint the words nearly black.
+ */
+html[data-zaray-theme="dark"] {
+  --zn-surface: #0b221b;
+  --zn-inner: #12352a;
+  --zn-flyout: #0b251e;
+  --zn-ink: #f0fff5;
+  --zn-muted: #b4dbc2;
+  --zn-heading: #c1f7d1;
+  --zn-border: rgba(121, 244, 160, .35);
+  --zn-hover: #205440;
+  --zn-shadow: 0 26px 70px rgba(0,0,0,.46);
+  --zn-surface-art: linear-gradient(145deg,rgba(32,78,54,.30),rgba(6,28,30,.14));
+  --zn-flyout-art: linear-gradient(145deg,rgba(28,81,60,.34),rgba(5,24,27,.10));
+  --zn-selected-ink: #092918;
+  --zn-focus: #8fffb0;
+}
+html[data-zaray-theme="light"] {
+  --zn-surface: #ffffff;
+  --zn-inner: #f1faf5;
+  --zn-flyout: #ffffff;
+  --zn-ink: #102d21;
+  --zn-muted: #365e4b;
+  --zn-heading: #17573b;
+  --zn-border: rgba(18,99,63,.28);
+  --zn-hover: #e4f5e9;
+  --zn-shadow: 0 22px 60px rgba(16,72,49,.18);
+  --zn-surface-art: linear-gradient(145deg,rgba(249,255,251,.36),rgba(224,245,232,.45));
+  --zn-flyout-art: linear-gradient(145deg,rgba(255,255,255,.35),rgba(223,246,232,.48));
+  --zn-selected-ink: #092918;
+  --zn-focus: #126742;
+}
+
+/* The main menu is a separate theme-correct block, not a dark overlay in light mode. */
+html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown {
+  background-color: var(--zn-surface) !important;
+  background-image: var(--zn-surface-art) !important;
+  color: var(--zn-ink) !important;
+  border-color: var(--zn-border) !important;
+  box-shadow: var(--zn-shadow) !important;
+}
+html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown .app-nav-current-context {
+  border-bottom-color: var(--zn-border) !important;
+}
+html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown .app-nav-current-context strong,
+html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown .app-nav-current-context > span:last-child,
+html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown .app-nav-label {
+  color: var(--zn-ink) !important;
+}
+html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown .app-nav-label,
+html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown .app-nav-current-context > span:last-child {
+  color: var(--zn-muted) !important;
+}
+html[data-zaray-theme] .app-no-sidebar .app-nav-flyout-trigger {
+  color: var(--zn-ink) !important;
+  border-color: transparent;
+}
+html[data-zaray-theme] .app-no-sidebar .app-nav-flyout-trigger svg:last-child {
+  color: var(--zn-muted) !important;
+}
+html[data-zaray-theme] .app-no-sidebar .app-nav-flyout-trigger:hover,
+html[data-zaray-theme] .app-no-sidebar .app-nav-flyout-trigger:focus-visible,
+html[data-zaray-theme] .app-no-sidebar .app-nav-flyout-trigger.is-active {
+  color: var(--zn-ink) !important;
+  background-color: var(--zn-hover) !important;
+  border-color: var(--zn-border) !important;
+}
+html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown .app-nav-flyout-panel {
+  background-color: var(--zn-inner) !important;
+  border-left-color: var(--zn-border) !important;
+  color: var(--zn-ink) !important;
+}
+html[data-zaray-theme] .app-no-sidebar .app-nav-flyout-panel .app-nav-flyout-heading,
+html[data-zaray-theme] .zaray-flyout-portal .app-nav-flyout-heading {
+  color: var(--zn-heading) !important;
+}
+html[data-zaray-theme] .app-no-sidebar .app-nav-flyout-panel .app-nav-link,
+html[data-zaray-theme] .app-no-sidebar .app-nav-footer .app-nav-link {
+  color: var(--zn-ink) !important;
+  background-color: transparent;
+}
+html[data-zaray-theme] .app-no-sidebar .app-nav-flyout-panel .app-nav-link:hover,
+html[data-zaray-theme] .app-no-sidebar .app-nav-flyout-panel .app-nav-link:focus-visible,
+html[data-zaray-theme] .app-no-sidebar .app-nav-footer .app-nav-link:hover,
+html[data-zaray-theme] .app-no-sidebar .app-nav-footer .app-nav-link:focus-visible {
+  color: var(--zn-ink) !important;
+  background-color: var(--zn-hover) !important;
+}
+html[data-zaray-theme] .app-no-sidebar .app-nav-footer {
+  border-top-color: var(--zn-border) !important;
+}
+html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown .app-nav-footer .app-nav-theme-switch.app-nav-theme-switch {
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: var(--zn-ink) !important;
+}
+html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown .app-nav-footer .app-nav-theme-switch:hover,
+html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown .app-nav-footer .app-nav-theme-switch:focus-visible {
+  background-color: var(--zn-hover) !important;
+}
+html[data-zaray-theme] .app-no-sidebar .app-nav-footer .app-nav-theme-switch .zaray-theme-switch-label,
+html[data-zaray-theme] .app-no-sidebar .app-nav-footer .app-nav-theme-switch .zaray-theme-icon,
+html[data-zaray-theme] .app-no-sidebar .app-nav-footer .app-nav-theme-switch svg {
+  color: var(--zn-ink) !important;
+}
+html[data-zaray-theme] .app-no-sidebar .app-nav-footer .account-signout button {
+  color: var(--zn-ink) !important;
+  border-color: var(--zn-border) !important;
+  background-color: transparent !important;
+}
+html[data-zaray-theme] .app-no-sidebar .app-nav-footer .account-signout button:hover,
+html[data-zaray-theme] .app-no-sidebar .app-nav-footer .account-signout button:focus-visible {
+  color: var(--zn-ink) !important;
+  background-color: var(--zn-hover) !important;
+}
+
+/* The desktop curtain is portaled into <body>, so it cannot inherit app-shell styles. */
+html[data-zaray-theme] .zaray-flyout-portal {
+  background-color: var(--zn-flyout) !important;
+  background-image: var(--zn-flyout-art) !important;
+  color: var(--zn-ink) !important;
+  border-color: var(--zn-border) !important;
+  box-shadow: var(--zn-shadow) !important;
+}
+html[data-zaray-theme] .zaray-flyout-portal .app-nav-flyout-heading {
+  border-bottom-color: var(--zn-border) !important;
+}
+html[data-zaray-theme] .zaray-flyout-portal .app-nav-link {
+  color: var(--zn-ink) !important;
+  background-color: transparent !important;
+}
+html[data-zaray-theme] .zaray-flyout-portal .app-nav-link:hover,
+html[data-zaray-theme] .zaray-flyout-portal .app-nav-link:focus-visible {
+  color: var(--zn-ink) !important;
+  background-color: var(--zn-hover) !important;
+}
+html[data-zaray-theme] .zaray-flyout-portal .app-nav-link.active,
+html[data-zaray-theme] .app-no-sidebar .app-nav-flyout-panel .app-nav-link.active {
+  color: var(--zn-selected-ink) !important;
+  background-color: #21f728 !important;
+  background-image: linear-gradient(105deg,#21f728,#51e6b5) !important;
+  font-weight: 780;
+}
+html[data-zaray-theme] .zaray-flyout-portal .app-nav-link svg,
+html[data-zaray-theme] .app-no-sidebar .app-nav-dropdown svg {
+  color: currentColor !important;
+}
+html[data-zaray-theme] .zaray-flyout-portal :is(a,button):focus-visible,
+html[data-zaray-theme] .app-no-sidebar .app-nav-dropdown :is(a,button):focus-visible {
+  outline: 2px solid var(--zn-focus) !important;
+  outline-offset: 2px;
+}
