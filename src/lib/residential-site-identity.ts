@@ -1,5 +1,6 @@
 import 'server-only';
 import {createServiceClient} from '@/lib/supabase/service';
+import {siteLogoForSurface} from '@/lib/site-logo-variants';
 
 /** Public site identity: only owner-approved display fields, never credentials or private company data. */
 const hex=(v:unknown, fallback:string) => typeof v==='string' && /^#[0-9a-fA-F]{6}$/.test(v)?v:fallback;
@@ -10,7 +11,8 @@ const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]
 export type ResidentialSiteIdentity={
  siteId:string;siteName:string;companySlug:string;brandName:string;
  siteAddress:string;contactPhone:string;contactEmail:string;
- logoDataUri:string|null;primaryColor:string;secondaryColor:string;
+ logoDataUri:string|null;logoLightDataUri:string|null;logoDarkDataUri:string|null;
+ primaryColor:string;secondaryColor:string;
  accentColor:string;titleColor:string;welcomeMessage:string;
 };
 
@@ -22,11 +24,13 @@ export async function publicResidentialSite(siteId:string):Promise<ResidentialSi
   .select('id,company_id,name,status,address,contact_phone,contact_email').eq('id',siteId).maybeSingle();
  if(siteError)throw new Error('Site lookup unavailable');
  if(!site||site.status!=='active')return null;
- const [{data:company,error:companyError},{data:template,error:templateError}]=await Promise.all([
+ const [{data:company,error:companyError},{data:template,error:templateError},{data:variants}]=await Promise.all([
   service.from('companies').select('id,slug,status').eq('id',site.company_id).maybeSingle(),
   service.from('ticket_templates')
    .select('brand_name,logo_data_uri,primary_color,secondary_color,accent_color,title_color,welcome_message')
-   .eq('company_id',site.company_id).eq('site_id',siteId).is('offer_id',null).maybeSingle()
+   .eq('company_id',site.company_id).eq('site_id',siteId).is('offer_id',null).maybeSingle(),
+  service.from('site_brand_assets').select('light_data_uri,dark_data_uri')
+   .eq('company_id',site.company_id).eq('site_id',siteId).maybeSingle()
  ]);
  if(companyError||templateError)throw new Error('Site branding unavailable');
  if(!company||!['active','trial'].includes(company.status))return null;
@@ -36,7 +40,11 @@ export async function publicResidentialSite(siteId:string):Promise<ResidentialSi
   contactPhone:String(site.contact_phone||'').slice(0,32),
   contactEmail:String(site.contact_email||'').slice(0,254),
   brandName:(template?.brand_name||'').trim().slice(0,90)||site.name,
-  logoDataUri:logo(template?.logo_data_uri),
+  logoDataUri:siteLogoForSurface({logoLightDataUri:logo(variants?.light_data_uri),
+   logoDarkDataUri:logo(variants?.dark_data_uri),logoDataUri:logo(template?.logo_data_uri)},
+   hex(template?.secondary_color,'#ffffff')),
+  logoLightDataUri:logo(variants?.light_data_uri)??logo(template?.logo_data_uri),
+  logoDarkDataUri:logo(variants?.dark_data_uri)??logo(template?.logo_data_uri),
   primaryColor:hex(template?.primary_color,'#167a46'),
   secondaryColor:hex(template?.secondary_color,'#ffffff'),
   accentColor:hex(template?.accent_color,'#0e9f6e'),
