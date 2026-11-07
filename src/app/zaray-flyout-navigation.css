@@ -444,7 +444,8 @@ html[data-zaray-theme] .zaray-flyout-portal .app-nav-link:focus-visible {
 html[data-zaray-theme] .zaray-flyout-portal .app-nav-link.active,
 html[data-zaray-theme] .app-no-sidebar .app-nav-flyout-panel .app-nav-link.active {
   color: var(--zn-selected-ink) !important;
-  background: linear-gradient(105deg,#21f728,#51e6b5) !important;
+  background-color: #21f728 !important;
+  background-image: linear-gradient(105deg,#21f728,#51e6b5) !important;
   font-weight: 780;
 }
 html[data-zaray-theme] .zaray-flyout-portal .app-nav-link svg,
