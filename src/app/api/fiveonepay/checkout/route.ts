@@ -97,7 +97,7 @@ export async function POST(request:NextRequest){
    commission:created.commission,net_amount:created.net_amount,
    payable_amount:created.payable_amount,operator:created.operator||operator||null,
    expires_at:created.expires_at,updated_at:new Date().toISOString()
-  }).eq('id',attempt.id).eq('merchant_id',merchant.id);
+  }).eq('id',attempt.id).eq('merchant_id',merchant.id).in('status',['prepared','pending']);
   if(saveError){console.error('FiveOne checkout persistence failed',{code:saveError.code});
    return json({error:'Le paiement est préparé mais son lien n’est pas encore disponible. Réessayez.'},503);}
   return json({paymentUrl:created.payment_url,reference:attempt.internal_reference,
