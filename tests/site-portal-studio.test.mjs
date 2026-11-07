@@ -76,6 +76,19 @@ test('studio offers live preview, explicit publication and site-only restore/dup
  assert.match(adminPage,/\/portail\/editeur/);
 });
 
+test('site switch isolation prevents stale drafts, and permits first publication of the default design',()=>{
+ assert.match(studio,/const requestVersion=useRef\(0\)/);
+ assert.match(studio,/const ready=loadedSite===companyId\+':'\+siteId/);
+ assert.match(studio,/if\(token!==requestVersion\.current\)return/);
+ assert.match(studio,/if\(token===requestVersion\.current\)setBusy\(false\)/);
+ assert.match(studio,/setHistory\(''\);setSourceId\(''\)/);
+ assert.match(studio,/!ready\?<div className="empty-state">Configuration indisponible/);
+ assert.match(studio,/disabled=\{working\|\|!canEdit\|\|\(!dirty&&state\.revision>=0\)\}/);
+ assert.match(studio,/<select value=\{companyId\} disabled=\{working\}/);
+ assert.match(studio,/<select value=\{siteId\} disabled=\{working\}/);
+ for(const index of [1,2,3,4,5,6])assert.doesNotMatch(studio,new RegExp('<h3>'+index+'\\.'));
+});
+
 test('web portal applies published branding only and retains separate native authentication',()=>{
  assert.match(web,/\/api\/public\/site-portal\?siteId=/);
  assert.match(web,/readPortalConfig\(result\.published\)/);
