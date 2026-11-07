@@ -35,6 +35,26 @@ RLS activée, aucune permission directe `anon`/`authenticated`, service_role uni
 
 Les options d'affichage désactivent les liens visibles, **pas les autorisations réseau ou l'accès aux API métiers**. Le constructeur visuel n'a aucun accès au routeur ni à ses secrets.
 
+## Préparation de l'installation MikroTik
+
+Le Studio des portails contient désormais un volet **Installation MikroTik · état du site** :
+- état de la publication web du site ;
+- équipements associés au **même site et à la même entreprise** (une réponse périmée d'une autre entreprise n'est jamais affichée) ;
+- état de connexion du connecteur observé par ZARAY, sans déduire la présence du HTML sur le routeur ;
+- accès direct au module de réseau préfiltré sur ce site et au générateur existant de `login.html` ;
+- téléchargement de `api.json` pour la détection du HotSpot sur les terminaux compatibles.
+
+Les fichiers RouterOS restent à installer **dans le dossier HTML du serveur HotSpot concerné**, après sauvegarde :
+- `login.html` : export ZARAY personnalisé sur le dernier design publié ; il conserve les macros RouterOS et l'authentification locale CHAP/HTTPS.
+- `md5.js` : conserver **le fichier RouterOS d'origine** et les autres fichiers natifs nécessaires ; ne pas le supprimer.
+- `api.json` : modèle natif avec `$(if logged-in ...)` et `$(link-login-only)` ; facultatif si un fichier équivalent et fonctionnel existe déjà dans le routeur. Il est intentionnellement invalide en JSON brut, car les macros sont rendues par RouterOS.
+
+En cas de plusieurs HotSpots, veiller à ce que le bon profil pointe vers le dossier HTML de **ce** site. Ne jamais écraser le dossier d'un autre site sans validation. La détection DHCP du portail (`/api`) nécessite, sur RouterOS compatible, un DNS HotSpot et un certificat HTTPS valide pour ce nom. Il faut configurer le walled-garden sur les seuls services distants réellement nécessaires, sans ouvrir toute la navigation non authentifiée.
+
+**Important :** un connecteur « en ligne » prouve uniquement que le connecteur a contacté ZARAY récemment. Cela ne prouve ni que `login.html` a été transféré ni qu'un client peut accéder à Internet. Sans MikroTik enregistré, la seule préparation possible est l'export des fichiers et la configuration du site.
+
+Référence MikroTik : https://help.mikrotik.com/docs/spaces/ROS/pages/56459266/HotSpot+-+Captive+portal
+
 ## Export natif MikroTik
 
 1. Depuis **Tickets Wi-Fi > Personnalisation**, sélectionner le même site et *Tous les forfaits du site*.

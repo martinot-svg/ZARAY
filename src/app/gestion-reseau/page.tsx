@@ -58,11 +58,13 @@ export default function NetworkPage(){
  }
  useEffect(()=>{(async()=>{try{
   const r=await fetchWorkspaceDirectory();const data=await r.json();if(!r.ok)throw Error(data.error||'Sites indisponibles');
-  const id=new URLSearchParams(location.search).get('companyId')||data.companies?.[0]?.id||'';
+  const query=new URLSearchParams(location.search);
+  const id=query.get('companyId')||data.companies?.[0]?.id||'';
   const company=data.companies?.find((c:{id:string})=>c.id===id);
   if(!company)throw Error('Entreprise inaccessible.');
   setCompanyId(id);setRole(company.role);const list=(data.sites||[]).filter((s:Site)=>s.company_id===id);
-  setSites(list);setSiteId(list[0]?.id||'');await refresh(id);
+  const requestedSite=query.get('siteId')||'';
+  setSites(list);setSiteId(list.find((s:Site)=>s.id===requestedSite)?.id||list[0]?.id||'');await refresh(id);
  }catch(e){setError(e instanceof Error?e.message:'Erreur de chargement');}})();},[]);
  useEffect(()=>{if(!companyId)return;const handle=setInterval(()=>void refresh(companyId),30000);return()=>clearInterval(handle);},[companyId]);
  async function run(endpoint:string,payload:Record<string,unknown>,method='POST'){
