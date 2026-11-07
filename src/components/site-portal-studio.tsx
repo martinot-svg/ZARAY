@@ -3,7 +3,7 @@ import {useCallback,useEffect,useRef,useState,type CSSProperties,type ChangeEven
 import Link from 'next/link';
 import {Check,ChevronRight,Copy,Eye,History,Image as Picture,Monitor,RotateCcw,Save,Smartphone,UploadCloud,Wifi} from 'lucide-react';
 import AppShell from '@/components/app-shell';
-import {DEFAULT_PORTAL_CONFIG,PORTAL_TEMPLATES,type PortalConfig} from '@/lib/site-portal-config';
+import {DEFAULT_PORTAL_CONFIG,PORTAL_TEMPLATES,portalFieldPalette,type PortalConfig} from '@/lib/site-portal-config';
 import {downloadMikrotikCaptiveApi} from '@/lib/mikrotik-captive-api-download';
 import './site-portal-studio.css';
 
@@ -11,6 +11,7 @@ type Site={id:string;company_id:string;name:string;company_slug:string;status:st
 type Company={id:string;legal_name:string;slug:string;role:string};
 type Version={version:number;published_at:string};
 type PortalRouter={id:string;site_id:string;name:string;last_seen_at:string|null};
+type SiteLogoState={key:string;uri:string|null;loading:boolean;error:boolean};
 type RouterSnapshot={companyId:string;routers:PortalRouter[];error:boolean};
 type PortalState={draft:PortalConfig;revision:number;published:PortalConfig|null;
  publishedVersion:number;publishedAt:string|null;versions:Version[]};
@@ -34,9 +35,13 @@ async function request(url:string,init?:RequestInit){
  return data;
 }
 function previewCss(config:PortalConfig):CSSProperties{
+ const fields=portalFieldPalette(config);
  return {'--ps-primary':config.primaryColor,'--ps-accent':config.accentColor,
   '--ps-background':config.backgroundColor,'--ps-panel':config.panelColor,
-  '--ps-text':config.textColor,'--ps-radius':config.cornerRadius+'px'} as CSSProperties;
+  '--ps-text':config.textColor,'--ps-radius':config.cornerRadius+'px',
+  '--ps-input-bg':fields.background,'--ps-input-border':fields.border,
+  '--ps-input-focus':fields.focus,'--ps-input-text':fields.text,
+  '--ps-input-guide':fields.placeholder} as CSSProperties;
 }
 async function coverData(file:File):Promise<string>{
  if(!/^image\/(png|jpeg|webp)$/.test(file.type)||file.size>3_000_000)
@@ -80,6 +85,7 @@ export default function SitePortalStudio(){
  const [originalCoverName,setOriginalCoverName]=useState('');
  const [loadedSite,setLoadedSite]=useState('');
  const [routerSnapshot,setRouterSnapshot]=useState<RouterSnapshot|null>(null);
+ const [siteLogo,setSiteLogo]=useState<SiteLogoState|null>(null);
  const requestVersion=useRef(0);
  const company=companies.find(c=>c.id===companyId);
  const site=sites.find(s=>s.id===siteId);
@@ -89,6 +95,8 @@ export default function SitePortalStudio(){
  const publishedLink=company&&site?
   '/wifi/'+encodeURIComponent(company.slug)+'?siteId='+encodeURIComponent(site.id):'';
  const ready=loadedSite===companyId+':'+siteId;
+ const brandKey=companyId+':'+siteId;
+ const currentLogo=siteLogo?.key===brandKey?siteLogo:null;
  const linkedRouters=routerSnapshot?.companyId===companyId
   ?routerSnapshot.routers.filter(router=>router.site_id===siteId):[];
  const routerOnline=(lastSeen:string|null)=>!!lastSeen
@@ -129,6 +137,29 @@ export default function SitePortalStudio(){
   })();
   return()=>{live=false;};
  },[companyId]);
+
+ useEffect(()=>{
+  let active=true;
+  const key=companyId+':'+siteId;
+  setSiteLogo(null);
+  if(!companyId||!siteId)return;
+  setSiteLogo({key,uri:null,loading:true,error:false});
+  (async()=>{
+   try{
+    // The same site-only branding used for web and native MikroTik exports.
+    const data=await request('/api/ticket-templates?'+new URLSearchParams({companyId,siteId}));
+    if(!active)return;
+    const candidate=data.settings?.logo_data_uri;
+    const uri=typeof candidate==='string'&&candidate.length<=180000
+     &&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/i.test(candidate)
+      ?candidate:null;
+    setSiteLogo({key,uri,loading:false,error:false});
+   }catch{
+    if(active)setSiteLogo({key,uri:null,loading:false,error:true});
+   }
+  })();
+  return()=>{active=false;};
+ },[companyId,siteId]);
 
  const reload=useCallback(async(id:string,tenant:string)=>{
   // A response for a previously selected site must never replace another site's draft.
@@ -304,6 +335,20 @@ export default function SitePortalStudio(){
        {originalCoverName&&<p className="ps-hint">Fichier original sur votre appareil : {originalCoverName}</p>}
       </div>
       <div className="ps-section">
+       <h3>Champs de saisie</h3>
+       <div className="ps-colors">
+        {([
+         ['inputBackgroundColor','Fond des champs'],
+         ['inputBorderColor','Bordure des champs'],
+         ['inputFocusColor','Couleur au focus'],
+         ['inputTextColor','Texte saisi']
+        ] as const).map(([key,label])=><label key={key}>{label}
+         <input type="color" value={form[key]} onChange={e=>change(key,e.target.value)} disabled={!canEdit}/>
+        </label>)}
+       </div>
+       <p className="ps-hint">Les guides « Identifiant du ticket » et « Mot de passe » gardent un contraste lisible et une légère transparence, quelle que soit la couleur choisie.</p>
+      </div>
+      <div className="ps-section">
        <h3> Parcours visibles</h3>
        {options.map(({key,label,detail})=><label className="ps-check" key={key}>
         <input type="checkbox" checked={form[key] as boolean} disabled={!canEdit}
@@ -348,13 +393,16 @@ export default function SitePortalStudio(){
         style={previewCss(form)}>
         {form.coverImageDataUri&&<img className="ps-cover" alt="" src={form.coverImageDataUri}/>}
         <div className="ps-demo-card">
-         <div className="ps-brand-mark"><Wifi size={22}/></div>
-         <span className="ps-brand-name">{site.name}</span>
+         <div className="ps-site-logo" aria-label={'Logo du site '+site.name}>
+          {currentLogo?.uri
+           ?<img src={currentLogo.uri} alt={'Logo du site '+site.name}/>
+           :<span>{currentLogo?.loading?'Chargement du logo…':currentLogo?.error?'Logo indisponible':'Logo non configuré'}</span>}
+         </div>
          {form.welcomeMessage&&<span className="ps-kicker">{form.welcomeMessage}</span>}
          <h3>{form.headline||'Bienvenue chez '+site.name}</h3>
          <p>{form.subtitle||'Connectez-vous avec votre ticket.'}</p>
-         <div className="ps-demo-field">Identifiant du ticket</div>
-         <div className="ps-demo-field">Mot de passe</div>
+         <input className="ps-demo-field" readOnly tabIndex={-1} aria-label="Aperçu du champ identifiant" placeholder="Identifiant du ticket"/>
+         <input className="ps-demo-field" readOnly tabIndex={-1} aria-label="Aperçu du champ mot de passe" placeholder="Mot de passe"/>
          <div className="ps-demo-button"><Wifi size={17}/>{form.buttonLabel||'Se connecter'}<ChevronRight size={16}/></div>
          <div className="ps-demo-links">
           {form.showOffers&&<span>Voir les offres</span>}
