@@ -42,6 +42,8 @@ jobs:
         run: node tests/premium-visual-audit.mjs
       - name: Verify flyout curtain is visible above the dashboard
         run: node tests/flyout-curtain-visual.mjs
+      - name: Verify readable menus and curtain in both themes
+        run: node tests/flyout-theme-contrast-visual.mjs
       - name: Verify compact forms on desktop, tablet and mobile
         env:
           BASE_URL: http://127.0.0.1:3000
