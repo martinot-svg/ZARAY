@@ -5,6 +5,7 @@ import {Check,ChevronRight,Copy,Eye,History,Image as Picture,Monitor,RotateCcw,S
 import AppShell from '@/components/app-shell';
 import {DEFAULT_PORTAL_CONFIG,PORTAL_TEMPLATES,portalFieldPalette,type PortalConfig} from '@/lib/site-portal-config';
 import {downloadMikrotikCaptiveApi} from '@/lib/mikrotik-captive-api-download';
+import {optimizeLogo} from '@/lib/logo-optimizer';
 import './site-portal-studio.css';
 
 type Site={id:string;company_id:string;name:string;company_slug:string;status:string};
@@ -87,6 +88,8 @@ export default function SitePortalStudio(){
  const [routerSnapshot,setRouterSnapshot]=useState<RouterSnapshot|null>(null);
  const [siteLogo,setSiteLogo]=useState<SiteLogoState|null>(null);
  const requestVersion=useRef(0);
+ const logoVersion=useRef(0);
+ const logoSiteRef=useRef('');
  const company=companies.find(c=>c.id===companyId);
  const site=sites.find(s=>s.id===siteId);
  const peers=sites.filter(s=>s.company_id===companyId&&s.id!==siteId&&s.status==='active');
@@ -96,6 +99,7 @@ export default function SitePortalStudio(){
   '/wifi/'+encodeURIComponent(company.slug)+'?siteId='+encodeURIComponent(site.id):'';
  const ready=loadedSite===companyId+':'+siteId;
  const brandKey=companyId+':'+siteId;
+ logoSiteRef.current=brandKey;
  const currentLogo=siteLogo?.key===brandKey?siteLogo:null;
  const linkedRouters=routerSnapshot?.companyId===companyId
   ?routerSnapshot.routers.filter(router=>router.site_id===siteId):[];
@@ -140,6 +144,7 @@ export default function SitePortalStudio(){
 
  useEffect(()=>{
   let active=true;
+  const token=++logoVersion.current;
   const key=companyId+':'+siteId;
   setSiteLogo(null);
   if(!companyId||!siteId)return;
@@ -148,18 +153,54 @@ export default function SitePortalStudio(){
    try{
     // The same site-only branding used for web and native MikroTik exports.
     const data=await request('/api/ticket-templates?'+new URLSearchParams({companyId,siteId}));
-    if(!active)return;
+    if(!active||token!==logoVersion.current)return;
     const candidate=data.settings?.logo_data_uri;
     const uri=typeof candidate==='string'&&candidate.length<=180000
      &&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/i.test(candidate)
       ?candidate:null;
     setSiteLogo({key,uri,loading:false,error:false});
    }catch{
-    if(active)setSiteLogo({key,uri:null,loading:false,error:true});
+    if(active&&token===logoVersion.current)setSiteLogo({key,uri:null,loading:false,error:true});
    }
   })();
   return()=>{active=false;};
  },[companyId,siteId]);
+
+ const uploadSiteLogo=async(event:ChangeEvent<HTMLInputElement>)=>{
+  const file=event.target.files?.[0];
+  event.target.value='';
+  if(!file||!site||!canEdit||!ready||working)return;
+  const key=brandKey;
+  const token=++logoVersion.current;
+  setWorking(true);setError('');setNotice('');
+  try{
+   if(!/^image\/(png|webp)$/.test(file.type)||file.size>3_000_000||file.size===0)
+    throw Error('Choisissez un logo PNG ou WebP transparent, 3 Mo maximum.');
+   const input=await new Promise<string>((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>typeof reader.result==='string'?resolve(reader.result):reject(Error('Logo illisible.'));
+    reader.onerror=()=>reject(Error('Impossible de lire le logo.'));
+    reader.readAsDataURL(file);
+   });
+   const optimized=await optimizeLogo(input);
+   // Fetch the latest saved template before writing. Keep all ticket layout,
+   // credentials format and site contact settings unchanged.
+   const params=new URLSearchParams({companyId,siteId});
+   const current=await request('/api/ticket-templates?'+params);
+   if(!current.settings||typeof current.settings!=='object')
+    throw Error('Paramètres du site indisponibles.');
+   if(key!==logoSiteRef.current)return;
+   await request('/api/ticket-templates',{method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({...current.settings,companyId,siteId,
+     logo_data_uri:optimized.dataUri})});
+   if(key!==logoSiteRef.current||token!==logoVersion.current)return;
+   setSiteLogo({key,uri:optimized.dataUri,loading:false,error:false});
+   setNotice('Logo du site enregistré : visible sur le portail web et les tickets. Le prochain export MikroTik utilisera ce logo.');
+  }catch(e){
+   if(key===logoSiteRef.current)setError(e instanceof Error?e.message:'Enregistrement du logo impossible.');
+  }finally{setWorking(false);}
+ };
 
  const reload=useCallback(async(id:string,tenant:string)=>{
   // A response for a previously selected site must never replace another site's draft.
@@ -308,9 +349,15 @@ export default function SitePortalStudio(){
        <label>Sous-titre <textarea rows={2} maxLength={180} value={form.subtitle} onChange={e=>change('subtitle',e.target.value)} disabled={!canEdit}/></label>
        <label>Bouton de connexion <input maxLength={45} value={form.buttonLabel} onChange={e=>change('buttonLabel',e.target.value)} disabled={!canEdit}/></label>
        <label>Message d’accueil <input maxLength={180} value={form.welcomeMessage} onChange={e=>change('welcomeMessage',e.target.value)} disabled={!canEdit}/></label>
-       <p className="ps-hint">Le nom, le logo transparent et les coordonnées du site restent gérés dans l’identité existante.</p>
+       <div className="ps-site-logo-editor">
+        <label className="ps-single">Logo du site
+         <input type="file" accept="image/png,image/webp" aria-label="Importer le logo transparent de ce site"
+          disabled={!canEdit||working||!ready} onChange={e=>void uploadSiteLogo(e)}/>
+        </label>
+        <p className="ps-hint">PNG ou WebP transparent. ZARAY rogne les marges vides. Le logo est commun aux tickets et au portail.</p>
+       </div>
        <Link className="ps-external" href={'/personnalisation-tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)}>
-        Modifier l’identité et le logo du site <ChevronRight size={15}/>
+        Coordonnées et autres réglages des tickets <ChevronRight size={15}/>
        </Link>
       </div>
       <div className="ps-section">
