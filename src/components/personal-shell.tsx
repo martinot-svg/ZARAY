@@ -98,7 +98,7 @@ export default function PersonalShell({
             aria-current={active === link.href.split('?')[0] ? 'page' : undefined}
             className={'personal-nav-link' + (active === link.href.split('?')[0] ? ' active' : '')}
             onClick={() => setHomeNavOpen(false)}>
-            <ZarayIcon name={link.icon as ZarayIconName} size={19} /> {link.label}
+            <ZarayIcon name={link.icon as ZarayIconName} size={19} /> <span className="zaray-nav-label-text">{link.label}</span>
           </Link>)}
         </nav>
       </div>
@@ -112,7 +112,7 @@ export default function PersonalShell({
             <div className="topbar-icon-curtain-inner">
               <button type="button" className="topbar-icon-menu-action"
                 onClick={() => themeButtonRef.current?.click()}>
-                <ZarayIcon name="settings" size={18} /> Changer le thème
+                <ZarayIcon name="settings" size={18} /> <span className="zaray-nav-label-text">Changer le thème</span>
               </button>
             </div>
           </div>
@@ -126,7 +126,7 @@ export default function PersonalShell({
             <div className="topbar-icon-curtain" aria-label="Création d'entreprise">
               <div className="topbar-icon-curtain-inner">
                 <Link className="topbar-icon-menu-action" href="/entreprises/nouvelle">
-                  <ZarayIcon name="company" size={18} /> Créer une entreprise
+                  <ZarayIcon name="company" size={18} /> <span className="zaray-nav-label-text">Créer une entreprise</span>
                 </Link>
               </div>
             </div>
@@ -148,7 +148,7 @@ export default function PersonalShell({
           {inviteCompanyId ?
             <Link href="/z-alliance"
               className="personal-profile-action" onClick={() => setProfileOpen(false)}>
-              <ZarayIcon name="alliance" size={18} /> Z’Alliance
+              <ZarayIcon name="alliance" size={18} /> <span className="zaray-nav-label-text">Z’Alliance</span>
             </Link>
             : <span className="personal-profile-action is-disabled" aria-disabled="true"
                 title="Cette action nécessite le rôle de propriétaire ou d’administrateur d’une entreprise.">
@@ -171,7 +171,7 @@ export default function PersonalShell({
       {links.map(item => <Link key={'mobile-' + item.href} href={item.href}
         className={'personal-mobile-dock-link' + (active === item.href ? ' is-active' : '')}
         aria-current={active === item.href ? 'page' : undefined}>
-        <ZarayIcon name={item.icon as ZarayIconName} size={21}/><span>{item.label === 'Finances des entreprises' ? 'Finances' : item.label === 'Mes entreprises' ? 'Entreprises' : 'Accueil'}</span>
+        <ZarayIcon name={item.icon as ZarayIconName} size={21}/><span className="zaray-nav-label-text">{item.label === 'Finances des entreprises' ? 'Finances' : item.label === 'Mes entreprises' ? 'Entreprises' : 'Accueil'}</span>
       </Link>)}
     </nav>
   </div>;
