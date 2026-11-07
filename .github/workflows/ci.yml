@@ -61,6 +61,7 @@ jobs:
             tests/wifi-offline-preparation.test.mjs \
             tests/captive-site-logo-input-colors.test.mjs \
             tests/site-dual-logo-library.test.mjs \
-            tests/seamless-global-navigation.test.mjs
+            tests/seamless-global-navigation.test.mjs \
+            tests/site-performance-overview.test.mjs
       - run: npm run typecheck
       - run: npm run build
