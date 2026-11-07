@@ -58,9 +58,12 @@ export async function PUT(request:NextRequest){
   const a=await admin(companyId,siteId);
   if(a.error)return a.error;
   const service=a.service!;
-  const {data:existing,error:existingError}=await service.from('fiveonepay_merchants')
+  const existingQuery=service.from('fiveonepay_merchants')
    .select('id,api_key_ciphertext,webhook_secret_ciphertext').eq('company_id',companyId)
-   .eq('environment',environment).is('site_id',siteId||null).maybeSingle();
+   .eq('environment',environment);
+  const {data:existing,error:existingError}=await (
+   siteId?existingQuery.eq('site_id',siteId):existingQuery.is('site_id',null)
+  ).maybeSingle();
   if(existingError)return reply({error:'Compte marchand indisponible.'},503);
   if(!existing&&(!apiKey||!webhookSecret))
    return reply({error:'Les deux secrets sont obligatoires pour créer un compte marchand.'},400);
