@@ -27,8 +27,9 @@ function safeSvg(buffer:Buffer):Buffer{
  // SVG originals are never served to a public browser: only sanitized content
  // is rasterized by Sharp and private originals remain unmodified.
  contents=contents.replace(/<!--[\s\S]*?-->/g,'').replace(/^\s*<\?xml[^?]*\?>\s*/i,'').trim();
- const forbidden=/<!(?:DOCTYPE|ENTITY)|<\?|<\s*\/?\s*(?:script|foreignObject|iframe|image|use|animate|set|animateMotion|animateTransform|style|filter|fe[a-z]+|video|audio|object|embed)\b|\bon[a-z][\w-]*\s*=|\b(?:href|src|xlink:href|style)\s*=|\b(?:javascript:|data:|@import|expression\s*\(|url\s*\()/i;
- if(forbidden.test(contents))throw Error('SVG non sécurisé : scripts, références externes ou contenus actifs interdits.');
+ const forbidden=/<!(?:DOCTYPE|ENTITY)|<!\[|<\?|<\s*\/?\s*(?:script|foreignObject|iframe|image|use|animate|set|animateMotion|animateTransform|style|filter|fe[a-z]+|video|audio|object|embed)\b|\bon[a-z][\w-]*\s*=|\b(?:href|src|xlink:href|style)\s*=|\b(?:javascript:|data:|@import|expression\s*\(|url\s*\()/i;
+ if(forbidden.test(contents)||/&(?!(?:amp|lt|gt|quot|apos);)/i.test(contents))
+  throw Error('SVG non sécurisé : scripts, références externes ou contenus actifs interdits.');
  if(!/^<svg\b[\s\S]*<\/svg>\s*$/i.test(contents))throw Error('Fichier SVG invalide.');
  const allowed=new Set(['svg','g','path','rect','circle','ellipse','line','polyline','polygon','defs','lineargradient','radialgradient','stop','clippath','text','tspan','title','desc']);
  for(const match of contents.matchAll(/<\s*\/?\s*([a-zA-Z][a-zA-Z0-9:-]*)\b/g)){
@@ -62,7 +63,8 @@ export async function processSiteLogoFile(bytes:Buffer,originalName:string,mime:
  let left=width,top=height,right=-1,bottom=-1,transparent=false;
  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
   const a=alpha[y*width+x];
-  if(a===0){transparent=true;continue;}
+  if(a<255)transparent=true;
+  if(a===0)continue;
   if(x<left)left=x;
   if(y<top)top=y;
   if(x>right)right=x;
