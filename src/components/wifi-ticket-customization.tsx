@@ -8,6 +8,8 @@ import {paletteFromLogo} from '@/lib/logo-palette';
 import {optimizeLogo} from '@/lib/logo-optimizer';
 import {downloadMikrotikCaptiveApi} from '@/lib/mikrotik-captive-api-download';
 import SiteLogoManager from '@/components/site-logo-manager';
+import {fetchWorkspaceDirectory} from '@/lib/workspace-directory-request';
+import {selectedCompany} from '@/lib/workspace-url';
 import {siteLogoForSurface} from '@/lib/site-logo-variants';
 
 type Site={id:string;company_id:string;name:string};
@@ -36,10 +38,11 @@ export default function WifiTicketCustomization(){
  const [error,setError]=useState(''),[notice,setNotice]=useState('');
  useEffect(()=>{let active=true;(async()=>{
    try{
-     const qs=new URLSearchParams(window.location.search),company=qs.get('companyId')??'';
-     if(!company){window.location.replace('/entreprises');return;}
-     const r=await fetch('/api/sites',{cache:'no-store'}),d=await r.json();
+     const qs=new URLSearchParams(window.location.search);
+     const r=await fetchWorkspaceDirectory(),d=await r.json();
      if(!r.ok)throw Error(d.error||'Entreprises indisponibles.');
+    const company=selectedCompany(d.companies??[],d.sites??[]);
+    if(!company)throw Error('Aucune entreprise accessible.');
      const found=(d.companies??[]).find((c:{id:string})=>c.id===company);
      if(!found)throw Error('Entreprise inaccessible.');
      const siteList=(d.sites??[]).filter((s:Site)=>s.company_id===company);
