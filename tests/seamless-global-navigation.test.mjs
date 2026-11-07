@@ -32,7 +32,7 @@ test('tenant directory data is session-bound, memory-only and short-lived',()=>{
  assert.match(directory,/inFlight: Promise<Response> \| null/);
  assert.match(directory,/response\.clone\(\)/);
  assert.match(directory,/snapshot\.expires>Date\.now\(\)/);
- assert.match(directory,/event.*SIGNED_OUT/);
+ assert.match(directory,/'SIGNED_OUT'/);
  assert.match(directory,/cache:'no-store'/);
  assert.match(directory,/invalidateWorkspaceDirectory/);
  assert.doesNotMatch(directory,/localStorage|sessionStorage|setTimeout/);
