@@ -55,10 +55,8 @@ export async function PATCH(request:NextRequest){
  if(!stored&&(!lightPath||!darkPath))
   return respond({error:'Importez les deux versions du logo pour initialiser ce site.'},400);
  try{
-  const [light,dark]=await Promise.all([
-   lightPath?processStoredSiteLogo(service,lightPath,companyId,access.user.id):Promise.resolve(null),
-   darkPath?processStoredSiteLogo(service,darkPath,companyId,access.user.id):Promise.resolve(null)
-  ]);
+  const light=lightPath?await processStoredSiteLogo(service,lightPath,companyId,access.user.id):null;
+  const dark=darkPath?await processStoredSiteLogo(service,darkPath,companyId,access.user.id):null;
   const finalLightPath=light?.path??stored?.light_original_path??'';
   const finalDarkPath=dark?.path??stored?.dark_original_path??'';
   const finalLight=light?.preview??stored?.light_data_uri??'';
