@@ -165,7 +165,20 @@
     transform: translateX(0) scaleX(1);
     clip-path: inset(0 0 0 0 round 16px);
   }
-  .app-no-sidebar .app-nav-flyout-trigger.is-active svg:last-child { transform: rotate(180deg); }
+  /* When the main menu is near the left side, the curtain can unfold rightward. */
+  .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown[data-flyout-side="right"] .app-nav-flyout-panel {
+    right: auto;
+    left: calc(100% - 2px);
+    transform-origin: left center;
+    transform: translateX(-12px) scaleX(.88);
+    clip-path: inset(0 100% 0 0 round 16px);
+  }
+  .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown[data-flyout-side="right"] .app-nav-flyout-panel.is-open {
+    transform: translateX(0) scaleX(1);
+    clip-path: inset(0 0 0 0 round 16px);
+  }
+  /* The trigger and its flyout overlap by two pixels: no gap for the cursor to cross. */
+    .app-no-sidebar .app-nav-flyout-trigger.is-active svg:last-child { transform: rotate(180deg); }
 }
 @media (max-width: 849px), (hover: none), (pointer: coarse), (max-height: 579px) {
   .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown {
