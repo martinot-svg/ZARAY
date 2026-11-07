@@ -30,6 +30,7 @@ export default function PersonalShell({
 }: Props) {
   const [homeNavOpen, setHomeNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [homeNavAlign, setHomeNavAlign] = useState<'start' | 'end'>('start');
   const displayName = name?.trim() || email?.split('@')[0] || 'Utilisateur ZARAY';
   const personalModuleTitle = ({
     '/entreprises': 'Mes entreprises',
@@ -54,6 +55,12 @@ export default function PersonalShell({
   const profileRef = useRef<HTMLDivElement>(null);
   const themeButtonRef = useRef<HTMLButtonElement>(null);
   const hoverMenus = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  function alignHomeMenu() {
+    const bounds = homeNavRef.current?.getBoundingClientRect();
+    if (!bounds || window.innerWidth <= 500) return;
+    const width = Math.min(390, window.innerWidth - 24);
+    setHomeNavAlign(bounds.left + width > window.innerWidth - 12 ? 'end' : 'start');
+  }
 
   // Only anchored dropdowns: no permanent or off-canvas black sidebar.
   useEffect(() => {
@@ -82,13 +89,13 @@ export default function PersonalShell({
     <header className="personal-topbar">
       <Link href="/mon-compte" className="personal-logo" aria-label="Accueil personnel ZARAY"><BrandLogo priority /></Link>
       {active !== '/mon-compte' && personalModuleTitle && <h1 className="personal-topbar-module-title" title={personalModuleTitle}>{personalModuleTitle}</h1>}
-      <div className="personal-home-nav-control" ref={homeNavRef}
-        onMouseEnter={() => { if (hoverMenus()) { setHomeNavOpen(true); setProfileOpen(false); } }}
+      <div className="personal-home-nav-control" ref={homeNavRef} data-menu-align={homeNavAlign}
+        onMouseEnter={() => { if (hoverMenus()) { alignHomeMenu(); setHomeNavOpen(true); setProfileOpen(false); } }}
         onMouseLeave={() => { if (hoverMenus() && !homeNavRef.current?.contains(document.activeElement)) setHomeNavOpen(false); }}>
         <button ref={homeNavButton} type="button" className="personal-home-nav-toggle"
           aria-controls="personal-home-navigation-links" aria-expanded={homeNavOpen}
           aria-label="Ouvrir la navigation de mon espace ZARAY"
-          onClick={() => { setHomeNavOpen(value => !value); setProfileOpen(false); }}>
+          onClick={() => { if (!homeNavOpen) alignHomeMenu(); setHomeNavOpen(value => !value); setProfileOpen(false); }}>
           <ZarayIcon name="menu" size={22}/>
         </button>
         <nav id="personal-home-navigation-links" aria-label="Navigation du compte personnel"
