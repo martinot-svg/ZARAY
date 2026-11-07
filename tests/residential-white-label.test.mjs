@@ -24,7 +24,9 @@ test('public branding is restricted to the selected active site and site-level t
  assert.match(site,/\.eq\('id',siteId\)/);
  assert.match(site,/\.eq\('company_id',site.company_id\)/);
  assert.match(site,/\.eq\('site_id',siteId\)\.is\('offer_id',null\)/);
- assert.match(site,/logoDataUri:logo\(template\?\.logo_data_uri\)/);
+ assert.match(site,/logoLightDataUri:logo\(variants\?\.light_data_uri\)/);
+ assert.match(site,/logoDarkDataUri:logo\(variants\?\.dark_data_uri\)/);
+ assert.match(site,/logoDataUri:siteLogoForSurface/);
  assert.doesNotMatch(site,/process\.env\.NEXT_PUBLIC_SUPABASE_SECRET/);
  const api=read('src/app/api/public/residential-site/route.ts');
  assert.match(api,/publicResidentialSite\(siteId\)/);
