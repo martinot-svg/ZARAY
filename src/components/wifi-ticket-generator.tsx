@@ -4,10 +4,25 @@ import { ZarayIcon } from '@/components/ui/zaray-icon';
 import VoucherCanvas from '@/components/voucher-canvas';
 import { generateA4Pdf, generateA4Jpegs, generateSingleTicketJpeg, requireVoucherLogo, voucherPages, type PrintableVoucher, type TicketVisual } from '@/lib/ticket-pdf';
 type Site={id:string;company_id:string;name:string;status:string};
-type Offer={id:string;name:string;status:string};
+type Offer={id:string;name:string;status:string;price_amount:number|string;currency:string;duration_minutes:number;validity_days:number};
 type Router={id:string;site_id:string;name:string;control_enabled:boolean;last_seen_at:string|null};
 type Batch={batchId:string;createdAt:string;count:number;ready:number;activated:number;pending:number;expired:number;printed:number;offerId:string};
 const defaultVisual:TicketVisual={logo_data_uri:null,primary_color:'#167a46',secondary_color:'#ffffff',title_color:'#10251a',border_color:'#a5b9ad',font_family:'Arial',username_length:5,password_length:5};
+/** Browser-only specimen data. Not stored, not provisioned, never suitable for sale. */
+function demonstrationTickets(offer:Offer,quantity:number):PrintableVoucher[]{
+ return Array.from({length:quantity},(_,index)=>({
+  id:'DEMONSTRATION-'+String(index+1).padStart(3,'0'),
+  username:'DEMO',
+  password:'0000',
+  offer_name:offer.name,
+  price_amount:offer.price_amount,
+  currency:offer.currency,
+  duration_minutes:offer.duration_minutes,
+  validity_days:offer.validity_days,
+  status:'demo'
+ }));
+}
+
 export default function WifiTicketGenerator(){
  const [companyId,setCompanyId]=useState(''),[companyName,setCompanyName]=useState('');
  const [sites,setSites]=useState<Site[]>([]),[siteId,setSiteId]=useState('');
@@ -138,6 +153,20 @@ export default function WifiTicketGenerator(){
   }catch(e){setError(e instanceof Error?e.message:'Génération impossible.');}
   finally{setBusy(false);}
  }
+ async function downloadDemoSheet(){
+  const offer=offers.find(value=>value.id===offerId);
+  const site=sites.find(value=>value.id===siteId);
+  if(!offer||!site||site.status!=='active'||busy)return;
+  setBusy(true);setError('');
+  try{
+   // No API call or persistence: a fictitious PDF with an unavoidable watermark.
+   const specimens=demonstrationTickets(offer,count);
+   const file=await generateA4Pdf({siteName:site.name,design,tickets:specimens});
+   downloadFile(file,'ZARAY-DEMONSTRATION-NON-VALABLE.pdf');
+  }catch(e){
+   setError(e instanceof Error?e.message:'Aperçu PDF indisponible.');
+  }finally{setBusy(false);}
+ }
  async function download(){
   setBusy(true);setError('');
   try{
@@ -149,6 +178,8 @@ export default function WifiTicketGenerator(){
   finally{setBusy(false);}
  }
  const chosen=sites.find(s=>s.id===siteId);
+ const demonstrationOffer=offers.find(o=>o.id===offerId);
+ const specimen=demonstrationOffer?demonstrationTickets(demonstrationOffer,1)[0]:null;
  const availableRouters=routers.filter(r=>r.site_id===siteId&&r.control_enabled&&r.last_seen_at&&Date.now()-new Date(r.last_seen_at).getTime()<180000);
  const selectedRouterId=availableRouters.some(r=>r.id===routerId)?routerId:(availableRouters[0]?.id??'');
  return <>
@@ -164,13 +195,23 @@ export default function WifiTicketGenerator(){
     <label>Quantité<select value={count} onChange={e=>{setCount(Number(e.target.value));setTickets([]);}}>{[1,11,33,66,99].map(n=><option key={n} value={n}>{n} ticket{n>1?'s':''}</option>)}</select></label>
    </div>
    
-   {!availableRouters.length&&<p className="alert" role="status">Aucun MikroTik autorisé n’est connecté à ce site. <a href={'/gestion-reseau?companyId='+encodeURIComponent(companyId)}>Associer et activer le routeur</a>.</p>}
+   {!availableRouters.length&&<p className="alert" role="status">Mode préparation : aucun MikroTik actif pour ce site. Vous pouvez voir un ticket fictif et télécharger un PDF d’exemple, sans générer de vrais identifiants. <a href={'/gestion-reseau?companyId='+encodeURIComponent(companyId)}>Gestion réseau</a>.</p>}
    <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
     <button type="button" className="primary-link" disabled={!companyId||!siteId||!offerId||!selectedRouterId||busy||chosen?.status!=='active'} onClick={create}><ZarayIcon name="ticket" size={16}/>{busy?'Génération…':'Générer un lot unique'}</button>
     <a href={'/tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)+'&tab=customize'}>Personnaliser l'apparence</a>
    </div>
    {error&&<p className="alert alert-error" role="alert">{error}</p>}
   </section>
+  {specimen&&chosen?.status==='active'&&<section className="panel" style={{padding:18,marginBottom:16}}>
+   <h2>Aperçu sans MikroTik</h2>
+   <p className="muted">Démonstration du modèle enregistré pour {chosen.name} et l’offre {demonstrationOffer?.name}. Les identifiants DEMO / 0000 sont fictifs, ne donnent jamais accès à Internet et ne sont ni enregistrés ni vendables.</p>
+   <div style={{maxWidth:600,margin:'12px 0'}}>
+    <VoucherCanvas preview ticket={specimen} design={design} siteName={chosen.name}/>
+   </div>
+   <button type="button" disabled={busy} onClick={()=>void downloadDemoSheet()}>
+    <ZarayIcon name="download" size={16}/> Télécharger le PDF de démonstration ({count} tickets non valables)
+   </button>
+  </section>}
   <details className="workspace-disclosure"><summary>Lots et stock</summary><section className="panel" style={{padding:18,marginBottom:16}}>
    <h2>Lots et stock de tickets préimprimés</h2>
    
