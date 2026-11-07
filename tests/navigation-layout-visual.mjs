@@ -122,6 +122,15 @@ try {
       await page.locator('.personal-shell').evaluate((el,show)=>el.style.display=show?'block':'none',mode==='personal');
       await page.locator('#desktop-curtain').evaluate((el,show)=>el.style.display=show?'grid':'none',
         mode==='company'&&viewport.width>=850);
+      if (mode==='personal') {
+        // Apply the same trigger-side selection used by PersonalShell at open time.
+        await page.locator('.personal-home-nav-control').evaluate(el=>{
+          const rect=el.getBoundingClientRect();
+          const width=Math.min(390,innerWidth-24);
+          el.setAttribute('data-menu-align',
+            rect.left+width>innerWidth-12?'end':'start');
+        });
+      }
       // Check each menu independently to avoid fixture-only overlap.
       for(const openSelector of mode==='company'
         ? ['#app-menu-fixture','#site-fixture',...(viewport.width>=850?['#desktop-curtain']:[])]
