@@ -135,3 +135,15 @@
  .ps-publication{align-items:flex-start}
 }
 @media(prefers-reduced-motion:reduce){.ps-studio button:not(.ps-template){transition:none}}
+
+/* Collapsible local-router installation: compact unless the administrator opens it. */
+.ps-installation{border:1px solid rgba(155,205,220,.22);border-radius:13px;padding:10px 12px;display:grid;gap:9px}
+.ps-installation summary{cursor:pointer;font-size:12px;font-weight:750;color:var(--zf-heading,#f5fffb)}
+.ps-installation[open]{padding-bottom:14px}
+.ps-installation .ps-hint{margin:7px 0;font-size:11px;line-height:1.55}
+.ps-router-list{list-style:none;margin:8px 0;padding:0;display:grid;gap:6px}
+.ps-router-list li{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 10px;padding:8px;border-radius:9px;background:rgba(130,185,220,.08);font-size:11px}
+.ps-router-list span{color:var(--zf-muted,#b4d0ce)}
+.ps-installation-actions{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;margin:8px 0}
+.ps-installation-actions button{border:1px solid rgba(140,202,220,.45);border-radius:9px;padding:9px 11px;color:var(--zf-heading,#eafff9);background:rgba(35,115,125,.12);font-size:12px}
+.ps-installation-actions button:disabled{opacity:.5}
