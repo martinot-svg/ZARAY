@@ -183,19 +183,14 @@ export default function SitePortalStudio(){
     reader.readAsDataURL(file);
    });
    const optimized=await optimizeLogo(input);
-   // Fetch the latest saved template before writing. Keep all ticket layout,
-   // credentials format and site contact settings unchanged.
-   const params=new URLSearchParams({companyId,siteId});
-   const current=await request('/api/ticket-templates?'+params);
-   if(!current.settings||typeof current.settings!=='object')
-    throw Error('Paramètres du site indisponibles.');
+   // Narrow endpoint updates the logo only; voucher styles and credentials
+   // settings remain untouched even when another administrator edits them.
    if(key!==logoSiteRef.current)return;
-   await request('/api/ticket-templates',{method:'PUT',
+   const result=await request('/api/ticket-templates',{method:'PATCH',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({...current.settings,companyId,siteId,
-     logo_data_uri:optimized.dataUri})});
+    body:JSON.stringify({companyId,siteId,logoDataUri:optimized.dataUri})});
    if(key!==logoSiteRef.current||token!==logoVersion.current)return;
-   setSiteLogo({key,uri:optimized.dataUri,loading:false,error:false});
+   setSiteLogo({key,uri:result.logoDataUri,loading:false,error:false});
    setNotice('Logo du site enregistré : visible sur le portail web et les tickets. Le prochain export MikroTik utilisera ce logo.');
   }catch(e){
    if(key===logoSiteRef.current)setError(e instanceof Error?e.message:'Enregistrement du logo impossible.');
