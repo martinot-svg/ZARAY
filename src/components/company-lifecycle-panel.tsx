@@ -2,6 +2,7 @@
 
 import {useState,type FormEvent} from 'react';
 import {useRouter} from 'next/navigation';
+import {invalidateWorkspaceDirectory} from '@/lib/workspace-directory-request';
 import {ZarayIcon} from '@/components/ui/zaray-icon';
 
 type Company={
@@ -41,6 +42,7 @@ export default function CompanyLifecyclePanel({company}:{company:Company}){
    const data=await response.json().catch(()=>({}));
    if(!response.ok)throw Error(data.error||'Opération indisponible.');
    if(action==='delete'&&data.deleted!==true)throw Error('Suppression non confirmée.');
+   invalidateWorkspaceDirectory();
    if(action==='delete'){router.replace('/entreprises');router.refresh();return;}
    setNotice(action==='deactivate'
     ?'Entreprise suspendue dans ZARAY. Aucune connexion Wi-Fi déjà établie n’a été coupée automatiquement.'
