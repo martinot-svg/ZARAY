@@ -4,6 +4,7 @@ import { ZarayIcon } from '@/components/ui/zaray-icon';
 import StandaloneModuleHeader from '@/components/standalone-module-header';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import {invalidateWorkspaceDirectory} from '@/lib/workspace-directory-request';
 
 import { useState, type FormEvent } from 'react';
 
@@ -26,6 +27,7 @@ export default function NouvelleEntreprise() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Échec de création');
+      invalidateWorkspaceDirectory();
       setCreated(data.company);
       if (typeof data.company?.id === 'string') router.replace('/tableau-de-bord?companyId='+encodeURIComponent(data.company.id));
     } catch (error) {
