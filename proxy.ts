@@ -100,7 +100,7 @@ function customHostResponse(request:NextRequest,site:SiteDomain|null){
   '/api/residential/account','/api/residential/notifications',
   '/api/residential/notification-preferences',
   '/api/residential/alarm-schedule',
-  '/api/public/wifi-offers'
+  '/api/public/wifi-offers','/api/fiveonepay/availability'
  ]);
  if(ownSiteRoutes.has(path)&&search.get('siteId')===site.siteId)
   return NextResponse.next({request});
@@ -119,6 +119,8 @@ function customHostResponse(request:NextRequest,site:SiteDomain|null){
  if(path==='/api/portal/'+site.companySlug+'/payment-methods')
   return NextResponse.next({request});
  if(path==='/api/manual-payments/submit'&&request.method==='POST')
+  return NextResponse.next({request});
+ if(path==='/api/fiveonepay/checkout'&&request.method==='POST')
   return NextResponse.next({request});
  return denied();
 }
