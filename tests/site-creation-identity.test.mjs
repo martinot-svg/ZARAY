@@ -29,17 +29,17 @@ test('every new site is created with name address email phone and branded identi
 test('the site creation UI requires five fields and live cropped-logo previews',()=>{
  const form=read('src/components/site-create-form.tsx');
  const page=read('src/app/sites/page.tsx');
- for(const key of ['setName','setAddress','setEmail','setPhone','setLogoDataUri']){
+ for(const key of ['setName','setAddress','setEmail','setPhone','setFiles']){
   assert.ok(form.includes(key),key);
  }
  assert.match(form,/type="email"/);
  assert.match(form,/type="tel"/);
- assert.match(form,/accept="image\/png,image\/webp"/);
+ assert.match(form,/accept="image\/png,image\/svg\+xml,image\/webp"/);
  assert.match(form,/optimizeLogo\(uri\)/);
  assert.match(form,/paletteFromLogo\(optimized\.dataUri\)/);
- assert.match(form,/APERÇU TICKET/);
- assert.match(form,/APERÇU PORTAIL CAPTIF/);
- assert.match(form,/!logoDataUri/);
+ assert.match(form,/uploadOriginalSiteLogo\(files\.light,companyId,'light'\)/);
+ assert.match(form,/uploadOriginalSiteLogo\(files\.dark,companyId,'dark'\)/);
+ assert.match(form,/!files\.light\|\|!files\.dark/);
  assert.match(page,/SiteCreateForm/);
  assert.match(page,/canCreate=/);
  assert.match(page,/\['owner','admin'\]/);
