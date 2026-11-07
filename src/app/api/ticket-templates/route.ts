@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { authorizeTenant } from '@/lib/tenant-context';
+import {createServiceClient} from '@/lib/supabase/service';
+import {siteLogoForSurface} from '@/lib/site-logo-variants';
 import sharp from 'sharp';
 export const dynamic = 'force-dynamic';
 const headers = { 'Cache-Control': 'no-store' };
@@ -46,7 +48,18 @@ export async function GET(request:NextRequest){
     const base=(data??[]).find(r=>r.offer_id===null) as Row|undefined;
     const override=offerId?(data??[]).find(r=>r.offer_id===offerId) as Row|undefined:null;
     const settings={...defaults,...Object.fromEntries(Object.keys(defaults).map(key=>[key,override?.[key as keyof Row]??base?.[key as keyof Row]??defaults[key as keyof typeof defaults]])),logo_data_uri:base?.logo_data_uri??null};
-    return NextResponse.json({settings,siteConfigured:!!base,offerConfigured:!!override},{headers});
+    // Legacy fallback is kept for sites that have not imported both variants.
+    const service=createServiceClient();
+    const {data:pair}=service?await service.from('site_brand_assets')
+      .select('light_data_uri,dark_data_uri').eq('company_id',companyId).eq('site_id',siteId).maybeSingle()
+      :{data:null};
+    const light=pair?.light_data_uri??base?.logo_data_uri??null;
+    const dark=pair?.dark_data_uri??base?.logo_data_uri??null;
+    const chosen=siteLogoForSurface({logoLightDataUri:light,logoDarkDataUri:dark},
+      String(settings.secondary_color??'#ffffff'));
+    return NextResponse.json({settings:{...settings,logo_data_uri:chosen,
+      logo_light_data_uri:light,logo_dark_data_uri:dark},
+      siteConfigured:!!base,offerConfigured:!!override},{headers});
   }catch{return fail('Service indisponible.',503);}
 }
 export async function PUT(request:NextRequest){
@@ -131,7 +144,12 @@ export async function PUT(request:NextRequest){
           }
         }
       }
-      values.logo_data_uri=logo as string|null;
+      // Template saves cannot override a centrally managed logo.
+      const backend=createServiceClient();
+      const {data:central}=backend?await backend.from('site_brand_assets')
+       .select('light_data_uri').eq('company_id',companyId).eq('site_id',siteId).maybeSingle()
+       :{data:null};
+      values.logo_data_uri=central?.light_data_uri??(logo as string|null);
     }
     const {error:writeError}=await supabase.from('ticket_templates').upsert({
       company_id:companyId,site_id:siteId,offer_id:offerId,...values,updated_at:new Date().toISOString(),
