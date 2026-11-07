@@ -102,8 +102,8 @@ export default function SitePerformanceOverview({companyId,siteId}:{
    </div>
    <div className="sp-metric-grid">
     {[
-     ['Tickets vendus',visible.tickets.sold,'Ventes comptabilisées sur la période'],
-     ['Stock non vendu',visible.tickets.stock,'Tickets enregistrés non vendus'],
+     ['Tickets vendus',visible.tickets.sold,'Ventes effectivement enregistrées sur la période'],
+     ['Codes non activés',visible.tickets.stock,'Statut disponible dans ZARAY'],
      ['Prêts à vendre',visible.tickets.ready,'Provisionnés sur MikroTik'],
      ['À préparer',visible.tickets.unprepared,'Sans confirmation réseau'],
      ['Premières connexions',visible.tickets.firstConnections,'Activations réseau sur la période']
@@ -144,7 +144,7 @@ export default function SitePerformanceOverview({companyId,siteId}:{
    <details className="sp-details">
     <summary>Comprendre les indicateurs</summary>
     <p>Revenus = paiements d’abonnement confirmés + ventes enregistrées en caisse + ventes historiques de vouchers comptabilisées. La première connexion à un HotSpot ne prouve jamais l’encaissement d’espèces.</p>
-    <p>Le stock représente les vouchers non vendus. « Prêts » indique une confirmation de provisionnement réseau ; sans MikroTik, il peut rester à zéro. Les échéances dépassées et les abonnements inactifs peuvent se recouper : ces compteurs ne doivent pas être additionnés.</p>
+    <p>Les codes disponibles ne prouvent pas le stock physique réellement remis aux clients : une vente de ticket préimprimé non enregistrée en caisse peut rester invisible. « Prêts » signifie provisionnés sur MikroTik ; sans routeur, ce nombre peut rester à zéro. Les échéances dépassées et les abonnements inactifs peuvent se recouper : ces compteurs ne doivent pas être additionnés.</p>
     <p>Les encaissements suivent la période sélectionnée. Les états « en retard », « échec », « inactif » et « à activer » représentent la situation actuelle. Les tentatives de paiement échouées sur la période : {number(visible.subscriptions.failedAttempts)}.</p>
    </details>
   </>}
