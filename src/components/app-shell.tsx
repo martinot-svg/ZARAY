@@ -117,10 +117,12 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
     : sections.flatMap(section => section.items).find(([path]) => path === activePath)?.[1]) || 'Espace de travail';
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeFlyout, setActiveFlyout] = useState<number | null>(null);
+  const [flyoutSide, setFlyoutSide] = useState<'left' | 'right'>('left');
   const [siteOpen, setSiteOpen] = useState(false);
   const siteButton = useRef<HTMLButtonElement>(null);
   const siteContainer = useRef<HTMLDivElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const menuDropdown = useRef<HTMLElement>(null);
   const firstMenuLink = useRef<HTMLAnchorElement>(null);
   const menuContainer = useRef<HTMLDivElement>(null);
   const hoverMenus = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -143,6 +145,16 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
     document.addEventListener('pointerdown', closeOutside);
     return () => { window.removeEventListener('keydown', closeOnEscape); document.removeEventListener('pointerdown', closeOutside); };
   }, [menuOpen, siteOpen, activeFlyout]);
+
+  // Keep flyouts visible: open towards the side with available viewport space.
+  function chooseFlyoutSide() {
+    if (!hoverMenus()) return;
+    const menuBounds = menuDropdown.current?.getBoundingClientRect();
+    if (!menuBounds) return;
+    const spaceRight = window.innerWidth - menuBounds.right;
+    const spaceLeft = menuBounds.left;
+    setFlyoutSide(spaceRight >= 310 || (spaceRight >= 250 && spaceRight > spaceLeft) ? 'right' : 'left');
+  }
 
   function selectSite(next: string) {
     setSiteOpen(false);
@@ -171,15 +183,14 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
         <h1 className="app-topbar-title" title={moduleTitle}>{moduleTitle}</h1>
         <div className="app-topbar-links">
         <div className="app-menu-container" ref={menuContainer}
-          onMouseEnter={() => { if (hoverMenus()) { setMenuOpen(true); setSiteOpen(false); } }}
           onMouseLeave={() => { if (hoverMenus() && !menuContainer.current?.contains(document.activeElement)) { setMenuOpen(false); setActiveFlyout(null); } }}>
           <button ref={menuButton} className="app-menu-button" type="button"
             aria-controls="zaray-app-nav" aria-expanded={menuOpen}
             aria-label="Ouvrir la navigation de l’entreprise"
-            onClick={() => { setMenuOpen(value => !value); setActiveFlyout(null); setSiteOpen(false); }}>
+            onClick={() => { if (!menuOpen) chooseFlyoutSide(); setMenuOpen(value => !value); setActiveFlyout(null); setSiteOpen(false); }}>
             <ZarayIcon name="menu" size={22} /><span className="topbar-icon-label">Menu</span>
           </button>
-          <nav id="zaray-app-nav"
+          <nav id="zaray-app-nav" ref={menuDropdown} data-flyout-side={flyoutSide}
             className={'app-nav-dropdown' + (menuOpen ? ' is-open' : '')}
             aria-label="Navigation de l’entreprise" inert={!menuOpen} aria-hidden={!menuOpen}>
             <div className="app-nav-current-context" aria-label="Contexte de travail">
