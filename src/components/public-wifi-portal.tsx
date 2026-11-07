@@ -9,10 +9,12 @@ import BrandLogo from '@/components/brand-logo';
 import {subscriberAccountName} from '@/lib/residential-site-labels';
 import {legibleInk} from '@/lib/ticket-pdf';
 import {readPortalConfig,portalFieldPalette,type PortalConfig} from '@/lib/site-portal-config';
+import {siteLogoForSurface} from '@/lib/site-logo-variants';
 
 type Offer={id:string;name:string;description?:string;durationMinutes:number;validityDays?:number;priceAmount:number;currency:string;maxDevices?:number};
 type ResidentialSite={id:string;name:string;status:string};
-type PublicIdentity={siteId:string;companySlug:string;brandName:string;siteName:string;logoDataUri:string|null;primaryColor:string;secondaryColor:string;accentColor:string;titleColor:string;contactPhone?:string;contactEmail?:string;siteAddress?:string};
+type PublicIdentity={siteId:string;companySlug:string;brandName:string;siteName:string;logoDataUri:string|null;logoLightDataUri?:string|null;logoDarkDataUri?:string|null;
+ primaryColor:string;secondaryColor:string;accentColor:string;titleColor:string;contactPhone?:string;contactEmail?:string;siteAddress?:string};
 type Method={provider:'orange_money'|'mvola';accountNumber:string;accountName:string;instructions:string};
 type Order={reference:string;status:string;amount:number;currency:string;offer_name:string};
 type Mode='home'|'ticket'|'subscribe'|'order';
@@ -198,6 +200,8 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
  const ticketCount=ticketOffers.length;
  const currentIdentity=siteIdentity?.siteId===selectedSiteId&&siteIdentity.companySlug===slug?siteIdentity:null;
  const displayBrand=demo?'ZARAY WIFI':currentIdentity?.brandName||siteName||companyName;
+ const displayedSiteLogo=siteLogoForSurface(currentIdentity,
+  portalDesign?.panelColor||currentIdentity?.secondaryColor||'#102334');
  const fieldColors=portalDesign?portalFieldPalette(portalDesign):null;
  const realBrandStyle=slug&&(currentIdentity||portalDesign)?{
   '--zw-accent':portalDesign?.primaryColor||currentIdentity?.primaryColor||'#167a46',
@@ -243,8 +247,8 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
       {portalDesign?.coverImageDataUri&&<img className="zw-studio-cover" src={portalDesign.coverImageDataUri} alt="" aria-hidden="true"/>}
       <div className="zw-simple-brand" aria-label={displayBrand}>
        {slug
-        ?currentIdentity?.logoDataUri
-         ?<img className="zw-simple-logo zw-site-logo" src={currentIdentity.logoDataUri} alt={'Logo du site '+(currentIdentity.siteName||displayBrand)}/>
+        ?displayedSiteLogo
+         ?<img className="zw-simple-logo zw-site-logo" src={displayedSiteLogo} alt={'Logo du site '+(currentIdentity?.siteName||displayBrand)}/>
          :<span className="zw-site-logo-fallback">Logo non configuré</span>
         :<><span className="zw-simple-emblem"><Wifi size={30} strokeWidth={2.4}/></span>
           <BrandLogo className="zw-simple-logo" surface="dark"/></>}
