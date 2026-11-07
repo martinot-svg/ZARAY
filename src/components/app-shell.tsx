@@ -215,6 +215,13 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
       ? '/sites/' + encodeURIComponent(next) + '?companyId=' + encodeURIComponent(activeCompany)
       : '/tableau-de-bord?companyId=' + encodeURIComponent(activeCompany));
   }
+  function getFlyoutItems(index: number): FlyoutItem[] {
+    const section = flyoutSections[index];
+    const items: FlyoutItem[] = section.label === 'Pilotage'
+      ? [{ href: 'site-dashboard', label: 'Tableau de bord du site' }, ...section.items]
+      : section.items;
+    return items.filter(item => !item.siteOnly || !!activeSite);
+  }
   function scopedHref(href: string) {
     if (href === 'site-dashboard') {
       const companySites = sites.filter(site => site.company_id === activeCompany);
@@ -258,9 +265,7 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
             </div>
             <div className="app-nav-rail" aria-label="Rubriques principales">
               {flyoutSections.map((section, index) => {
-                const items: FlyoutItem[] = section.label === 'Pilotage'
-                  ? [{ href: 'site-dashboard', label: 'Tableau de bord du site' }, ...section.items]
-                  : section.items;
+                const items = getFlyoutItems(index);
                 return <div className="app-nav-flyout" key={section.label}
                   onMouseEnter={event => { if (hoverMenus()) openFlyout(index, event.currentTarget); }}>
                   <button type="button"
@@ -279,7 +284,7 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
                     aria-hidden={desktopFlyout || activeFlyout !== index}
                     inert={desktopFlyout || activeFlyout !== index || !menuOpen}>
                     <div className="app-nav-flyout-heading">{section.label}</div>
-                    {items.filter(item => !item.siteOnly || activeSite).map(item => {
+                    {items.map(item => {
                       const href = scopedHref(item.href);
                       return <Link key={item.href} href={href}
                         ref={item.href === '/tableau-de-bord' ? firstMenuLink : undefined}
@@ -358,10 +363,7 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
           role="group" aria-label={'Sous-menu ' + flyoutSections[activeFlyout].label}
           onMouseEnter={cancelMenuClose} onMouseLeave={scheduleMenuClose}>
           <div className="app-nav-flyout-heading">{flyoutSections[activeFlyout].label}</div>
-          {(flyoutSections[activeFlyout].label === 'Pilotage'
-            ? [{ href: 'site-dashboard', label: 'Tableau de bord du site' }, ...flyoutSections[activeFlyout].items]
-            : flyoutSections[activeFlyout].items)
-            .filter(item => !item.siteOnly || activeSite)
+          {getFlyoutItems(activeFlyout)
             .map(item => <Link key={item.href} href={scopedHref(item.href)}
               className={'app-nav-link' + (activePath === item.href ? ' active' : '')}
               aria-current={activePath === item.href ? 'page' : undefined}
