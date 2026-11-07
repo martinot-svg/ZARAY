@@ -12,7 +12,7 @@ import {readPortalConfig,portalFieldPalette,type PortalConfig} from '@/lib/site-
 
 type Offer={id:string;name:string;description?:string;durationMinutes:number;validityDays?:number;priceAmount:number;currency:string;maxDevices?:number};
 type ResidentialSite={id:string;name:string;status:string};
-type PublicIdentity={brandName:string;siteName:string;logoDataUri:string|null;primaryColor:string;secondaryColor:string;accentColor:string;titleColor:string;contactPhone?:string;contactEmail?:string;siteAddress?:string};
+type PublicIdentity={siteId:string;companySlug:string;brandName:string;siteName:string;logoDataUri:string|null;primaryColor:string;secondaryColor:string;accentColor:string;titleColor:string;contactPhone?:string;contactEmail?:string;siteAddress?:string};
 type Method={provider:'orange_money'|'mvola';accountNumber:string;accountName:string;instructions:string};
 type Order={reference:string;status:string;amount:number;currency:string;offer_name:string};
 type Mode='home'|'ticket'|'subscribe'|'order';
@@ -123,7 +123,8 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
  },[slug]);
 
  useEffect(()=>{
-  if(!slug||!selectedSiteId){setSiteIdentity(null);return;}
+  setSiteIdentity(null);
+  if(!slug||!selectedSiteId)return;
   let active=true;
   requestJson('/api/public/residential-site?siteId='+encodeURIComponent(selectedSiteId))
    .then(result=>{if(active)setSiteIdentity(result.site as PublicIdentity);})
@@ -195,18 +196,19 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
  const selectedOffer=subscriptionOffers.find(o=>o.id===selectedSubscription);
  const destination=validSlug?'/wifi/'+encodeURIComponent(slugEntry.trim().toLowerCase()):'';
  const ticketCount=ticketOffers.length;
- const displayBrand=demo?'ZARAY WIFI':siteIdentity?.brandName||siteName||companyName;
+ const currentIdentity=siteIdentity?.siteId===selectedSiteId&&siteIdentity.companySlug===slug?siteIdentity:null;
+ const displayBrand=demo?'ZARAY WIFI':currentIdentity?.brandName||siteName||companyName;
  const fieldColors=portalDesign?portalFieldPalette(portalDesign):null;
- const realBrandStyle=slug&&(siteIdentity||portalDesign)?{
-  '--zw-accent':portalDesign?.primaryColor||siteIdentity?.primaryColor||'#167a46',
-  '--zw-cyan':portalDesign?.accentColor||siteIdentity?.accentColor||'#0e9f6e',
-  '--zw-site-primary':portalDesign?.primaryColor||siteIdentity?.primaryColor||'#167a46',
-  '--zw-site-accent':portalDesign?.accentColor||siteIdentity?.accentColor||'#0e9f6e',
-  '--zw-site-secondary':portalDesign?.panelColor||siteIdentity?.secondaryColor||'#102334',
-  '--zw-site-title':portalDesign?.textColor||siteIdentity?.titleColor||'#f6fafe',
+ const realBrandStyle=slug&&(currentIdentity||portalDesign)?{
+  '--zw-accent':portalDesign?.primaryColor||currentIdentity?.primaryColor||'#167a46',
+  '--zw-cyan':portalDesign?.accentColor||currentIdentity?.accentColor||'#0e9f6e',
+  '--zw-site-primary':portalDesign?.primaryColor||currentIdentity?.primaryColor||'#167a46',
+  '--zw-site-accent':portalDesign?.accentColor||currentIdentity?.accentColor||'#0e9f6e',
+  '--zw-site-secondary':portalDesign?.panelColor||currentIdentity?.secondaryColor||'#102334',
+  '--zw-site-title':portalDesign?.textColor||currentIdentity?.titleColor||'#f6fafe',
   '--zw-site-background':portalDesign?.backgroundColor||'#071528',
   '--zw-site-corners':(portalDesign?.cornerRadius??21)+'px',
-  '--zw-site-button-ink':legibleInk('#10251a',portalDesign?.primaryColor||siteIdentity?.primaryColor||'#167a46'),
+  '--zw-site-button-ink':legibleInk('#10251a',portalDesign?.primaryColor||currentIdentity?.primaryColor||'#167a46'),
   '--zw-input-bg':fieldColors?.background,
   '--zw-input-border':fieldColors?.border,
   '--zw-input-focus':fieldColors?.focus,
@@ -241,8 +243,8 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
       {portalDesign?.coverImageDataUri&&<img className="zw-studio-cover" src={portalDesign.coverImageDataUri} alt="" aria-hidden="true"/>}
       <div className="zw-simple-brand" aria-label={displayBrand}>
        {slug
-        ?siteIdentity?.logoDataUri
-         ?<img className="zw-simple-logo zw-site-logo" src={siteIdentity.logoDataUri} alt={'Logo du site '+(siteIdentity.siteName||displayBrand)}/>
+        ?currentIdentity?.logoDataUri
+         ?<img className="zw-simple-logo zw-site-logo" src={currentIdentity.logoDataUri} alt={'Logo du site '+(currentIdentity.siteName||displayBrand)}/>
          :<span className="zw-site-logo-fallback">Logo non configuré</span>
         :<><span className="zw-simple-emblem"><Wifi size={30} strokeWidth={2.4}/></span>
           <BrandLogo className="zw-simple-logo" surface="dark"/></>}
@@ -263,11 +265,11 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
       </form>
       {ticketMessage&&<p className="zw-simple-alert" role="status">{ticketMessage}</p>}
       {(portalDesign?.showSubscribe??true)&&<button type="button" className="zw-simple-subscribe" onClick={()=>toMode('subscribe')}><House size={18}/> Devenir un abonné de {companyName} <ArrowRight size={18}/></button>}
-      {!demo&&selectedSiteId&&(portalDesign?.showAccount??true)&&<Link className="zw-simple-offers-link zw-resident-account-link" href={siteBrandedHost?'/mycompte/me':'/mon-internet/'+encodeURIComponent(selectedSiteId)}><ShieldCheck size={17}/> {subscriberAccountName({brandName:siteIdentity?.brandName||displayBrand,siteName:siteIdentity?.siteName||siteName||displayBrand})} <ArrowRight size={14}/></Link>}
+      {!demo&&selectedSiteId&&(portalDesign?.showAccount??true)&&<Link className="zw-simple-offers-link zw-resident-account-link" href={siteBrandedHost?'/mycompte/me':'/mon-internet/'+encodeURIComponent(selectedSiteId)}><ShieldCheck size={17}/> {subscriberAccountName({brandName:currentIdentity?.brandName||displayBrand,siteName:currentIdentity?.siteName||siteName||displayBrand})} <ArrowRight size={14}/></Link>}
       {(portalDesign?.showOffers??true)&&<button type="button" className="zw-simple-offers-link" onClick={()=>setOffersDialog(true)}>Voir les offres Wi-Fi {ticketCount>0?'('+ticketCount+')':''} <ArrowRight size={14}/></button>}
       <div className="zw-simple-footer">
        {(portalDesign?.showContact??true)&&<span>Fournisseur : <strong>{companyName}</strong></span>}
-       {!demo&&(portalDesign?.showContact??true)&&(siteIdentity?.contactPhone||siteIdentity?.contactEmail)&&<span>{[siteIdentity.contactPhone,siteIdentity.contactEmail].filter(Boolean).join(' · ')}</span>}
+       {!demo&&(portalDesign?.showContact??true)&&(currentIdentity?.contactPhone||currentIdentity?.contactEmail)&&<span>{[currentIdentity.contactPhone,currentIdentity.contactEmail].filter(Boolean).join(' · ')}</span>}
        <span>{demo?'Démonstration : aucun accès Internet activé':'Connexion effective via le portail MikroTik du site'}</span>
        {portalDesign?.termsText&&<details className="zw-portal-legal"><summary>Conditions d’utilisation</summary><p>{portalDesign.termsText}</p></details>}
        {portalDesign?.privacyText&&<details className="zw-portal-legal"><summary>Confidentialité</summary><p>{portalDesign.privacyText}</p></details>}
