@@ -8,7 +8,7 @@ import './public-wifi-portal-themes.css';
 import BrandLogo from '@/components/brand-logo';
 import {subscriberAccountName} from '@/lib/residential-site-labels';
 import {legibleInk} from '@/lib/ticket-pdf';
-import {readPortalConfig,type PortalConfig} from '@/lib/site-portal-config';
+import {readPortalConfig,portalFieldPalette,type PortalConfig} from '@/lib/site-portal-config';
 
 type Offer={id:string;name:string;description?:string;durationMinutes:number;validityDays?:number;priceAmount:number;currency:string;maxDevices?:number};
 type ResidentialSite={id:string;name:string;status:string};
@@ -196,6 +196,7 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
  const destination=validSlug?'/wifi/'+encodeURIComponent(slugEntry.trim().toLowerCase()):'';
  const ticketCount=ticketOffers.length;
  const displayBrand=demo?'ZARAY WIFI':siteIdentity?.brandName||siteName||companyName;
+ const fieldColors=portalDesign?portalFieldPalette(portalDesign):null;
  const realBrandStyle=slug&&(siteIdentity||portalDesign)?{
   '--zw-accent':portalDesign?.primaryColor||siteIdentity?.primaryColor||'#167a46',
   '--zw-cyan':portalDesign?.accentColor||siteIdentity?.accentColor||'#0e9f6e',
@@ -206,6 +207,11 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
   '--zw-site-background':portalDesign?.backgroundColor||'#071528',
   '--zw-site-corners':(portalDesign?.cornerRadius??21)+'px',
   '--zw-site-button-ink':legibleInk('#10251a',portalDesign?.primaryColor||siteIdentity?.primaryColor||'#167a46'),
+  '--zw-input-bg':fieldColors?.background,
+  '--zw-input-border':fieldColors?.border,
+  '--zw-input-focus':fieldColors?.focus,
+  '--zw-input-text':fieldColors?.text,
+  '--zw-input-guide':fieldColors?.placeholder,
  } as CSSProperties:undefined;
  return <div className={mode==='home'?'zw-root zw-landing':'zw-root'} data-site-branded={slug?'true':undefined} data-portal-template={portalDesign?.template} data-portal-align={portalDesign?.align} style={realBrandStyle}>
   <div className="zw-sky" aria-hidden="true"/><div className="zw-mesh" aria-hidden="true"/>
@@ -234,11 +240,12 @@ export default function PublicWifiPortal({slug,linkedSiteId='',startInSubscripti
      <div className="zw-simple-card">
       {portalDesign?.coverImageDataUri&&<img className="zw-studio-cover" src={portalDesign.coverImageDataUri} alt="" aria-hidden="true"/>}
       <div className="zw-simple-brand" aria-label={displayBrand}>
-       {slug&&siteIdentity?.logoDataUri
-         ?<img className="zw-simple-logo zw-site-logo" src={siteIdentity.logoDataUri} alt={'Logo '+displayBrand}/>
-         :<span className="zw-simple-emblem"><Wifi size={30} strokeWidth={2.4}/></span>}
-       {demo&&<BrandLogo className="zw-simple-logo" surface="dark"/>}
-       {slug&&!siteIdentity?.logoDataUri&&<strong className="zw-site-name">{displayBrand}</strong>}
+       {slug
+        ?siteIdentity?.logoDataUri
+         ?<img className="zw-simple-logo zw-site-logo" src={siteIdentity.logoDataUri} alt={'Logo du site '+(siteIdentity.siteName||displayBrand)}/>
+         :<span className="zw-site-logo-fallback">Logo non configuré</span>
+        :<><span className="zw-simple-emblem"><Wifi size={30} strokeWidth={2.4}/></span>
+          <BrandLogo className="zw-simple-logo" surface="dark"/></>}
       </div>
       <div className="zw-simple-heading">
        <span className="zw-simple-eyebrow">{portalDesign?.welcomeMessage||'PORTAIL WIFI · '+(siteName||'CONNEXION')}</span>
