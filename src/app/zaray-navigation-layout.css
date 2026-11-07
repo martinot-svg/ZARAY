@@ -433,3 +433,16 @@ html[data-zaray-theme] .personal-no-sidebar :is(.personal-home-nav-menu,.persona
     transition: none !important;
   }
 }
+
+/* On pointer devices, dropdown alignment is selected from the real trigger
+   position: a tablet's menu must never fall off the right edge. */
+@media(min-width:501px) {
+  html[data-zaray-theme] .personal-no-sidebar .personal-home-nav-control[data-menu-align="end"] .personal-home-nav-menu {
+    left: auto !important;
+    right: 0 !important;
+  }
+  html[data-zaray-theme] .personal-no-sidebar .personal-home-nav-control[data-menu-align="start"] .personal-home-nav-menu {
+    left: 0 !important;
+    right: auto !important;
+  }
+}
