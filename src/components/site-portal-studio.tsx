@@ -1,5 +1,5 @@
 'use client';
-import {useCallback,useEffect,useMemo,useState,type CSSProperties,type ChangeEvent} from 'react';
+import {useCallback,useEffect,useRef,useState,type CSSProperties,type ChangeEvent} from 'react';
 import Link from 'next/link';
 import {Check,ChevronRight,Copy,Eye,History,Image as Picture,Monitor,RotateCcw,Save,Smartphone,UploadCloud,Wifi} from 'lucide-react';
 import AppShell from '@/components/app-shell';
@@ -75,6 +75,8 @@ export default function SitePortalStudio(){
  const [sourceId,setSourceId]=useState('');
  const [history,setHistory]=useState('');
  const [originalCoverName,setOriginalCoverName]=useState('');
+ const [loadedSite,setLoadedSite]=useState('');
+ const requestVersion=useRef(0);
  const company=companies.find(c=>c.id===companyId);
  const site=sites.find(s=>s.id===siteId);
  const peers=sites.filter(s=>s.company_id===companyId&&s.id!==siteId&&s.status==='active');
@@ -82,7 +84,7 @@ export default function SitePortalStudio(){
  const dirty=JSON.stringify(form)!==JSON.stringify(state.draft);
  const publishedLink=company&&site?
   '/wifi/'+encodeURIComponent(company.slug)+'?siteId='+encodeURIComponent(site.id):'';
- const params=useMemo(()=>new URLSearchParams({companyId,siteId}),[companyId,siteId]);
+ const ready=loadedSite===companyId+':'+siteId;
 
  useEffect(()=>{
   let live=true;
@@ -106,16 +108,25 @@ export default function SitePortalStudio(){
  },[]);
 
  const reload=useCallback(async(id:string,tenant:string)=>{
-  if(!id||!tenant)return;
-  setBusy(true);setError('');setNotice('');
+  // A response for a previously selected site must never replace another site's draft.
+  const token=++requestVersion.current;
+  setState(initial);setForm(DEFAULT_PORTAL_CONFIG);setLoadedSite('');
+  setHistory('');setSourceId('');setOriginalCoverName('');
+  setError('');setNotice('');
+  if(!id||!tenant){setBusy(false);return;}
+  setBusy(true);
   try{
    const data=await request('/api/site-portal?'+new URLSearchParams({companyId:tenant,siteId:id}));
+   if(token!==requestVersion.current)return;
    const result:PortalState={draft:data.draft,revision:data.revision,
     published:data.published,publishedVersion:data.publishedVersion,
     publishedAt:data.publishedAt,versions:data.versions||[]};
-   setState(result);setForm(result.draft);setOriginalCoverName('');
-  }catch(e){setError(e instanceof Error?e.message:'Configuration indisponible.');}
-  finally{setBusy(false);}
+   setState(result);setForm(result.draft);setLoadedSite(tenant+':'+id);
+  }catch(e){
+   if(token===requestVersion.current)setError(e instanceof Error?e.message:'Configuration indisponible.');
+  }finally{
+   if(token===requestVersion.current)setBusy(false);
+  }
  },[]);
  useEffect(()=>{void reload(siteId,companyId);},[siteId,companyId,reload]);
 
@@ -123,7 +134,7 @@ export default function SitePortalStudio(){
   setForm(before=>({...before,[key]:value}));setNotice('');
  }
  const save=async()=>{
-  if(!site||!canEdit)return;
+  if(!site||!canEdit||!ready||working)return;
   setWorking(true);setError('');setNotice('');
   try{
    const data=await request('/api/site-portal',{method:'PUT',
@@ -135,7 +146,7 @@ export default function SitePortalStudio(){
   finally{setWorking(false);}
  };
  const publish=async()=>{
-  if(!site||!canEdit||dirty||state.revision<1)return;
+  if(!site||!canEdit||!ready||working||dirty||state.revision<1)return;
   if(!window.confirm('Publier cette version pour '+site.name+' ? Le portail de ce site sera mis à jour.'))return;
   setWorking(true);setError('');
   try{
@@ -149,7 +160,7 @@ export default function SitePortalStudio(){
  };
  const restore=async()=>{
   const version=Number(history);
-  if(!site||!canEdit||dirty||!version)return;
+  if(!site||!canEdit||!ready||working||dirty||!version)return;
   if(!window.confirm('Restaurer la version '+version+' dans le brouillon de '+site.name+' ? Le portail actuel restera publié.'))return;
   setWorking(true);setError('');
   try{
@@ -161,7 +172,7 @@ export default function SitePortalStudio(){
   finally{setWorking(false);}
  };
  const duplicate=async()=>{
-  if(!site||!sourceId||!canEdit||dirty)return;
+  if(!site||!sourceId||!canEdit||!ready||working||dirty)return;
   if(!window.confirm('Copier le portail PUBLIÉ du site source dans le brouillon de '+site.name+' ? Cela remplacera son brouillon, pas son portail public.'))return;
   setWorking(true);setError('');
   try{
@@ -174,7 +185,7 @@ export default function SitePortalStudio(){
   finally{setWorking(false);}
  };
  const upload=async(event:ChangeEvent<HTMLInputElement>)=>{
-  const file=event.target.files?.[0];if(!file)return;
+  const file=event.target.files?.[0];if(!file||!ready||working)return;
   setWorking(true);setError('');
   try{
    const processed=await coverData(file);
@@ -191,12 +202,12 @@ export default function SitePortalStudio(){
     <div><h2>Portail de mon site</h2><p>Personnalisez, prévisualisez puis publiez. La connexion Wi-Fi reste gérée par MikroTik.</p></div>
     <div className="ps-site-selects">
      <label>Entreprise
-      <select value={companyId} onChange={e=>{const id=e.target.value;setCompanyId(id);setSiteId(sites.find(s=>s.company_id===id)?.id||'');}}>
+      <select value={companyId} disabled={working} onChange={e=>{if(dirty&&ready&&!window.confirm('Abandonner les modifications non enregistrées ?'))return;const id=e.target.value;setCompanyId(id);setSiteId(sites.find(s=>s.company_id===id)?.id||'');}}>
        {companies.map(c=><option key={c.id} value={c.id}>{c.legal_name}</option>)}
       </select>
      </label>
      <label>Site
-      <select value={siteId} onChange={e=>setSiteId(e.target.value)}>
+      <select value={siteId} disabled={working} onChange={e=>{if(dirty&&ready&&!window.confirm('Abandonner les modifications non enregistrées ?'))return;setSiteId(e.target.value);}}>
        {sites.filter(s=>s.company_id===companyId).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
       </select>
      </label>
@@ -204,13 +215,13 @@ export default function SitePortalStudio(){
    </div>
    {error&&<p className="ps-alert" role="alert">{error}</p>}
    {notice&&<p className="ps-notice" role="status">{notice}</p>}
-   {busy?<p role="status">Chargement de l’éditeur…</p>:!site?<div className="empty-state">Créez un site avant de personnaliser son portail.</div>:<>
+   {busy?<p role="status">Chargement de l’éditeur…</p>:!site?<div className="empty-state">Créez un site avant de personnaliser son portail.</div>:!ready?<div className="empty-state">Configuration indisponible. <button type="button" onClick={()=>void reload(siteId,companyId)}>Réessayer</button></div>:<>
     <div className="ps-publication">
      <span><span className={'ps-live-dot'+(state.published?' is-on':'')}/>
       {state.published?'Portail publié · version '+state.publishedVersion:'Aucun design personnalisé publié'}</span>
      <span>{dirty?'Modifications non enregistrées':state.revision>=1?'Brouillon enregistré':'Configuration par défaut'}</span>
      <div className="ps-commands">
-      <button type="button" onClick={()=>void save()} disabled={working||!canEdit||!dirty}><Save size={16}/> Enregistrer</button>
+      <button type="button" onClick={()=>void save()} disabled={working||!canEdit||(!dirty&&state.revision>=0)}><Save size={16}/> Enregistrer</button>
       <button type="button" className="ps-publish" onClick={()=>void publish()} disabled={working||!canEdit||dirty||state.revision<1||site.status!=='active'}><UploadCloud size={17}/> Publier</button>
       <button type="button" className="ps-muted" onClick={()=>{setForm(state.draft);setNotice('Modifications locales annulées.');}} disabled={!dirty||working}><RotateCcw size={15}/> Annuler</button>
      </div>
@@ -218,7 +229,7 @@ export default function SitePortalStudio(){
     <div className="ps-columns">
      <section className="ps-controls" aria-label="Réglages du portail">
       <div className="ps-section">
-       <h3>1. Choisir un modèle</h3>
+       <h3> Choisir un modèle</h3>
        <div className="ps-template-grid">
         {PORTAL_TEMPLATES.map(t=><button type="button" key={t.key}
          className={'ps-template'+(form.template===t.key?' is-selected':'')}
@@ -227,7 +238,7 @@ export default function SitePortalStudio(){
        </div>
       </div>
       <div className="ps-section ps-inputs">
-       <h3>2. Textes et identité</h3>
+       <h3> Textes et identité</h3>
        <label>Titre de bienvenue <input maxLength={85} value={form.headline} onChange={e=>change('headline',e.target.value)} disabled={!canEdit}/></label>
        <label>Sous-titre <textarea rows={2} maxLength={180} value={form.subtitle} onChange={e=>change('subtitle',e.target.value)} disabled={!canEdit}/></label>
        <label>Bouton de connexion <input maxLength={45} value={form.buttonLabel} onChange={e=>change('buttonLabel',e.target.value)} disabled={!canEdit}/></label>
@@ -238,7 +249,7 @@ export default function SitePortalStudio(){
        </Link>
       </div>
       <div className="ps-section">
-       <h3>3. Couleurs et mise en page</h3>
+       <h3> Couleurs et mise en page</h3>
        <div className="ps-colors">{colors.map(({key,label})=><label key={key}>{label}
         <input type="color" value={form[key] as string} onChange={e=>change(key,e.target.value)} disabled={!canEdit}/>
        </label>)}</div>
@@ -259,7 +270,7 @@ export default function SitePortalStudio(){
        {originalCoverName&&<p className="ps-hint">Fichier original sur votre appareil : {originalCoverName}</p>}
       </div>
       <div className="ps-section">
-       <h3>4. Parcours visibles</h3>
+       <h3> Parcours visibles</h3>
        {options.map(({key,label,detail})=><label className="ps-check" key={key}>
         <input type="checkbox" checked={form[key] as boolean} disabled={!canEdit}
          onChange={e=>change(key,e.target.checked)}/>
@@ -268,12 +279,12 @@ export default function SitePortalStudio(){
        <p className="ps-hint">Ces réglages n’ajoutent aucun droit d’accès réseau et ne modifient pas le MikroTik.</p>
       </div>
       <div className="ps-section ps-inputs">
-       <h3>5. Mentions et confidentialité</h3>
+       <h3> Mentions et confidentialité</h3>
        <label>Conditions d’utilisation <textarea rows={3} maxLength={1500} value={form.termsText} onChange={e=>change('termsText',e.target.value)} disabled={!canEdit}/></label>
        <label>Politique de confidentialité <textarea rows={3} maxLength={1500} value={form.privacyText} onChange={e=>change('privacyText',e.target.value)} disabled={!canEdit}/></label>
       </div>
       <div className="ps-section">
-       <h3>6. Versions et duplication</h3>
+       <h3> Versions et duplication</h3>
        <label className="ps-single"><History size={16}/> Restaurer dans le brouillon
         <select value={history} onChange={e=>setHistory(e.target.value)} disabled={!canEdit}>
          <option value="">Choisir une version</option>
