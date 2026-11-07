@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { authorizeTenant } from '@/lib/tenant-context';
 import sharp from 'sharp';
+import {normalizeTransparentSiteLogo} from '@/lib/site-logo-server';
 export const dynamic = 'force-dynamic';
 const headers = { 'Cache-Control': 'no-store' };
 const fail = (error: string, status: number) => NextResponse.json({ error }, { status, headers });
@@ -49,6 +50,56 @@ export async function GET(request:NextRequest){
     return NextResponse.json({settings,siteConfigured:!!base,offerConfigured:!!override},{headers});
   }catch{return fail('Service indisponible.',503);}
 }
+/**
+ * Shared site logo only. Unlike PUT, this never writes ticket colors, credentials
+ * lengths, offers or other site identity fields. A missing base template is
+ * created with its default values resolved by the existing GET endpoint.
+ */
+export async function PATCH(request:NextRequest){
+ const origin=request.headers.get('origin');
+ if(origin&&origin!==request.nextUrl.origin)return fail('Origine non autorisée.',403);
+ const body=await request.json().catch(()=>null) as Record<string,unknown>|null;
+ const companyId=typeof body?.companyId==='string'?body.companyId:'';
+ const siteId=typeof body?.siteId==='string'?body.siteId:'';
+ const incoming=body?.logoDataUri;
+ if(!companyId||!siteId||typeof incoming!=='string')
+  return fail('Entreprise, site et logo transparent requis.',400);
+ try{
+  const {supabase,access,error}=await authorized(companyId,siteId,null);
+  if(error)return error;
+  if(!access.ok||!['owner','admin'].includes(access.member.role))
+   return fail('Droits de configuration insuffisants.',403);
+  let normalized:{dataUri:string};
+  try{normalized=await normalizeTransparentSiteLogo(incoming);}
+  catch(e){return fail(e instanceof Error?e.message:'Logo transparent invalide.',400);}
+  const {data:stored,error:readError}=await supabase.from('ticket_templates')
+   .select('id').eq('company_id',companyId).eq('site_id',siteId)
+   .is('offer_id',null).maybeSingle();
+  if(readError)return fail('Identité du site indisponible.',503);
+  const values={logo_data_uri:normalized.dataUri,updated_at:new Date().toISOString()};
+  if(stored){
+   const {data,error:updateError}=await supabase.from('ticket_templates')
+    .update(values).eq('id',stored.id).eq('company_id',companyId)
+    .eq('site_id',siteId).is('offer_id',null).select('id').maybeSingle();
+   if(updateError||!data)return fail('Enregistrement du logo refusé.',updateError?.code==='42501'?403:503);
+  }else{
+   const {error:insertError}=await supabase.from('ticket_templates')
+    .insert({company_id:companyId,site_id:siteId,offer_id:null,...values});
+   if(insertError){
+    // A concurrent site template creation may win the unique base-row slot.
+    if(insertError.code!=='23505')return fail('Enregistrement du logo refusé.',insertError.code==='42501'?403:503);
+    const {data,error:retryError}=await supabase.from('ticket_templates')
+     .update(values).eq('company_id',companyId).eq('site_id',siteId)
+     .is('offer_id',null).select('id').maybeSingle();
+    if(retryError||!data)return fail('Enregistrement du logo refusé.',503);
+   }
+  }
+  return NextResponse.json({saved:true,logoDataUri:normalized.dataUri},{headers});
+ }catch{
+  return fail('Service du logo indisponible.',503);
+ }
+}
+
 export async function PUT(request:NextRequest){
   const body=await request.json().catch(()=>null) as Record<string,unknown>|null;
   if(!body)return fail('Données invalides.',400);
