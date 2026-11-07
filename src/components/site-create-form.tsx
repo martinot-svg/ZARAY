@@ -1,10 +1,11 @@
 'use client';
 
-import {useRef,useState,type ChangeEvent,type FormEvent} from 'react';
+import {useEffect,useState,type ChangeEvent,type FormEvent} from 'react';
 import {ZarayIcon} from '@/components/ui/zaray-icon';
-import {optimizeLogo} from '@/lib/logo-optimizer';
 import {paletteFromLogo,type LogoPalette} from '@/lib/logo-palette';
+import {optimizeLogo} from '@/lib/logo-optimizer';
 import {legibleInk} from '@/lib/ticket-pdf';
+import {uploadOriginalSiteLogo,validateLogoFile} from '@/lib/site-logo-upload';
 
 type SiteCreated={
  id:string;company_id:string;name:string;status:string;created_at:string;
@@ -14,7 +15,7 @@ const defaultPalette:LogoPalette={
  primary_color:'#167a46',secondary_color:'#ffffff',accent_color:'#0e9f6e',
  title_color:'#10251a',border_color:'#a5b9ad'
 };
-
+type Files={light:File|null;dark:File|null};
 export default function SiteCreateForm({companyId,companyName,onCreated}:{
  companyId:string;companyName:string;onCreated:(site:SiteCreated)=>void;
 }){
@@ -22,121 +23,122 @@ export default function SiteCreateForm({companyId,companyName,onCreated}:{
  const [address,setAddress]=useState('');
  const [email,setEmail]=useState('');
  const [phone,setPhone]=useState('');
- const [logoDataUri,setLogoDataUri]=useState('');
+ const [files,setFiles]=useState<Files>({light:null,dark:null});
  const [palette,setPalette]=useState<LogoPalette>(defaultPalette);
- const [cropped,setCropped]=useState(false);
- const [processing,setProcessing]=useState(false);
  const [saving,setSaving]=useState(false);
  const [error,setError]=useState('');
  const [notice,setNotice]=useState('');
- const requestId=useRef(0);
- const previewName=name.trim()||'Nom du site';
- const previewColor=palette.primary_color;
- const previewBackground=palette.secondary_color;
- const buttonInk=legibleInk('#0b1922',previewColor);
-
- async function importLogo(event:ChangeEvent<HTMLInputElement>){
-  const file=event.target.files?.[0];
-  const request=++requestId.current;
-  setLogoDataUri('');setCropped(false);setError('');setNotice('');
-  if(!file)return;
-  if(!['image/png','image/webp'].includes(file.type)||file.size<16||file.size>2_000_000){
-   setError('Logo obligatoire : PNG ou WebP avec fond transparent, 2 Mo maximum.');
-   event.target.value='';return;
+ const [inputKey,setInputKey]=useState(0);
+ const [lightPreview,setLightPreview]=useState('');
+ const [darkPreview,setDarkPreview]=useState('');
+ // Preview only raster formats. Untrusted SVG is strictly checked server-side.
+ useEffect(()=>{
+  const a=files.light&&files.light.type!=='image/svg+xml'?URL.createObjectURL(files.light):'';
+  const b=files.dark&&files.dark.type!=='image/svg+xml'?URL.createObjectURL(files.dark):'';
+  setLightPreview(a||'');setDarkPreview(b||'');
+  return()=>{if(a)URL.revokeObjectURL(a);if(b)URL.revokeObjectURL(b);};
+ },[files]);
+ async function choose(event:ChangeEvent<HTMLInputElement>,variant:'light'|'dark'){
+  const file=event.target.files?.[0]??null;
+  setError('');setNotice('');
+  if(file){
+   try{validateLogoFile(file);}
+   catch(e){event.target.value='';setError(e instanceof Error?e.message:'Fichier invalide.');return;}
   }
-  setProcessing(true);
-  try{
-   const uri=await new Promise<string>((resolve,reject)=>{
-    const reader=new FileReader();
-    reader.onload=()=>typeof reader.result==='string'?resolve(reader.result):reject(Error('Fichier illisible.'));
-    reader.onerror=()=>reject(Error('Impossible de lire le logo.'));
-    reader.readAsDataURL(file);
-   });
-   const optimized=await optimizeLogo(uri);
-   const colors=await paletteFromLogo(optimized.dataUri);
-   if(requestId.current!==request)return;
-   setLogoDataUri(optimized.dataUri);
-   setCropped(optimized.cropped);
-   setPalette(colors||defaultPalette);
-   setNotice(optimized.cropped
-    ?'Logo validé : les marges entièrement transparentes ont été rognées.'
-    :'Logo transparent validé : aucune marge vide à retirer.');
-  }catch(e){
-   if(requestId.current===request)setError(e instanceof Error?e.message:'Le logo doit déjà avoir un fond transparent.');
-  }finally{if(requestId.current===request)setProcessing(false);}
+  setFiles(old=>({...old,[variant]:file}));
+  if(variant==='light'&&file&&file.type!=='image/svg+xml'&&file.size<=2_000_000){
+   // Retain existing palette detection when convenient; it never affects the
+   // immutable original sent directly to private Supabase Storage.
+   try{
+    const uri=await new Promise<string>((resolve,reject)=>{
+     const reader=new FileReader();
+     reader.onload=()=>resolve(String(reader.result||''));
+     reader.onerror=()=>reject(Error('Logo illisible'));
+     reader.readAsDataURL(file);
+    });
+    const optimized=await optimizeLogo(uri);
+    const colors=await paletteFromLogo(optimized.dataUri);
+    if(colors)setPalette(colors);
+   }catch{/* Palette extraction is optional; server owns real validation. */}
+  }
  }
  async function submit(event:FormEvent<HTMLFormElement>){
   event.preventDefault();
-  if(!logoDataUri||processing){setError('Importez d’abord un logo PNG ou WebP transparent.');return;}
+  if(!files.light||!files.dark){setError('Importez les deux versions du logo avant de créer le site.');return;}
+  if(files.light===files.dark){setError('Sélectionnez deux versions distinctes.');return;}
   setSaving(true);setError('');setNotice('');
   try{
+   setNotice('Transfert sécurisé des deux logos originaux…');
+   const [lightLogoPath,darkLogoPath]=await Promise.all([
+    uploadOriginalSiteLogo(files.light,companyId,'light'),
+    uploadOriginalSiteLogo(files.dark,companyId,'dark')
+   ]);
+   setNotice('Vérification de la transparence et synchronisation du site…');
    const response=await fetch('/api/sites',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({companyId,name,address,email,phone,logoDataUri,palette})
+    body:JSON.stringify({companyId,name,address,email,phone,lightLogoPath,darkLogoPath,palette})
    });
    const data=await response.json().catch(()=>({}));
    if(!response.ok)throw Error(data.error||'Création impossible.');
    if(!data.site?.id)throw Error('Création du site non confirmée.');
    onCreated(data.site);
    setName('');setAddress('');setEmail('');setPhone('');
-   setLogoDataUri('');setCropped(false);setPalette(defaultPalette);
-   const selected=document.getElementById('site-new-logo') as HTMLInputElement|null;
-   if(selected)selected.value='';
-   setNotice('Site créé avec ses coordonnées et son logo. Le ticket et le portail captif utilisent déjà son identité graphique.');
-  }catch(e){setError(e instanceof Error?e.message:'Création impossible.');}
+   setFiles({light:null,dark:null});setInputKey(i=>i+1);setPalette(defaultPalette);
+   setNotice('Logo importé et optimisé avec succès. Les deux versions sont associées uniquement à ce site.');
+  }catch(e){setNotice('');setError(e instanceof Error?e.message:'Création impossible.');}
   finally{setSaving(false);}
  }
+ const previewName=name.trim()||'Nom du site';
  return <form className="form-stack compact-form" onSubmit={event=>void submit(event)}>
   <span className="muted">Entreprise : {companyName}</span>
   <div className="workspace-grid" style={{gap:12}}>
    <label>Nom du site
-    <input value={name} onChange={e=>setName(e.target.value)}
-     required minLength={2} maxLength={120} autoComplete="organization"
-     placeholder="Ex. M’lay Connexion — Centre"/>
+    <input value={name} onChange={e=>setName(e.target.value)} required minLength={2} maxLength={120}
+     autoComplete="organization" placeholder="Ex. M’lay Connexion — Centre"/>
    </label>
    <label>Adresse du site
-    <input value={address} onChange={e=>setAddress(e.target.value)}
-     required minLength={3} maxLength={160} autoComplete="street-address"
-     placeholder="Quartier, rue, ville"/>
+    <input value={address} onChange={e=>setAddress(e.target.value)} required minLength={3} maxLength={160}
+     autoComplete="street-address" placeholder="Quartier, rue, ville"/>
    </label>
    <label>E-mail du site
     <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
      required maxLength={254} autoComplete="email" placeholder="contact@exemple.mg"/>
    </label>
    <label>Téléphone du site
-    <input type="tel" value={phone} onChange={e=>setPhone(e.target.value)}
-     required minLength={5} maxLength={32} pattern="[+0-9(). /-]+"
-     autoComplete="tel" placeholder="+261 34 00 000 00"/>
+    <input type="tel" value={phone} onChange={e=>setPhone(e.target.value)} required minLength={5}
+     maxLength={32} pattern="[+0-9(). /-]+" autoComplete="tel" placeholder="+261 34 00 000 00"/>
    </label>
   </div>
-  <section style={{display:'grid',gap:10}}>
-   <label htmlFor="site-new-logo">Logo transparent obligatoire (PNG ou WebP)</label>
-   <input id="site-new-logo" type="file" accept="image/png,image/webp"
-    onChange={e=>void importLogo(e)} disabled={processing||saving} required={!logoDataUri}/>
-   <p className="muted">Fournissez un logo déjà détouré. ZARAY retire uniquement les marges transparentes inutiles : aucune couleur ni partie visible du logo ne sera supprimée.</p>
-   {processing&&<p role="status">Vérification et rognage des marges transparentes…</p>}
-   {logoDataUri&&<div style={{display:'grid',gap:12}}>
-    <span className="status-pill">{cropped?'Logo transparent rogné':'Logo transparent prêt'}</span>
-    <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
-     <div style={{flex:'1 1 180px',minWidth:0,background:previewBackground,border:'1px solid #a7b5be',borderRadius:12,padding:12,color:legibleInk(palette.title_color,previewBackground)}}>
-      <div style={{fontSize:11,fontWeight:750,marginBottom:7}}>APERÇU TICKET</div>
-      <div style={{display:'flex',alignItems:'center',gap:10}}>
-       <img src={logoDataUri} alt={'Logo du site '+previewName}
-        style={{maxWidth:85,maxHeight:75,width:'auto',height:'auto',objectFit:'contain',flexShrink:0}}/>
-       <strong>{previewName}</strong>
-      </div>
+  <section style={{display:'grid',gap:11}}>
+   <strong>Identité du site · deux logos obligatoires</strong>
+   <p className="muted">PNG ou SVG transparent, WebP transparent accepté. PNG/WebP : 15 Mo maximum ; SVG : 2 Mo. Les originaux sont préservés et leurs copies d’affichage sont rognées uniquement dans les marges alpha transparentes.</p>
+   <div className="workspace-grid" style={{gap:12}}>
+    {(['light','dark'] as const).map(variant=><label key={variant}>
+     {variant==='light'?'Logo version claire · sur fond sombre':'Logo version sombre · sur fond clair'}
+     <input key={inputKey+'-'+variant} type="file" accept="image/png,image/svg+xml,image/webp"
+      onChange={e=>void choose(e,variant)} disabled={saving} required/>
+     <div style={{marginTop:8,minHeight:96,display:'grid',placeItems:'center',border:'1px solid #9fb3b6',
+      borderRadius:12,background:variant==='light'?'#102334':'#ffffff',
+      color:variant==='light'?'#ffffff':'#102334',padding:10}}>
+      {files[variant]
+       ?(variant==='light'?lightPreview:darkPreview)
+        ?<img src={variant==='light'?lightPreview:darkPreview} alt={'Aperçu '+variant+' du logo de '+previewName}
+          style={{maxWidth:'100%',maxHeight:76,objectFit:'contain',width:'auto',height:'auto'}}/>
+        :<span style={{fontSize:12,textAlign:'center'}}>SVG vectoriel : {files[variant]?.name}<br/>Aperçu après validation</span>
+       :<span style={{fontSize:12}}>Choisir un logo</span>}
      </div>
-     <div style={{flex:'1 1 180px',minWidth:0,background:previewBackground,border:'1px solid '+previewColor,borderRadius:12,padding:12,color:legibleInk(palette.title_color,previewBackground),textAlign:'center'}}>
-      <div style={{fontSize:11,fontWeight:750,marginBottom:7}}>APERÇU PORTAIL CAPTIF</div>
-      <img src={logoDataUri} alt="" style={{maxHeight:77,maxWidth:'100%',width:'auto',height:'auto',objectFit:'contain'}}/>
-      <div style={{fontWeight:700,marginTop:5}}>{previewName}</div>
-      <div style={{background:previewColor,color:buttonInk,borderRadius:7,padding:7,fontSize:12,marginTop:9,fontWeight:700}}>Connexion Wi-Fi</div>
-     </div>
-    </div>
-   </div>}
+    </label>)}
+   </div>
+   <p className="muted">Le visuel du ticket conservera une zone réservée au logo. La version affichée sera choisie automatiquement selon la luminosité du fond.</p>
+   <div style={{border:'1px solid #a7b5be',borderRadius:12,padding:12,
+    color:legibleInk(palette.title_color,palette.secondary_color),
+    background:palette.secondary_color,fontSize:12}}>
+    Aperçu des couleurs du ticket : {previewName}
+   </div>
   </section>
-  <button className="primary-link" type="submit" disabled={saving||processing||!logoDataUri||!companyId}>
-   <ZarayIcon name="add" size={18}/> {saving?'Création…':'Créer le site'}
+  <button className="primary-link" type="submit"
+   disabled={saving||!files.light||!files.dark||!companyId}>
+   <ZarayIcon name="add" size={18}/> {saving?'Création et optimisation…':'Créer le site'}
   </button>
   {error&&<p className="alert alert-error" role="alert">{error}</p>}
   {notice&&<p className="alert alert-success" role="status">{notice}</p>}
