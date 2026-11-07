@@ -112,7 +112,7 @@ test('upload accepts transparent PNG/WebP only and uses no background removal AI
  const manager=readFileSync('src/components/site-logo-manager.tsx','utf8');
  assert.match(manager,/accept="image\/png,image\/svg\+xml,image\/webp"/);
  assert.match(editor,/await optimizeLogo\(uri\)/);
- assert.match(editor,/marges entièrement transparentes/);
+ assert.match(readFileSync('src/components/site-logo-manager.tsx','utf8'),/marges transparentes inutiles/);
  assert.match(backend,/stats\.isOpaque/);
  assert.match(backend,/stored\?\.logo_data_uri!==logo/);
  assert.doesNotMatch(source,/cleanLogoPixels|removeComplexBackground|logo-ai/);
