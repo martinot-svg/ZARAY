@@ -2,6 +2,7 @@
  *  3×11 vouchers, each 60×20mm, start 10×21mm, gaps 5×3.5mm, 150dpi.
  *  Never send voucher credentials to remote image/PDF services.
  */
+import {siteLogoForSurface} from '@/lib/site-logo-variants';
 export type PrintableVoucher={
  id:string;username:string;password:string;offer_name:string;
  price_amount:number|string;currency:string;duration_minutes:number;
@@ -9,7 +10,9 @@ export type PrintableVoucher={
 };
 export type TicketStyle='classic'|'event'|'minimal'|'corporate';
 export type TicketVisual={
- logo_data_uri:string|null;primary_color:string;secondary_color:string;
+ logo_data_uri:string|null;
+ logo_light_data_uri?:string|null;logo_dark_data_uri?:string|null;
+ primary_color:string;secondary_color:string;
  title_color:string;border_color:string;font_family:string;
  username_length:number;password_length:number;
  template_key?:TicketStyle;accent_color?:string;gradient_enabled?:boolean;
@@ -49,7 +52,7 @@ function fit(ctx:CanvasRenderingContext2D,text:string,x:number,y:number,width:nu
 }
 function logoPaint(ctx:CanvasRenderingContext2D,img:HTMLImageElement|null,x:number,y:number,w:number,h:number){
  if(!img||!img.naturalWidth||!img.naturalHeight)return false;
- const scale=Math.min(w/img.naturalWidth,h/img.naturalHeight);
+ const scale=Math.min(1,w/img.naturalWidth,h/img.naturalHeight);
  const iw=img.naturalWidth*scale,ih=img.naturalHeight*scale;
  ctx.save();
  // Draw the entire supplied logo, including any built-in background.
@@ -58,6 +61,12 @@ function logoPaint(ctx:CanvasRenderingContext2D,img:HTMLImageElement|null,x:numb
  ctx.shadowOffsetX=1;ctx.shadowOffsetY=1;
  ctx.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);
  ctx.restore();return true;
+}
+export function ticketLogo(design:TicketVisual){
+ const surface=design.template_key==='event'||(design.gradient_enabled&&design.template_key!=='classic')
+  ?design.primary_color:design.secondary_color;
+ return siteLogoForSurface({logoLightDataUri:design.logo_light_data_uri,
+  logoDarkDataUri:design.logo_dark_data_uri,logoDataUri:design.logo_data_uri},surface);
 }
 const imageCache=new Map<string,Promise<HTMLImageElement|null>>();
 export async function loadVoucherLogo(uri:string|null):Promise<HTMLImageElement|null>{
@@ -100,8 +109,9 @@ export function paintVoucher(ctx:CanvasRenderingContext2D,x:number,y:number,tick
  const secondary=darkTheme?'rgba(255,255,255,.82)':legibleInk(preferred,background);
  if(kind==='classic'){
    ctx.fillStyle=primary;ctx.fillRect(x,y,3,h);
+   // Dedicated, protected left column: no text ever crosses the logo zone.
    let left=x+11;
-   if(logoPaint(ctx,logo,x+9,y+19,59,74))left=x+73;
+   if(logoPaint(ctx,logo,x+8,y+9,63,h-18))left=x+79;
    const available=x+w-8-left;
    fit(ctx,name,left,y+20,available,16,legibleInk(primary,background),font,true);
    fit(ctx,ticket.offer_name,left,y+40,available,14,ink,font,true);
@@ -131,15 +141,16 @@ export function paintVoucher(ctx:CanvasRenderingContext2D,x:number,y:number,tick
    }
    ctx.beginPath();ctx.moveTo(split,y+8);ctx.lineTo(split,y+h-8);
    ctx.setLineDash([4,4]);ctx.strokeStyle=darkTheme?'rgba(255,255,255,.65)':border;ctx.lineWidth=1.4;ctx.stroke();ctx.setLineDash([]);
-   const logoUsed=logoPaint(ctx,logo,mainX,y+7,64,36);
-   const textX=mainX+(logoUsed?70:0),textW=mainWidth-(logoUsed?70:0);
+   // The reserved logo column spans the full height. Labels never overlap it.
+   const logoUsed=logoPaint(ctx,logo,mainX,y+9,64,h-18);
+   const textX=mainX+(logoUsed?72:0),textW=mainWidth-(logoUsed?72:0);
    fit(ctx,name,textX,y+21,textW,16,fg,font,true);
-   fit(ctx,ticket.offer_name,mainX,y+40,mainWidth,15,fg,font,true);
-   fit(ctx,'UTILISATEUR  '+ticket.username,mainX,y+62,mainWidth,14,fg,font,true);
-   fit(ctx,'MOT DE PASSE  '+ticket.password,mainX,y+85,mainWidth,14,fg,font,true);
+   fit(ctx,ticket.offer_name,textX,y+40,textW,15,fg,font,true);
+   fit(ctx,'UTILISATEUR  '+ticket.username,textX,y+62,textW,14,fg,font,true);
+   fit(ctx,'MOT DE PASSE  '+ticket.password,textX,y+85,textW,14,fg,font,true);
    const optionalFooter=design.footer_text?.trim()||design.welcome_message?.trim()||'';
    const footer='NON ACTIVÉ'+(optionalFooter?' · '+optionalFooter:'');
-   fit(ctx,footer,mainX,y+105,mainWidth,11,secondary,font,false);
+   fit(ctx,footer,textX,y+105,textW,11,secondary,font,false);
    const rightInk=kind==='corporate'&&!darkTheme?legibleInk('#ffffff',primary):fg;
    const rightSub=kind==='corporate'&&!darkTheme?rightInk:secondary;
    fit(ctx,'WI-FI',sideX,y+22,sideWidth,17,rightInk,font,true);
@@ -176,7 +187,7 @@ export function paintVoucher(ctx:CanvasRenderingContext2D,x:number,y:number,tick
 export async function drawVoucherCanvas(canvas:HTMLCanvasElement,ticket:PrintableVoucher,design:TicketVisual,siteName:string){
  canvas.width=TICKET_PIXEL_WIDTH;canvas.height=TICKET_PIXEL_HEIGHT;
  const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas indisponible.');
- const logo=await requireVoucherLogo(design.logo_data_uri);
+ const logo=await requireVoucherLogo(ticketLogo(design));
  // Discard races by letting callers guard effect lifetimes; drawing is synchronous.
  ctx.clearRect(0,0,canvas.width,canvas.height);
  paintVoucher(ctx,0,0,ticket,design,siteName,logo);
@@ -194,7 +205,7 @@ function canvasPage(sheet:TicketSheet,arr:PrintableVoucher[],logo:HTMLImageEleme
 }
 /** A4 physical PDF geometry and 150dpi JPEG image pages are unchanged. */
 export async function generateA4Pdf(sheet:TicketSheet):Promise<Blob>{
- const logo=await requireVoucherLogo(sheet.design.logo_data_uri);
+ const logo=await requireVoucherLogo(ticketLogo(sheet.design));
  const pages=voucherPages(sheet.tickets);if(!pages.length)throw Error('Aucun ticket à exporter.');
  const objects:(Uint8Array|null)[]=[null,null],kids:number[]=[];
  for(const items of pages){
@@ -217,7 +228,7 @@ export async function generateA4Pdf(sheet:TicketSheet):Promise<Blob>{
 
 /** JPEG export uses the exact same canvas painting logic as PDF and print previews. */
 export async function generateA4Jpegs(sheet:TicketSheet):Promise<Blob[]>{
- const logo=await requireVoucherLogo(sheet.design.logo_data_uri);
+ const logo=await requireVoucherLogo(ticketLogo(sheet.design));
  const pages=voucherPages(sheet.tickets);
  if(!pages.length)throw Error('Aucun ticket à exporter.');
  const files:Blob[]=[];
