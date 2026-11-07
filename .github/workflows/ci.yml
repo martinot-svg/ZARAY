@@ -58,6 +58,7 @@ jobs:
             tests/dashboard-visual-refinement.test.mjs \
             tests/site-portal-studio.test.mjs \
             tests/mikrotik-captive-installation.test.mjs \
-            tests/wifi-offline-preparation.test.mjs
+            tests/wifi-offline-preparation.test.mjs \
+            tests/captive-site-logo-input-colors.test.mjs
       - run: npm run typecheck
       - run: npm run build
