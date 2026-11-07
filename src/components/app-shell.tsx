@@ -360,7 +360,8 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
         <div id={'zaray-nav-flyout-' + activeFlyout} ref={flyoutPortal}
           className="zaray-flyout-portal"
           data-side={flyoutPosition.side}
-          style={{ left: flyoutPosition.left, top: flyoutPosition.top }}
+          style={{ left: flyoutPosition.left, top: flyoutPosition.top,
+            maxHeight: `min(76dvh, 580px, calc(100dvh - ${flyoutPosition.top + 12}px))` }}
           role="group" aria-label={'Sous-menu ' + flyoutSections[activeFlyout].label}
           onMouseEnter={cancelMenuClose} onMouseLeave={scheduleMenuClose}>
           <div className="app-nav-flyout-heading">{flyoutSections[activeFlyout].label}</div>
