@@ -6,6 +6,7 @@ import type { TicketVisual,TicketStyle,PrintableVoucher } from '@/lib/ticket-pdf
 import {legibleInk} from '@/lib/ticket-pdf';
 import {paletteFromLogo} from '@/lib/logo-palette';
 import {optimizeLogo} from '@/lib/logo-optimizer';
+import {downloadMikrotikCaptiveApi} from '@/lib/mikrotik-captive-api-download';
 
 type Site={id:string;company_id:string;name:string};
 type Offer={id:string;name:string;status:string;duration_minutes:number;validity_days:number;price_amount:number|string;currency:string};
@@ -169,6 +170,13 @@ export default function WifiTicketCustomization(){
   }catch(e){setError(e instanceof Error?e.message:'Téléchargement impossible.');}
   finally{setBusy(false);}
  }
+ async function downloadCaptiveDiscovery(){
+  setError('');setNotice('');
+  try{
+   await downloadMikrotikCaptiveApi();
+   setNotice('api.json téléchargé. Conservez md5.js et les autres fichiers natifs du HotSpot.');
+  }catch(e){setError(e instanceof Error?e.message:'Impossible de télécharger api.json.');}
+ }
  function restore(){
    setForm(old=>({...initial,logo_data_uri:old.logo_data_uri,
        username_length:old.username_length,password_length:old.password_length}));
@@ -290,6 +298,10 @@ export default function WifiTicketCustomization(){
        <button type="button" disabled={busy||!siteId} onClick={()=>void downloadPortal()}>
         <ZarayIcon name="download" size={17}/> Télécharger la page MikroTik pour ce site
        </button>
+       <button type="button" disabled={busy||!siteId} onClick={()=>void downloadCaptiveDiscovery()}>
+        <ZarayIcon name="download" size={17}/> Télécharger api.json (détection mobile)
+       </button>
+       <p className="muted">Installer login.html sur le HotSpot ; conserver son md5.js d’origine et ses autres pages natives. api.json complète la détection sur les téléphones compatibles si le routeur n’en dispose pas déjà. La publication du portail web n’installe pas ces fichiers sur le routeur.</p>
        <p className="muted"><a href={'/wifi/'+encodeURIComponent(companySlug)+(siteId?'?siteId='+encodeURIComponent(siteId):'')} target="_blank" rel="noopener noreferrer"><ZarayIcon name="next" size={17}/> Ouvrir la version web interactive du portail de ce site</a></p>
        
       </div>
