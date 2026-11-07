@@ -1,0 +1,35 @@
+/* Continuity over concealment: do not hide the entire module while entering. */
+.app-no-sidebar .app-content,
+.personal-no-sidebar .personal-content{
+ animation:none!important;
+}
+.app-no-sidebar .app-content{
+ min-height:min(60dvh,520px);
+}
+.app-no-sidebar .app-topbar,
+.personal-no-sidebar .personal-topbar{
+ backface-visibility:hidden;
+}
+.zaray-data-pending{
+ display:flex;align-items:center;min-height:62px;padding:10px 4px;
+ border-top:1px solid color-mix(in srgb,currentColor 10%,transparent);
+ font-size:12px;line-height:1.5;opacity:.66;
+}
+.zaray-data-pending span{display:block}
+@media(prefers-reduced-motion:no-preference){
+ .app-no-sidebar .app-content > :is(.panel,.module-grid,.workspace-grid,.dashboard-surface,.toolbar,.data-list,.kpi-grid){
+   animation:zaray-section-place 170ms cubic-bezier(.22,.7,.28,1) both;
+ }
+ .app-no-sidebar .app-content :is(.panel,.kpi,.data-row,.dashboard-metric){
+   transition:background-color 140ms ease,border-color 140ms ease,box-shadow 140ms ease;
+ }
+ @keyframes zaray-section-place{
+   from{opacity:.92;transform:translate3d(0,3px,0)}
+   to{opacity:1;transform:translate3d(0,0,0)}
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .app-no-sidebar .app-content > :is(.panel,.module-grid,.workspace-grid,.dashboard-surface,.toolbar,.data-list,.kpi-grid){
+  animation:none!important;transform:none!important;
+ }
+}

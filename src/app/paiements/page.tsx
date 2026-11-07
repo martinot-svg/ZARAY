@@ -4,6 +4,8 @@ import StandaloneModuleHeader from '@/components/standalone-module-header';
 import { useEffect, useState } from 'react';
 import { scopedQuery, selectedCompany } from '@/lib/workspace-url';
 import { MotionFeedback } from '@/components/motion';
+import ModuleDataState from '@/components/module-data-state';
+import {fetchWorkspaceDirectory} from '@/lib/workspace-directory-request';
 type Company = { id: string; legal_name: string; role: string };
 type Payment = { id: string; order_id: string; provider: string; provider_payment_id: string; amount: number | string; currency: string; status: string; confirmed_at: string | null; created_at: string };
 const labels: Record<string,string> = { pending: 'En attente', succeeded: 'Confirmé', failed: 'Échec', cancelled: 'Annulé', review_required: 'À rapprocher' };
@@ -18,7 +20,7 @@ export default function PaymentsPage() {
     let active=true;
     (async()=>{
       try {
-        const response=await fetch('/api/sites',{cache:'no-store'});
+        const response=await fetchWorkspaceDirectory();
         const data=await response.json();
         if(!response.ok) throw new Error(data.error || 'Impossible de charger les entreprises.');
         if(active){setCompanies(data.companies ?? []);setCompanyId(selectedCompany(data.companies??[],data.sites??[]));}
@@ -46,7 +48,7 @@ export default function PaymentsPage() {
     <StandaloneModuleHeader title="Suivi des paiements" />
     
     {companies.length>0&&<span className="muted">Entreprise active : {companies.find(c=>c.id===companyId)?.legal_name ?? '—'}</span>}
-    {busy?null:payments.length?<div className="module-grid" style={{marginTop:24}}>
+    {busy?<ModuleDataState label="Préparation des paiements…"/>:payments.length?<div className="module-grid" style={{marginTop:24}}>
       {payments.map(p=><article className="module" key={p.id}>
         <span className="module-number">{labels[p.status] ?? p.status}</span><h3>{Number(p.amount).toLocaleString('fr-FR')} {p.currency}</h3>
         <details className="payment-info-disclosure"><summary>Références</summary><p>Fournisseur : {p.provider}</p><p>Référence paiement : {p.provider_payment_id}</p><p>Commande : {p.order_id}</p></details><span className="module-status">{p.confirmed_at?'Confirmé le '+new Date(p.confirmed_at).toLocaleString('fr-FR'):'Créé le '+new Date(p.created_at).toLocaleString('fr-FR')}</span>

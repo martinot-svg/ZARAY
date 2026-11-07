@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useState} from 'react';
 import AppShell from '@/components/app-shell';
+import ModuleDataState from '@/components/module-data-state';
 import NotificationInbox from '@/components/notification-inbox';
 import {fetchWorkspaceDirectory} from '@/lib/workspace-directory-request';
 
@@ -68,7 +69,7 @@ export default function NotificationsPage(){
     {matching.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
    </select></label>
   </section>}
-  {loading?<p role="status">Chargement des notifications…</p>:
+  {loading?<ModuleDataState label="Préparation des notifications…"/>:
    error?<p role="alert">{error}</p>:
    !canOpen?<p>Aucun site ne vous a été attribué pour les notifications.</p>:
    <NotificationInbox companyId={companyId} siteId={siteId}/>}

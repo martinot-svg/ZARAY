@@ -3,6 +3,7 @@ import { ZarayIcon } from '@/components/ui/zaray-icon';
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import {invalidateWorkspaceDirectory} from '@/lib/workspace-directory-request';
 
 export default function SignOutButton({ profile = false }: { profile?: boolean } = {}) {
   const [busy, setBusy] = useState(false);
@@ -13,6 +14,7 @@ export default function SignOutButton({ profile = false }: { profile?: boolean }
     try {
       const { error: signOutError } = await createClient().auth.signOut();
       if (signOutError) throw signOutError;
+      invalidateWorkspaceDirectory();
       window.location.replace('/connexion');
     } catch {
       setError('Déconnexion impossible. Réessayez.');

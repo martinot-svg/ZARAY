@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import VoucherCanvas from '@/components/voucher-canvas';
+import {fetchWorkspaceDirectory} from '@/lib/workspace-directory-request';
+import {selectedCompany} from '@/lib/workspace-url';
 import { generateA4Pdf, generateA4Jpegs, generateSingleTicketJpeg, requireVoucherLogo, ticketLogo, voucherPages, type PrintableVoucher, type TicketVisual } from '@/lib/ticket-pdf';
 type Site={id:string;company_id:string;name:string;status:string};
 type Offer={id:string;name:string;status:string;price_amount:number|string;currency:string;duration_minutes:number;validity_days:number};
@@ -33,10 +35,11 @@ export default function WifiTicketGenerator(){
  const [batchId,setBatchId]=useState(''),[readyCount,setReadyCount]=useState(0),[batches,setBatches]=useState<Batch[]>([]),[singleId,setSingleId]=useState('');
  useEffect(()=>{let live=true;(async()=>{
   try{
-   const qs=new URLSearchParams(window.location.search),company=qs.get('companyId')??'';
-   if(!company){window.location.replace('/entreprises');return;}
-   const res=await fetch('/api/sites',{cache:'no-store'}),data=await res.json();
+   const qs=new URLSearchParams(window.location.search);
+   const res=await fetchWorkspaceDirectory(),data=await res.json();
    if(!res.ok)throw Error(data.error||'Sites indisponibles.');
+    const company=selectedCompany(data.companies??[],data.sites??[]);
+    if(!company)throw Error('Aucune entreprise accessible.');
    const c=(data.companies??[]).find((x:{id:string})=>x.id===company);
    if(!c)throw Error('Entreprise inaccessible.');
    const scoped=(data.sites??[]).filter((s:Site)=>s.company_id===company);

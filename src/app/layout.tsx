@@ -11,9 +11,11 @@ import './zaray-icon-topbar.css';
 import './zaray-compact-workspace.css';
 import './zaray-module-consistency.css';
 import './zaray-dashboard-refinement.css';
+import './seamless-navigation.css';
 import { ContrastGuardian } from '@/components/contrast-guardian';
 import WorkspaceBackdrop from '@/components/workspace-backdrop';
 import ThemeSwitch from '@/components/theme-switch';
+import SeamlessNavigation from '@/components/seamless-navigation';
 
 export const viewport: Viewport = { themeColor: '#0a0d0b' };
 
@@ -36,5 +38,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="fr" data-zaray-theme="dark"><body><ContrastGuardian /><WorkspaceBackdrop /><div className="global-auth-theme"><ThemeSwitch /></div>{children}</body></html>;
+  return <html lang="fr" data-zaray-theme="dark"><body><SeamlessNavigation /><ContrastGuardian /><WorkspaceBackdrop /><div className="global-auth-theme"><ThemeSwitch /></div>{children}</body></html>;
 }

@@ -3,6 +3,7 @@ import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import AppShell from '@/components/app-shell';
+import ModuleDataState from '@/components/module-data-state';
 import { activeSiteId, scopedQuery, selectedCompany } from '@/lib/workspace-url';
 import { MotionFeedback } from '@/components/motion';
 
@@ -38,7 +39,7 @@ export default function OffresPage(){
     </form>
    </section></details>
    <section className="panel"><div className="panel-head"><div><div className="panel-title">Catalogue</div><div className="muted">{offers.filter(o=>o.status==='active').length} offre(s) actuellement actives.</div></div></div>
-    {busy?null:filtered.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Offre</th><th>Prix</th><th>Paramètres</th><th>Statut</th><th></th></tr></thead><tbody>{filtered.map(o=><tr key={o.id}><td><strong>{o.name}</strong><small>{o.description||'Sans description'}</small></td><td><strong>{money(o.price_amount,o.currency)}</strong></td><td>{o.duration_minutes} min · {o.validity_days} j · {o.max_devices} appareil(s)</td><td><span className="status-pill">{statusLabels[o.status]??o.status}</span></td><td><button type="button" onClick={()=>startEdit(o)}><ZarayIcon name="edit" size={18} /> Modifier</button></td></tr>)}</tbody></table></div>:<div className="empty-state"><strong>{offers.length?'Aucun résultat':'Catalogue vide'}</strong><p>{offers.length?'Ajustez vos filtres.':'Créez votre premier forfait Internet.'}</p><a className="primary-link" href="#offer-form" onClick={()=>{const el=document.getElementById('offer-form') as HTMLDetailsElement|null;if(el)el.open=true;}}><ZarayIcon name="add" size={18} /> Créer une offre</a></div>}
+    {busy?<ModuleDataState label="Préparation des offres…"/>:filtered.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Offre</th><th>Prix</th><th>Paramètres</th><th>Statut</th><th></th></tr></thead><tbody>{filtered.map(o=><tr key={o.id}><td><strong>{o.name}</strong><small>{o.description||'Sans description'}</small></td><td><strong>{money(o.price_amount,o.currency)}</strong></td><td>{o.duration_minutes} min · {o.validity_days} j · {o.max_devices} appareil(s)</td><td><span className="status-pill">{statusLabels[o.status]??o.status}</span></td><td><button type="button" onClick={()=>startEdit(o)}><ZarayIcon name="edit" size={18} /> Modifier</button></td></tr>)}</tbody></table></div>:<div className="empty-state"><strong>{offers.length?'Aucun résultat':'Catalogue vide'}</strong><p>{offers.length?'Ajustez vos filtres.':'Créez votre premier forfait Internet.'}</p><a className="primary-link" href="#offer-form" onClick={()=>{const el=document.getElementById('offer-form') as HTMLDetailsElement|null;if(el)el.open=true;}}><ZarayIcon name="add" size={18} /> Créer une offre</a></div>}
    </section>
   </div>
   <MotionFeedback message={error || notice} kind={error ? 'error' : 'success'}/>

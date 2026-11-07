@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import AppShell from '@/components/app-shell';
 import { MotionFeedback } from '@/components/motion';
 import { activeSiteId,scopedQuery,selectedCompany } from '@/lib/workspace-url';
+import {fetchWorkspaceDirectory} from '@/lib/workspace-directory-request';
 
 type Company = { id: string; legal_name: string; role: string };
 type Site = { id: string; company_id: string; name: string; status: string };
@@ -60,7 +61,7 @@ export default function CaissePage() {
     let active = true;
     (async () => {
       try {
-        const response = await fetch('/api/sites', { cache: 'no-store' });
+        const response = await fetchWorkspaceDirectory();
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Impossible de charger votre espace.');
         if (!active) return;
