@@ -21,5 +21,5 @@ export default function SignOutButton({ profile = false }: { profile?: boolean }
       setBusy(false);
     }
   }
-  return <div className="account-signout"><button type="button" onClick={signOut} disabled={busy}><ZarayIcon name={profile ? "sidebar" : "logout"} size={18} /> {busy ? 'Déconnexion…' : profile ? 'Quitter mon espace' : 'Se déconnecter'}</button>{error && <p role="alert">{error}</p>}</div>;
+  return <div className="account-signout"><button type="button" onClick={signOut} disabled={busy}><ZarayIcon name={profile ? "sidebar" : "logout"} size={18} /> <span className="zaray-nav-label-text">{busy ? 'Déconnexion…' : profile ? 'Quitter mon espace' : 'Se déconnecter'}</span></button>{error && <p role="alert">{error}</p>}</div>;
 }

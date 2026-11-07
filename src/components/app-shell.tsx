@@ -161,7 +161,8 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
     cancelMenuClose();
     if (desktopFlyout) {
       const rect = trigger.getBoundingClientRect();
-      const width = 286;
+      // Matches the shared --zaray-nav-flyout-width in navigation-layout.css.
+      const width = 352;
       const viewportPadding = 12;
       const leftSpace = rect.left - viewportPadding;
       const rightSpace = window.innerWidth - rect.right - viewportPadding;
@@ -170,7 +171,7 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
         ? Math.max(viewportPadding, rect.left - width + 2)
         : Math.min(window.innerWidth - width - viewportPadding, rect.right - 2);
       const itemCount = flyoutSections[index].items.length + (index === 0 ? 1 : 0);
-      const estimatedHeight = Math.min(510, 56 + itemCount * 47);
+      const estimatedHeight = Math.min(510, 72 + itemCount * 64);
       const top = Math.max(viewportPadding,
         Math.min(rect.top - 4, window.innerHeight - estimatedHeight - viewportPadding));
       setFlyoutSide(side);
@@ -276,7 +277,7 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
                       else openFlyout(index, event.currentTarget);
                     }}>
                     <ZarayIcon name={section.icon} size={19} />
-                    <span>{section.label}</span>
+                    <span className="zaray-nav-label-text">{section.label}</span>
                     <ZarayIcon name="next" size={16} />
                   </button>
                   <div id={desktopFlyout ? undefined : 'zaray-nav-flyout-' + index}
@@ -292,7 +293,7 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
                         aria-current={activePath === item.href ? 'page' : undefined}
                         onClick={closeNavigation}>
                         <ZarayIcon name={navigationIcons[item.href as keyof typeof navigationIcons] ?? 'next'} size={17} />
-                        {item.label}
+                        <span className="zaray-nav-label-text">{item.label}</span>
                       </Link>;
                     })}
                   </div>
@@ -301,13 +302,13 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
             </div>
             <div className="app-nav-footer">
               <Link className="app-nav-link" href={scopedHref('/tableau-de-bord')} onClick={() => { setMenuOpen(false); setActiveFlyout(null); }}>
-                <ZarayIcon name="dashboard" size={18} /> Vue générale
+                <ZarayIcon name="dashboard" size={18} /> <span className="zaray-nav-label-text">Vue générale</span>
               </Link>
               <Link className="app-nav-link" href="/mon-compte" onClick={() => { setMenuOpen(false); setActiveFlyout(null); }}>
-                <ZarayIcon name="profile" size={18} /> Mon compte
+                <ZarayIcon name="profile" size={18} /> <span className="zaray-nav-label-text">Mon compte</span>
               </Link>
               <Link className="app-nav-link" href="/entreprises" onClick={() => { setMenuOpen(false); setActiveFlyout(null); }}>
-                <ZarayIcon name="company" size={18} /> Changer d’entreprise
+                <ZarayIcon name="company" size={18} /> <span className="zaray-nav-label-text">Changer d’entreprise</span>
               </Link>
               <ThemeSwitch className="app-nav-theme-switch" />
               <SignOutButton />
@@ -369,7 +370,7 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
               aria-current={activePath === item.href ? 'page' : undefined}
               onClick={closeNavigation}>
               <ZarayIcon name={navigationIcons[item.href as keyof typeof navigationIcons] ?? 'next'} size={17} />
-              {item.label}
+              <span className="zaray-nav-label-text">{item.label}</span>
             </Link>)}
         </div>, document.body)}
     {activeCompany && <nav className="workspace-mobile-dock" aria-label="Navigation rapide de l’entreprise">

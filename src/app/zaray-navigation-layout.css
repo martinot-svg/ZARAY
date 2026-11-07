@@ -1,0 +1,448 @@
+/*
+ * ZARAY — Shared navigation typography/layout contract.
+ * Imported LAST, after legacy and galactic overrides. Scope to NAVIGATION only:
+ * authenticated company/site, personal space, module tabs and mobile docks.
+ * No company, site, authentication or payment logic is modified.
+ */
+
+/* Every navigation label owns a flexible text cell, separate from its icon. */
+:where(.app-no-sidebar,.personal-no-sidebar) .zaray-nav-label-text {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  max-width: 100%;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
+  line-height: 1.45;
+  text-align: start;
+}
+
+/* Consistent icon sizing and vertical alignment, even with multi-line labels. */
+:where(.app-no-sidebar,.personal-no-sidebar) :is(
+  .app-nav-flyout-trigger,.app-nav-link,.app-site-option,
+  .personal-nav-link,.personal-profile-action,.topbar-icon-menu-action,
+  .personal-profile-dropdown .account-signout button,
+  .app-nav-footer .account-signout button
+) {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 44px;
+  height: auto;
+  white-space: normal !important;
+  text-overflow: clip !important;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  line-height: 1.45;
+  text-align: start;
+}
+:where(.app-no-sidebar,.personal-no-sidebar) :is(
+  .app-nav-link,.app-site-option,.personal-nav-link,.personal-profile-action,
+  .topbar-icon-menu-action,.personal-profile-dropdown .account-signout button,
+  .app-nav-footer .account-signout button
+) {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding-block: 11px;
+  padding-inline: 12px;
+}
+:where(.app-no-sidebar,.personal-no-sidebar) :is(
+  .app-nav-flyout-trigger,.app-nav-link,.app-site-option,
+  .personal-nav-link,.personal-profile-action,.topbar-icon-menu-action,
+  .personal-profile-dropdown .account-signout button,
+  .app-nav-footer .account-signout button
+) > svg {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 19px;
+  align-self: center;
+  color: currentColor;
+}
+.app-no-sidebar .app-nav-flyout-trigger {
+  display: grid !important;
+  grid-template-columns: 20px minmax(0,1fr) 17px;
+  align-items: center;
+  column-gap: 11px;
+  padding: 12px 13px;
+  min-height: 48px;
+  width: 100%;
+}
+.app-no-sidebar .app-nav-flyout-trigger > svg:first-child { width: 20px; height: 20px; }
+.app-no-sidebar .app-nav-flyout-trigger > svg:last-child { width: 17px; height: 17px; justify-self: end; }
+.app-no-sidebar .app-nav-current-context :is(strong,span) {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+/* Never truncate a panel to a fixed value that no longer fits its labels. */
+html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown {
+  box-sizing: border-box;
+  width: min(390px,calc(100vw - 24px)) !important;
+  min-width: 0;
+  padding: clamp(10px,1.4vw,15px);
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  max-height: min(calc(100dvh - 94px),800px) !important;
+  overscroll-behavior: contain;
+}
+.app-no-sidebar .app-nav-rail { min-width: 0; }
+.app-no-sidebar .app-nav-flyout { min-width: 0; }
+html[data-zaray-theme] .app-no-sidebar .app-nav-flyout-panel.is-open {
+  min-width: 0;
+  max-height: min(64dvh,720px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+.app-no-sidebar .app-nav-flyout-panel .app-nav-link { min-height: 44px; }
+.app-no-sidebar .app-nav-flyout-panel .app-nav-flyout-heading {
+  overflow-wrap: anywhere;
+  white-space: normal;
+  line-height: 1.4;
+}
+.app-no-sidebar .app-nav-footer { min-width: 0; }
+.app-no-sidebar .app-nav-footer .app-nav-link { min-height: 44px; }
+.app-no-sidebar .app-nav-footer :is(.zaray-theme-switch,.account-signout button) {
+  min-height: 44px;
+  line-height: 1.45;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  text-overflow: clip !important;
+}
+.app-no-sidebar .app-nav-footer .zaray-theme-switch .zaray-theme-switch-label {
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+/* Portaled desktop rideau: its geometry matches AppShell.openFlyout width=352. */
+html[data-zaray-theme] .zaray-flyout-portal {
+  box-sizing: border-box;
+  width: min(352px,calc(100vw - 24px)) !important;
+  padding: 14px;
+  max-height: min(76dvh,580px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+html[data-zaray-theme] .zaray-flyout-portal .app-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 46px;
+  height: auto;
+  padding: 12px;
+  white-space: normal !important;
+  text-overflow: clip !important;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+html[data-zaray-theme] .zaray-flyout-portal .app-nav-link > svg {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 19px;
+}
+html[data-zaray-theme] .zaray-flyout-portal .zaray-nav-label-text {
+  display: block;
+  min-width: 0;
+  flex: 1 1 auto;
+  white-space: normal !important;
+  overflow: visible !important;
+  overflow-wrap: anywhere;
+  text-overflow: clip !important;
+  line-height: 1.45;
+}
+html[data-zaray-theme] .zaray-flyout-portal .app-nav-flyout-heading {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  padding-bottom: 12px;
+}
+
+/* Site selector: arbitrary site/company names wrap rather than bleed away. */
+html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-site-dropdown {
+  box-sizing: border-box;
+  width: min(380px,calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  min-width: 0;
+  max-height: min(calc(100dvh - 94px),720px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.app-no-sidebar .app-site-dropdown :is(.app-site-heading,.app-site-feedback,.app-site-option) {
+  max-width: 100%;
+  min-width: 0;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+.app-no-sidebar .app-site-option { align-items: center; }
+.app-no-sidebar .app-site-option > svg { width:19px; height:19px; flex:0 0 19px; }
+
+/* Personal space navigation and profile actions share exactly the same rhythm. */
+html[data-zaray-theme] .personal-no-sidebar .personal-home-nav-menu {
+  box-sizing: border-box;
+  width: min(390px,calc(100vw - 24px));
+  min-width: 0;
+  max-width: calc(100vw - 24px);
+  max-height: min(calc(100dvh - 98px),720px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 10px;
+}
+html[data-zaray-theme] .personal-no-sidebar .personal-profile-dropdown {
+  box-sizing: border-box;
+  width: min(340px,calc(100vw - 24px));
+  min-width: 0;
+  max-width: calc(100vw - 24px);
+  max-height: min(calc(100dvh - 98px),720px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 10px;
+}
+.personal-no-sidebar :is(.personal-home-nav-menu,.personal-profile-dropdown) :is(.personal-nav-link,.personal-profile-action,.account-signout button) {
+  min-width: 0;
+  min-height: 45px;
+  width: 100%;
+  padding: 12px;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+.personal-no-sidebar .personal-profile-dropdown .personal-profile-action.is-disabled {
+  align-items: center;
+}
+.personal-no-sidebar :is(.personal-home-nav-menu,.personal-profile-dropdown) .zaray-nav-label-text {
+  display: block;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.personal-no-sidebar .topbar-icon-curtain {
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(370px,calc(100vw - 24px));
+}
+.personal-no-sidebar .topbar-icon-curtain-inner {
+  box-sizing: border-box;
+  min-width: min(240px,calc(100vw - 24px));
+  max-width: 100%;
+}
+.personal-no-sidebar .topbar-icon-menu-action {
+  white-space: normal !important;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+/* Personal dropdowns are dark-on-dark or dark-on-light based on active theme,
+   retaining ZARAY's existing green accents and selection style. */
+html[data-zaray-theme] .personal-no-sidebar :is(.personal-home-nav-menu,.personal-profile-dropdown) {
+  background-color: var(--zn-surface) !important;
+  background-image: var(--zn-surface-art) !important;
+  color: var(--zn-ink) !important;
+  border-color: var(--zn-border) !important;
+  box-shadow: var(--zn-shadow) !important;
+}
+html[data-zaray-theme] .personal-no-sidebar :is(.personal-home-nav-menu,.personal-profile-dropdown)
+:is(.personal-nav-link,.personal-profile-action,.account-signout button) {
+  color: var(--zn-ink) !important;
+  background-color: transparent;
+}
+html[data-zaray-theme] .personal-no-sidebar :is(.personal-home-nav-menu,.personal-profile-dropdown)
+:is(.personal-nav-link,.personal-profile-action,.account-signout button):is(:hover,:focus-visible) {
+  color: var(--zn-ink) !important;
+  background-color: var(--zn-hover) !important;
+}
+html[data-zaray-theme] .personal-no-sidebar :is(.personal-home-nav-menu,.personal-profile-dropdown)
+:is(.personal-nav-link.active,.personal-profile-action.active) {
+  color: var(--zn-selected-ink) !important;
+  background-color: #21f728 !important;
+  background-image: linear-gradient(105deg,#21f728,#51e6b5);
+}
+html[data-zaray-theme] .personal-no-sidebar :is(.personal-home-nav-menu,.personal-profile-dropdown)
+:is(.personal-nav-link,.personal-profile-action,.account-signout button) svg {
+  color: currentColor !important;
+}
+
+/* Icon-only header controls stay compact. Text titles adapt instead of ellipsizing. */
+.app-no-sidebar .zaray-icon-topbar .app-topbar-title,
+.personal-no-sidebar .personal-topbar .personal-topbar-module-title {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  line-height: 1.35;
+}
+.app-shell.app-no-sidebar .app-topbar.zaray-icon-topbar {
+  height: auto !important;
+  min-height: 72px !important;
+}
+.personal-no-sidebar .personal-topbar { height: auto; min-height: 72px; }
+
+/* Module navigation: tab labels never become one-line clipped strips. */
+.app-no-sidebar :is(.co-tabs,.rs-tabs) {
+  display: flex;
+  flex-wrap: wrap !important;
+  align-items: stretch;
+  overflow: visible !important;
+  gap: 8px;
+  min-width: 0;
+}
+.app-no-sidebar :is(.co-tabs,.rs-tabs) > button {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 44px;
+  height: auto;
+  flex: 0 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  text-overflow: clip !important;
+  line-height: 1.4;
+  text-align: center;
+}
+.app-no-sidebar :is(.co-tabs,.rs-tabs) > button svg {
+  flex: 0 0 17px;
+  width: 17px;
+  height: 17px;
+}
+.app-no-sidebar nav[aria-label="Onglets du module Tickets Wi-Fi"] > button {
+  min-width: 0;
+  min-height: 44px;
+  height: auto;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  text-align: center;
+}
+.app-no-sidebar nav[aria-label="Onglets du module Tickets Wi-Fi"] > button > svg {
+  flex-shrink: 0;
+}
+
+/* Touch docks: short two-line labels instead of invisible ellipses. */
+@media(max-width:700px) {
+  .workspace-mobile-dock,.personal-mobile-dock {
+    min-width: 0;
+    min-height: 72px;
+    height: auto;
+    align-items: stretch;
+    grid-auto-columns: minmax(0,1fr);
+  }
+  .workspace-mobile-dock-link,.personal-mobile-dock-link {
+    box-sizing: border-box;
+    min-width: 0;
+    height: auto;
+    min-height: 60px;
+    padding: 7px 4px;
+    gap: 5px;
+    align-items: center;
+    justify-content: center;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+  .workspace-mobile-dock-link .zaray-nav-label-text,
+  .personal-mobile-dock-link .zaray-nav-label-text,
+  .workspace-mobile-dock-link span,
+  .personal-mobile-dock-link span {
+    display: block !important;
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+    text-align: center;
+    font-size: clamp(10px,2.65vw,12px);
+  }
+  html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-nav-dropdown {
+    position: fixed !important;
+    top: 68px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: calc(100dvh - 82px) !important;
+  }
+  html[data-zaray-theme] .app-no-sidebar .zaray-icon-topbar .app-site-dropdown {
+    position: fixed !important;
+    top: 68px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: calc(100dvh - 82px) !important;
+  }
+}
+@media(max-width:500px) {
+  html[data-zaray-theme] .personal-no-sidebar .personal-home-nav-menu,
+  html[data-zaray-theme] .personal-no-sidebar .personal-profile-dropdown {
+    position: fixed !important;
+    top: 72px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: calc(100dvh - 84px) !important;
+  }
+  .app-no-sidebar :is(.co-tabs,.rs-tabs) > button {
+    flex: 1 1 min(145px,100%);
+  }
+  .app-no-sidebar nav[aria-label="Onglets du module Tickets Wi-Fi"] > button {
+    flex: 1 1 min(140px,100%);
+  }
+  .personal-no-sidebar .personal-topbar {
+    flex-wrap: wrap !important;
+    row-gap: 6px;
+  }
+  .personal-no-sidebar .personal-topbar .personal-topbar-module-title {
+    order: 10;
+    flex: 1 0 100%;
+    width: 100%;
+    text-align: start;
+    font-size: clamp(13px,3.8vw,16px);
+  }
+  .app-shell.app-no-sidebar .app-topbar.zaray-icon-topbar {
+    flex-wrap: wrap !important;
+    row-gap: 5px;
+  }
+  .app-no-sidebar .zaray-icon-topbar .app-topbar-title {
+    order: 3;
+    flex: 1 0 100%;
+    width: 100%;
+    font-size: clamp(13px,3.8vw,16px) !important;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  :where(.app-no-sidebar,.personal-no-sidebar) :is(.app-nav-flyout-trigger,.app-nav-link,.personal-nav-link,.personal-profile-action) {
+    transition: none !important;
+  }
+}
+
+/* On pointer devices, dropdown alignment is selected from the real trigger
+   position: a tablet's menu must never fall off the right edge. */
+@media(min-width:501px) {
+  html[data-zaray-theme] .personal-no-sidebar .personal-home-nav-control[data-menu-align="end"] .personal-home-nav-menu {
+    left: auto !important;
+    right: 0 !important;
+  }
+  html[data-zaray-theme] .personal-no-sidebar .personal-home-nav-control[data-menu-align="start"] .personal-home-nav-menu {
+    left: 0 !important;
+    right: auto !important;
+  }
+}

@@ -30,6 +30,7 @@ export default function PersonalShell({
 }: Props) {
   const [homeNavOpen, setHomeNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [homeNavAlign, setHomeNavAlign] = useState<'start' | 'end'>('start');
   const displayName = name?.trim() || email?.split('@')[0] || 'Utilisateur ZARAY';
   const personalModuleTitle = ({
     '/entreprises': 'Mes entreprises',
@@ -54,6 +55,12 @@ export default function PersonalShell({
   const profileRef = useRef<HTMLDivElement>(null);
   const themeButtonRef = useRef<HTMLButtonElement>(null);
   const hoverMenus = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  function alignHomeMenu() {
+    const bounds = homeNavRef.current?.getBoundingClientRect();
+    if (!bounds || window.innerWidth <= 500) return;
+    const width = Math.min(390, window.innerWidth - 24);
+    setHomeNavAlign(bounds.left + width > window.innerWidth - 12 ? 'end' : 'start');
+  }
 
   // Only anchored dropdowns: no permanent or off-canvas black sidebar.
   useEffect(() => {
@@ -82,13 +89,13 @@ export default function PersonalShell({
     <header className="personal-topbar">
       <Link href="/mon-compte" className="personal-logo" aria-label="Accueil personnel ZARAY"><BrandLogo priority /></Link>
       {active !== '/mon-compte' && personalModuleTitle && <h1 className="personal-topbar-module-title" title={personalModuleTitle}>{personalModuleTitle}</h1>}
-      <div className="personal-home-nav-control" ref={homeNavRef}
-        onMouseEnter={() => { if (hoverMenus()) { setHomeNavOpen(true); setProfileOpen(false); } }}
+      <div className="personal-home-nav-control" ref={homeNavRef} data-menu-align={homeNavAlign}
+        onMouseEnter={() => { if (hoverMenus()) { alignHomeMenu(); setHomeNavOpen(true); setProfileOpen(false); } }}
         onMouseLeave={() => { if (hoverMenus() && !homeNavRef.current?.contains(document.activeElement)) setHomeNavOpen(false); }}>
         <button ref={homeNavButton} type="button" className="personal-home-nav-toggle"
           aria-controls="personal-home-navigation-links" aria-expanded={homeNavOpen}
           aria-label="Ouvrir la navigation de mon espace ZARAY"
-          onClick={() => { setHomeNavOpen(value => !value); setProfileOpen(false); }}>
+          onClick={() => { if (!homeNavOpen) alignHomeMenu(); setHomeNavOpen(value => !value); setProfileOpen(false); }}>
           <ZarayIcon name="menu" size={22}/>
         </button>
         <nav id="personal-home-navigation-links" aria-label="Navigation du compte personnel"
@@ -98,7 +105,7 @@ export default function PersonalShell({
             aria-current={active === link.href.split('?')[0] ? 'page' : undefined}
             className={'personal-nav-link' + (active === link.href.split('?')[0] ? ' active' : '')}
             onClick={() => setHomeNavOpen(false)}>
-            <ZarayIcon name={link.icon as ZarayIconName} size={19} /> {link.label}
+            <ZarayIcon name={link.icon as ZarayIconName} size={19} /> <span className="zaray-nav-label-text">{link.label}</span>
           </Link>)}
         </nav>
       </div>
@@ -112,7 +119,7 @@ export default function PersonalShell({
             <div className="topbar-icon-curtain-inner">
               <button type="button" className="topbar-icon-menu-action"
                 onClick={() => themeButtonRef.current?.click()}>
-                <ZarayIcon name="settings" size={18} /> Changer le thème
+                <ZarayIcon name="settings" size={18} /> <span className="zaray-nav-label-text">Changer le thème</span>
               </button>
             </div>
           </div>
@@ -126,7 +133,7 @@ export default function PersonalShell({
             <div className="topbar-icon-curtain" aria-label="Création d'entreprise">
               <div className="topbar-icon-curtain-inner">
                 <Link className="topbar-icon-menu-action" href="/entreprises/nouvelle">
-                  <ZarayIcon name="company" size={18} /> Créer une entreprise
+                  <ZarayIcon name="company" size={18} /> <span className="zaray-nav-label-text">Créer une entreprise</span>
                 </Link>
               </div>
             </div>
@@ -148,7 +155,7 @@ export default function PersonalShell({
           {inviteCompanyId ?
             <Link href="/z-alliance"
               className="personal-profile-action" onClick={() => setProfileOpen(false)}>
-              <ZarayIcon name="alliance" size={18} /> Z’Alliance
+              <ZarayIcon name="alliance" size={18} /> <span className="zaray-nav-label-text">Z’Alliance</span>
             </Link>
             : <span className="personal-profile-action is-disabled" aria-disabled="true"
                 title="Cette action nécessite le rôle de propriétaire ou d’administrateur d’une entreprise.">
@@ -171,7 +178,7 @@ export default function PersonalShell({
       {links.map(item => <Link key={'mobile-' + item.href} href={item.href}
         className={'personal-mobile-dock-link' + (active === item.href ? ' is-active' : '')}
         aria-current={active === item.href ? 'page' : undefined}>
-        <ZarayIcon name={item.icon as ZarayIconName} size={21}/><span>{item.label === 'Finances des entreprises' ? 'Finances' : item.label === 'Mes entreprises' ? 'Entreprises' : 'Accueil'}</span>
+        <ZarayIcon name={item.icon as ZarayIconName} size={21}/><span className="zaray-nav-label-text">{item.label === 'Finances des entreprises' ? 'Finances' : item.label === 'Mes entreprises' ? 'Entreprises' : 'Accueil'}</span>
       </Link>)}
     </nav>
   </div>;
