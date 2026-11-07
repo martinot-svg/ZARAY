@@ -111,3 +111,25 @@
  .zw-root[data-portal-template] .zw-simple-card,
  .zw-root[data-portal-template] .zw-simple-connect{transition:none;animation:none}
 }
+
+/* Published, owner-selected input colors override every template.
+   Keep input hints contrast-safe and gently transparent. */
+.zw-root[data-site-branded="true"][data-portal-template] .zw-simple-field{
+ background:var(--zw-input-bg,#071628);
+ border-color:var(--zw-input-border,#4c6677);
+}
+.zw-root[data-site-branded="true"][data-portal-template] .zw-simple-field:focus-within{
+ border-color:var(--zw-input-focus,#20c997);
+ box-shadow:0 0 0 2px color-mix(in srgb,var(--zw-input-focus,#20c997) 25%,transparent);
+}
+.zw-root[data-site-branded="true"][data-portal-template] .zw-simple-field input{
+ color:var(--zw-input-text,#ffffff);
+ background:transparent;
+}
+.zw-root[data-site-branded="true"][data-portal-template] .zw-simple-field input::placeholder{
+ color:var(--zw-input-guide,rgba(255,255,255,.72));opacity:1;
+}
+.zw-root[data-site-branded="true"][data-portal-template] .zw-simple-field > svg,
+.zw-root[data-site-branded="true"][data-portal-template] .zw-simple-eye{
+ color:var(--zw-input-text,#ffffff);opacity:.8;
+}
