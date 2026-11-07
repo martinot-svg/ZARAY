@@ -5,13 +5,15 @@ import {Check,ChevronRight,Copy,Eye,History,Image as Picture,Monitor,RotateCcw,S
 import AppShell from '@/components/app-shell';
 import {DEFAULT_PORTAL_CONFIG,PORTAL_TEMPLATES,portalFieldPalette,type PortalConfig} from '@/lib/site-portal-config';
 import {downloadMikrotikCaptiveApi} from '@/lib/mikrotik-captive-api-download';
+import {siteLogoForSurface} from '@/lib/site-logo-variants';
+import SiteLogoManager from '@/components/site-logo-manager';
 import './site-portal-studio.css';
 
 type Site={id:string;company_id:string;name:string;company_slug:string;status:string};
 type Company={id:string;legal_name:string;slug:string;role:string};
 type Version={version:number;published_at:string};
 type PortalRouter={id:string;site_id:string;name:string;last_seen_at:string|null};
-type SiteLogoState={key:string;uri:string|null;loading:boolean;error:boolean};
+type SiteLogoState={key:string;uri:string|null;lightUri:string|null;darkUri:string|null;loading:boolean;error:boolean};
 type RouterSnapshot={companyId:string;routers:PortalRouter[];error:boolean};
 type PortalState={draft:PortalConfig;revision:number;published:PortalConfig|null;
  publishedVersion:number;publishedAt:string|null;versions:Version[]};
@@ -86,6 +88,7 @@ export default function SitePortalStudio(){
  const [loadedSite,setLoadedSite]=useState('');
  const [routerSnapshot,setRouterSnapshot]=useState<RouterSnapshot|null>(null);
  const [siteLogo,setSiteLogo]=useState<SiteLogoState|null>(null);
+ const [logoRevision,setLogoRevision]=useState(0);
  const requestVersion=useRef(0);
  const company=companies.find(c=>c.id===companyId);
  const site=sites.find(s=>s.id===siteId);
@@ -97,6 +100,9 @@ export default function SitePortalStudio(){
  const ready=loadedSite===companyId+':'+siteId;
  const brandKey=companyId+':'+siteId;
  const currentLogo=siteLogo?.key===brandKey?siteLogo:null;
+ const visibleLogo=siteLogoForSurface({
+  logoDataUri:currentLogo?.uri,logoLightDataUri:currentLogo?.lightUri,
+  logoDarkDataUri:currentLogo?.darkUri},form.panelColor);
  const linkedRouters=routerSnapshot?.companyId===companyId
   ?routerSnapshot.routers.filter(router=>router.site_id===siteId):[];
  const routerOnline=(lastSeen:string|null)=>!!lastSeen
@@ -143,7 +149,7 @@ export default function SitePortalStudio(){
   const key=companyId+':'+siteId;
   setSiteLogo(null);
   if(!companyId||!siteId)return;
-  setSiteLogo({key,uri:null,loading:true,error:false});
+  setSiteLogo({key,uri:null,lightUri:null,darkUri:null,loading:true,error:false});
   (async()=>{
    try{
     // The same site-only branding used for web and native MikroTik exports.
@@ -153,13 +159,16 @@ export default function SitePortalStudio(){
     const uri=typeof candidate==='string'&&candidate.length<=180000
      &&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/i.test(candidate)
       ?candidate:null;
-    setSiteLogo({key,uri,loading:false,error:false});
+    setSiteLogo({key,uri,
+     lightUri:typeof data.settings?.logo_light_data_uri==='string'?data.settings.logo_light_data_uri:null,
+     darkUri:typeof data.settings?.logo_dark_data_uri==='string'?data.settings.logo_dark_data_uri:null,
+     loading:false,error:false});
    }catch{
-    if(active)setSiteLogo({key,uri:null,loading:false,error:true});
+    if(active)setSiteLogo({key,uri:null,lightUri:null,darkUri:null,loading:false,error:true});
    }
   })();
   return()=>{active=false;};
- },[companyId,siteId]);
+ },[companyId,siteId,logoRevision]);
 
  const reload=useCallback(async(id:string,tenant:string)=>{
   // A response for a previously selected site must never replace another site's draft.
@@ -308,7 +317,9 @@ export default function SitePortalStudio(){
        <label>Sous-titre <textarea rows={2} maxLength={180} value={form.subtitle} onChange={e=>change('subtitle',e.target.value)} disabled={!canEdit}/></label>
        <label>Bouton de connexion <input maxLength={45} value={form.buttonLabel} onChange={e=>change('buttonLabel',e.target.value)} disabled={!canEdit}/></label>
        <label>Message d’accueil <input maxLength={180} value={form.welcomeMessage} onChange={e=>change('welcomeMessage',e.target.value)} disabled={!canEdit}/></label>
-       <p className="ps-hint">Le nom, le logo transparent et les coordonnées du site restent gérés dans l’identité existante.</p>
+       <SiteLogoManager companyId={companyId} siteId={siteId} canEdit={canEdit}
+        onUpdated={()=>setLogoRevision(value=>value+1)}/>
+       <p className="ps-hint">Les versions claire et sombre sont réutilisées dans les tickets et le portail du site.</p>
        <Link className="ps-external" href={'/personnalisation-tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)}>
         Modifier l’identité et le logo du site <ChevronRight size={15}/>
        </Link>
@@ -394,8 +405,8 @@ export default function SitePortalStudio(){
         {form.coverImageDataUri&&<img className="ps-cover" alt="" src={form.coverImageDataUri}/>}
         <div className="ps-demo-card">
          <div className="ps-site-logo" aria-label={'Logo du site '+site.name}>
-          {currentLogo?.uri
-           ?<img src={currentLogo.uri} alt={'Logo du site '+site.name}/>
+          {visibleLogo
+           ?<img src={visibleLogo} alt={'Logo du site '+site.name}/>
            :<span>{currentLogo?.loading?'Chargement du logo…':currentLogo?.error?'Logo indisponible':'Logo non configuré'}</span>}
          </div>
          {form.welcomeMessage&&<span className="ps-kicker">{form.welcomeMessage}</span>}
