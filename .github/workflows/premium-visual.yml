@@ -44,6 +44,8 @@ jobs:
         run: node tests/flyout-curtain-visual.mjs
       - name: Verify readable menus and curtain in both themes
         run: node tests/flyout-theme-contrast-visual.mjs
+      - name: Verify navigation labels and opened menus on desktop tablet mobile
+        run: node tests/navigation-layout-visual.mjs
       - name: Verify compact forms on desktop, tablet and mobile
         env:
           BASE_URL: http://127.0.0.1:3000
