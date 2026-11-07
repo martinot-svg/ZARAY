@@ -36,16 +36,16 @@ export async function merchantForSite(companyId:string,siteId:string){
   .select('mode').eq('site_id',siteId).eq('company_id',companyId).maybeSingle();
  if(routingError)throw new Error('Payment routing unavailable');
  const scope=routing?.mode==='dedicated'?siteId:null;
- const {data,error}=await service.from('fiveonepay_merchants').select('*')
-  .eq('company_id',companyId).eq('enabled',true).eq('environment','production')
-  .is('site_id',scope).maybeSingle();
+ const production=service.from('fiveonepay_merchants').select('*')
+  .eq('company_id',companyId).eq('enabled',true).eq('environment','production');
+ const {data,error}=await (scope?production.eq('site_id',scope):production.is('site_id',null)).maybeSingle();
  // Sandbox merchant can be used only with explicit server-side sandbox opt-in.
  if(error)throw new Error('Merchant lookup unavailable');
  if(data)return data as FiveOneMerchant;
  if(process.env.ZARAY_FIVEONEPAY_SANDBOX_ENABLED==='true'){
-  const {data:test,error:testError}=await service.from('fiveonepay_merchants').select('*')
-   .eq('company_id',companyId).eq('enabled',true).eq('environment','sandbox')
-   .is('site_id',scope).maybeSingle();
+  const sandbox=service.from('fiveonepay_merchants').select('*')
+   .eq('company_id',companyId).eq('enabled',true).eq('environment','sandbox');
+  const {data:test,error:testError}=await (scope?sandbox.eq('site_id',scope):sandbox.is('site_id',null)).maybeSingle();
   if(testError)throw new Error('Sandbox merchant lookup unavailable');
   return (test||null) as FiveOneMerchant|null;
  }
