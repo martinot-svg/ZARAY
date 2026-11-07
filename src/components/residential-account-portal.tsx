@@ -5,6 +5,7 @@ import {Bell,CalendarClock,CheckCircle2,ChevronRight,Clock3,LogOut,Mail,ShieldCh
 import {createClient} from '@/lib/supabase/client';
 import NotificationInbox from '@/components/notification-inbox';
 import {subscriberAccountName} from '@/lib/residential-site-labels';
+import FiveOneCheckoutButton from '@/components/fiveonepay-checkout-button';
 import ResidentialNotificationPreferences from '@/components/residential-notification-preferences';
 import ResidentialAlarmPreferences from '@/components/residential-alarm-preferences';
 import './residential-account-portal.css';
@@ -17,7 +18,7 @@ type Identity={
 type Subscription={id:string;offer_name:string;validity_days:number;paid_cycles:number;activated_cycles:number;activated_at:string|null;expires_at:string|null;created_at:string};
 type Order={id:string;public_reference:string;offer_name:string;status:string;amount:number|string;currency:string;paid_at:string|null;created_at:string};
 type Cycle={order_id:string;offer_name:string;amount:number|string;currency:string;paid_at:string;activated_at:string|null;period_start:string|null;period_end:string|null};
-type Account={customer:{name:string};site:Identity;subscriptions:Subscription[];orders:Order[];cycles:Cycle[];status:string;usage:{available:boolean;downloadBytes:number|null;uploadBytes:number|null;rateDownBps:number|null;rateUpBps:number|null;message:string}};
+type Account={customer:{name:string;email:string};site:Identity;subscriptions:Subscription[];orders:Order[];cycles:Cycle[];status:string;usage:{available:boolean;downloadBytes:number|null;uploadBytes:number|null;rateDownBps:number|null;rateUpBps:number|null;message:string}};
 type Phase='loading'|'login'|'otp'|'account'|'denied';
 const date=(value:string|null)=>value?new Date(value).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'—';
 const money=(value:number|string,currency:string)=>Number(value).toLocaleString('fr-FR')+' '+(currency==='MGA'?'Ar':currency);
@@ -155,7 +156,7 @@ export default function ResidentialAccountPortal({siteId}:{siteId:string}){
      <ResidentialAlarmPreferences siteId={siteId} />
      <section className="rp-panel">
       <div className="rp-section-heading"><h2>Paiements et renouvellements</h2>{from&&<a href={'/wifi/'+encodeURIComponent(from)+'?siteId='+encodeURIComponent(siteId)}>Voir les offres <ChevronRight size={15}/></a>}</div>
-      {account.orders.length?<div className="rp-list">{account.orders.map(order=><div className="rp-list-row" key={order.id}><div><strong>{order.offer_name}</strong><small>{order.public_reference} · {date(order.created_at)}</small></div><div className="rp-list-value"><strong>{money(order.amount,order.currency)}</strong><small>{order.status==='paid'?'Payé':order.status==='pending_payment'?'Paiement attendu':order.status}</small></div></div>)}</div>:<p>Aucune opération enregistrée pour ce site.</p>}
+      {account.orders.length?<div className="rp-list">{account.orders.map(order=><div className="rp-list-row" key={order.id}><div><strong>{order.offer_name}</strong><small>{order.public_reference} · {date(order.created_at)}</small></div><div className="rp-list-value"><strong>{money(order.amount,order.currency)}</strong><small>{order.status==='paid'?'Payé':order.status==='pending_payment'?'Paiement attendu':order.status}</small>{order.status==='pending_payment'&&<FiveOneCheckoutButton siteId={siteId} reference={order.public_reference} customerEmail={account.customer.email}/>}</div></div>)}</div>:<p>Aucune opération enregistrée pour ce site.</p>}
      </section>
      <p className="rp-network-note"><ShieldCheck size={16}/> Votre accès Internet n'est confirmé qu'après activation par votre fournisseur. Les mesures réseau ne sont pas simulées.</p>
     </>}
