@@ -8,7 +8,7 @@ test('the live WiFi portal displays the site identity and no vendor branding',()
  assert.match(web,/\/api\/public\/residential-site\?siteId=/);
  assert.match(web,/currentIdentity=siteIdentity\?\.siteId===selectedSiteId&&siteIdentity\.companySlug===slug/);
  assert.match(web,/currentIdentity\?\.brandName/);
- assert.match(web,/currentIdentity\?\.logoDataUri/);
+ assert.match(web,/siteLogoForSurface\(currentIdentity/);
  assert.match(web,/!demo&&selectedSiteId&&/);
  assert.match(web,/portalDesign\?\.showAccount/);
  assert.match(web,/\/mon-internet\//);
