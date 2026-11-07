@@ -52,7 +52,7 @@ export async function GET(request:NextRequest){
    :!first.activated_cycles?'Activation en attente'
    :!first.expires_at?'Échéance à confirmer'
    :Date.parse(first.expires_at)<Date.now()?'Expiré':'En cours';
-  return reply({customer:{name:customer.full_name},site,
+  return reply({customer:{name:customer.full_name,email:user.email.toLowerCase()},site,
    subscriptions:subscriptions||[],orders:orders||[],cycles,status,
    usage:{available:false,downloadBytes:null,uploadBytes:null,rateDownBps:null,rateUpBps:null,
     message:'Les mesures de consommation et de débit ne sont pas encore transmises par le routeur.'}
