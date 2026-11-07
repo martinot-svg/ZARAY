@@ -3,6 +3,7 @@
 import type { DashboardPayload } from '@/lib/dashboard-types';
 import Link from 'next/link';
 import AppShell from '@/components/app-shell';
+import SitePerformanceOverview from '@/components/site-performance-overview';
 import { ZarayIcon, type ZarayIconName } from '@/components/ui/zaray-icon';
 
 type Metrics = DashboardPayload['metrics'];
@@ -51,6 +52,8 @@ export default function DashboardWorkspace({ siteId, payload }: {
           <div className="kpi-value">{values[key]===null?<span className="muted">Indisponible</span>:values[key]!.toLocaleString('fr-FR')}</div>
         </article>)}
       </section>
+
+      {site&&<SitePerformanceOverview companyId={company.id} siteId={site.id}/>}
 
       {!site&&<section className="panel dashboard-sites" aria-label="Sites de l'entreprise">
         <div className="panel-head"><h2 className="panel-title">Sites <span className="dashboard-heading-count">{sites.length}</span></h2></div>
