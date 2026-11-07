@@ -4,17 +4,19 @@ import { readFileSync } from 'node:fs';
 
 const read = (path) => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 
-test('enterprise toolbar renders the official logo first and all controls to the right', () => {
+test('enterprise toolbar keeps the logo, menu, alerts and site while moving secondary controls into the menu', () => {
   const shell = read('src/components/app-shell.tsx');
   const head = shell.slice(shell.indexOf('<header className="app-topbar zaray-icon-topbar">'), shell.indexOf('</header>'));
   const brand = head.indexOf('className="app-topbar-brand"');
   const actions = head.indexOf('className="app-topbar-links"');
   const menu = head.indexOf('className="app-menu-container"');
   const site = head.indexOf('className="app-site-container"');
-  const theme = head.indexOf('className="topbar-icon-group topbar-theme-control"');
-  const account = head.indexOf('aria-label="Mon compte"');
-  const overview = head.indexOf('aria-label="Vue générale"');
-  assert.ok(brand >= 0 && brand < actions && actions < menu && menu < site && site < theme && theme < account && account < overview);
+  const notifications = head.indexOf('aria-label="Centre de notifications"');
+  assert.ok(brand >= 0 && brand < actions && actions < menu && menu < notifications && notifications < site);
+  assert.doesNotMatch(head, /className="topbar-icon-group topbar-theme-control"/);
+  assert.doesNotMatch(head, /aria-label="Mon compte"/);
+  assert.match(shell, /<ThemeSwitch className="app-nav-theme-switch" \/>/);
+  assert.match(shell, /Changer d’entreprise/);
   assert.doesNotMatch(head,/className="workspace-context"/);
   assert.doesNotMatch(head,/<select\b/);
   assert.match(head,/aria-label="ZARAY · Espace personnel"/);
