@@ -1,5 +1,7 @@
 'use client';
 import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
+import {selectedCompany} from '@/lib/workspace-url';
+import ModuleDataState from '@/components/module-data-state';
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/app-shell';
@@ -29,11 +31,11 @@ export default function WifiTicketsPage() {
     (async()=>{
       try {
         const qs=new URLSearchParams(window.location.search);
-        const companyId=qs.get('companyId')??'';
-        if(!companyId){window.location.replace('/entreprises');return;}
         const response=await fetchWorkspaceDirectory();
         const data=await response.json();
         if(!response.ok)throw new Error(data.error||'Contexte entreprise indisponible.');
+        const companyId=selectedCompany(data.companies??[],data.sites??[]);
+        if(!companyId)throw new Error('Aucune entreprise accessible pour les tickets.');
         const selected=(data.companies??[]).find((c:Company)=>c.id===companyId) as Company|undefined;
         if(!selected)throw new Error('Entreprise inaccessible.');
         const requestedSite=qs.get('siteId')??'';
@@ -74,11 +76,19 @@ export default function WifiTicketsPage() {
     return()=>window.removeEventListener('popstate',listener);
   },[company]);
 
-  if(loading)return <AppShell activePath="/tickets" title="Tickets Wi-Fi"><span className="motion-sr-only" role="status">Préparation des tickets Wi-Fi</span></AppShell>;
-  if(error||!company)return <main className="form-shell"><section className="form-card">
-    <h1>Tickets Wi-Fi indisponibles</h1><p role="alert">{error||'Entreprise inaccessible.'}</p>
-    <a href="/entreprises">Revenir à mes entreprises</a>
-  </section></main>;
+  if(loading)return <AppShell activePath="/tickets" title="Tickets Wi-Fi">
+    <section className="panel" aria-label="Tickets Wi-Fi" style={{padding:16}}>
+     <h2 className="panel-title">Tickets Wi-Fi</h2>
+     <ModuleDataState label="Préparation des tickets et de vos autorisations…"/>
+    </section>
+   </AppShell>;
+  if(error||!company)return <AppShell activePath="/tickets" title="Tickets Wi-Fi">
+    <section className="panel" role="alert">
+     <h2>Tickets Wi-Fi indisponibles</h2>
+     <p>{error||'Entreprise inaccessible.'}</p>
+     <a href="/entreprises">Revenir à mes entreprises</a>
+    </section>
+   </AppShell>;
 
   const manager=isManager(company.role);
   return <AppShell activePath="/tickets" companyId={company.id} siteId={siteId||undefined} title="Tickets Wi-Fi">
