@@ -74,13 +74,13 @@ test('topbar menu replaces personal sidebar with outside-click, Escape and reduc
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 });
 
-test('company menu uses three named groups, retains routes and excludes public website link',()=>{
+test('company menu uses six flyout rubrics, retains routes and excludes public website link',()=>{
  const nav=source('src/components/app-shell.tsx');
- for(const section of ['GESTION','ACTIVITÉ','FINANCE & RÉSEAU'])assert.ok(nav.includes(section));
+ for(const section of ['Pilotage','Clients & abonnements','Ventes & commandes','Finances','Portail & réseau','Administration'])assert.ok(nav.includes("label: '"+section+"'"));
  for(const path of ['/tableau-de-bord','/sites','/membres','/clients','/offres','/commandes','/tickets','/paiements/verification','/parametres-paiement','/portail'])assert.ok(nav.includes("'"+path+"'"),path);
  assert.doesNotMatch(nav,/Voir le site public/);
  assert.match(nav,/aria-controls="zaray-app-nav"/);
- assert.match(nav,/Retour au compte personnel/);
+ assert.match(nav,/Mon compte/);
  assert.match(nav,/SignOutButton/);
 });
 test('company list preserves creation route and never uses example records',()=>{
@@ -129,9 +129,10 @@ test('company dashboard scope stays visible, navigation remains compact and mobi
 
 test('site filtering is limited to operational pages and company-wide site directory remains global',()=>{
  const shell=source('src/components/app-shell.tsx');
- assert.match(shell,/const siteOperational = \['\/clients','\/commandes','\/abonnements','\/tickets','\/paiements\/verification'\]/);
- assert.match(shell,/activeSite && siteOperational/);
- assert.match(shell,/href === '\/entreprises'/);
+ assert.match(shell,/const operational = \['\/clients', '\/commandes', '\/abonnements', '\/tickets', '\/caisse', '\/paiements\/verification'\]/);
+ assert.match(shell,/activeSite && operational\.includes\(href\)/);
+ assert.match(shell,/href="\/entreprises"/);
+ assert.match(shell,/href === 'site-domain'/);
 });
 
 test('personal dashboard uses only authorized enterprise finance data and clear KPI semantics',()=>{
