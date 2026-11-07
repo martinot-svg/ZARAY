@@ -115,7 +115,7 @@ test('site colors, logo and welcome text are applied as safe values, not HTML in
 test('MikroTik HTML exposes only the current site subscriber account when backend is available',()=>{
  assert.match(portal,/id="accountLink" class="account-link" href="#" hidden/);
  assert.match(portal,/SITE_HOSTED/);
- assert.match(portal,/PUBLIC_API_BASE\+'\/mycompte\/me'/);
+ assert.match(portal,/PUBLIC_API_BASE\+'\/kaotiko\/me'/);
  assert.match(portal,/PUBLIC_API_BASE\+'\/mon-internet\/'\+encodeURIComponent\(SITE_ID\)/);
  assert.match(portal,/!LOCAL_ONLY&&PUBLIC_API_BASE&&/);
  assert.match(portal,/PORTAL\.showAccount!==false/);
