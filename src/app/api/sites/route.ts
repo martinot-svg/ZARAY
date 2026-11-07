@@ -97,10 +97,9 @@ export async function POST(request: NextRequest) {
     try{
       if(dual){
         // Only download originals after the administrator and tenant are checked.
-        const [light,dark]=await Promise.all([
-          processStoredSiteLogo(service,lightPath,companyId,permission.user.id),
-          processStoredSiteLogo(service,darkPath,companyId,permission.user.id)
-        ]);
+        // Sequential decoding bounds memory use for high-resolution originals.
+        const light=await processStoredSiteLogo(service,lightPath,companyId,permission.user.id);
+        const dark=await processStoredSiteLogo(service,darkPath,companyId,permission.user.id);
         pair={light,dark};
       }else processed=await normalizeTransparentSiteLogo(logo);
     }catch(e){return json(e instanceof Error?e.message:'Fichier du logo invalide.',400);}
