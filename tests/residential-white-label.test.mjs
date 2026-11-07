@@ -6,8 +6,9 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 test('the live WiFi portal displays the site identity and no vendor branding',()=>{
  const web=read('src/components/public-wifi-portal.tsx');
  assert.match(web,/\/api\/public\/residential-site\?siteId=/);
- assert.match(web,/siteIdentity\?\.brandName/);
- assert.match(web,/siteIdentity\?\.logoDataUri/);
+ assert.match(web,/currentIdentity=siteIdentity\?\.siteId===selectedSiteId&&siteIdentity\.companySlug===slug/);
+ assert.match(web,/currentIdentity\?\.brandName/);
+ assert.match(web,/currentIdentity\?\.logoDataUri/);
  assert.match(web,/!demo&&selectedSiteId&&/);
  assert.match(web,/portalDesign\?\.showAccount/);
  assert.match(web,/\/mon-internet\//);

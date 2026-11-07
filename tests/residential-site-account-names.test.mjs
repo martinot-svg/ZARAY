@@ -44,7 +44,8 @@ test('account link remains tied to the site selected on the wifi and hotspot por
  const hotspot=read('public/hotspot/zaray-login.html');
  const proxy=read('proxy.ts');
  const account=read('src/app/api/residential/account/route.ts');
- assert.match(web,/subscriberAccountName\(\{brandName:siteIdentity\?\.brandName/);
+ assert.match(web,/currentIdentity=siteIdentity\?\.siteId===selectedSiteId&&siteIdentity\.companySlug===slug/);
+ assert.match(web,/subscriberAccountName\(\{brandName:currentIdentity\?\.brandName/);
  assert.match(web,/\/mon-internet\/'\+encodeURIComponent\(selectedSiteId\)/);
  assert.match(hotspot,/SITE_HOSTED/);
  assert.match(hotspot,/PUBLIC_API_BASE\+'\/mycompte\/me'/);

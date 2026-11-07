@@ -413,3 +413,9 @@
 .zw-root[data-site-branded="true"] .zw-simple-connect{
  color:var(--zw-site-button-ink,#10251a);
 }
+
+/* A provider's branding slot contains only that site's logo. */
+.zw-root[data-site-branded="true"] .zw-site-logo-fallback{
+ display:block;text-align:center;font-size:11px;color:var(--zw-site-title,#f6fafe);
+ opacity:.68;padding:12px 0;max-width:180px;
+}

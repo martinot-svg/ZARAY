@@ -21,6 +21,10 @@ export type PortalConfig={
  backgroundColor:string;
  panelColor:string;
  textColor:string;
+ inputBackgroundColor:string;
+ inputBorderColor:string;
+ inputFocusColor:string;
+ inputTextColor:string;
  align:'center'|'left';
  cornerRadius:number;
  showOffers:boolean;
@@ -42,6 +46,10 @@ export const DEFAULT_PORTAL_CONFIG:PortalConfig={
  backgroundColor:'#06111e',
  panelColor:'#10273a',
  textColor:'#f1fff9',
+ inputBackgroundColor:'#071628',
+ inputBorderColor:'#4c6677',
+ inputFocusColor:'#20c997',
+ inputTextColor:'#ffffff',
  align:'center',
  cornerRadius:22,
  showOffers:true,
@@ -93,6 +101,11 @@ export function parsePortalConfig(input:unknown):PortalConfig{
   backgroundColor:getColor(object.backgroundColor),
   panelColor:getColor(object.panelColor),
   textColor:getColor(object.textColor),
+  // Backward compatible with previously published portal versions.
+  inputBackgroundColor:getColor(object.inputBackgroundColor??DEFAULT_PORTAL_CONFIG.inputBackgroundColor),
+  inputBorderColor:getColor(object.inputBorderColor??DEFAULT_PORTAL_CONFIG.inputBorderColor),
+  inputFocusColor:getColor(object.inputFocusColor??DEFAULT_PORTAL_CONFIG.inputFocusColor),
+  inputTextColor:getColor(object.inputTextColor??DEFAULT_PORTAL_CONFIG.inputTextColor),
   align:object.align,
   cornerRadius:Number(object.cornerRadius),
   showOffers:object.showOffers as boolean,
@@ -106,4 +119,44 @@ export function parsePortalConfig(input:unknown):PortalConfig{
 }
 export function readPortalConfig(source:unknown):PortalConfig|null{
  try{return parsePortalConfig(source);}catch{return null;}
+}
+
+/** Shared contrast-safe field tokens used by both editor preview and web portal.
+ * Text colors picked by the owner are honored whenever they meet WCAG AA.
+ * Placeholder alpha is selected against the actual input background, not the card.
+ */
+function luminance(value:string):number{
+ const rgb=[1,3,5].map(offset=>{
+  const channel=parseInt(value.slice(offset,offset+2),16)/255;
+  return channel<=.04045?channel/12.92:Math.pow((channel+.055)/1.055,2.4);
+ });
+ return .2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2];
+}
+function contrast(a:string,b:string):number{
+ const x=luminance(a),y=luminance(b);
+ return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);
+}
+function mixedWithBackground(ink:string,bg:string,alpha:number):string{
+ const channel=(n:number)=>{
+  const a=parseInt(ink.slice(n,n+2),16),b=parseInt(bg.slice(n,n+2),16);
+  return Math.round(a*alpha+b*(1-alpha)).toString(16).padStart(2,'0');
+ };
+ return '#'+channel(1)+channel(3)+channel(5);
+}
+export function portalFieldPalette(config:Pick<PortalConfig,
+ 'inputBackgroundColor'|'inputBorderColor'|'inputFocusColor'|'inputTextColor'>){
+ const background=config.inputBackgroundColor;
+ const preferred=config.inputTextColor;
+ const black='#000000',white='#ffffff';
+ const text=contrast(preferred,background)>=4.5?preferred:
+  contrast(black,background)>=contrast(white,background)?black:white;
+ const base=contrast(black,background)>=contrast(white,background)?black:white;
+ let opacity=.72;
+ // A gently muted guide, never an invisible guide on a midtone surface.
+ while(opacity<.98&&contrast(mixedWithBackground(base,background,opacity),background)<4.5)
+  opacity=Math.min(1,Math.round((opacity+.02)*100)/100);
+ const placeholder=base===white
+  ?'rgba(255,255,255,'+opacity.toFixed(2)+')'
+  :'rgba(0,0,0,'+opacity.toFixed(2)+')';
+ return {background,border:config.inputBorderColor,focus:config.inputFocusColor,text,placeholder};
 }
