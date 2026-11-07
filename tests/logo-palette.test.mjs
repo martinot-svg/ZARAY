@@ -23,7 +23,7 @@ test('monochrome and transparent images are handled safely',()=>{
 test('logo upload and manual override remain available per site',()=>{
  const ui=readFileSync('src/components/wifi-ticket-customization.tsx','utf8');
  assert.match(ui,/paletteFromLogo\((?:uri|targetUri)\)/);
- assert.match(ui,/Reprendre les couleurs du logo/);
+ assert.match(ui,/SiteLogoManager/);
  assert.match(ui,/\['primary_color','Principale'\]/);
  assert.match(ui,/\['accent_color','Accent \/ dégradé'\]/);
  assert.match(ui,/logoRequest\.current\+\+/);
@@ -35,8 +35,8 @@ test('ticket exports and Hotspot keep uploaded logo visible',()=>{
  const portal=readFileSync('public/hotspot/zaray-login.html','utf8');
  assert.match(pdf,/export async function requireVoucherLogo/);
  assert.match(pdf,/if\(uri&&!logo\)throw Error/);
- assert.match(pdf,/const logoUsed=logoPaint\(ctx,logo,mainX,y\+7,64,36\)/);
- assert.match(generator,/await requireVoucherLogo\(design.logo_data_uri\)/);
+ assert.match(pdf,/const logoUsed=logoPaint\(ctx,logo,mainX,y\+9,64,h-18\)/);
+ assert.match(generator,/await requireVoucherLogo\(ticketLogo\(design\)\)/);
  assert.match(generator,/canvas\.dataset\.logoReady!=='true'/);
  assert.match(canvas,/canvas\.dataset\.logoReady='true'/);
  assert.match(portal,/\.logo-mark\.has-site-logo/);

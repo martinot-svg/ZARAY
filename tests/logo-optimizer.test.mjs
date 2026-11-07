@@ -109,9 +109,10 @@ test('upload accepts transparent PNG/WebP only and uses no background removal AI
  const editor=readFileSync('src/components/wifi-ticket-customization.tsx','utf8');
  const backend=readFileSync('src/app/api/ticket-templates/route.ts','utf8');
  const portal=readFileSync('public/hotspot/zaray-login.html','utf8');
- assert.match(editor,/accept="image\/png,image\/webp"/);
+ const manager=readFileSync('src/components/site-logo-manager.tsx','utf8');
+ assert.match(manager,/accept="image\/png,image\/svg\+xml,image\/webp"/);
  assert.match(editor,/await optimizeLogo\(uri\)/);
- assert.match(editor,/marges entièrement transparentes/);
+ assert.match(readFileSync('src/components/site-logo-manager.tsx','utf8'),/marges transparentes inutiles/);
  assert.match(backend,/stats\.isOpaque/);
  assert.match(backend,/stored\?\.logo_data_uri!==logo/);
  assert.doesNotMatch(source,/cleanLogoPixels|removeComplexBackground|logo-ai/);

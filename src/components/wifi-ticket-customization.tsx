@@ -7,6 +7,8 @@ import {legibleInk} from '@/lib/ticket-pdf';
 import {paletteFromLogo} from '@/lib/logo-palette';
 import {optimizeLogo} from '@/lib/logo-optimizer';
 import {downloadMikrotikCaptiveApi} from '@/lib/mikrotik-captive-api-download';
+import SiteLogoManager from '@/components/site-logo-manager';
+import {siteLogoForSurface} from '@/lib/site-logo-variants';
 
 type Site={id:string;company_id:string;name:string};
 type Offer={id:string;name:string;status:string;duration_minutes:number;validity_days:number;price_amount:number|string;currency:string};
@@ -135,6 +137,8 @@ export default function WifiTicketCustomization(){
     siteName:site?.name??'',
     brandName:String(base.brand_name||site?.name||companyName).slice(0,90),
     logoDataUri:typeof base.logo_data_uri==='string'?base.logo_data_uri:null,
+    logoLightDataUri:typeof base.logo_light_data_uri==='string'?base.logo_light_data_uri:null,
+    logoDarkDataUri:typeof base.logo_dark_data_uri==='string'?base.logo_dark_data_uri:null,
     primaryColor:base.primary_color||'#40caff',
     accentColor:base.accent_color||'#66eabe',
     secondaryColor:base.secondary_color||'#ffffff',
@@ -220,16 +224,12 @@ export default function WifiTicketCustomization(){
         </button>)}
       </div>
       <h2>Couleurs et identité</h2>
-      {!offerId?<div><label>Logo du site avec fond transparent (PNG ou WebP)</label>
-        <input type="file" accept="image/png,image/webp" onChange={upload} disabled={analyzingLogo}/>
-        <p className="muted">Importez un logo dont le fond est déjà transparent. ZARAY rogne uniquement les marges entièrement transparentes, sans effacer le fond ni les détails du dessin. Aucun détourage IA.</p>
-        
-        {form.logo_data_uri&&<div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:12,margin:'12px 0'}}>
-         <img src={form.logo_data_uri} alt="Logo du site chargé" style={{maxWidth:'100%',width:'auto',height:'auto',maxHeight:180,objectFit:'contain',borderRadius:10,border:'1px solid #9BADBA'}}/>
-         <button type="button" disabled={analyzingLogo} onClick={()=>void applyLogoPalette(form.logo_data_uri!,false)}>{analyzingLogo?'Analyse du logo…':'Reprendre les couleurs du logo'}</button>
-         <button type="button" disabled={analyzingLogo} onClick={()=>{logoRequest.current++;change('logo_data_uri',null);}}>Retirer le logo</button>
-        </div>}
-      </div>:null}
+      {!offerId&&<SiteLogoManager companyId={companyId} siteId={siteId}
+       onUpdated={()=>{void (async()=>{
+        const response=await fetch('/api/ticket-templates?'+new URLSearchParams({companyId,siteId}),{cache:'no-store'});
+        const data=await response.json();
+        if(response.ok)setForm(old=>({...old,...data.settings}));
+       })();}}/>}
       <div className="field-grid">
         {([['primary_color','Principale'],['secondary_color','Fond'],['accent_color','Accent / dégradé'],
            ['title_color','Texte'],['border_color','Bordure']] as const).map(([key,label])=>
@@ -283,7 +283,8 @@ export default function WifiTicketCustomization(){
        
        {!offerId?<div aria-label="Aperçu du portail captif du site" style={{margin:'14px auto',maxWidth:360,padding:16,borderRadius:20,background:form.secondary_color||'#102334',border:'1px solid '+(form.primary_color||'#40caff'),textAlign:'center',color:legibleInk(form.title_color||'#f2fbff',form.secondary_color||'#102334')}}>
          <div aria-label="Emplacement centré du logo" style={{display:'flex',justifyContent:'center',alignItems:'center',maxWidth:'100%',margin:'0 auto 8px'}}>
-          {form.logo_data_uri?<img src={form.logo_data_uri} alt="Logo du site" style={{display:'block',width:'auto',height:'auto',maxWidth:'min(62%,180px)',maxHeight:76,objectFit:'contain',margin:'0 auto'}}/>:<div aria-hidden="true" style={{fontSize:25,fontWeight:800,color:form.accent_color||'#66eabe'}}>Wi-Fi</div>}
+          {siteLogoForSurface({logoDataUri:form.logo_data_uri,logoLightDataUri:form.logo_light_data_uri,logoDarkDataUri:form.logo_dark_data_uri},form.secondary_color)
+           ?<img src={siteLogoForSurface({logoDataUri:form.logo_data_uri,logoLightDataUri:form.logo_light_data_uri,logoDarkDataUri:form.logo_dark_data_uri},form.secondary_color)!} alt="Logo du site" style={{display:'block',width:'auto',height:'auto',maxWidth:'min(62%,180px)',maxHeight:76,objectFit:'contain',margin:'0 auto'}}/>:<div aria-hidden="true" style={{fontSize:25,fontWeight:800,color:form.accent_color||'#66eabe'}}>Wi-Fi</div>}
          </div>
          <div style={{fontWeight:800,fontSize:16}}>{form.brand_name||site?.name||companyName}</div>
          <p style={{fontSize:11,color:legibleInk(form.title_color||'#f2fbff',form.secondary_color||'#102334'),opacity:.82}}>{form.welcome_message||'Chaque connexion ouvre votre univers.'}</p>

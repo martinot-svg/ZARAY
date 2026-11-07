@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import {
-  loadVoucherLogo,paintVoucher,TICKET_PIXEL_WIDTH,TICKET_PIXEL_HEIGHT,
+  loadVoucherLogo,paintVoucher,ticketLogo,TICKET_PIXEL_WIDTH,TICKET_PIXEL_HEIGHT,
   type PrintableVoucher,type TicketVisual
 } from '@/lib/ticket-pdf';
 
@@ -20,8 +20,8 @@ export default function VoucherCanvas({ticket,design,siteName,preview=false}:{
        canvas.dataset.logoReady='false';
        // Draw the readable core immediately, even while a logo is decoding.
        paintVoucher(ctx,0,0,ticket,design,siteName,null);
-       if(design.logo_data_uri){
-         void loadVoucherLogo(design.logo_data_uri).then(logo=>{
+       if(ticketLogo(design)){
+         void loadVoucherLogo(ticketLogo(design)).then(logo=>{
            if(!alive)return;
            if(!logo){canvas.dataset.logoReady='error';return;}
            ctx.clearRect(0,0,canvas.width,canvas.height);

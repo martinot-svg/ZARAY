@@ -85,7 +85,7 @@ test('native captive portal opens only the login with one discreet offers contro
 test('public brand lookup is scoped by active site and default site template, not offer overrides',()=>{
  assert.match(api,/\.eq\('id',siteId\)\.eq\('status','active'\)/);
  assert.match(api,/\.eq\('site_id',siteId\)\.eq\('company_id',site.company_id\)\.is\('offer_id',null\)/);
- assert.match(api,/\.select\('brand_name,logo_data_uri,primary_color,accent_color,welcome_message'\)/);
+ assert.match(api,/\.select\('brand_name,logo_data_uri,primary_color,secondary_color,accent_color,welcome_message'\)/);
  assert.match(api,/branding,/);
  assert.doesNotMatch(api,/service[_-]?role[_-]?key|credential_hash|ticket_password/);
 });

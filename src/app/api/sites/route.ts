@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import {createServiceClient} from '@/lib/supabase/service';
 import {authorizeTenant} from '@/lib/tenant-context';
 import {normalizeTransparentSiteLogo} from '@/lib/site-logo-server';
+import {processStoredSiteLogo} from '@/lib/site-logo-library';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,12 +67,16 @@ export async function POST(request: NextRequest) {
     const email=typeof body.email==='string'?body.email.trim().toLowerCase():'';
     const phone=typeof body.phone==='string'?body.phone.trim():'';
     const logo=typeof body.logoDataUri==='string'?body.logoDataUri:'';
+    const lightPath=typeof body.lightLogoPath==='string'?body.lightLogoPath:'';
+    const darkPath=typeof body.darkLogoPath==='string'?body.darkLogoPath:'';
+    const dual=!!(lightPath||darkPath);
     const colors=(body.palette&&typeof body.palette==='object'&&!Array.isArray(body.palette)
       ?body.palette:{}) as Record<string,unknown>;
     if(!SITE_NAME.test(name)||address.length<3||address.length>160||
        email.length>254||!/^\S+@\S+\.\S+$/.test(email)||
        phone.length<5||phone.length>32||!/^[+0-9(). /-]+$/.test(phone)||
-       !logo)return json('Renseignez le nom, l’adresse, un e-mail, un téléphone et un logo PNG/WebP transparent.',400);
+       (dual?(!lightPath||!darkPath||lightPath===darkPath):!logo))
+      return json('Renseignez tous les champs et les deux versions transparentes du logo (claire et sombre).',400);
     const defaults={
       primary_color:'#167a46',secondary_color:'#ffffff',
       accent_color:'#0e9f6e',title_color:'#10251a',border_color:'#a5b9ad'
@@ -87,19 +92,34 @@ export async function POST(request: NextRequest) {
       return json('La création de sites est réservée au propriétaire et aux administrateurs.',403);
     const service=createServiceClient();
     if(!service)return json('Service de création indisponible.',503);
-    let processed:{dataUri:string};
-    try{processed=await normalizeTransparentSiteLogo(logo);}
-    catch(e){return json(e instanceof Error?e.message:'Logo transparent invalide.',400);}
-    const {data,error}=await service.rpc('create_site_with_branding',{
+    let processed:{dataUri:string}|null=null;
+    let pair:{light:{preview:string};dark:{preview:string}}|null=null;
+    try{
+      if(dual){
+        // Only download originals after the administrator and tenant are checked.
+        // Sequential decoding bounds memory use for high-resolution originals.
+        const light=await processStoredSiteLogo(service,lightPath,companyId,permission.user.id);
+        const dark=await processStoredSiteLogo(service,darkPath,companyId,permission.user.id);
+        pair={light,dark};
+      }else processed=await normalizeTransparentSiteLogo(logo);
+    }catch(e){return json(e instanceof Error?e.message:'Fichier du logo invalide.',400);}
+    const base={
       p_company_id:companyId,p_actor_user_id:permission.user.id,
       p_name:name,p_address:address,p_email:email,p_phone:phone,
-      p_logo_data_uri:processed.dataUri,
       p_primary_color:palette.primary_color,
       p_secondary_color:palette.secondary_color,
       p_accent_color:palette.accent_color,
       p_title_color:palette.title_color,
       p_border_color:palette.border_color
-    });
+    };
+    const {data,error}=dual&&pair
+      ?await service.rpc('create_site_with_logo_variants',{
+        ...base,p_light_data_uri:pair.light.preview,p_dark_data_uri:pair.dark.preview,
+        p_light_path:lightPath,p_dark_path:darkPath
+      })
+      :await service.rpc('create_site_with_branding',{
+        ...base,p_logo_data_uri:processed!.dataUri
+      });
     if(error){
       if(error.code==='23505')return json('Ce nom de site est déjà utilisé dans cette entreprise.',409);
       if(error.message?.includes('site_company_inactive'))return json('Cette entreprise est suspendue ou inactive.',409);

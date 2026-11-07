@@ -26,7 +26,7 @@ test('site-specific logo replaces Wi-Fi emblem and brand name in editor preview'
  assert.match(editor,/\/api\/ticket-templates\?'.*new URLSearchParams\(\{companyId,siteId\}\)/);
  assert.match(editor,/const currentLogo=siteLogo\?\.key===brandKey\?siteLogo:null/);
  assert.match(editor,/<div className="ps-site-logo"/);
- assert.match(editor,/<img src=\{currentLogo\.uri\} alt=\{'Logo du site '/);
+ assert.match(editor,/<img src={visibleLogo} alt=/);
  assert.doesNotMatch(editor,/<div className="ps-brand-mark"><Wifi/);
  assert.doesNotMatch(editor,/<span className="ps-brand-name">\{site\.name\}/);
  assert.match(editorCss,/\.ps-site-logo img\{/);
@@ -51,7 +51,7 @@ test('shared field palette generates readable, semi-transparent guide colors',()
 
 test('public and RouterOS portal keep native login and never show a second site name under logo',()=>{
  assert.match(portal,/currentIdentity=siteIdentity\?\.siteId===selectedSiteId&&siteIdentity\.companySlug===slug/);
- assert.match(portal,/currentIdentity\?\.logoDataUri/);
+ assert.match(portal,/siteLogoForSurface\(currentIdentity/);
  assert.doesNotMatch(portal,/<strong className="zw-site-name">\{displayBrand\}/);
  assert.match(router,/id="siteLogo"/);
  assert.doesNotMatch(router,/id="siteBrand"/);

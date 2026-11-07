@@ -8,7 +8,7 @@ test('the live WiFi portal displays the site identity and no vendor branding',()
  assert.match(web,/\/api\/public\/residential-site\?siteId=/);
  assert.match(web,/currentIdentity=siteIdentity\?\.siteId===selectedSiteId&&siteIdentity\.companySlug===slug/);
  assert.match(web,/currentIdentity\?\.brandName/);
- assert.match(web,/currentIdentity\?\.logoDataUri/);
+ assert.match(web,/siteLogoForSurface\(currentIdentity/);
  assert.match(web,/!demo&&selectedSiteId&&/);
  assert.match(web,/portalDesign\?\.showAccount/);
  assert.match(web,/\/mon-internet\//);
@@ -24,7 +24,9 @@ test('public branding is restricted to the selected active site and site-level t
  assert.match(site,/\.eq\('id',siteId\)/);
  assert.match(site,/\.eq\('company_id',site.company_id\)/);
  assert.match(site,/\.eq\('site_id',siteId\)\.is\('offer_id',null\)/);
- assert.match(site,/logoDataUri:logo\(template\?\.logo_data_uri\)/);
+ assert.match(site,/logoLightDataUri:logo\(variants\?\.light_data_uri\)/);
+ assert.match(site,/logoDarkDataUri:logo\(variants\?\.dark_data_uri\)/);
+ assert.match(site,/logoDataUri:siteLogoForSurface/);
  assert.doesNotMatch(site,/process\.env\.NEXT_PUBLIC_SUPABASE_SECRET/);
  const api=read('src/app/api/public/residential-site/route.ts');
  assert.match(api,/publicResidentialSite\(siteId\)/);
