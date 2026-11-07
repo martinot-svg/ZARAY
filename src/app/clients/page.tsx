@@ -3,6 +3,7 @@ import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import AppShell from '@/components/app-shell';
+import ModuleDataState from '@/components/module-data-state';
 import { activeSiteId, selectedCompany } from '@/lib/workspace-url';
 import { MotionFeedback } from '@/components/motion';
 
@@ -45,7 +46,7 @@ export default function ClientsPage(){
       </form>
     </section>}
     <section className="panel"><div className="panel-head"><div><div className="panel-title">Répertoire clients</div></div><span className="status-pill">{customers.length} total</span></div>
-      {busy?null:filtered.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Client</th><th>Origine</th><th>Site</th><th>Statut</th><th>Inscription</th><th></th></tr></thead><tbody>{filtered.map(c=><tr key={c.id}><td><strong>{c.full_name}</strong><small>{c.email||'Sans e-mail'}{c.phone?' · '+c.phone:''}</small></td><td>{c.enrollment_source==='public_subscription'?'Portail d’abonnement':'Historique'}</td><td>{availableSites.find(s=>s.id===c.site_id)?.name||'—'}</td><td><span className="status-pill">{statusLabels[c.status]??c.status}</span></td><td>{new Date(c.created_at).toLocaleDateString('fr-FR')}</td><td><button type="button" onClick={()=>startEdit(c)}><ZarayIcon name="edit" size={18} /> Modifier</button></td></tr>)}</tbody></table></div>:<div className="empty-state"><strong>{customers.length?'Aucun résultat':'Aucun client'}</strong><p>{customers.length?'Modifiez vos filtres ou votre recherche.':'Les nouveaux clients apparaîtront ici après leur inscription sur le portail d’abonnement.'}</p>{signupSlug&&<a className="primary-link" href={'/portail/'+encodeURIComponent(signupSlug)} target="_blank" rel="noopener noreferrer"><ZarayIcon name="next" size={18} /> Ouvrir le portail d’inscription</a>}</div>}
+      {busy?<ModuleDataState label="Préparation des clients…"/>:filtered.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Client</th><th>Origine</th><th>Site</th><th>Statut</th><th>Inscription</th><th></th></tr></thead><tbody>{filtered.map(c=><tr key={c.id}><td><strong>{c.full_name}</strong><small>{c.email||'Sans e-mail'}{c.phone?' · '+c.phone:''}</small></td><td>{c.enrollment_source==='public_subscription'?'Portail d’abonnement':'Historique'}</td><td>{availableSites.find(s=>s.id===c.site_id)?.name||'—'}</td><td><span className="status-pill">{statusLabels[c.status]??c.status}</span></td><td>{new Date(c.created_at).toLocaleDateString('fr-FR')}</td><td><button type="button" onClick={()=>startEdit(c)}><ZarayIcon name="edit" size={18} /> Modifier</button></td></tr>)}</tbody></table></div>:<div className="empty-state"><strong>{customers.length?'Aucun résultat':'Aucun client'}</strong><p>{customers.length?'Modifiez vos filtres ou votre recherche.':'Les nouveaux clients apparaîtront ici après leur inscription sur le portail d’abonnement.'}</p>{signupSlug&&<a className="primary-link" href={'/portail/'+encodeURIComponent(signupSlug)} target="_blank" rel="noopener noreferrer"><ZarayIcon name="next" size={18} /> Ouvrir le portail d’inscription</a>}</div>}
     </section>
    </div>
    <MotionFeedback message={error || notice} kind={error ? 'error' : 'success'}/>
