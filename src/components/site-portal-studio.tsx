@@ -4,11 +4,14 @@ import Link from 'next/link';
 import {Check,ChevronRight,Copy,Eye,History,Image as Picture,Monitor,RotateCcw,Save,Smartphone,UploadCloud,Wifi} from 'lucide-react';
 import AppShell from '@/components/app-shell';
 import {DEFAULT_PORTAL_CONFIG,PORTAL_TEMPLATES,type PortalConfig} from '@/lib/site-portal-config';
+import {downloadMikrotikCaptiveApi} from '@/lib/mikrotik-captive-api-download';
 import './site-portal-studio.css';
 
 type Site={id:string;company_id:string;name:string;company_slug:string;status:string};
 type Company={id:string;legal_name:string;slug:string;role:string};
 type Version={version:number;published_at:string};
+type PortalRouter={id:string;site_id:string;name:string;last_seen_at:string|null};
+type RouterSnapshot={companyId:string;routers:PortalRouter[];error:boolean};
 type PortalState={draft:PortalConfig;revision:number;published:PortalConfig|null;
  publishedVersion:number;publishedAt:string|null;versions:Version[]};
 const initial:PortalState={draft:DEFAULT_PORTAL_CONFIG,revision:-1,published:null,
@@ -76,6 +79,7 @@ export default function SitePortalStudio(){
  const [history,setHistory]=useState('');
  const [originalCoverName,setOriginalCoverName]=useState('');
  const [loadedSite,setLoadedSite]=useState('');
+ const [routerSnapshot,setRouterSnapshot]=useState<RouterSnapshot|null>(null);
  const requestVersion=useRef(0);
  const company=companies.find(c=>c.id===companyId);
  const site=sites.find(s=>s.id===siteId);
@@ -85,6 +89,10 @@ export default function SitePortalStudio(){
  const publishedLink=company&&site?
   '/wifi/'+encodeURIComponent(company.slug)+'?siteId='+encodeURIComponent(site.id):'';
  const ready=loadedSite===companyId+':'+siteId;
+ const linkedRouters=routerSnapshot?.companyId===companyId
+  ?routerSnapshot.routers.filter(router=>router.site_id===siteId):[];
+ const routerOnline=(lastSeen:string|null)=>!!lastSeen
+  &&Date.now()-new Date(lastSeen).getTime()<150000;
 
  useEffect(()=>{
   let live=true;
@@ -106,6 +114,21 @@ export default function SitePortalStudio(){
   })();
   return()=>{live=false};
  },[]);
+
+ useEffect(()=>{
+  let live=true;
+  setRouterSnapshot(null);
+  if(!companyId)return;
+  (async()=>{
+   try{
+    const data=await request('/api/network?companyId='+encodeURIComponent(companyId));
+    if(live)setRouterSnapshot({companyId,routers:Array.isArray(data.routers)?data.routers:[],error:false});
+   }catch{
+    if(live)setRouterSnapshot({companyId,routers:[],error:true});
+   }
+  })();
+  return()=>{live=false;};
+ },[companyId]);
 
  const reload=useCallback(async(id:string,tenant:string)=>{
   // A response for a previously selected site must never replace another site's draft.
@@ -194,6 +217,17 @@ export default function SitePortalStudio(){
    setNotice('Image optimisée pour le web. L’original reste sur votre appareil.');
   }catch(e){setError(e instanceof Error?e.message:'Image invalide.');}
   finally{setWorking(false);event.target.value='';}
+ };
+
+ const downloadDetection=async()=>{
+  if(!ready||working)return;
+  setWorking(true);setError('');setNotice('');
+  try{
+   await downloadMikrotikCaptiveApi();
+   setNotice('api.json téléchargé. Conservez md5.js et les pages HotSpot natives de votre routeur.');
+  }catch(e){
+   setError(e instanceof Error?e.message:'Téléchargement de api.json impossible.');
+  }finally{setWorking(false);}
  };
 
  return <AppShell activePath="/portail" title="Studio des portails captifs">
@@ -334,10 +368,35 @@ export default function SitePortalStudio(){
       {publishedLink&&<Link className="ps-external" href={publishedLink} target="_blank">
        Ouvrir le portail public <ChevronRight size={16}/>
       </Link>}
-      {site&&<Link className="ps-external" href={'/personnalisation-tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)}>
-       Préparer le fichier login.html du MikroTik <ChevronRight size={16}/>
-      </Link>}
-      <p className="ps-hint">Cette prévisualisation ne tente aucune authentification. Les changements deviennent publics seulement après « Publier ». La page native MikroTik devra être téléchargée puis installée sur le routeur pour refléter les changements locaux.</p>
+      <details className="ps-installation">
+       <summary>Installation MikroTik · état du site</summary>
+       <p className="ps-hint">{state.published
+        ?'Version '+state.publishedVersion+' publiée sur le web. Installation sur le MikroTik non vérifiée.'
+        :'Publiez d’abord le design du site. Le routeur conserve sa page précédente tant que login.html n’est pas installé.'}</p>
+       {routerSnapshot?.companyId!==companyId
+        ?<p className="ps-hint">Chargement des équipements…</p>
+        :routerSnapshot.error
+         ?<p className="ps-hint">État des équipements indisponible.</p>
+         :linkedRouters.length
+          ?<ul className="ps-router-list">{linkedRouters.map(router=><li key={router.id}>
+           <strong>{router.name}</strong>
+           <span>{routerOnline(router.last_seen_at)?'Connecteur en ligne':'Connecteur hors ligne ou non associé'}</span>
+          </li>)}</ul>
+          :<p className="ps-hint">Aucun MikroTik enregistré pour ce site.</p>}
+       <div className="ps-installation-actions">
+        <Link className="ps-external" href={'/gestion-reseau?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)}>
+         Associer un MikroTik <ChevronRight size={15}/>
+        </Link>
+        <Link className="ps-external" href={'/personnalisation-tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)}>
+         Préparer login.html <ChevronRight size={15}/>
+        </Link>
+        <button type="button" onClick={()=>void downloadDetection()} disabled={working||!ready}>
+         Télécharger api.json
+        </button>
+       </div>
+       <p className="ps-hint">Sur le routeur : sauvegardez le dossier HotSpot, remplacez login.html, conservez md5.js et les autres pages natives. Ajoutez api.json si nécessaire pour la détection mobile. Le DNS HotSpot et un certificat HTTPS valide sont requis pour annoncer le portail aux appareils compatibles. Un connecteur en ligne ne confirme pas que la page est installée.</p>
+      </details>
+      <p className="ps-hint">L’aperçu ne tente aucune authentification. Publier sur Vercel n’installe pas de fichiers sur un MikroTik privé.</p>
      </aside>
     </div>
    </>}
