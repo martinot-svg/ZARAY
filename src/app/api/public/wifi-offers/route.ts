@@ -1,5 +1,6 @@
 import {NextRequest,NextResponse} from 'next/server';
 import {createServiceClient} from '@/lib/supabase/service';
+import {siteLogoForSurface} from '@/lib/site-logo-variants';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -25,11 +26,13 @@ export async function GET(request:NextRequest){
  if(companyError)return respond({error:'Portail entreprise temporairement indisponible.'},503);
  if(!company||!['active','trial'].includes(company.status)||!company.slug)
   return respond({error:'Portail entreprise indisponible.'},404);
- const [{data,error},{data:style,error:styleError}]=await Promise.all([
+ const [{data,error},{data:style,error:styleError},{data:variants}]=await Promise.all([
   service.rpc('get_hotspot_offer_catalog',{p_site_id:siteId}),
   service.from('ticket_templates')
-   .select('brand_name,logo_data_uri,primary_color,accent_color,welcome_message')
-   .eq('site_id',siteId).eq('company_id',site.company_id).is('offer_id',null).maybeSingle()
+   .select('brand_name,logo_data_uri,primary_color,secondary_color,accent_color,welcome_message')
+   .eq('site_id',siteId).eq('company_id',site.company_id).is('offer_id',null).maybeSingle(),
+  service.from('site_brand_assets').select('light_data_uri,dark_data_uri')
+   .eq('site_id',siteId).eq('company_id',site.company_id).maybeSingle()
  ]);
  if(error)return respond({error:'Offres temporairement indisponibles.'},503);
  // Degrade gracefully to company/site defaults; a branding read failure must
@@ -49,7 +52,11 @@ export async function GET(request:NextRequest){
   accentColor:publicColor(style?.accent_color,'#66eabe'),
   welcomeMessage:typeof style?.welcome_message==='string'
    ?style.welcome_message.slice(0,120):'',
-  logoDataUri:logo
+  logoDataUri:siteLogoForSurface({logoLightDataUri:variants?.light_data_uri,
+   logoDarkDataUri:variants?.dark_data_uri,logoDataUri:logo},
+   publicColor(style?.secondary_color,'#ffffff')),
+  logoLightDataUri:variants?.light_data_uri??logo,
+  logoDarkDataUri:variants?.dark_data_uri??logo
  };
  const offers=(data??[]).map((offer:{
   offer_id:string;offer_name:string;offer_description:string|null;
