@@ -17,10 +17,10 @@ function scope(search){
 const companies=[{id:'a'},{id:'b'}];
 const sites=[{id:'a1',company_id:'a'},{id:'b1',company_id:'b'}];
 
-test('a legacy company route without a selection redirects to Mes entreprises',()=>{
+test('a direct module route without a company selects the first authorized company',()=>{
  const {api,target}=scope('');
- assert.equal(api.selectedCompany(companies,sites),'');
- assert.equal(target.url,'/entreprises');
+ assert.equal(api.selectedCompany(companies,sites),'a');
+ assert.equal(target.url,undefined);
 });
 test('explicit company selection is honored',()=>{
  const {api}=scope('?companyId=b');
