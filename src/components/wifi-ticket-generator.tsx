@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { ZarayIcon } from '@/components/ui/zaray-icon';
 import VoucherCanvas from '@/components/voucher-canvas';
-import { generateA4Pdf, generateA4Jpegs, generateSingleTicketJpeg, requireVoucherLogo, voucherPages, type PrintableVoucher, type TicketVisual } from '@/lib/ticket-pdf';
+import { generateA4Pdf, generateA4Jpegs, generateSingleTicketJpeg, requireVoucherLogo, ticketLogo, voucherPages, type PrintableVoucher, type TicketVisual } from '@/lib/ticket-pdf';
 type Site={id:string;company_id:string;name:string;status:string};
 type Offer={id:string;name:string;status:string;price_amount:number|string;currency:string;duration_minutes:number;validity_days:number};
 type Router={id:string;site_id:string;name:string;control_enabled:boolean;last_seen_at:string|null};
@@ -133,7 +133,7 @@ export default function WifiTicketGenerator(){
    await authorizedPrint();
    // The browser captures the existing print canvases. Wait for the configured
    // site logo to be decoded AND actually painted before opening print.
-   await requireVoucherLogo(design.logo_data_uri);
+   await requireVoucherLogo(ticketLogo(design));
    await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));
    const canvases=document.querySelectorAll<HTMLCanvasElement>('#zaray-print-area .zaray-voucher-print-canvas');
    if(canvases.length!==tickets.length||[...canvases].some(canvas=>canvas.dataset.logoReady!=='true'))
