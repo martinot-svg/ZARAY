@@ -10,10 +10,13 @@ export function selectedCompany(companies:CompanyOption[],sites:SiteOption[]=[])
   const fromURL=params.get('companyId');
   const site=params.get('siteId');
   const chosen=fromURL || (site ? sites.find(s=>s.id===site)?.company_id : '') || '';
-  if(!chosen){ window.location.assign('/entreprises'); return ''; }
+  // Direct links such as /sites may omit companyId. Use the first authorized
+  // company instead of flashing an empty workspace and hard-redirecting.
+  const resolved=chosen||companies[0]?.id||'';
+  if(!resolved)return '';
   if(fromURL&&!companies.some(c=>c.id===fromURL))throw new Error('Entreprise inaccessible.');
-  if(site&&!sites.some(s=>s.id===site&&s.company_id===chosen))throw new Error('Site inaccessible dans cette entreprise.');
-  return chosen;
+  if(site&&!sites.some(s=>s.id===site&&s.company_id===resolved))throw new Error('Site inaccessible dans cette entreprise.');
+  return resolved;
 }
 export function scopedQuery(companyId:string): string {
   const params=new URLSearchParams({companyId});
