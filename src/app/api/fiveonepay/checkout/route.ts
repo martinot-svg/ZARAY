@@ -58,6 +58,10 @@ export async function POST(request:NextRequest){
    .select('id').eq('order_id',subscription.id).in('status',['submitted','approved']).limit(1);
   if(manualError)return json({error:'Impossible de vérifier les paiements en cours.'},503);
   if(manual?.length)return json({error:'Un paiement manuel est déjà en cours de vérification.'},409);
+  const {data:company,error:companyError}=await service.from('companies')
+   .select('status').eq('id',subscription.company_id).maybeSingle();
+  if(companyError||!company||!['active','trial'].includes(company.status))
+   return json({error:'Entreprise indisponible pour les encaissements.'},409);
   const merchant=await merchantForSite(subscription.company_id,subscription.site_id);
   if(!merchant)return json({error:'FiveOne Pay n’est pas encore configuré pour ce site.'},409);
   if(merchant.environment==='sandbox'&&process.env.ZARAY_FIVEONEPAY_SANDBOX_ENABLED!=='true')
