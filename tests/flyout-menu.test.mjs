@@ -55,3 +55,26 @@ test('redundant header actions move into the menu without removing site and noti
   assert.match(shell, /href="\/mon-compte"/);
   assert.match(shell, /Changer d’entreprise/);
 });
+
+test('Pilotage shows three site-aware links from hover without a second click', () => {
+  assert.match(shell, /label: 'Pilotage', icon: 'dashboard'/);
+  assert.match(shell, /section\.label === 'Pilotage' && activeSite/);
+  assert.match(shell, /href: 'site-dashboard', label: 'Tableau de bord du site'/);
+  assert.match(shell, /href: '\/tableau-de-bord', label: 'Vue générale'/);
+  assert.match(shell, /href: '\/sites', label: 'Sites de l’entreprise'/);
+  assert.match(shell, /onMouseEnter=\{\(\) => \{ if \(hoverMenus\(\)\) setActiveFlyout\(index\)/);
+  const menu = shell.split('className="app-menu-container"')[1].split('<nav id="zaray-app-nav"')[0];
+  assert.doesNotMatch(menu, /onMouseEnter/);
+  assert.match(menu, /if \(!menuOpen\) chooseFlyoutSide\(\)/);
+});
+
+test('flyout selects the available side and is connected to its trigger for cursor travel', () => {
+  assert.match(shell, /const \[flyoutSide, setFlyoutSide\]/);
+  assert.match(shell, /getBoundingClientRect\(\)/);
+  assert.match(shell, /window\.innerWidth - menuBounds\.right/);
+  assert.match(shell, /data-flyout-side=\{flyoutSide\}/);
+  assert.match(css, /\[data-flyout-side="right"\] \.app-nav-flyout-panel/);
+  assert.match(css, /left: calc\(100% - 2px\)/);
+  assert.match(css, /right: calc\(100% - 2px\)/);
+  assert.match(css, /clip-path: inset\(0 100% 0 0 round 16px\)/);
+});
