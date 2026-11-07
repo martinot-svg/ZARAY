@@ -108,7 +108,17 @@ export async function POST(request:NextRequest,{params}:Context){
   });
   if(ledgerError){console.error('fiveonepay ledger reconciliation failed',{code:ledgerError.code});
    return reply({error:'Rapprochement en attente.'},503);}
-  const paymentStatus=String(ledger?.payment_status||'');
+  // On duplicate delivery, the ledger response omits payment_status.
+  // Re-read the authoritative payment to preserve review_required.
+  let paymentStatus=String(ledger?.payment_status||'');
+  if(!paymentStatus&&ledger?.payment_id){
+   const {data:record,error:recordError}=await service.from('payments')
+    .select('status').eq('id',String(ledger.payment_id)).single();
+   if(recordError||!record)return reply({error:'État du paiement indisponible.'},503);
+   paymentStatus=record.status;
+  }
+  if(!['succeeded','review_required'].includes(paymentStatus))
+   return reply({error:'Rapprochement non confirmé.'},503);
   const {error:updateError}=await service.from('fiveonepay_attempts').update({
    status:paymentStatus==='review_required'?'review_required':'succeeded',
    provider_payment_id:event.data.id,
