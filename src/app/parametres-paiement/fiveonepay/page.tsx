@@ -131,7 +131,7 @@ export default function FiveOnePaySettings(){
        <option value="production">Production · Argent réel</option>
       </select>
      </label>
-     <label>Nom du compte marchand
+     <label>Nom d’identification du compte
       <input value={label} onChange={e=>setLabel(e.target.value)} required minLength={2} maxLength={80}/>
      </label>
      <label>Clé API secrète FiveOne Pay
