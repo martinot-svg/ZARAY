@@ -8,6 +8,7 @@ import BrandLogo from '@/components/brand-logo';
 import ThemeSwitch from '@/components/theme-switch';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { createPortal } from 'react-dom';
 
 const sections = [
   { label: 'GESTION', items: [['/tableau-de-bord', 'Tableau de bord'], ['/sites', 'Sites'], ['/notifications', 'Notifications'], ['/membres', 'Membres']] },
@@ -119,6 +120,10 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
   const [activeFlyout, setActiveFlyout] = useState<number | null>(null);
   const [flyoutSide, setFlyoutSide] = useState<'left' | 'right'>('left');
   const [siteOpen, setSiteOpen] = useState(false);
+  const [desktopFlyout, setDesktopFlyout] = useState(false);
+  const [flyoutPosition, setFlyoutPosition] = useState({ left: 0, top: 0, side: 'left' as 'left' | 'right' });
+  const closeMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flyoutPortal = useRef<HTMLDivElement>(null);
   const siteButton = useRef<HTMLButtonElement>(null);
   const siteContainer = useRef<HTMLDivElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -126,6 +131,53 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
   const firstMenuLink = useRef<HTMLAnchorElement>(null);
   const menuContainer = useRef<HTMLDivElement>(null);
   const hoverMenus = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  useEffect(() => {
+    const media = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 850px) and (min-height: 580px)');
+    const sync = () => { setDesktopFlyout(media.matches); setActiveFlyout(null); };
+    sync();
+    media.addEventListener('change', sync);
+    // A fixed-position flyout must not keep stale coordinates during a window resize or scroll.
+    const hideFlyout = () => setActiveFlyout(null);
+    window.addEventListener('resize', hideFlyout);
+    window.addEventListener('scroll', hideFlyout, true);
+    return () => {
+      media.removeEventListener('change', sync);
+      window.removeEventListener('resize', hideFlyout);
+      window.removeEventListener('scroll', hideFlyout, true);
+      if (closeMenuTimer.current) clearTimeout(closeMenuTimer.current);
+    };
+  }, []);
+  function cancelMenuClose() {
+    if (closeMenuTimer.current) { clearTimeout(closeMenuTimer.current); closeMenuTimer.current = null; }
+  }
+  function closeNavigation() { cancelMenuClose(); setMenuOpen(false); setActiveFlyout(null); }
+  function scheduleMenuClose() {
+    cancelMenuClose();
+    closeMenuTimer.current = setTimeout(() => {
+      if (!flyoutPortal.current?.contains(document.activeElement)) closeNavigation();
+    }, 210);
+  }
+  function openFlyout(index: number, trigger: HTMLElement) {
+    cancelMenuClose();
+    if (desktopFlyout) {
+      const rect = trigger.getBoundingClientRect();
+      const width = 286;
+      const viewportPadding = 12;
+      const leftSpace = rect.left - viewportPadding;
+      const rightSpace = window.innerWidth - rect.right - viewportPadding;
+      const side: 'left' | 'right' = leftSpace >= width || leftSpace >= rightSpace ? 'left' : 'right';
+      const left = side === 'left'
+        ? Math.max(viewportPadding, rect.left - width + 2)
+        : Math.min(window.innerWidth - width - viewportPadding, rect.right - 2);
+      const itemCount = flyoutSections[index].items.length + (index === 0 ? 1 : 0);
+      const estimatedHeight = Math.min(510, 56 + itemCount * 47);
+      const top = Math.max(viewportPadding,
+        Math.min(rect.top - 4, window.innerHeight - estimatedHeight - viewportPadding));
+      setFlyoutSide(side);
+      setFlyoutPosition({ left, top, side });
+    }
+    setActiveFlyout(index);
+  }
   useEffect(() => {
     if (!menuOpen && !siteOpen) return;
     // Both icon menus remain keyboard accessible without hijacking toolbar focus.
@@ -138,7 +190,7 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
     };
     const closeOutside = (event: PointerEvent) => {
       if (!(event.target instanceof Node)) return;
-      if (menuOpen && !menuContainer.current?.contains(event.target)) { setMenuOpen(false); setActiveFlyout(null); }
+      if (menuOpen && !menuContainer.current?.contains(event.target) && !flyoutPortal.current?.contains(event.target)) closeNavigation();
       if (siteOpen && !siteContainer.current?.contains(event.target)) setSiteOpen(false);
     };
     window.addEventListener('keydown', closeOnEscape);
@@ -163,9 +215,21 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
       ? '/sites/' + encodeURIComponent(next) + '?companyId=' + encodeURIComponent(activeCompany)
       : '/tableau-de-bord?companyId=' + encodeURIComponent(activeCompany));
   }
+  function getFlyoutItems(index: number): FlyoutItem[] {
+    const section = flyoutSections[index];
+    const items: FlyoutItem[] = section.label === 'Pilotage'
+      ? [{ href: 'site-dashboard', label: 'Tableau de bord du site' }, ...section.items]
+      : section.items;
+    return items.filter(item => !item.siteOnly || !!activeSite);
+  }
   function scopedHref(href: string) {
-    if (href === 'site-dashboard' && activeCompany && activeSite)
-      return '/sites/' + encodeURIComponent(activeSite) + '?companyId=' + encodeURIComponent(activeCompany);
+    if (href === 'site-dashboard') {
+      const companySites = sites.filter(site => site.company_id === activeCompany);
+      const destination = activeSite || (companySites.length === 1 ? companySites[0].id : '');
+      return activeCompany && destination
+        ? '/sites/' + encodeURIComponent(destination) + '?companyId=' + encodeURIComponent(activeCompany)
+        : activeCompany ? '/sites?companyId=' + encodeURIComponent(activeCompany) : '/sites';
+    }
     if (href === 'site-domain' && activeCompany && activeSite)
       return '/sites/' + encodeURIComponent(activeSite) + '/domaine?companyId=' + encodeURIComponent(activeCompany);
     if (href === 'site-notifications' && activeCompany && activeSite)
@@ -183,11 +247,12 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
         <h1 className="app-topbar-title" title={moduleTitle}>{moduleTitle}</h1>
         <div className="app-topbar-links">
         <div className="app-menu-container" ref={menuContainer}
-          onMouseLeave={() => { if (hoverMenus() && !menuContainer.current?.contains(document.activeElement)) { setMenuOpen(false); setActiveFlyout(null); } }}>
+          onMouseEnter={cancelMenuClose}
+          onMouseLeave={() => { if (hoverMenus()) scheduleMenuClose(); }}>
           <button ref={menuButton} className="app-menu-button" type="button"
             aria-controls="zaray-app-nav" aria-expanded={menuOpen}
             aria-label="Ouvrir la navigation de l’entreprise"
-            onClick={() => { if (!menuOpen) chooseFlyoutSide(); setMenuOpen(value => !value); setActiveFlyout(null); setSiteOpen(false); }}>
+            onClick={() => { cancelMenuClose(); if (!menuOpen) chooseFlyoutSide(); setMenuOpen(value => !value); setActiveFlyout(null); setSiteOpen(false); }}>
             <ZarayIcon name="menu" size={22} /><span className="topbar-icon-label">Menu</span>
           </button>
           <nav id="zaray-app-nav" ref={menuDropdown} data-flyout-side={flyoutSide}
@@ -200,30 +265,32 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
             </div>
             <div className="app-nav-rail" aria-label="Rubriques principales">
               {flyoutSections.map((section, index) => {
-                const items: FlyoutItem[] = section.label === 'Pilotage' && activeSite
-                  ? [{ href: 'site-dashboard', label: 'Tableau de bord du site' }, ...section.items]
-                  : section.items;
+                const items = getFlyoutItems(index);
                 return <div className="app-nav-flyout" key={section.label}
-                  onMouseEnter={() => { if (hoverMenus()) setActiveFlyout(index); }}>
+                  onMouseEnter={event => { if (hoverMenus()) openFlyout(index, event.currentTarget); }}>
                   <button type="button"
                     className={'app-nav-flyout-trigger' + (activeFlyout === index ? ' is-active' : '')}
                     aria-controls={'zaray-nav-flyout-' + index} aria-expanded={activeFlyout === index}
-                    onClick={() => setActiveFlyout(previous => previous === index ? null : index)}>
+                    onClick={event => {
+                      if (activeFlyout === index) setActiveFlyout(null);
+                      else openFlyout(index, event.currentTarget);
+                    }}>
                     <ZarayIcon name={section.icon} size={19} />
                     <span>{section.label}</span>
                     <ZarayIcon name="next" size={16} />
                   </button>
-                  <div id={'zaray-nav-flyout-' + index}
+                  <div id={desktopFlyout ? undefined : 'zaray-nav-flyout-' + index}
                     className={'app-nav-flyout-panel' + (activeFlyout === index ? ' is-open' : '')}
-                    aria-hidden={activeFlyout !== index} inert={activeFlyout !== index || !menuOpen}>
+                    aria-hidden={desktopFlyout || activeFlyout !== index}
+                    inert={desktopFlyout || activeFlyout !== index || !menuOpen}>
                     <div className="app-nav-flyout-heading">{section.label}</div>
-                    {items.filter(item => !item.siteOnly || activeSite).map(item => {
+                    {items.map(item => {
                       const href = scopedHref(item.href);
                       return <Link key={item.href} href={href}
                         ref={item.href === '/tableau-de-bord' ? firstMenuLink : undefined}
                         className={'app-nav-link' + (activePath === item.href ? ' active' : '')}
                         aria-current={activePath === item.href ? 'page' : undefined}
-                        onClick={() => { setMenuOpen(false); setActiveFlyout(null); }}>
+                        onClick={closeNavigation}>
                         <ZarayIcon name={navigationIcons[item.href as keyof typeof navigationIcons] ?? 'next'} size={17} />
                         {item.label}
                       </Link>;
@@ -287,6 +354,24 @@ export default function AppShell({ children, activePath, companyId, siteId, titl
         {children}
       </main>
     </div>
+    {desktopFlyout && menuOpen && activeFlyout !== null && typeof document !== 'undefined' &&
+      createPortal(
+        <div id={'zaray-nav-flyout-' + activeFlyout} ref={flyoutPortal}
+          className="zaray-flyout-portal"
+          data-side={flyoutPosition.side}
+          style={{ left: flyoutPosition.left, top: flyoutPosition.top }}
+          role="group" aria-label={'Sous-menu ' + flyoutSections[activeFlyout].label}
+          onMouseEnter={cancelMenuClose} onMouseLeave={scheduleMenuClose}>
+          <div className="app-nav-flyout-heading">{flyoutSections[activeFlyout].label}</div>
+          {getFlyoutItems(activeFlyout)
+            .map(item => <Link key={item.href} href={scopedHref(item.href)}
+              className={'app-nav-link' + (activePath === item.href ? ' active' : '')}
+              aria-current={activePath === item.href ? 'page' : undefined}
+              onClick={closeNavigation}>
+              <ZarayIcon name={navigationIcons[item.href as keyof typeof navigationIcons] ?? 'next'} size={17} />
+              {item.label}
+            </Link>)}
+        </div>, document.body)}
     {activeCompany && <nav className="workspace-mobile-dock" aria-label="Navigation rapide de l’entreprise">
       {mobileDockItems.map(item => {
         const href = item.href + '?companyId=' + encodeURIComponent(activeCompany)

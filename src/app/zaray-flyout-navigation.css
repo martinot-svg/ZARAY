@@ -196,3 +196,104 @@
     clip-path: none !important;
   }
 }
+
+
+/* Fix 2026-11-07: desktop flyouts render in a body portal instead of inside
+   the header dropdown. This avoids clipped panels and stacking contexts. */
+@media (hover: hover) and (pointer: fine) and (min-width: 850px) and (min-height: 580px) {
+  .app-no-sidebar .app-nav-flyout-panel {
+    display: none !important;
+  }
+}
+.zaray-flyout-portal {
+  box-sizing: border-box;
+  position: fixed !important;
+  z-index: 2147480000;
+  isolation: isolate;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  width: 286px;
+  max-height: min(76dvh, 510px);
+  padding: 13px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(133,255,174,.42);
+  border-radius: 16px;
+  background: linear-gradient(150deg, #102f26 0%, #071d20 100%);
+  color: #eaffef;
+  box-shadow: 0 26px 70px rgba(0,0,0,.47), 0 0 28px rgba(40,245,122,.11);
+  animation: zaray-flyout-rideau-left 250ms cubic-bezier(.2,.8,.25,1) both;
+}
+.zaray-flyout-portal[data-side="right"] {
+  animation-name: zaray-flyout-rideau-right;
+}
+@keyframes zaray-flyout-rideau-left {
+  from { opacity: 0; transform: translateX(10px) scaleX(.92); clip-path: inset(0 0 0 100% round 16px); }
+  to { opacity: 1; transform: translateX(0) scaleX(1); clip-path: inset(0 0 0 0 round 16px); }
+}
+@keyframes zaray-flyout-rideau-right {
+  from { opacity: 0; transform: translateX(-10px) scaleX(.92); clip-path: inset(0 100% 0 0 round 16px); }
+  to { opacity: 1; transform: translateX(0) scaleX(1); clip-path: inset(0 0 0 0 round 16px); }
+}
+.zaray-flyout-portal .app-nav-flyout-heading {
+  color: #a9f2bd;
+  padding: 6px 9px 10px;
+  font-size: 12px;
+  font-weight: 780;
+  border-bottom: 1px solid rgba(120,255,164,.2);
+}
+.zaray-flyout-portal .app-nav-link {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  color: #e5ffed;
+  text-decoration: none;
+  font-size: 13px;
+  line-height: 1.3;
+}
+.zaray-flyout-portal .app-nav-link:hover,
+.zaray-flyout-portal .app-nav-link:focus-visible {
+  color: #ffffff;
+  background: rgba(65,255,133,.16);
+  outline: 2px solid transparent;
+}
+.zaray-flyout-portal .app-nav-link.active {
+  color: #081b0f;
+  background: linear-gradient(105deg,#21f728,#51e6b5);
+  font-weight: 780;
+}
+.zaray-flyout-portal .app-nav-link:focus-visible { outline-color: #75ffa3; }
+.app-no-sidebar .zaray-icon-topbar .app-nav-dropdown .app-nav-footer .zaray-theme-switch.app-nav-theme-switch {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 10px 12px !important;
+  transform: none !important;
+  overflow: hidden;
+  text-align: left;
+  white-space: normal;
+}
+.app-no-sidebar .zaray-icon-topbar .app-nav-dropdown .app-nav-footer .app-nav-theme-switch .zaray-theme-switch-label {
+  display: inline !important;
+  position: static !important;
+  margin: 0 !important;
+  white-space: normal !important;
+  max-width: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .zaray-flyout-portal {
+    animation: none !important;
+    clip-path: none !important;
+    transform: none !important;
+  }
+}

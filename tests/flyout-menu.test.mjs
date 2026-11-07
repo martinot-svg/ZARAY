@@ -26,10 +26,10 @@ test('six accessible flyout rubrics preserve every operational ZARAY module', ()
 });
 
 test('flyout interaction supports mouse hover, touch click, escape and outside close', () => {
-  assert.match(shell, /onMouseEnter=\{\(\) => \{ if \(hoverMenus\(\)\) setActiveFlyout\(index\)/);
-  assert.match(shell, /onClick=\{\(\) => setActiveFlyout\(previous => previous === index \? null : index\)/);
+  assert.match(shell, /onMouseEnter=\{event => \{ if \(hoverMenus\(\)\) openFlyout\(index, event\.currentTarget\)/);
+  assert.match(shell, /else openFlyout\(index, event\.currentTarget\)/);
   assert.match(shell, /aria-controls=\{'zaray-nav-flyout-' \+ index\} aria-expanded=\{activeFlyout === index\}/);
-  assert.match(shell, /aria-hidden=\{activeFlyout !== index\} inert=\{activeFlyout !== index \|\| !menuOpen\}/);
+  assert.match(shell, /aria-hidden=\{desktopFlyout \|\| activeFlyout !== index\}/);
   assert.match(shell, /event\.key === 'Escape'/);
   assert.match(shell, /document\.addEventListener\('pointerdown', closeOutside\)/);
   assert.match(shell, /menuButton\.current\?\.focus\(\)/);
@@ -58,11 +58,11 @@ test('redundant header actions move into the menu without removing site and noti
 
 test('Pilotage shows three site-aware links from hover without a second click', () => {
   assert.match(shell, /label: 'Pilotage', icon: 'dashboard'/);
-  assert.match(shell, /section\.label === 'Pilotage' && activeSite/);
+  assert.match(shell, /section\.label === 'Pilotage'/);
   assert.match(shell, /href: 'site-dashboard', label: 'Tableau de bord du site'/);
   assert.match(shell, /href: '\/tableau-de-bord', label: 'Vue générale'/);
   assert.match(shell, /href: '\/sites', label: 'Sites de l’entreprise'/);
-  assert.match(shell, /onMouseEnter=\{\(\) => \{ if \(hoverMenus\(\)\) setActiveFlyout\(index\)/);
+  assert.match(shell, /onMouseEnter=\{event => \{ if \(hoverMenus\(\)\) openFlyout\(index, event\.currentTarget\)/);
   const menu = shell.split('className="app-menu-container"')[1].split('<nav id="zaray-app-nav"')[0];
   assert.doesNotMatch(menu, /onMouseEnter/);
   assert.match(menu, /if \(!menuOpen\) chooseFlyoutSide\(\)/);
@@ -70,6 +70,7 @@ test('Pilotage shows three site-aware links from hover without a second click', 
 
 test('flyout selects the available side and is connected to its trigger for cursor travel', () => {
   assert.match(shell, /const \[flyoutSide, setFlyoutSide\]/);
+  assert.match(shell, /const \[desktopFlyout, setDesktopFlyout\]/);
   assert.match(shell, /getBoundingClientRect\(\)/);
   assert.match(shell, /window\.innerWidth - menuBounds\.right/);
   assert.match(shell, /data-flyout-side=\{flyoutSide\}/);
@@ -77,4 +78,34 @@ test('flyout selects the available side and is connected to its trigger for curs
   assert.match(css, /left: calc\(100% - 2px\)/);
   assert.match(css, /right: calc\(100% - 2px\)/);
   assert.match(css, /clip-path: inset\(0 100% 0 0 round 16px\)/);
+});
+
+test('desktop submenu escapes clipped header in a body portal', () => {
+  assert.match(shell, /import \{ createPortal \} from 'react-dom'/);
+  assert.match(shell, /desktopFlyout && menuOpen && activeFlyout !== null/);
+  assert.match(shell, /createPortal\(/);
+  assert.match(shell, /document\.body\)/);
+  assert.match(shell, /className="zaray-flyout-portal"/);
+  assert.match(shell, /ref=\{flyoutPortal\}/);
+  assert.match(shell, /flyoutPortal\.current\?\.contains\(event\.target\)/);
+  assert.match(shell, /onMouseEnter=\{cancelMenuClose\} onMouseLeave=\{scheduleMenuClose\}/);
+  assert.match(css, /\.zaray-flyout-portal \{/);
+  assert.match(css, /position: fixed !important/);
+  assert.match(css, /z-index: 2147480000/);
+  assert.match(css, /\.app-nav-flyout-panel \{\s*display: none !important/);
+  assert.match(css, /@keyframes zaray-flyout-rideau-left/);
+  assert.match(css, /@keyframes zaray-flyout-rideau-right/);
+});
+
+test('Pilotage retains its site entry on the company dashboard', () => {
+  assert.match(shell, /section\.label === 'Pilotage'/);
+  assert.doesNotMatch(shell, /section\.label === 'Pilotage' && activeSite/);
+  assert.match(shell, /companySites\.length === 1/);
+  assert.match(shell, /href: 'site-dashboard', label: 'Tableau de bord du site'/);
+});
+
+test('menu footer theme control remains contained without overflow', () => {
+  assert.match(css, /\.zaray-theme-switch\.app-nav-theme-switch/);
+  assert.match(css, /white-space: normal/);
+  assert.match(css, /overflow: hidden/);
 });
