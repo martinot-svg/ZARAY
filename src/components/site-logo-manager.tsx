@@ -15,7 +15,7 @@ export default function SiteLogoManager({companyId,siteId,canEdit=true,onUpdated
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState('');
  const [notice,setNotice]=useState('');
- const [revision,setRevision]=useState(0);
+ const [inputReset,setInputReset]=useState(0);
  useEffect(()=>{
   let active=true;
   setPair(blank);setLight(null);setDark(null);setError('');setNotice('');setLoading(true);
@@ -31,7 +31,7 @@ export default function SiteLogoManager({companyId,siteId,canEdit=true,onUpdated
    finally{if(active)setLoading(false);}
   })();
   return()=>{active=false};
- },[companyId,siteId,revision]);
+ },[companyId,siteId]);
  function choose(event:ChangeEvent<HTMLInputElement>,variant:Variant){
   const file=event.target.files?.[0]||null;setNotice('');setError('');
   if(file){try{validateLogoFile(file);}catch(e){
@@ -59,7 +59,7 @@ export default function SiteLogoManager({companyId,siteId,canEdit=true,onUpdated
    const data=await response.json().catch(()=>({}));
    if(!response.ok)throw Error(data.error||'Impossible de synchroniser les logos.');
    setPair({configured:true,lightDataUri:data.lightDataUri,darkDataUri:data.darkDataUri,updatedAt:new Date().toISOString()});
-   setLight(null);setDark(null);setRevision(i=>i+1);
+   setLight(null);setDark(null);setInputReset(i=>i+1);
    setNotice(data.optimized?.length
     ?'Logo importé et optimisé avec succès. Les marges transparentes inutiles ont été supprimées.'
     :'Logo importé et optimisé avec succès.');
@@ -76,7 +76,7 @@ export default function SiteLogoManager({companyId,siteId,canEdit=true,onUpdated
    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(145px,1fr))',gap:12}}>
     {(['light','dark'] as const).map(variant=><div key={variant}>
      <label>{variant==='light'?'Version claire · fond sombre':'Version sombre · fond clair'}
-      <input type="file" accept="image/png,image/svg+xml,image/webp"
+      <input key={inputReset+'-'+variant} type="file" accept="image/png,image/svg+xml,image/webp"
        onChange={e=>choose(e,variant)} disabled={busy||!canEdit}/>
      </label>
      <div style={{marginTop:7,minHeight:84,display:'grid',placeItems:'center',padding:10,
