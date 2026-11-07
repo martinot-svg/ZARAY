@@ -32,7 +32,8 @@ test('hybrid routing and ABWIFI references are bound to verified site and mercha
  assert.match(sql,/v_merchant\.site_id is distinct from v_site\.id/);
  assert.match(sql,/v_order\.status<>'pending_payment'/);
  assert.match(service,/routing\?\.mode==='dedicated'/);
- assert.match(service,/\.is\('site_id',scope\)/);
+ assert.match(service,/production\.eq\('site_id',scope\)/);
+ assert.match(service,/production\.is\('site_id',null\)/);
  assert.match(service,/api\.fiveonepay\.com\/v1/);
  assert.match(service,/pay\.fiveonepay\.com/);
  assert.match(service,/Idempotency-Key/);
