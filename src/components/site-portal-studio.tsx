@@ -368,6 +368,9 @@ export default function SitePortalStudio(){
       {publishedLink&&<Link className="ps-external" href={publishedLink} target="_blank">
        Ouvrir le portail public <ChevronRight size={16}/>
       </Link>}
+      {site&&<Link className="ps-external" href={'/tickets?companyId='+encodeURIComponent(companyId)+'&siteId='+encodeURIComponent(siteId)+'&tab=generate'}>
+       Prévisualiser les tickets sans routeur <ChevronRight size={16}/>
+      </Link>}
       <details className="ps-installation">
        <summary>Installation MikroTik · état du site</summary>
        <p className="ps-hint">{state.published
