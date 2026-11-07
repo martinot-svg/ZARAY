@@ -5,6 +5,25 @@
  * No company, site, authentication or payment logic is modified.
  */
 
+/* Context navigation uses the same flexible text cell as the main menus. */
+.workspace-breadcrumb { min-width: 0; max-width: 100%; }
+.workspace-breadcrumb a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+.workspace-breadcrumb a > svg { flex: 0 0 18px; }
+.workspace-breadcrumb .zaray-nav-label-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 /* Every navigation label owns a flexible text cell, separate from its icon. */
 :where(.app-no-sidebar,.personal-no-sidebar) .zaray-nav-label-text {
   display: block;
@@ -331,7 +350,9 @@ html[data-zaray-theme] .personal-no-sidebar :is(.personal-home-nav-menu,.persona
   text-align: center;
 }
 .app-no-sidebar nav[aria-label="Onglets du module Tickets Wi-Fi"] > button > svg {
-  flex-shrink: 0;
+  flex: 0 0 17px;
+  width: 17px;
+  height: 17px;
 }
 
 /* Touch docks: short two-line labels instead of invisible ellipses. */

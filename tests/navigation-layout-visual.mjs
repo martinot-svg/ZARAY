@@ -15,9 +15,9 @@ mkdirSync(dir,{recursive:true});
 const companyLabel='Mlay Connexion – Entreprise régionale de gestion des abonnements et accès sans fil';
 const longest='Personnalisation et vérification complète des autorisations et des abonnements résidentiels';
 const html=`<!doctype html><html lang="fr" data-zaray-theme="dark">
-<head><meta charset="utf-8"></head><body>
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"></head><body>
   <div class="app-shell app-no-sidebar" data-workspace-chapter="mint">
-    <div class="app-main">
+    <div class="app-main"><nav class="workspace-breadcrumb"><span>Compte ZARAY /</span><a href="#company"><svg></svg><span class="zaray-nav-label-text">${companyLabel.repeat(3)} · Vue générale</span></a></nav>
       <header class="app-topbar zaray-icon-topbar">
         <a class="app-topbar-brand">ZARAY</a>
         <h1 class="app-topbar-title">Administration des abonnements résidentiels de l'entreprise</h1>
@@ -108,7 +108,7 @@ const cases=[
   {name:'desktop',width:1366,height:860},
   {name:'wide-desktop',width:1920,height:1080},
 ];
-const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox']});
 try {
   for(const viewport of cases) {
     const page=await browser.newPage({viewport:{width:viewport.width,height:viewport.height},
@@ -172,6 +172,14 @@ try {
           [viewport.name,mode,theme,openSelector,'root box '+JSON.stringify(outcome)].join(' '));
         assert.deepEqual(outcome.offenders,[],
           [viewport.name,mode,theme,openSelector,'labels overflow'].join(' '));
+      }
+      if(mode==='company') {
+        const breadcrumb=await page.locator('.workspace-breadcrumb a').evaluate(el=>{
+          const r=el.getBoundingClientRect();
+          return {right:r.right,scroll:el.scrollWidth,width:el.clientWidth};
+        });
+        assert.ok(breadcrumb.right<=viewport.width+2, 'long breadcrumb stays inside viewport');
+        assert.ok(breadcrumb.scroll<=breadcrumb.width+2, 'long breadcrumb text fits');
       }
       // Header titles must wrap rather than report text-overflow:ellipsis.
       const titleSelector=mode==='company'?'.app-topbar-title':'.personal-topbar-module-title';

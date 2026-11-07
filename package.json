@@ -12,7 +12,8 @@
     "test:brand": "node --test tests/brand.test.mjs",
     "test:navigation": "node --test tests/navigation.test.mjs",
     "prebuild": "node scripts/generate-favicon.mjs && node scripts/build-earth-hd.mjs && node scripts/build-earth-rotation.mjs && node scripts/build-earth-first-frame.mjs",
-    "test:public": "node --test tests/public-home.test.mjs"
+    "test:public": "node --test tests/public-home.test.mjs",
+    "test:navigation:browser": "node tests/navigation-layout-visual.mjs && node tests/navigation-shell-browser.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.7.0",
@@ -27,6 +28,8 @@
     "@types/node": "22.15.30",
     "@types/react": "19.1.8",
     "@types/react-dom": "19.1.7",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "esbuild": "0.28.2",
+    "playwright": "1.65.0"
   }
 }

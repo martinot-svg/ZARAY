@@ -28,7 +28,7 @@ export default function WorkspaceBreadcrumb({companyId}:{companyId:string}){
  if(!context)return null;
  return <nav aria-label="Contexte entreprise et site" className="workspace-breadcrumb">
   <span>Compte ZARAY / </span>
-  <a href={'/tableau-de-bord?companyId='+encodeURIComponent(companyId)}><ZarayIcon name="site" size={18} /> {context.company} · Vue générale</a>
-  {context.site&&<><span> / </span><a href={'/sites/'+encodeURIComponent(context.siteId||'')+'?companyId='+encodeURIComponent(companyId)}><ZarayIcon name="site" size={18} /> {context.site} · Tableau de bord du site</a></>}
+  <a href={'/tableau-de-bord?companyId='+encodeURIComponent(companyId)}><ZarayIcon name="site" size={18} /><span className="zaray-nav-label-text">{context.company} · Vue générale</span></a>
+  {context.site&&<><span> / </span><a href={'/sites/'+encodeURIComponent(context.siteId||'')+'?companyId='+encodeURIComponent(companyId)}><ZarayIcon name="site" size={18} /><span className="zaray-nav-label-text">{context.site} · Tableau de bord du site</span></a></>}
  </nav>;
 }
