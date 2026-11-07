@@ -152,6 +152,25 @@ export function paintVoucher(ctx:CanvasRenderingContext2D,x:number,y:number,tick
    if(sideNote)fit(ctx,sideNote,sideX,y+103,sideWidth,10,rightSub,font);
  }
  ctx.strokeStyle=border;ctx.lineWidth=1.5;ctx.strokeRect(x+.8,y+.8,w-1.6,h-1.6);
+ // Every offline sample must be visibly unusable, including JPEG/PDF exports.
+ // This is painted on the shared canvas after the ticket so it cannot be hidden
+ // by a template, a logo or a background color.
+ if(ticket.status==='demo'){
+  ctx.save();
+  ctx.translate(x+w/2,y+h/2);
+  ctx.rotate(-Math.PI/22);
+  ctx.fillStyle='rgba(255,255,255,.95)';
+  ctx.fillRect(-w*.48,-20,w*.96,40);
+  ctx.strokeStyle='#7b1424';
+  ctx.lineWidth=1.8;
+  ctx.strokeRect(-w*.48,-20,w*.96,40);
+  ctx.fillStyle='#7b1424';
+  ctx.font='700 21px Arial';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText('DÉMO — NON VALABLE',0,0,w*.91);
+  ctx.restore();
+ }
  ctx.restore();
 }
 export async function drawVoucherCanvas(canvas:HTMLCanvasElement,ticket:PrintableVoucher,design:TicketVisual,siteName:string){
