@@ -15,7 +15,7 @@ mkdirSync(dir,{recursive:true});
 const companyLabel='Mlay Connexion – Entreprise régionale de gestion des abonnements et accès sans fil';
 const longest='Personnalisation et vérification complète des autorisations et des abonnements résidentiels';
 const html=`<!doctype html><html lang="fr" data-zaray-theme="dark">
-<head><meta charset="utf-8"></head><body>
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"></head><body>
   <div class="app-shell app-no-sidebar" data-workspace-chapter="mint">
     <div class="app-main"><nav class="workspace-breadcrumb"><span>Compte ZARAY /</span><a href="#company"><svg></svg><span class="zaray-nav-label-text">${companyLabel.repeat(3)} · Vue générale</span></a></nav>
       <header class="app-topbar zaray-icon-topbar">

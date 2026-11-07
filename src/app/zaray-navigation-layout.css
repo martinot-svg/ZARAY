@@ -350,7 +350,9 @@ html[data-zaray-theme] .personal-no-sidebar :is(.personal-home-nav-menu,.persona
   text-align: center;
 }
 .app-no-sidebar nav[aria-label="Onglets du module Tickets Wi-Fi"] > button > svg {
-  flex-shrink: 0;
+  flex: 0 0 17px;
+  width: 17px;
+  height: 17px;
 }
 
 /* Touch docks: short two-line labels instead of invisible ellipses. */
