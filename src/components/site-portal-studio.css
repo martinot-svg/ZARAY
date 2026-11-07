@@ -93,15 +93,19 @@
  align-items:center;gap:11px;border:1px solid rgba(255,255,255,.21);
  border-radius:var(--ps-radius);background:var(--ps-panel);color:var(--ps-text);
  box-shadow:0 20px 55px rgba(0,0,0,.25);padding:23px 21px;text-align:center}
-.ps-brand-mark{display:grid;place-items:center;width:44px;height:44px;
- color:var(--ps-background);background:var(--ps-primary);border-radius:13px}
-.ps-brand-name{font-size:12px;font-weight:800;overflow-wrap:anywhere;letter-spacing:.02em}
+.ps-site-logo{width:100%;min-height:55px;max-height:76px;display:flex;align-items:center;justify-content:center;margin:0 auto 2px;flex-shrink:0}
+.ps-site-logo img{display:block;width:auto;height:auto;max-width:min(100%,180px);max-height:76px;object-fit:contain;margin:0 auto}
+.ps-site-logo span{font-size:10px;font-weight:650;color:var(--ps-text);opacity:.7;text-align:center}
 .ps-kicker{font-size:10px;color:var(--ps-accent)}
 .ps-demo-card h3{margin:0;color:var(--ps-text);font-size:23px;line-height:1.13;letter-spacing:-.035em}
 .ps-demo-card p{color:var(--ps-text);opacity:.76;font-size:11px;line-height:1.5;margin:0}
-.ps-demo-field{width:100%;text-align:left;background:color-mix(in srgb,var(--ps-background) 66%,var(--ps-panel));
- border:1px solid color-mix(in srgb,var(--ps-text) 25%,transparent);border-radius:9px;
- color:var(--ps-text);opacity:.86;padding:11px 13px;font-size:11px}
+.ps-demo-portal input.ps-demo-field{display:block;width:100%;min-width:0;text-align:left;
+ background:var(--ps-input-bg);border:1px solid var(--ps-input-border);border-radius:9px;
+ color:var(--ps-input-text);opacity:1;padding:11px 13px;font-size:11px;
+ outline:none;box-shadow:none;cursor:default}
+.ps-demo-portal input.ps-demo-field::placeholder{color:var(--ps-input-guide);opacity:1}
+.ps-demo-portal input.ps-demo-field:focus-visible{border-color:var(--ps-input-focus);
+ box-shadow:0 0 0 2px color-mix(in srgb,var(--ps-input-focus) 25%,transparent)}
 .ps-demo-button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px;
  border-radius:9px;padding:11px 12px;font-size:11px;font-weight:800;
  background:var(--ps-primary);color:var(--ps-background)}
