@@ -4,6 +4,7 @@ import {useEffect,useState,type FormEvent} from 'react';
 import Link from 'next/link';
 import {AlertCircle,ArrowRight,BadgeCheck,CalendarClock,CheckCircle2,ChevronLeft,ChevronRight,Clock3,House,RefreshCw,Search,Wifi,WifiOff,Wallet} from 'lucide-react';
 import AppShell from '@/components/app-shell';
+import ModuleDataState from '@/components/module-data-state';
 import {activeSiteId,scopedQuery,selectedCompany} from '@/lib/workspace-url';
 import './residential-subscriptions.css';
 type Company={id:string;legal_name:string;role:string};
@@ -143,7 +144,7 @@ export default function ResidentialPage(){
      <div className="rs-tabs" role="tablist" aria-label="Filtrer les abonnements">{groups.map(g=><button type="button" role="tab" aria-selected={status===g.key} key={g.key} onClick={()=>switchStatus(g.key)}>{g.label}</button>)}</div>
     </div>
     {error&&<p className="rs-error" role="alert"><AlertCircle size={16}/>{error}</p>}
-    {loading||busy?<span className="motion-sr-only" role="status">Actualisation des abonnements</span>:!companyId?<div className="rs-empty">Sélectionnez une entreprise.</div>:!rows.length?<div className="rs-empty"><House size={28}/><strong>Aucun abonné dans cette sélection.</strong><p>Les demandes effectuées depuis le portail client apparaîtront automatiquement ici.</p>{search||status!=='all'?<button type="button" onClick={reset}>Réinitialiser les filtres</button>:<Link href={'/portail'+context}>Ouvrir les portails client <ArrowRight size={15}/></Link>}</div>:
+    {loading||busy?<ModuleDataState label="Actualisation des abonnements…"/>:!companyId?<div className="rs-empty">Sélectionnez une entreprise.</div>:!rows.length?<div className="rs-empty"><House size={28}/><strong>Aucun abonné dans cette sélection.</strong><p>Les demandes effectuées depuis le portail client apparaîtront automatiquement ici.</p>{search||status!=='all'?<button type="button" onClick={reset}>Réinitialiser les filtres</button>:<Link href={'/portail'+context}>Ouvrir les portails client <ArrowRight size={15}/></Link>}</div>:
     <div className="rs-table-scroll"><table className="rs-table"><thead><tr><th>Abonné</th><th>Forfait</th><th>Site</th><th>Dernier paiement</th><th>Échéance</th><th>État</th><th></th></tr></thead><tbody>{rows.map(s=>{const tag=stateOf(s);return <tr key={s.id}><td><strong>{s.customers?.full_name||'Client'}</strong><small>{s.customers?.phone||s.customers?.email||'—'}</small></td><td><strong>{s.offer_name}</strong><small>{s.validity_days} jours · {s.paid_cycles} règlement(s)</small></td><td>{siteName(s.site_id)}</td><td>{date(s.last_paid_at)}</td><td>{date(s.expires_at)}</td><td><span className={'rs-status rs-'+tag.tone}>{tag.label}</span></td><td><button type="button" onClick={()=>{setSelectedId(s.id===selectedId?'':s.id);setRenewalRef('');}} aria-expanded={s.id===selectedId} className="rs-open">Détails <ArrowRight size={14}/></button></td></tr>})}</tbody></table></div>}
     <div className="rs-pages"><span>Page {page} / {totalPages}</span><div><button type="button" disabled={page<=1||busy} aria-label="Page précédente" onClick={()=>{setPage(p=>p-1);setSelectedId('');}}><ChevronLeft size={17}/></button><button type="button" disabled={page>=totalPages||busy} aria-label="Page suivante" onClick={()=>{setPage(p=>p+1);setSelectedId('');}}><ChevronRight size={17}/></button></div></div>
    </section>
