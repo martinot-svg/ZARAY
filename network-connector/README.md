@@ -18,3 +18,18 @@ Node.js 22 or later is required. See the environment variable example in this fo
 - En cas de perte de connexion, le connecteur réessaie automatiquement le cycle; les accusés de résultat sont réessayés trois fois. Surveillez les commandes non acquittées et réconciliez-les manuellement si le processus s'arrête brutalement.
 
 Documentation officielle : https://manual.mikrotik.com/docs/developer-guides/rest-api/
+
+
+## Alternative sans ordinateur : moteur natif RouterOS 7
+
+Dans **Gestion réseau**, choisir **Agent natif (.rsc)** pour générer un
+script d'appairage spécifique au routeur, à importer une seule fois depuis
+le terminal ou WinBox. Le routeur assure ensuite la synchronisation HTTPS
+directement avec ZARAY grâce à son planificateur RouterOS : aucun processus
+Node.js, VPS ou serveur FreeRADIUS externe n'est requis pour ce mode.
+
+L'agent natif et cet agent Node.js sont **deux options alternatives**. Le
+nouvel appairage révoque le précédent et désactive le contrôle jusqu'à
+validation explicite. Les limites et la procédure de retrait sont détaillées
+dans [routeros/README.md](routeros/README.md). Le fonctionnement sur un
+routeur physique doit encore être validé avant activation.
