@@ -14,7 +14,7 @@
 # The credential is persisted in RouterOS configuration, readable by authorized RouterOS admins.
 # Keep restricted administrator access and do not export scripts with sensitive values.
 /system script add name="zaray-native-credentials" policy=read,write,test,sensitive source=(":global zarayNativeRouterId \"" . $routerId . "\"; :global zarayNativeToken \"" . $token . "\";");
-/system script add name="zaray-native-cycle" policy=read,write,test,sensitive source={
+/system script add name="zaray-native-cycle" policy=ftp,read,write,test,sensitive source={
  :if ([/system script job print count-only where script="zaray-native-cycle"] > 1) do={ :error "ZARAY: already running"; };
  :global zarayNativeRouterId;
  :global zarayNativeToken;
@@ -161,5 +161,5 @@
   } on-error={ :log warning "ZARAY: network command result not acknowledged"; };
  };
 };
-/system scheduler add name="zaray-native-minute" interval=1m start-time=startup on-event="zaray-native-cycle" policy=read,write,test,sensitive disabled=no;
+/system scheduler add name="zaray-native-minute" interval=1m start-time=startup on-event="zaray-native-cycle" policy=ftp,read,write,test,sensitive disabled=no;
 :log info "ZARAY: RouterOS native agent installed (network control remains disabled in ZARAY)";
