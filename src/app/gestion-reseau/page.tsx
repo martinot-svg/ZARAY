@@ -114,7 +114,29 @@ export default function NetworkPage(){
     </div>)}{!routers.some(r=>r.site_id===s.id)&&<p className="muted">Aucun routeur associé.</p>}
    </div>)}</div>
   </section></details>
-  <details className="workspace-disclosure"><summary>Sessions et appareils</summary><section className="panel"><div className="panel-head"><div><h2 className="panel-title">Appareils et sessions détectés</h2></div><label>Source <select value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">Toutes</option>{['hotspot','pppoe','dhcp','wifi','neighbor','radius'].map(x=><option key={x} value={x}>{x.toUpperCase()}</option>)}</select></label></div>
+  <details className="workspace-disclosure"><summary>MikroTik · interfaces réseau</summary>
+   <section className="panel"><div className="panel-head"><h2 className="panel-title">Interfaces RouterOS</h2></div>
+    <p className="muted">Supervision en lecture seule des interfaces détectées par le connecteur. « En fonctionnement » désigne le signal RouterOS « running » ; ce n’est pas une mesure du débit ou de la disponibilité Internet.</p>
+    {devices.some(d=>d.observed_kind==='interface')?<div className="table-wrap"><table className="data-table"><thead><tr><th>Routeur</th><th>Interface et type</th><th>Adresse MAC</th><th>État</th></tr></thead><tbody>
+    {devices.filter(d=>d.observed_kind==='interface').map(d=><tr key={d.id}><td>{routers.find(r=>r.id===d.router_id)?.name||'Routeur inconnu'}</td><td>{d.client_label||d.identity_key}</td><td>{d.mac_address||'—'}</td><td>{fresh(d.observed_at)&&routers.some(r=>r.id===d.router_id&&fresh(r.last_seen_at))?(d.active?'En fonctionnement':'Non actif'):'Non vérifié récemment'}</td></tr>)}
+    </tbody></table></div>:<div className="empty-state"><strong>Aucune interface découverte</strong><p>Les interfaces apparaissent après appairage et synchronisation d’un routeur compatible.</p></div>}
+   </section>
+  </details>
+  <details className="workspace-disclosure"><summary>RADIUS · configuration des routeurs</summary>
+   <section className="panel">
+    <div className="panel-head"><h2 className="panel-title">Serveurs RADIUS déclarés sur MikroTik</h2></div>
+    <p className="muted">Inventaire en lecture seule obtenu par le connecteur local. « Activé » indique uniquement que le serveur n’est pas désactivé dans RouterOS : cela ne confirme ni sa joignabilité, ni l’authentification des clients. Les secrets partagés ne sont jamais récupérés.</p>
+    {devices.filter(d=>d.observed_kind==='radius').length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Routeur</th><th>Serveur et service</th><th>État déclaré</th><th>Dernière observation</th></tr></thead><tbody>
+     {devices.filter(d=>d.observed_kind==='radius').map(d=><tr key={d.id}>
+      <td>{routers.find(r=>r.id===d.router_id)?.name||'Routeur inconnu'}</td>
+      <td>{d.client_label||d.identity_key}</td>
+      <td>{fresh(d.observed_at)&&routers.some(r=>r.id===d.router_id&&fresh(r.last_seen_at))?(d.active?'Activé dans RouterOS':'Désactivé dans RouterOS'):'Non vérifié récemment'}</td>
+      <td>{fmt(d.observed_at)}</td>
+     </tr>)}
+    </tbody></table></div>:<div className="empty-state"><strong>Aucun serveur RADIUS observé</strong><p>Connectez le routeur et autorisez la lecture de la configuration RADIUS dans RouterOS. Aucun serveur RADIUS n’est automatiquement créé.</p></div>}
+   </section>
+  </details>
+  <details className="workspace-disclosure"><summary>Sessions et appareils</summary><section className="panel"><div className="panel-head"><div><h2 className="panel-title">Appareils et sessions détectés</h2></div><label>Source <select value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">Toutes</option>{['hotspot','pppoe','dhcp','wifi','neighbor','radius','interface'].map(x=><option key={x} value={x}>{x.toUpperCase()}</option>)}</select></label></div>
    {visibleDevices.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Appareil / Utilisateur</th><th>Source</th><th>Adresse IP</th><th>État</th><th>Intervention</th></tr></thead><tbody>{visibleDevices.map(d=><tr key={d.id}><td><strong>{d.client_label||d.identity_key}</strong><small>{d.mac_address||'MAC inconnue'}</small></td><td>{d.observed_kind}</td><td>{d.ip_address||'—'}</td><td>{d.active&&fresh(d.observed_at)&&routers.some(r=>r.id===d.router_id&&fresh(r.last_seen_at))?'Session active':'Historique / état inconnu'}</td><td>{d.observed_kind==='hotspot'&&d.mac_address&&canManage?<button type="button" disabled={busy} onClick={()=>void deviceAction(d,true)}>Bloquer</button>:<span className="muted">Consultation</span>}</td></tr>)}</tbody></table></div>:<div className="empty-state"><strong>Aucune découverte</strong><p>Les équipements apparaîtront après l’appairage et la première synchronisation.</p></div>}
   </section></details>
   <div className="workspace-grid"><details className="workspace-disclosure"><summary>Associer un abonnement</summary><section className="panel"><h2 className="panel-title">Associer un abonnement au réseau</h2>
