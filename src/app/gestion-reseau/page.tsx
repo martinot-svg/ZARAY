@@ -38,12 +38,19 @@ export default function NetworkPage(){
  const chosenResources=resources.find(r=>r.router_id===routerId);
  const healthy=chosenResources&&fresh(chosenResources.observed_at)&&chosen&&fresh(chosen.last_seen_at);
  const recentlySeenRouters=routers.filter(r=>fresh(r.last_seen_at));
+ // The agent must contact the SAME deployment that created its lab credentials.
+ function currentZarayOrigin(){
+  const url=new URL(window.location.origin);
+  if(url.protocol!=='https:'||url.username||url.password||url.port||url.pathname!=='/'||
+     url.search||url.hash)throw new Error('Un déploiement ZARAY HTTPS est obligatoire pour l’appairage.');
+  return url.origin;
+ }
  // This configuration template intentionally contains no pairing token or RouterOS credentials.
  function downloadConnectorConfig(router:Router){
   const rows=[
    '# ZARAY — configuration locale du connecteur MikroTik',
    '# À remplir sur la machine du réseau local, jamais dans GitHub.',
-   'ZARAY_URL=https://zaray.vercel.app',
+   'ZARAY_URL='+currentZarayOrigin(),
    'ZARAY_ROUTER_ID='+router.id,
    'MIKROTIK_URL=https://'+router.host.trim(),
    'MIKROTIK_USER=REMPLACER_COMPTE_ROUTEROS',
@@ -149,13 +156,15 @@ export default function NetworkPage(){
    const response=await fetch('/network/zaray-routeros-agent.rsc',{cache:'no-store'});
    if(!response.ok)throw new Error('Modèle de l’agent natif indisponible.');
    const template=await response.text();
-   if(!template.includes('__ZARAY_ROUTER_ID__')||!template.includes('__ZARAY_PAIRING_TOKEN__'))
+   if(!template.includes('__ZARAY_ROUTER_ID__')||!template.includes('__ZARAY_PAIRING_TOKEN__')||
+      !template.includes('__ZARAY_AGENT_ENDPOINT__'))
     throw new Error('Le modèle du script est incomplet.');
    const data=await run('/api/network/pair',{routerId:r.id});
    if(!data?.pairingToken)return;
    setPair({token:data.pairingToken,routerId:r.id,expiresAt:data.expiresAt});
    const source=template.replaceAll('__ZARAY_ROUTER_ID__',r.id)
-    .replaceAll('__ZARAY_PAIRING_TOKEN__',data.pairingToken);
+    .replaceAll('__ZARAY_PAIRING_TOKEN__',data.pairingToken)
+    .replaceAll('__ZARAY_AGENT_ENDPOINT__',currentZarayOrigin()+'/api/network/agent');
    const url=URL.createObjectURL(new Blob([source],{type:'text/plain;charset=utf-8'}));
    const a=document.createElement('a');a.href=url;a.download='zaray-native-'+r.id+'.rsc';
    document.body.appendChild(a);a.click();a.remove();
