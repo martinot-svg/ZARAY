@@ -1,0 +1,7 @@
+# SNIPPET ONLY; a real strong RADIUS shared secret and router IP go in a private clients.conf.
+# Use a private VPN/LAN, tightly scoped firewall and a distinct secret for each MikroTik.
+client zaray_mikrotik_private {
+ ipaddr = 192.0.2.10
+ secret = REPLACE_WITH_LONG_RANDOM_SECRET_OUTSIDE_GIT
+ shortname = zaray-router
+}
