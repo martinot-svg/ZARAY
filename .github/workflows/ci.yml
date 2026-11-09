@@ -41,6 +41,7 @@ jobs:
             tests/password-visibility.test.mjs \
             tests/daily-inspiration-curation.test.mjs \
             tests/network-preparation.test.mjs \
+            tests/winbox-console.test.mjs \
             tests/hotspot-captive-catalog.test.mjs \
             tests/logo-palette.test.mjs \
             tests/logo-optimizer.test.mjs \
