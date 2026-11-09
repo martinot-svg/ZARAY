@@ -38,7 +38,7 @@ export async function POST(req:NextRequest){
  if(!roles.includes(c.access!.member.role))return json({error:'Accès réservé aux responsables.'},403);
  const [{data:router},{data:order},{data:policy}]=await Promise.all([
   c.service!.from('network_routers').select('id,company_id,site_id,control_enabled').eq('id',routerId).eq('company_id',companyId).maybeSingle(),
-  c.service!.from('subscription_orders').select('id,site_id,company_id,status,paid_at,validity_days').eq('id',orderId).eq('company_id',companyId).maybeSingle(),
+  c.service!.from('subscription_orders').select('id,site_id,company_id,status,paid_at,validity_days,offer_id').eq('id',orderId).eq('company_id',companyId).maybeSingle(),
   c.service!.from('network_company_policies').select('grace_hours').eq('company_id',companyId).maybeSingle()
  ]);
  if(!router||!order||router.site_id!==order.site_id)return json({error:'Le routeur et la commande doivent appartenir au même site.'},409);
@@ -51,9 +51,20 @@ export async function POST(req:NextRequest){
   const until=new Date(Math.max(Date.now(),new Date(order.paid_at).getTime())+Math.max(1,Number(order.validity_days))*86400000);
   expiry=until.toISOString();grace=new Date(until.getTime()+(policy?.grace_hours??72)*3600000).toISOString();
  }
+ // Capture bandwidth once for this subscription. Editing the offer must not silently
+ // change the speed of existing customers.
+ let uploadKbps:number|null=null,downloadKbps:number|null=null;
+ if(order.offer_id){
+  const {data:offer,error:offerError}=await c.service!.from('offers')
+   .select('upload_kbps,download_kbps').eq('id',order.offer_id).eq('company_id',companyId).maybeSingle();
+  if(offerError)return json({error:'Débit de l’offre indisponible.'},503);
+  if(offer&&Number.isInteger(offer.upload_kbps)&&Number.isInteger(offer.download_kbps)){
+   uploadKbps=offer.upload_kbps;downloadKbps=offer.download_kbps;
+  }
+ }
  const {data:account,error}=await c.service!.from('network_access_accounts').insert({
   company_id:companyId,router_id:routerId,order_id:orderId,username,protocol,
-  expires_at:expiry,grace_until:grace,desired_state:expiry?'active':'suspended'
+  expires_at:expiry,grace_until:grace,desired_state:expiry?'active':'suspended',upload_kbps:uploadKbps,download_kbps:downloadKbps
  }).select('id,router_id,username,protocol,desired_state').single();
  if(error)return json({error:error.code==='23505'?'Ce compte réseau ou cette commande est déjà lié.':'Association impossible.'},error.code==='23505'?409:503);
  if(router.control_enabled&&expiry){
