@@ -1,3 +1,4 @@
+import {networkWritesBlockedInPreview} from '@/lib/network-preview-guard';
 import {NextRequest,NextResponse} from 'next/server';
 import {createServiceClient} from '@/lib/supabase/service';
 import {radiusTokenHash,verifyRadiusPassword} from '@/lib/network-radius-crypto';
@@ -7,6 +8,7 @@ const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]
 const deny=()=>new NextResponse(null,{status:401,headers:{'Cache-Control':'no-store'}});
 const unavailable=()=>new NextResponse(null,{status:503,headers:{'Cache-Control':'no-store'}});
 export async function POST(req:NextRequest){
+ if(networkWritesBlockedInPreview())return NextResponse.json({error:'Prévisualisation réseau en lecture seule.'},{status:403,headers:{'Cache-Control':'no-store'}});
  const token=/^Bearer ([a-f0-9]{64})$/i.exec(req.headers.get('authorization')||'')?.[1];
  const b=await req.json().catch(()=>null) as Record<string,unknown>|null;
  const routerId=typeof b?.routerId==='string'?b.routerId:'';
