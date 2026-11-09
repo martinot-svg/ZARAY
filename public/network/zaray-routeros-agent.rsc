@@ -184,6 +184,52 @@
      /ppp secret set $users comment=($expectedPrefix . $expiresNs);
     };
    };
+   # Bandwidth is applied ONLY to profiles ZARAY already owns.
+   # Never replace a custom MikroTik profile, which could contain unrelated policies.
+   :if ($action = "resume_account") do={
+    :local up ($cmd->"uploadKbps"); :local down ($cmd->"downloadKbps");
+    :if ([:typeof $up] != "nil" || [:typeof $down] != "nil") do={
+     :set up [:tonum $up]; :set down [:tonum $down];
+     :if ([:typeof $up] != "num" || [:typeof $down] != "num" ||
+          $up < 64 || $down < 64 || $up > 10000000 || $down > 10000000) do={ :error "Invalid speed limit"; };
+     :local newName ("zaray-speed-" . $up . "k-" . $down . "k");
+     :local limit ($up . "k/" . $down . "k");
+     :if ($protocol = "hotspot") do={
+      :local user [/ip hotspot user find where name=$username];
+      :local current [/ip hotspot user get $user profile];
+      :local currentProfile [/ip hotspot user profile find where name=$current];
+      :if ([:len $currentProfile] != 1 || !([/ip hotspot user profile get $currentProfile comment] = "zaray:managed-bandwidth")) do={
+       :error "Hotspot profile not managed by ZARAY; speed unchanged";
+      };
+      :local target [/ip hotspot user profile find where name=$newName];
+      :if ([:len $target] > 1) do={ :error "Ambiguous bandwidth profile"; };
+      :if ([:len $target] = 0) do={
+       /ip hotspot user profile add name=$newName rate-limit=$limit comment="zaray:managed-bandwidth";
+      } else={
+       :if ([/ip hotspot user profile get $target comment] != "zaray:managed-bandwidth" ||
+            [/ip hotspot user profile get $target rate-limit] != $limit) do={ :error "Conflicting Hotspot speed profile"; };
+      };
+      /ip hotspot user set $user profile=$newName;
+     };
+     :if ($protocol = "pppoe") do={
+      :local user [/ppp secret find where name=$username];
+      :local current [/ppp secret get $user profile];
+      :local currentProfile [/ppp profile find where name=$current];
+      :if ([:len $currentProfile] != 1 || [/ppp profile get $currentProfile comment] != "zaray:managed-bandwidth") do={
+       :error "PPP profile not managed by ZARAY; speed unchanged";
+      };
+      :local target [/ppp profile find where name=$newName];
+      :if ([:len $target] > 1) do={ :error "Ambiguous PPP bandwidth profile"; };
+      :if ([:len $target] = 0) do={
+       /ppp profile add name=$newName rate-limit=$limit comment="zaray:managed-bandwidth";
+      } else={
+       :if ([/ppp profile get $target comment] != "zaray:managed-bandwidth" ||
+            [/ppp profile get $target rate-limit] != $limit) do={ :error "Conflicting PPP speed profile"; };
+      };
+      /ppp secret set $user profile=$newName;
+     };
+    };
+   };
    :if ($protocol = "hotspot" && ($action = "suspend_account" || $action = "resume_account")) do={
     :local users [/ip hotspot user find where name=$username];
     :if ([:len $users] != 1) do={ :error "Missing or ambiguous hotspot account"; };
