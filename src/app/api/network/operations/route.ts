@@ -16,6 +16,10 @@ export async function POST(req:NextRequest){
   confirmation=b?.confirmation;
  if(!uuid.test(routerId)||!uuid.test(observationId)||reason.length<3||reason.length>250||
     confirmation!=='DECONNECTER')return error('Confirmation et motif requis.',400);
+ // A Vercel Preview may share credentials with production. Never queue a real
+ // network command from Preview unless explicitly enabled for an isolated test lab.
+ if(process.env.VERCEL_ENV==='preview'&&process.env.ZARAY_PREVIEW_NETWORK_MUTATIONS!=='enabled')
+  return error('Prévisualisation en lecture seule : opérations réelles désactivées.',403);
  const client=await createClient();
  const auth=await authorizeTenant(client,companyId);
  if(!auth.ok)return error(auth.error,auth.status);
