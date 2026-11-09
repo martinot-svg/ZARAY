@@ -1,3 +1,4 @@
+import {networkWritesBlockedInPreview} from '@/lib/network-preview-guard';
 import {NextRequest,NextResponse} from 'next/server';
 import {createClient} from '@/lib/supabase/server';
 import {createServiceClient} from '@/lib/supabase/service';
@@ -8,6 +9,7 @@ export const dynamic='force-dynamic';
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 const json=(data:unknown,status=200)=>NextResponse.json(data,{status,headers:{'Cache-Control':'no-store'}});
 export async function POST(req:NextRequest){
+ if(networkWritesBlockedInPreview())return NextResponse.json({error:'Prévisualisation réseau en lecture seule.'},{status:403,headers:{'Cache-Control':'no-store'}});
  const b=await req.json().catch(()=>null) as Record<string,unknown>|null;
  const companyId=typeof b?.companyId==='string'?b.companyId:'';
  const accountId=typeof b?.accountId==='string'?b.accountId:'';
