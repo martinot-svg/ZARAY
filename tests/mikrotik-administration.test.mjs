@@ -83,3 +83,23 @@ test('browser identifies incompatible sources and separates request from confirm
  assert.ok(ui.includes("le résultat ne sera confirmé"));
  assert.ok(ui.includes("retour arrière local sûr"));
 });
+
+test('all existing network write handlers reject unisolated Vercel Previews',()=>{
+ const guard=file('src/lib/network-preview-guard.ts');
+ assert.ok(guard.includes("process.env.VERCEL_ENV==='preview'"));
+ assert.ok(guard.includes("ZARAY_PREVIEW_NETWORK_MUTATIONS"));
+ for(const path of [
+  'src/app/api/network/route.ts',
+  'src/app/api/network/access/route.ts',
+  'src/app/api/network/device-action/route.ts',
+  'src/app/api/network/pair/route.ts',
+  'src/app/api/network/agent/route.ts',
+  'src/app/api/network/radius/gateway/route.ts',
+  'src/app/api/network/radius/credentials/route.ts',
+  'src/app/api/network/radius/auth/route.ts'
+ ]){
+  const src=file(path);
+  assert.ok(src.includes('networkWritesBlockedInPreview()'),path);
+  assert.ok(src.includes('status:403'),path);
+ }
+});
