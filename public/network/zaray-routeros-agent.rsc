@@ -3,7 +3,7 @@
 # Credentials and all RouterOS actions stay on the router. HTTPS certificates MUST be verified.
 :local routerId "__ZARAY_ROUTER_ID__";
 :local pairCode "__ZARAY_PAIRING_TOKEN__";
-:local endpoint "https://zaray.vercel.app/api/network/agent";
+:local endpoint "__ZARAY_AGENT_ENDPOINT__";
 :if ([:len $routerId] != 36 || [:len $pairCode] != 64) do={ :error "ZARAY: incomplete installation file"; };
 :if ([:len [/system script find where name="zaray-native-cycle"]] > 0) do={ :error "ZARAY: native agent already installed"; };
 :local body [:serialize to=json value=({"routerId"=$routerId;"action"="claim"}) options=json.no-string-conversion];
@@ -22,7 +22,7 @@
  :local rid $zarayNativeRouterId;
  :local token $zarayNativeToken;
  :if ([:typeof $token] != "str" || !($token ~ "^[a-f0-9]{64}$")) do={ :error "ZARAY: connector key missing"; };
- :local endpoint "https://zaray.vercel.app/api/network/agent";
+ :local endpoint "__ZARAY_AGENT_ENDPOINT__";
  :local headers ("Authorization: Bearer " . $token . ",Content-Type: application/json");
  # Offline guard runs BEFORE all cloud requests, including when HTTPS is unreachable.
  # A missing/invalid router clock cannot be trusted for a calendar expiration.
