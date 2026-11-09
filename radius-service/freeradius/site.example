@@ -1,0 +1,14 @@
+# SNIPPETS ONLY. Apply to a dedicated virtual server with restricted NAS clients.
+# The bridge currently supports PAP requests (User-Password). No EAP/CHAP/MSCHAP.
+# authorize { ... }
+if (!&User-Password) {
+ reject
+}
+update control {
+ Auth-Type := zaray_rest
+}
+# authenticate { ... }
+Auth-Type zaray_rest {
+ zaray_rest
+}
+# accounting remains unconfigured: do not claim usage/accounting is active.
