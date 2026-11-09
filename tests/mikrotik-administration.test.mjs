@@ -24,6 +24,8 @@ test('advanced read-only inventories never capture credentials or raw configurat
 });
 test('inventory coverage is explicit, capped, paged and tenant-scoped',()=>{
  assert.ok(node.includes("sourceStats:[...sourceStats.values()]"));
+ assert.ok(node.includes("key:o=>'wifi:'"));
+ assert.ok(node.includes("key:o=>'wireless:'"));
  assert.ok(node.includes("Math.min(25,500-items.length)"));
  assert.ok(backend.includes("b?.sourceStats!==undefined"));
  assert.ok(backend.includes("complete:item.complete"));
@@ -42,6 +44,8 @@ test('session command is not an insecure direct RouterOS browser call',()=>{
  assert.ok(operations.includes("confirmation!=='DECONNECTER'"));
  assert.ok(operations.includes("router.control_enabled"));
  assert.ok(operations.includes("credential?.paired_at"));
+ assert.ok(operations.includes("ZARAY_PREVIEW_NETWORK_MUTATIONS"));
+ assert.ok(operations.includes("process.env.VERCEL_ENV==='preview'"));
  assert.ok(operations.includes("recent(observation.observed_at)"));
  assert.ok(operations.includes(".eq('router_id',routerId).eq('company_id',companyId)"));
  assert.ok(operations.includes("observed_kind==='hotspot'"));
