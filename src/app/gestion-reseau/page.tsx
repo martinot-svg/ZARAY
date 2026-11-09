@@ -18,6 +18,8 @@ export default function NetworkPage(){
  const [name,setName]=useState(''),[host,setHost]=useState(''),[routerId,setRouterId]=useState(''),[username,setUsername]=useState(''),[protocol,setProtocol]=useState('hotspot'),[orderId,setOrderId]=useState('');
  const [pair,setPair]=useState<{token:string;routerId:string;expiresAt:string}|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [grace,setGrace]=useState('72'),[extensionLimit,setExtensionLimit]=useState('24'),[filter,setFilter]=useState('all'),[selectedDevice,setSelectedDevice]=useState('');
+ const [radiusGateway,setRadiusGateway]=useState<{configured:boolean;enabled:boolean;lastAuthAt:string|null}|null>(null);
+ const [radiusToken,setRadiusToken]=useState(''),[radiusAccountId,setRadiusAccountId]=useState(''),[radiusPassword,setRadiusPassword]=useState('');
  const canManage=role==='owner'||role==='admin';
  const chosen=routers.find(r=>r.id===routerId);
  const recentlySeenRouters=routers.filter(r=>fresh(r.last_seen_at));
@@ -73,6 +75,29 @@ export default function NetworkPage(){
   catch(e){setError(e instanceof Error?e.message:'Erreur');return null;}
   finally{setBusy(false);}
  }
+ useEffect(()=>{
+  if(!companyId||!routerId){setRadiusGateway(null);return;}
+  const controller=new AbortController();
+  fetch('/api/network/radius/gateway?companyId='+encodeURIComponent(companyId)+'&routerId='+encodeURIComponent(routerId),
+   {cache:'no-store',signal:controller.signal})
+   .then(async res=>{const data=await res.json();if(!res.ok)throw Error(data.error||'Passerelle indisponible');return data;})
+   .then(data=>{if(!controller.signal.aborted)setRadiusGateway(data);})
+   .catch(()=>{if(!controller.signal.aborted)setRadiusGateway(null);});
+  return()=>controller.abort();
+ },[companyId,routerId]);
+ async function prepareRadiusGateway(){
+  if(!routerId||!canManage||role!=='owner')return;
+  if(!confirm('Créer ou renouveler la clé de la passerelle ? Une clé précédente sera révoquée et la passerelle restera désactivée.'))return;
+  const result=await run('/api/network/radius/gateway',{routerId});
+  if(result?.gatewayToken){setRadiusToken(result.gatewayToken);setRadiusGateway({configured:true,enabled:false,lastAuthAt:null});}
+ }
+ async function saveRadiusPassword(e:FormEvent){
+  e.preventDefault();
+  if(!radiusAccountId||!radiusPassword||radiusPassword.length<12)return;
+  const result=await run('/api/network/radius/credentials',{accountId:radiusAccountId,password:radiusPassword});
+  setRadiusPassword('');
+  if(result?.saved)setRadiusAccountId('');
+ }
  async function add(e:FormEvent){e.preventDefault();const data=await run('/api/network',{siteId,name,host});if(data){setName('');setHost('');}}
  async function register(e:FormEvent){e.preventDefault();const data=await run('/api/network/access',{routerId,orderId,username,protocol});if(data)setUsername('');}
  async function pairing(r:Router){const data=await run('/api/network/pair',{routerId:r.id});if(data?.pairingToken){setPair({token:data.pairingToken,routerId:r.id,expiresAt:data.expiresAt});}}
@@ -104,6 +129,24 @@ export default function NetworkPage(){
    </section>
   </div>
   {pair&&<section className="panel" aria-live="polite"><h2 className="panel-title">Code d’association à usage unique</h2><p>Valable jusqu’au {fmt(pair.expiresAt)}. Ce code n’est affiché qu’une fois.</p><p><code style={{overflowWrap:'anywhere'}}>{pair.token}</code></p><p className="muted">Routeur : <code>{pair.routerId}</code>. Installez le connecteur Node.js du projet sur une machine du réseau local, avec les variables ZARAY_ROUTER_ID, ZARAY_PAIRING_TOKEN, MIKROTIK_URL, MIKROTIK_USER et MIKROTIK_PASSWORD. Utilisez un certificat RouterOS vérifiable. </p><button type="button" onClick={()=>void navigator.clipboard.writeText(pair.token)}>Copier le code</button> <button type="button" onClick={()=>setPair(null)}>Masquer</button></section>}
+  <details className="workspace-disclosure"><summary>RADIUS · authentification centrale</summary>
+   <section className="panel">
+    <div className="panel-head"><h2 className="panel-title">Préparer le service RADIUS</h2></div>
+    <p className="muted">Cette section prépare les identifiants pour un futur service FreeRADIUS. La passerelle reste désactivée tant qu’un serveur privé n’a pas été installé et vérifié.</p>
+    <div className="form-stack compact-form">
+     <label>Routeur cible<select value={routerId} onChange={e=>{setRadiusToken('');setRadiusAccountId('');setRadiusPassword('');setRouterId(e.target.value);}}>{routers.map(r=><option key={r.id} value={r.id}>{r.name}</option>)}</select></label>
+     <p className="muted">Passerelle : {radiusGateway?(radiusGateway.configured?(radiusGateway.enabled?'Activée':'Préparée · désactivée'):'Non préparée'):'État non disponible'}</p>
+     <button type="button" disabled={!routerId||role!=='owner'||busy} onClick={()=>void prepareRadiusGateway()}>Créer / renouveler la clé de passerelle</button>
+    </div>
+    {radiusToken&&<div className="panel" aria-live="polite"><strong>Clé RADIUS temporairement affichée</strong><p className="muted">Enregistrez-la exclusivement sur le serveur privé FreeRADIUS. Elle ne sera pas affichée à nouveau.</p><code style={{overflowWrap:'anywhere'}}>{radiusToken}</code><div><button type="button" onClick={()=>void navigator.clipboard.writeText(radiusToken)}>Copier la clé</button> <button type="button" onClick={()=>setRadiusToken('')}>Masquer</button></div></div>}
+    <form className="form-stack compact-form" onSubmit={saveRadiusPassword}>
+     <label>Compte réseau résidentiel<select required value={radiusAccountId} onChange={e=>setRadiusAccountId(e.target.value)}><option value="">Choisir un compte</option>{accounts.filter(a=>a.router_id===routerId).map(a=><option key={a.id} value={a.id}>{a.username} · {a.protocol.toUpperCase()}</option>)}</select></label>
+     <label>Nouveau mot de passe RADIUS<input type="password" value={radiusPassword} minLength={12} maxLength={128} autoComplete="new-password" onChange={e=>setRadiusPassword(e.target.value)} placeholder="12 caractères minimum"/></label>
+     <button type="submit" disabled={!canManage||busy||!radiusAccountId||radiusPassword.length<12}>Enregistrer le secret du compte</button>
+     <p className="muted">Le mot de passe n’est jamais réaffiché. Ce formulaire ne crée pas d’accès Internet. Les tickets occasionnels restent gérés par le connecteur Hotspot existant.</p>
+    </form>
+   </section>
+  </details>
   <details className="workspace-disclosure"><summary>Cartographie</summary><section className="panel"><div className="panel-head"><div><h2 className="panel-title">Cartographie du réseau</h2></div></div>
    
    <div className="workspace-grid">{sites.map(s=><div className="panel" key={s.id} style={{padding:16}}>
