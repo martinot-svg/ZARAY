@@ -1,3 +1,4 @@
+import {networkWritesBlockedInPreview} from '@/lib/network-preview-guard';
 import {createHash,randomBytes,timingSafeEqual} from 'node:crypto';
 import {NextRequest,NextResponse} from 'next/server';
 import {createServiceClient} from '@/lib/supabase/service';
@@ -10,6 +11,7 @@ const json=(data:unknown,status=200)=>NextResponse.json(data,{status,headers:{'C
 const digest=(s:string)=>createHash('sha256').update(s).digest('hex');
 const clean=(s:unknown,max=128)=>typeof s==='string'?s.trim().slice(0,max):'';
 export async function POST(request:NextRequest){
+ if(networkWritesBlockedInPreview())return NextResponse.json({error:'Prévisualisation réseau en lecture seule.'},{status:403,headers:{'Cache-Control':'no-store'}});
  const auth=request.headers.get('authorization')||'';
  const token=/^Bearer ([0-9a-f]{64})$/i.exec(auth)?.[1]||'';
  const b=await request.json().catch(()=>null) as Record<string,unknown>|null;
