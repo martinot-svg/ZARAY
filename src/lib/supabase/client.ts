@@ -9,7 +9,7 @@ export function createClient() {
     let valid=false;
     try {
       const parsed=new URL(url||'');
-      valid=!!ref&&/^[a-z]{20}$/.test(ref)&&ref!=='hosyeygtaksbahnxxiqf'&&
+      valid=!!ref&&/^[a-z0-9]{20}$/.test(ref)&&ref!=='hosyeygtaksbahnxxiqf'&&
         parsed.protocol==='https:'&&parsed.hostname===ref+'.supabase.co'&&
         !parsed.username&&!parsed.password&&!parsed.port&&parsed.pathname==='/'&&!parsed.search&&!parsed.hash;
     } catch {}
