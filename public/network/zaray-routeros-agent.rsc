@@ -55,6 +55,7 @@
  };
  :local obs [:toarray ""];
  :local kinds [:toarray ""];
+ :local sourceStats [:toarray ""];
  :local count 0;
  :do {
   :set kinds ($kinds,"interface");
@@ -67,6 +68,8 @@
     :set count ($count + 1);
    };
   };
+  :local reported [:len [/interface find]];
+  :set sourceStats ($sourceStats,({"kind"="interface";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
  } on-error={ :log warning "ZARAY: RouterOS interfaces unavailable"; };
  :set count 0;
  :do {
@@ -77,6 +80,8 @@
     :set count ($count + 1);
    };
   };
+  :local reported [:len [/ip hotspot active find]];
+  :set sourceStats ($sourceStats,({"kind"="hotspot";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
  } on-error={ :log warning "ZARAY: Hotspot discovery unavailable"; };
  :set count 0;
  :do {
@@ -87,10 +92,12 @@
     :set count ($count + 1);
    };
   };
+  :local reported [:len [/ppp active find]];
+  :set sourceStats ($sourceStats,({"kind"="pppoe";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
  } on-error={ :log warning "ZARAY: PPP discovery unavailable"; };
  :if ([:len $kinds] = 0) do={ :error "ZARAY: no RouterOS inventory available"; };
  :local metrics ({"cpuLoad"=[/system resource get cpu-load];"totalMemory"=[/system resource get total-memory];"freeMemory"=[/system resource get free-memory];"uptime"=[:tostr [/system resource get uptime]]});
- :local syncBody [:serialize to=json value=({"routerId"=$rid;"action"="sync";"agentKind"="routeros-native";"model"=[/system resource get board-name];"version"=[/system resource get version];"kinds"=$kinds;"observations"=$obs;"resources"=$metrics}) options=json.no-string-conversion];
+ :local syncBody [:serialize to=json value=({"routerId"=$rid;"action"="sync";"agentKind"="routeros-native";"model"=[/system resource get board-name];"version"=[/system resource get version];"kinds"=$kinds;"observations"=$obs;"sourceStats"=$sourceStats;"resources"=$metrics}) options=json.no-string-conversion];
  :do {
   /tool fetch url=$endpoint http-method=post http-data=$syncBody http-header-field=$headers check-certificate=yes output=none;
  } on-error={ :log warning "ZARAY: sync failed"; :error "ZARAY: sync failed"; };
