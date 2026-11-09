@@ -68,6 +68,7 @@ jobs:
             tests/seamless-global-navigation.test.mjs \
             tests/site-performance-overview.test.mjs \
             tests/fiveonepay-hybrid.test.mjs
+      - run: node --test tests/network-rollback-plan.test.mjs
       - run: node --test tests/network-session-mock.test.mjs
       - run: node --experimental-strip-types --test tests/preview-supabase-isolation.test.mjs
       - run: node --check network-connector/agent.mjs
