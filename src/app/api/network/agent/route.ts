@@ -116,8 +116,12 @@ export async function POST(request:NextRequest){
    },{onConflict:'router_id'});
    if(resourceError)return json({error:'Synchronisation des ressources indisponible.'},503);
   }
+  if(b?.agentKind!==undefined&&!['node-local','routeros-native'].includes(String(b.agentKind)))
+   return json({error:'Type d’agent invalide.'},400);
   const model=clean(b?.model,120),version=clean(b?.version,120);
-  const {error}=await service.from('network_routers').update({status:'online',last_seen_at:now,model:model||null,routeros_version:version||null}).eq('id',routerId);
+  const routerUpdate:Record<string,unknown>={status:'online',last_seen_at:now,model:model||null,routeros_version:version||null};
+  if(b?.agentKind)routerUpdate.agent_kind=b.agentKind;
+  const {error}=await service.from('network_routers').update(routerUpdate).eq('id',routerId);
   if(error)return json({error:'État du routeur indisponible.'},503);
   return json({synced:observations.length,kinds:completed});
  }
@@ -133,9 +137,21 @@ export async function POST(request:NextRequest){
   if(siteError||!siteState||companyError||!companyState)
    return json({error:'Statut du site ou de l’entreprise indisponible.'},503);
   const siteActive=siteState.status==='active'&&['trial','active'].includes(companyState.status);
-  const {data,error}=await service.from('network_commands').select('id,account_id,voucher_id,action,protocol,username,session_id,mac_address,expires_at')
-    .eq('router_id',routerId).eq('status','queued').gt('expires_at',new Date().toISOString())
-    .order('created_at').limit(10);
+  // A native RouterOS script explicitly declares the small set of actions it can execute.
+  // Legacy Node connectors omit this parameter and continue receiving every supported command.
+  const declared=b?.supportedActions;
+  if(declared!==undefined&&(!Array.isArray(declared)||declared.length>8||
+   declared.some(x=>typeof x!=='string'||![
+    'disconnect_hotspot','disconnect_ppp','suspend_account','resume_account',
+    'provision_voucher','expire_voucher','block_hotspot_mac','unblock_hotspot_mac'
+   ].includes(x))))return json({error:'Capacités de l’agent invalides.'},400);
+  const supported=Array.isArray(declared)?[...new Set(declared as string[])]:null;
+  if(supported&&supported.length===0)return json({commands:[],controlEnabled:true});
+  let query=service.from('network_commands')
+   .select('id,account_id,voucher_id,action,protocol,username,session_id,mac_address,expires_at')
+   .eq('router_id',routerId).eq('status','queued').gt('expires_at',new Date().toISOString());
+  if(supported)query=query.in('action',supported);
+  const {data,error}=await query.order('created_at').limit(10);
   if(error)return json({error:'Commandes indisponibles.'},503);
   const commands:Record<string,unknown>[]=[];
   for(const cmd of data||[]){
