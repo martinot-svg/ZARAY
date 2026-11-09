@@ -28,7 +28,7 @@ test('resume grants include trustworthy paid status, tenant, deadline and clock-
  assert.match(api,/account\.username!==cmd\.username/);
  assert.match(api,/order\.site_id===router\.site_id/);
  assert.match(api,/\['paid','active','activation_pending'\]/);
- assert.match(api,/BigInt\(expiry\)\*1000000n/);
+ assert.match(api,/BigInt\\(expiry\\)\\*BigInt\\(1000000\\)/);
  assert.match(api,/deadlineEpochNs/);
  assert.match(api,/uploadKbps/);
 });
