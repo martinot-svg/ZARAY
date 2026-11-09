@@ -93,6 +93,29 @@ export async function POST(request:NextRequest){
    });
    if(usageError)return json({error:'Impossible de synchroniser le temps cumulé des tickets.'},503);
   }
+  if(b?.resources!==undefined){
+   const raw=b.resources;
+   if(!raw||typeof raw!=='object'||Array.isArray(raw))
+    return json({error:'Ressources RouterOS invalides.'},400);
+   const m=raw as Record<string,unknown>;
+   const parse=(value:unknown,max:number)=>{
+    const v=typeof value==='number'?String(value):value;
+    if(typeof v!=='string'||!/^(0|[1-9][0-9]{0,15})$/.test(v))return null;
+    const n=Number(v);
+    return Number.isSafeInteger(n)&&n<=max?n:null;
+   };
+   const cpu=parse(m.cpuLoad,100),free=parse(m.freeMemory,Number.MAX_SAFE_INTEGER);
+   const total=parse(m.totalMemory,Number.MAX_SAFE_INTEGER),uptime=m.uptime;
+   if(cpu===null||free===null||total===null||free>total||
+      typeof uptime!=='string'||uptime.length<1||uptime.length>64)
+    return json({error:'Ressources RouterOS invalides.'},400);
+   const {error:resourceError}=await service.from('network_router_resources').upsert({
+    router_id:routerId,company_id:router.company_id,cpu_load_percent:cpu,
+    free_memory_bytes:free,total_memory_bytes:total,router_uptime:uptime,
+    observed_at:now
+   },{onConflict:'router_id'});
+   if(resourceError)return json({error:'Synchronisation des ressources indisponible.'},503);
+  }
   const model=clean(b?.model,120),version=clean(b?.version,120);
   const {error}=await service.from('network_routers').update({status:'online',last_seen_at:now,model:model||null,routeros_version:version||null}).eq('id',routerId);
   if(error)return json({error:'État du routeur indisponible.'},503);
