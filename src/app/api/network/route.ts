@@ -9,12 +9,13 @@ export async function GET(req:NextRequest){
  const supabase=await createClient();
  const permission=await authorizeTenant(supabase,companyId);
  if(!permission.ok)return fail(permission.error,permission.status);
- const [routers,observations]=await Promise.all([
+ const [routers,observations,resources]=await Promise.all([
  supabase.from('network_routers').select('id,company_id,site_id,name,host,model,routeros_version,connection_mode,status,control_enabled,last_seen_at,created_at').eq('company_id',companyId).order('created_at',{ascending:false}),
- supabase.from('network_observations').select('id,router_id,observed_kind,identity_key,ip_address,mac_address,client_label,active,observed_at').eq('company_id',companyId).order('observed_at',{ascending:false}).limit(500)
+ supabase.from('network_observations').select('id,router_id,observed_kind,identity_key,ip_address,mac_address,client_label,active,observed_at').eq('company_id',companyId).order('observed_at',{ascending:false}).limit(500),
+ supabase.from('network_router_resources').select('router_id,company_id,cpu_load_percent,free_memory_bytes,total_memory_bytes,router_uptime,observed_at').eq('company_id',companyId).limit(300)
  ]);
- if(routers.error||observations.error)return fail('Inventaire indisponible.',503);
- return NextResponse.json({routers:routers.data,observations:observations.data},{headers});
+ if(routers.error||observations.error||resources.error)return fail('Inventaire indisponible.',503);
+ return NextResponse.json({routers:routers.data,observations:observations.data,resources:resources.data},{headers});
 }
 export async function POST(req:NextRequest){
  const body=await req.json().catch(()=>null);
