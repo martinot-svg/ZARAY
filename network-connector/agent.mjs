@@ -57,7 +57,20 @@ const sources=[
  {kind:'dhcp',path:'ip/dhcp-server/lease',key:o=>o['.id'],label:o=>o['host-name'],ip:o=>o.address,mac:o=>o['mac-address'],active:o=>o.status==='bound'},
  {kind:'wifi',path:'interface/wifi/registration-table',key:o=>o['.id']||o['mac-address'],label:o=>o.interface,ip:o=>o['last-ip'],mac:o=>o['mac-address'],active:()=>true},
  {kind:'wifi',path:'interface/wireless/registration-table',key:o=>o['.id']||o['mac-address'],label:o=>o.interface,ip:o=>o['last-ip'],mac:o=>o['mac-address'],active:()=>true},
- {kind:'neighbor',path:'ip/neighbor',key:o=>o['.id']||o['mac-address']||o.address,label:o=>o.identity||o['interface-name'],ip:o=>o.address,mac:o=>o['mac-address'],active:()=>false}
+ {kind:'neighbor',path:'ip/neighbor',key:o=>o['.id']||o['mac-address']||o.address,label:o=>o.identity||o['interface-name'],ip:o=>o.address,mac:o=>o['mac-address'],active:()=>false},
+ // Admin inventories are strictly summaries, never raw RouterOS objects: exclude passwords,
+ // shared keys, scripts, firewall exports and all sensitive fields by construction.
+ {kind:'hotspot-user',path:'ip/hotspot/user',key:o=>o['.id'],label:o=>o.name,ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'hotspot-profile',path:'ip/hotspot/user/profile',key:o=>o['.id'],label:o=>[o.name,o['rate-limit']||'débit non défini'].join(' · '),ip:()=>'',mac:()=>'',active:()=>true},
+ {kind:'ppp-secret',path:'ppp/secret',key:o=>o['.id'],label:o=>[o.name,o.service||'ppp'].join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'ppp-profile',path:'ppp/profile',key:o=>o['.id'],label:o=>[o.name,o['rate-limit']||'débit non défini'].join(' · '),ip:()=>'',mac:()=>'',active:()=>true},
+ {kind:'ip-address',path:'ip/address',key:o=>o['.id'],label:o=>[o.address,o.interface].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'ip-pool',path:'ip/pool',key:o=>o['.id'],label:o=>[o.name,o.ranges].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:()=>true},
+ {kind:'dhcp-server',path:'ip/dhcp-server',key:o=>o['.id'],label:o=>[o.name,o.interface].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'queue',path:'queue/simple',key:o=>o['.id'],label:o=>[o.name,o.target,o['max-limit']].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'firewall-filter',path:'ip/firewall/filter',key:o=>o['.id'],label:o=>[o.chain,o.action].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'firewall-nat',path:'ip/firewall/nat',key:o=>o['.id'],label:o=>[o.chain,o.action].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'route',path:'ip/route',key:o=>o['.id'],label:o=>[o['dst-address'],o.gateway].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.active==='true'&&o.disabled!=='true'}
 ];
 
 function routerUptimeSeconds(input){
@@ -93,7 +106,7 @@ function normalize(v){return typeof v==='string'?v:'';}
 async function sync(){
  const resource=await ros('system/resource');
  const board=await ros('system/routerboard').catch(()=>null);
- const kinds=new Set(),items=[];
+ const kinds=new Set(),items=[],sourceStats=new Map();
  let voucherUsage=[];
  try{voucherUsage=await voucherUptimeReadings();}catch(e){console.warn('[ZARAY] Compteurs Hotspot indisponibles',e.message);}
  for(const source of sources){
@@ -101,17 +114,23 @@ async function sync(){
    const response=await ros(source.path);
    if(!Array.isArray(response))continue;
    kinds.add(source.kind);
-   for(const entry of response){
-    if(items.length>=500)break;
+   const limit=Math.max(0,Math.min(25,500-items.length));
+   let collected=0;
+   for(const entry of response.slice(0,limit)){
     const key=normalize(source.key(entry)).slice(0,255);if(!key)continue;
     items.push({kind:source.kind,key,ip:normalize(source.ip(entry)),mac:normalize(source.mac(entry)),
-     label:normalize(source.label(entry)),active:source.active(entry)});
+     label:normalize(source.label(entry)).slice(0,160),active:source.active(entry)});
+    collected++;
    }
+   const existing=sourceStats.get(source.kind)||{kind:source.kind,reportedCount:0,collectedCount:0,complete:true};
+   existing.reportedCount+=response.length;existing.collectedCount+=collected;
+   existing.complete=existing.complete&&collected===response.length;
+   sourceStats.set(source.kind,existing);
   }catch(e){console.warn('[ZARAY] Source indisponible',source.path,e.message);}
  }
  if(kinds.size){
   const result=await api('sync',{model:board?.['model']||resource?.['board-name']||'',version:resource?.version||'',
-   agentKind:'node-local',kinds:[...kinds],observations:items,voucherUsage,resources:{
+   agentKind:'node-local',kinds:[...kinds],observations:items,sourceStats:[...sourceStats.values()],voucherUsage,resources:{
     cpuLoad:resource?.['cpu-load'],freeMemory:resource?.['free-memory'],
     totalMemory:resource?.['total-memory'],uptime:resource?.uptime
    }});
