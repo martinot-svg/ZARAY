@@ -111,7 +111,10 @@ async function sync(){
  }
  if(kinds.size){
   const result=await api('sync',{model:board?.['model']||resource?.['board-name']||'',version:resource?.version||'',
-   kinds:[...kinds],observations:items,voucherUsage});
+   kinds:[...kinds],observations:items,voucherUsage,resources:{
+    cpuLoad:resource?.['cpu-load'],freeMemory:resource?.['free-memory'],
+    totalMemory:resource?.['total-memory'],uptime:resource?.uptime
+   }});
   console.log('[ZARAY] Synchronisées :',result.synced,'observations');
  }
 }
