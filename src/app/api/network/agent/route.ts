@@ -229,7 +229,7 @@ export async function POST(request:NextRequest){
     if(resume){
      // RouterOS :timestamp and :tonsec both represent nanoseconds from Unix epoch.
      // The router stores the deadline in its owned account comment for offline checks.
-     accountPayload={accountId:account.id,deadlineEpochNs:(BigInt(expiry)*1000000n).toString()};
+     accountPayload={accountId:account.id,deadlineEpochNs:(BigInt(expiry)*BigInt(1000000)).toString()};
      if(Number.isInteger(account.upload_kbps)&&Number.isInteger(account.download_kbps))
       accountPayload={...accountPayload,uploadKbps:account.upload_kbps,downloadKbps:account.download_kbps};
     }
