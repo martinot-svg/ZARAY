@@ -20,14 +20,13 @@ export async function POST(req:NextRequest){
  if(gateError)return unavailable();
  if(!gateway||!gateway.enabled)return deny(); // Explicit commissioning required.
  const companyId=gateway.company_id;
- const [{data:router,error:routerError},{data:company,error:companyError},{data:site,error:siteError},{data:account,error:accountError}]=await Promise.all([
+ const [{data:router,error:routerError},{data:company,error:companyError},{data:account,error:accountError}]=await Promise.all([
   service.from('network_routers').select('id,site_id,control_enabled').eq('id',routerId).eq('company_id',companyId).maybeSingle(),
   service.from('companies').select('status').eq('id',companyId).maybeSingle(),
-  service.from('sites').select('id,status').eq('company_id',companyId).eq('id',routerId).maybeSingle(),
   service.from('network_access_accounts').select('id,order_id,desired_state,administrative_hold,expires_at,grace_until,extension_until')
    .eq('company_id',companyId).eq('router_id',routerId).eq('protocol',protocol).eq('username',username).maybeSingle()
  ]);
- if(routerError||companyError||siteError||accountError)return unavailable();
+ if(routerError||companyError||accountError)return unavailable();
  if(!router||!company||!account||!router.control_enabled||!['trial','active'].includes(company.status))return deny();
  // Tenant-scoped site status is fetched by the router's site_id, never by a client-supplied ID.
  const {data:realSite,error:realSiteError}=await service.from('sites').select('status')
@@ -46,7 +45,7 @@ export async function POST(req:NextRequest){
  if(!order||order.site_id!==router.site_id||!order.paid_at||!['paid','active','activation_pending'].includes(order.status)||!credential)return deny();
  const valid=await verifyRadiusPassword(password,credential.password_salt,credential.password_hash);
  if(!valid)return deny();
- void service.from('network_radius_gateways').update({last_auth_at:new Date().toISOString()})
-  .eq('router_id',routerId).eq('company_id',companyId).then(()=>{});
+ await service.from('network_radius_gateways').update({last_auth_at:new Date().toISOString()})
+  .eq('router_id',routerId).eq('company_id',companyId);
  return new NextResponse(null,{status:204,headers:{'Cache-Control':'no-store'}});
 }
