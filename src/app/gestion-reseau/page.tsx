@@ -23,6 +23,9 @@ export default function NetworkPage(){
  const [radiusToken,setRadiusToken]=useState(''),[radiusAccountId,setRadiusAccountId]=useState(''),[radiusPassword,setRadiusPassword]=useState('');
  const canManage=role==='owner'||role==='admin';
  const chosen=routers.find(r=>r.id===routerId);
+ const [adminSource,setAdminSource]=useState('interface');
+ const routerInventory=devices.filter(d=>d.router_id===routerId&&d.observed_kind===adminSource);
+ const routerCommands=commands.filter(c=>c.router_id===routerId);
  const chosenResources=resources.find(r=>r.router_id===routerId);
  const healthy=chosenResources&&fresh(chosenResources.observed_at)&&chosen&&fresh(chosen.last_seen_at);
  const recentlySeenRouters=routers.filter(r=>fresh(r.last_seen_at));
@@ -183,9 +186,9 @@ export default function NetworkPage(){
     <p className="muted"><a href="https://github.com/martinot-svg/ZARAY/tree/main/network-connector/routeros" target="_blank" rel="noopener noreferrer">Documentation et limites du moteur natif</a></p>
    </section>
   </details>
-  <details className="workspace-disclosure"><summary>WinBox · console MikroTik</summary>
+  <details className="workspace-disclosure"><summary>Administration MikroTik</summary>
    <section className="panel">
-    <div className="panel-head"><div><h2 className="panel-title">Console MikroTik intégrée à ZARAY</h2><span className="muted">Diagnostics RouterOS en lecture seule</span></div></div>
+    <div className="panel-head"><div><h2 className="panel-title">Administration MikroTik</h2><span className="muted">Diagnostics RouterOS en lecture seule</span></div></div>
     <p className="muted">Ce tableau de bord reprend certaines fonctions de supervision de WinBox, sans lancer d'exécutable Windows ni ouvrir l'administration du routeur sur Internet. Les données sont remontées par le connecteur privé ZARAY.</p>
     <div className="form-stack compact-form">
      <label>Routeur<select value={routerId} onChange={e=>setRouterId(e.target.value)}>{routers.map(r=><option value={r.id} key={r.id}>{r.name}</option>)}</select></label>
@@ -217,6 +220,27 @@ export default function NetworkPage(){
        <p className="muted">Les nombres représentent uniquement les dernières observations reçues, pas un contrôle d'accès Internet.</p>
       </div>
      </div>:<div className="empty-state"><strong>Aucun routeur sélectionné</strong><p>Ajoutez puis associez un MikroTik pour afficher ses diagnostics.</p></div>}
+    {chosen&&<>
+     <div className="panel" style={{padding:16}}>
+      <h3>Inventaire du routeur sélectionné</h3>
+      <p className="muted">Site : {sites.find(s=>s.id===chosen.site_id)?.name||'Non disponible'} · Agent : {chosen.agent_kind==='routeros-native'?'RouterOS natif':chosen.agent_kind==='node-local'?'Connecteur local':'Non identifié'} · Contrôle : {chosen.control_enabled?'activé':'désactivé'}</p>
+      <label>Source d’inventaire<select value={adminSource} onChange={e=>setAdminSource(e.target.value)}>
+       <option value="interface">Interfaces</option><option value="hotspot">Sessions Hotspot</option><option value="pppoe">Sessions PPPoE</option><option value="dhcp">Baux DHCP</option><option value="wifi">Stations Wi-Fi</option><option value="neighbor">Voisins</option>
+      </select></label>
+      <p className="muted">Dernières observations reçues, parfois partielles selon l’agent. Une source vide ne garantit pas l’absence d’équipements.</p>
+      {routerInventory.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Nom</th><th>Adresse IP</th><th>Adresse MAC</th><th>État observé</th><th>Dernière observation</th></tr></thead><tbody>
+       {routerInventory.map(d=><tr key={d.id}><td>{d.client_label||d.identity_key}</td><td>{d.ip_address||'—'}</td><td>{d.mac_address||'—'}</td><td>{fresh(d.observed_at)&&fresh(chosen.last_seen_at)?(d.active?'Actif':'Inactif'):'Non vérifié récemment'}</td><td>{fmt(d.observed_at)}</td></tr>)}
+      </tbody></table></div>:<p className="muted">Aucune observation reçue pour cette source sur ce routeur.</p>}
+     </div>
+     <div className="panel" style={{padding:16}}>
+      <h3>Commandes du routeur sélectionné</h3>
+      <p className="muted">Extrait des 50 dernières commandes de l’entreprise. Une commande demandée ou envoyée reste en attente de confirmation du routeur.</p>
+      {routerCommands.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Heure</th><th>Action</th><th>Compte</th><th>Statut</th><th>Retour du routeur</th></tr></thead><tbody>
+       {routerCommands.map(c=><tr key={c.id}><td>{fmt(c.created_at)}</td><td>{c.action}</td><td>{c.username}</td><td>{c.status}</td><td>{c.outcome||'—'}</td></tr>)}
+      </tbody></table></div>:<p className="muted">Aucune commande pour ce routeur dans cet extrait.</p>}
+     </div>
+     <p className="muted">La configuration avancée du pare-feu, du NAT, du routage, des serveurs DHCP et le terminal RouterOS ne sont pas encore disponibles dans cette console.</p>
+    </>}
     <div className="panel" style={{padding:16}}>
      <h3>WinBox officiel — application locale</h3>
      <p className="muted">L'archive Windows fournie correspond à WinBox v4.5. Pour ouvrir l'application, téléchargez-la sur votre ordinateur Windows, extrayez WinBox.exe et connectez-vous à l'adresse du routeur depuis un réseau autorisé.</p>
