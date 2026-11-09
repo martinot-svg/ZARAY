@@ -56,15 +56,35 @@ La plateforme ZARAY reste hébergée sur Vercel avec les données dans Supabase.
 Un build Next.js et des tests de structure ne remplacent pas une validation
 d'import RouterOS sur l'appareil cible.
 
-- Le déclenchement dépend d'Internet sortant et de ZARAY disponible.
-  En cas de coupure, les comptes déjà configurés conservent leur état actuel.
-- Les expirations de tickets par **temps de connexion cumulé** sont conservées
-  par `limit-uptime` sur RouterOS, mais **l'expiration calendaire des comptes
-  résidentiels hors ligne reste à développer**. Ne considérez pas encore
-  ce mode comme une politique de coupure entièrement autonome hors ligne.
-- Le mode natif n'inclut pas encore la synchronisation complète des compteurs
-  cumulés de tous les tickets, les blocages MAC, le débit/les profils par offre,
-  l'envoi garanti des accusés après une panne réseau, ni le RADIUS User Manager.
+- La **coupure calendaire hors ligne** est implémentée pour les comptes
+  Hotspot/PPPoE explicitement étiquetés `zaray:access:<account_uuid>:<epoch_ns>`
+  après validation d'un abonnement payé, de son site et de sa date limite.
+  Le garde local s'exécute **avant** l'appel HTTPS à chaque minute : il désactive
+  l'utilisateur et coupe les sessions quand la date est dépassée.
+  **Condition indispensable :** l'horloge RouterOS doit être fiable. Si elle
+  indique une date antérieure à 2024, la coupure calendaire est volontairement
+  suspendue avec un avertissement, et ne peut pas être garantie pendant une
+  panne prolongée sans horloge matérielle fiable. Testez NTP, changement de
+  fuseau, redémarrage hors ligne et dérive de l'horloge sur le matériel cible.
+  La coupure locale ne réactive jamais automatiquement un abonnement.
+- L'acquittement est **récupérable pendant la durée de vie de la commande** :
+  ZARAY peut rediffuser après 90 secondes une commande restée `dispatched`.
+  Les actions prennent en charge une nouvelle exécution et les réponses
+  identiques sont acceptées une seconde fois côté serveur. Les commandes
+  expirent normalement après 24 heures : ce mécanisme n'est pas une garantie
+  de livraison illimitée et ne remplace pas les vérifications terrain.
+- Les offres peuvent maintenant définir des débits montant/descendant.
+  Les valeurs sont copiées dans le compte réseau à son association à une
+  commande, puis communiquées lors de `resume_account`. L'agent natif
+  configure le `rate-limit` seulement si le compte utilise déjà un **profil
+  explicitement géré par ZARAY**, marqué `zaray:managed-bandwidth`.
+  Il refuse de remplacer le profil existant d'un administrateur tiers :
+  aucun changement de débit n'est annoncé tant que l'application sur
+  RouterOS n'est pas confirmée.
+- Les expirations par **temps de connexion cumulé** des tickets restent
+  couvertes par `limit-uptime` sur RouterOS. La synchronisation complète
+  de tous les compteurs cumulés, les blocages MAC et RADIUS User Manager
+  ne sont toujours pas inclus.
   Ces commandes non prises en charge restent dans la file ZARAY
   (`supportedActions`), sans être consommées silencieusement.
 - Le cycle lit au plus 12 interfaces + 10 sessions Hotspot + 10 PPP pour
