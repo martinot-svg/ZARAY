@@ -3,7 +3,7 @@ import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 import {useEffect,useMemo,useState,type FormEvent} from 'react';
 import AppShell from '@/components/app-shell';
 import {ZarayIcon} from '@/components/ui/zaray-icon';
-type Router={id:string;site_id:string;name:string;host:string;model:string|null;routeros_version:string|null;status:string;control_enabled:boolean;last_seen_at:string|null};
+type Router={id:string;site_id:string;name:string;host:string;model:string|null;routeros_version:string|null;status:string;control_enabled:boolean;agent_kind:'unreported'|'node-local'|'routeros-native';last_seen_at:string|null};
 type RouterResource={router_id:string;cpu_load_percent:number;total_memory_bytes:number;free_memory_bytes:number;router_uptime:string;observed_at:string};
 type Observation={id:string;router_id:string;observed_kind:string;identity_key:string;ip_address:string|null;mac_address:string|null;client_label:string|null;active:boolean;observed_at:string};
 type Account={id:string;router_id:string;order_id:string|null;username:string;protocol:string;expires_at:string|null;grace_until:string|null;extension_until:string|null;administrative_hold:boolean;desired_state:string;applied_state:string};
@@ -104,6 +104,30 @@ export default function NetworkPage(){
  async function add(e:FormEvent){e.preventDefault();const data=await run('/api/network',{siteId,name,host});if(data){setName('');setHost('');}}
  async function register(e:FormEvent){e.preventDefault();const data=await run('/api/network/access',{routerId,orderId,username,protocol});if(data)setUsername('');}
  async function pairing(r:Router){const data=await run('/api/network/pair',{routerId:r.id});if(data?.pairingToken){setPair({token:data.pairingToken,routerId:r.id,expiresAt:data.expiresAt});}}
+ async function prepareNativeAgent(r:Router){
+  if(!canManage||busy)return;
+  const approved=confirm('Préparer un agent natif sur '+r.name+' ? Cela révoque tout connecteur précédent, désactive les commandes réseau et impose un nouvel appairage.');
+  if(!approved)return;
+  setError('');setNotice('');
+  try{
+   const response=await fetch('/network/zaray-routeros-agent.rsc',{cache:'no-store'});
+   if(!response.ok)throw new Error('Modèle de l’agent natif indisponible.');
+   const template=await response.text();
+   if(!template.includes('__ZARAY_ROUTER_ID__')||!template.includes('__ZARAY_PAIRING_TOKEN__'))
+    throw new Error('Le modèle du script est incomplet.');
+   const data=await run('/api/network/pair',{routerId:r.id});
+   if(!data?.pairingToken)return;
+   setPair({token:data.pairingToken,routerId:r.id,expiresAt:data.expiresAt});
+   const source=template.replaceAll('__ZARAY_ROUTER_ID__',r.id)
+    .replaceAll('__ZARAY_PAIRING_TOKEN__',data.pairingToken);
+   const url=URL.createObjectURL(new Blob([source],{type:'text/plain;charset=utf-8'}));
+   const a=document.createElement('a');a.href=url;a.download='zaray-native-'+r.id+'.rsc';
+   document.body.appendChild(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),1000);
+   setNotice('Fichier .rsc généré. Importez-le sur le MikroTik dans les 15 minutes, puis supprimez toute copie du fichier contenant le code.');
+  }catch(e){setError(e instanceof Error?e.message:'Préparation native indisponible.');}
+ }
+
  async function control(r:Router){if(!confirm('Changer les autorisations de contrôle sur '+r.name+' ?'))return;await run('/api/network/access',{kind:'control',routerId:r.id,enabled:!r.control_enabled},'PATCH');}
  async function hold(a:Account){if(!confirm('Modifier la suspension administrative du compte '+a.username+' ?'))return;const reason=prompt('Motif de l’intervention :')?.trim();if(!reason)return;await run('/api/network/access',{kind:'hold',accountId:a.id,blocked:!a.administrative_hold,reason},'PATCH');}
  async function extend(a:Account){const hours=Number(prompt('Durée en heures, maximum '+extensionLimit+' :','24'));if(!Number.isInteger(hours)||hours<1)return;const reason=prompt('Motif de la prolongation :')?.trim();if(!reason)return;await run('/api/network/access',{kind:'extend',accountId:a.id,hours,reason},'PATCH');}
@@ -127,7 +151,7 @@ export default function NetworkPage(){
    <section className="panel"><div className="panel-head"><div><h2 className="panel-title">Équipements MikroTik</h2><span className="muted">{routers.length} routeur(s)</span></div></div>
     {routers.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Routeur</th><th>Site</th><th>Connexion</th><th>Contrôle</th><th>Actions</th></tr></thead><tbody>{routers.map(r=><tr key={r.id}>
      <td><strong>{r.name}</strong><small>{r.model||r.host} · {r.routeros_version||'RouterOS non détecté'}</small></td><td>{sites.find(s=>s.id===r.site_id)?.name||'—'}</td><td>{status(r)}<small>{fmt(r.last_seen_at)}</small></td>
-     <td>{r.control_enabled?'Activé':'Lecture seule'}</td><td><button type="button" onClick={()=>downloadConnectorConfig(r)} title="Télécharger un modèle sans aucun secret">Préparer le connecteur</button> <button type="button" disabled={!canManage||busy} onClick={()=>void pairing(r)}>Associer</button> <button type="button" disabled={role!=='owner'||busy} onClick={()=>void control(r)}>{r.control_enabled?'Désactiver':'Activer le contrôle'}</button></td>
+     <td>{r.control_enabled?'Activé':'Lecture seule'}<small>{r.agent_kind==='routeros-native'?'Agent RouterOS natif':r.agent_kind==='node-local'?'Connecteur Node.js':'Type non confirmé'}</small></td><td><button type="button" onClick={()=>downloadConnectorConfig(r)} title="Télécharger un modèle sans aucun secret">Préparer le connecteur</button> <button type="button" disabled={!canManage||busy} onClick={()=>void prepareNativeAgent(r)} title="Télécharger le programme natif RouterOS, sans ordinateur intermédiaire">Agent natif (.rsc)</button> <button type="button" disabled={!canManage||busy} onClick={()=>void pairing(r)}>Associer</button> <button type="button" disabled={role!=='owner'||busy} onClick={()=>void control(r)}>{r.control_enabled?'Désactiver':'Activer le contrôle'}</button></td>
     </tr>)}</tbody></table></div>:<div className="empty-state"><strong>Aucun MikroTik</strong><p>Enregistrez un équipement pour commencer.</p></div>}
    </section>
   </div>
@@ -148,6 +172,15 @@ export default function NetworkPage(){
      <button type="submit" disabled={!canManage||busy||!radiusAccountId||radiusPassword.length<12}>Enregistrer le secret du compte</button>
      <p className="muted">Le mot de passe n’est jamais réaffiché. Ce formulaire ne crée pas d’accès Internet. Les tickets occasionnels restent gérés par le connecteur Hotspot existant.</p>
     </form>
+   </section>
+  </details>
+  <details className="workspace-disclosure"><summary>Agent natif MikroTik · sans VPS</summary>
+   <section className="panel">
+    <h2 className="panel-title">Moteur natif ZARAY</h2>
+    <p className="muted">Pour un routeur RouterOS 7 compatible, le script natif synchronise les interfaces et sessions puis traite uniquement les commandes autorisées : suspension, reprise, déconnexion et tickets Hotspot. Aucun ordinateur Node.js ou serveur RADIUS n’est requis pour ce mode.</p>
+    <p className="muted">Sur la ligne du routeur, choisissez « Agent natif (.rsc) ». Importez le fichier dans <strong>WinBox → Files</strong>, puis exécutez <code>/import file-name=zaray-native-IDENTIFIANT.rsc</code> dans le terminal du MikroTik. Le routeur doit pouvoir accéder à ZARAY en HTTPS avec validation du certificat. Supprimez le fichier d’import après appairage : il contient un code temporaire.</p>
+    <p className="muted">L’installation ne se fait pas depuis Vercel : elle exige une seule intervention initiale sur le routeur. Les commandes restent en lecture seule tant que le propriétaire n’active pas explicitement le contrôle dans ZARAY. Ne faites pas tourner l’agent natif et le connecteur Node.js simultanément sur un même routeur.</p>
+    <p className="muted"><a href="https://github.com/martinot-svg/ZARAY/tree/main/network-connector/routeros" target="_blank" rel="noopener noreferrer">Documentation et limites du moteur natif</a></p>
    </section>
   </details>
   <details className="workspace-disclosure"><summary>WinBox · console MikroTik</summary>
