@@ -74,6 +74,24 @@ dédié : `ZARAY_PREVIEW_NETWORK_MUTATIONS=enabled`,
 `ZARAY_PREVIEW_LAB_APPROVED=approved`. Jamais sur la branche main ni dans
 un environnement Preview partagé avec la production.
 
+### Diagnostic public de la Preview (sans secret)
+
+Une fois la nouvelle révision déployée, consulter
+`/api/network/lab-status` sur l'URL Preview. Le diagnostic renvoie
+`isolatedConfiguration=false` et HTTP 503 si les variables Lab manquent ;
+`networkWritesBlocked=true` indique que les commandes sont désactivées.
+Un résultat de configuration valide **ne prouve pas** la connexion à la base,
+ses migrations, les permissions ni les validations sur un routeur : ces
+contrôles doivent être exécutés séparément.
+
+Un script de tests RLS prêt à exécuter est disponible dans
+`tests/lab/supabase-tenant-isolation.mjs`. Il exige des jetons de
+test **uniquement Lab**, refusant toute URL correspondant à la
+production. Il vérifie la visibilité A/B, la protection contre les
+insertions depuis le navigateur et la pagination. Fournir au moins 51
+observations synthétiques au routeur A pour confirmer la seconde page.
+Ne pas stocker les jetons de test dans Git ni les coller dans le chat.
+
 ### Preuves attendues avant déblocage
 
 - Les métadonnées Supabase affichent **deux IDs de projet différents** ;
