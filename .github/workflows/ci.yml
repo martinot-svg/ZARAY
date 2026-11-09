@@ -43,6 +43,7 @@ jobs:
             tests/network-preparation.test.mjs \
             tests/native-routeros-engine.test.mjs \
             tests/native-network-reliability.test.mjs \
+            tests/mikrotik-administration.test.mjs \
             tests/winbox-console.test.mjs \
             tests/hotspot-captive-catalog.test.mjs \
             tests/logo-palette.test.mjs \
