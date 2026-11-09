@@ -150,6 +150,11 @@ async function disconnect(protocol,username,sessionId){
  const sessions=(Array.isArray(list)?list:[]).filter(o=>
   (protocol==='hotspot'?o.user:o.name)===username&&(!sessionId||o['.id']===sessionId));
  for(const row of sessions){await ros(path+'/'+row['.id'],'DELETE');}
+ // A successful DELETE request is not a confirmed disconnect. Verify again.
+ const after=await ros(path);
+ if(!Array.isArray(after)||after.some(o=>
+  (protocol==='hotspot'?o.user:o.name)===username&&(!sessionId||o['.id']===sessionId)))
+  throw Error('Session encore présente après la commande MikroTik.');
  return sessions.length;
 }
 async function hotspotMacRestriction(mac,block){
