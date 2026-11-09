@@ -25,6 +25,14 @@ CREATE TABLE public.network_observations(
  CONSTRAINT network_observations_observed_kind_check
  CHECK (observed_kind IN ('interface','hotspot','pppoe'))
 );
+ALTER TABLE public.network_observations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY network_observations_tenant ON public.network_observations
+ FOR SELECT TO authenticated USING (
+  EXISTS (SELECT 1 FROM public.company_members m
+   WHERE m.company_id=network_observations.company_id
+    AND m.user_id=(SELECT auth.uid()) AND m.status='active')
+ );
+GRANT SELECT ON public.network_observations TO authenticated;
 CREATE TABLE public.network_commands(
  id uuid PRIMARY KEY,router_id uuid NOT NULL,
  action text NOT NULL, session_id text,status text NOT NULL
