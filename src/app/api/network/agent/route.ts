@@ -1,3 +1,4 @@
+import {dispatchableNetworkCommand} from '@/lib/network-command-lease';
 import {networkWritesBlockedInPreview} from '@/lib/network-preview-guard';
 import {createHash,randomBytes,timingSafeEqual} from 'node:crypto';
 import {NextRequest,NextResponse} from 'next/server';
@@ -178,15 +179,14 @@ export async function POST(request:NextRequest){
   if(supported&&supported.length===0)return json({commands:[],controlEnabled:true});
   // A dropped acknowledgement or router reboot must not permanently strand a command.
   // Redispatch only after a 90-second lease, with all entitlements rechecked.
-  const retryBefore=new Date(Date.now()-90000).toISOString();
+  const dispatchNow=Date.now();
   let query=service.from('network_commands')
    .select('id,account_id,voucher_id,action,protocol,username,session_id,mac_address,expires_at,status,dispatched_at')
    .eq('router_id',routerId).in('status',['queued','dispatched']).gt('expires_at',new Date().toISOString());
   if(supported)query=query.in('action',supported);
   const {data,error}=await query.order('created_at').limit(100);
   if(error)return json({error:'Commandes indisponibles.'},503);
-  const retryable=(data||[]).filter(cmd=>cmd.status==='queued'||(cmd.status==='dispatched'&&
-   !!cmd.dispatched_at&&cmd.dispatched_at<retryBefore)).slice(0,10);
+  const retryable=(data||[]).filter(cmd=>dispatchableNetworkCommand(cmd,dispatchNow)).slice(0,10);
   const commands:Record<string,unknown>[]=[];
   for(const cmd of retryable){
 
