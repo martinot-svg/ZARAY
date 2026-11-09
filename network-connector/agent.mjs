@@ -45,6 +45,10 @@ if(!token){
  console.log('[ZARAY] Connecteur appairé, secret enregistré localement.');
 }
 const sources=[
+ // Read-only RouterOS RADIUS inventory: never collect shared secrets or claim auth is healthy.
+ {kind:'radius',path:'radius',key:o=>o['.id']||[o.service,o.address].join(':'),
+  label:o=>['RADIUS',o.service||'service inconnu',o.address||'adresse inconnue'].join(' · '),
+  ip:o=>o.address,mac:()=>'',active:o=>o.disabled!=='true'},
  {kind:'hotspot',path:'ip/hotspot/active',key:o=>o['.id'],label:o=>o.user,ip:o=>o.address,mac:o=>o['mac-address'],active:()=>true},
  {kind:'pppoe',path:'ppp/active',key:o=>o['.id'],label:o=>o.name,ip:o=>o.address,mac:o=>o['caller-id'],active:()=>true},
  {kind:'dhcp',path:'ip/dhcp-server/lease',key:o=>o['.id'],label:o=>o['host-name'],ip:o=>o.address,mac:o=>o['mac-address'],active:o=>o.status==='bound'},
