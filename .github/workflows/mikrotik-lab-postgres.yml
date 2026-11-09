@@ -1,0 +1,42 @@
+name: ZARAY MikroTik isolated PostgreSQL lab
+on:
+  pull_request:
+    paths:
+      - 'src/app/api/network/**'
+      - 'supabase/migrations/**'
+      - 'tests/lab/postgres-*.sql'
+      - '.github/workflows/mikrotik-lab-postgres.yml'
+permissions:
+  contents: read
+jobs:
+  migration-rls:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: isolated-ci-only
+          POSTGRES_DB: zaray_mikrotik_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d zaray_mikrotik_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: isolated-ci-only
+      PGDATABASE: zaray_mikrotik_ci
+      PGOPTIONS: '-c client_min_messages=warning'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare synthetic tenants in ephemeral PostgreSQL
+        run: psql -v ON_ERROR_STOP=1 -f tests/lab/postgres-schema-fixture.sql
+      - name: Apply the proposed MikroTik inventory migration
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261109121500_mikrotik_administration_inventory.sql
+      - name: Assert tenant RLS, 50-row pagination, staleness, partial observations, and command uniqueness
+        run: psql -v ON_ERROR_STOP=1 -f tests/lab/postgres-migration-assert.sql
