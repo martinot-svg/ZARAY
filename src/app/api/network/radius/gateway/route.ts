@@ -1,3 +1,4 @@
+import {networkWritesBlockedInPreview} from '@/lib/network-preview-guard';
 import {NextRequest,NextResponse} from 'next/server';
 import {createClient} from '@/lib/supabase/server';
 import {createServiceClient} from '@/lib/supabase/service';
@@ -27,6 +28,7 @@ export async function GET(req:NextRequest){
   message:'La création d’une passerelle ne démarre pas de serveur RADIUS et n’active aucun accès.'});
 }
 export async function POST(req:NextRequest){
+ if(networkWritesBlockedInPreview())return NextResponse.json({error:'Prévisualisation réseau en lecture seule.'},{status:403,headers:{'Cache-Control':'no-store'}});
  const b=await req.json().catch(()=>null) as Record<string,unknown>|null;
  const companyId=typeof b?.companyId==='string'?b.companyId:'',routerId=typeof b?.routerId==='string'?b.routerId:'';
  const c=await ctx(companyId,routerId);if(c.error)return c.error;
