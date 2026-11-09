@@ -147,22 +147,28 @@ export async function POST(request:NextRequest){
    ].includes(x))))return json({error:'Capacités de l’agent invalides.'},400);
   const supported=Array.isArray(declared)?[...new Set(declared as string[])]:null;
   if(supported&&supported.length===0)return json({commands:[],controlEnabled:true});
+  // A dropped acknowledgement or router reboot must not permanently strand a command.
+  // Redispatch only after a 90-second lease, with all entitlements rechecked.
+  const retryBefore=new Date(Date.now()-90000).toISOString();
   let query=service.from('network_commands')
-   .select('id,account_id,voucher_id,action,protocol,username,session_id,mac_address,expires_at')
-   .eq('router_id',routerId).eq('status','queued').gt('expires_at',new Date().toISOString());
+   .select('id,account_id,voucher_id,action,protocol,username,session_id,mac_address,expires_at,status,dispatched_at')
+   .eq('router_id',routerId).in('status',['queued','dispatched']).gt('expires_at',new Date().toISOString());
   if(supported)query=query.in('action',supported);
-  const {data,error}=await query.order('created_at').limit(10);
+  const {data,error}=await query.order('created_at').limit(100);
   if(error)return json({error:'Commandes indisponibles.'},503);
+  const retryable=(data||[]).filter(cmd=>cmd.status==='queued'||(cmd.status==='dispatched'&&
+   !!cmd.dispatched_at&&cmd.dispatched_at<retryBefore)).slice(0,10);
   const commands:Record<string,unknown>[]=[];
-  for(const cmd of data||[]){
+  for(const cmd of retryable){
 
    if(!siteActive&&['provision_voucher','resume_account','unblock_hotspot_mac'].includes(cmd.action)){
     await service.from('network_commands')
      .update({status:'cancelled',outcome:'Site ou entreprise désactivé : activation réseau refusée',completed_at:new Date().toISOString()})
-     .eq('id',cmd.id).eq('router_id',routerId).eq('status','queued');
+     .eq('id',cmd.id).eq('router_id',routerId).in('status',['queued','dispatched']);
     continue;
    }
    let voucherPayload:Record<string,unknown>={};
+   let accountPayload:Record<string,unknown>={};
    if(['provision_voucher','expire_voucher'].includes(cmd.action)){
     if(!cmd.voucher_id){await service.from('network_commands').update({status:'cancelled',outcome:'Ticket manquant'}).eq('id',cmd.id);continue;}
     const [{data:voucher},{data:net}]=await Promise.all([
@@ -176,7 +182,7 @@ export async function POST(request:NextRequest){
        &&['hmac-v1','hmac-numeric-v2'].includes(net.credential_scheme)&&[1,2].includes(net.key_version):
        (voucher.status==='expired'||voucher.status==='cancelled'));
     if(!valid){
-     await service.from('network_commands').update({status:'cancelled',outcome:'Droit Wi-Fi ou site invalide',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('status','queued');continue;
+     await service.from('network_commands').update({status:'cancelled',outcome:'Droit Wi-Fi ou site invalide',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('router_id',routerId).in('status',['queued','dispatched']);continue;
     }
     if(provision){
       let password='';
@@ -187,7 +193,7 @@ export async function POST(request:NextRequest){
       const hashMatches=typeof actual==='string'&&/^[0-9a-f]{64}$/i.test(actual)&&
         timingSafeEqual(Buffer.from(expected,'hex'),Buffer.from(actual,'hex'));
       if(!hashMatches){
-       await service.from('network_commands').update({status:'failed',outcome:'Empreinte du ticket incohérente',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('status','queued');continue;
+       await service.from('network_commands').update({status:'failed',outcome:'Empreinte du ticket incohérente',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('router_id',routerId).in('status',['queued','dispatched']);continue;
       }
       voucherPayload={voucherId:voucher!.id,password,durationMinutes:voucher!.duration_minutes,maxDevices:net!.max_devices,credentialScheme:net!.credential_scheme};
     }else voucherPayload={voucherId:voucher!.id};
@@ -195,29 +201,67 @@ export async function POST(request:NextRequest){
    if(['block_hotspot_mac','unblock_hotspot_mac'].includes(cmd.action)){
     const {data:block}=await service.from('network_device_blocks').select('active').eq('router_id',routerId).eq('mac_address',cmd.mac_address).maybeSingle();
     const expected=cmd.action==='block_hotspot_mac';
-    if(!block||block.active!==expected){await service.from('network_commands').update({status:'cancelled',outcome:'Restriction obsolète',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('status','queued');continue;}
+    if(!block||block.active!==expected){await service.from('network_commands').update({status:'cancelled',outcome:'Restriction obsolète',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('router_id',routerId).in('status',['queued','dispatched']);continue;}
    }
    if(cmd.account_id){
-    const {data:account}=await service.from('network_access_accounts').select('desired_state').eq('id',cmd.account_id).eq('router_id',routerId).maybeSingle();
-    if(!account||((cmd.action==='resume_account')!==(account.desired_state==='active'))){
-     await service.from('network_commands').update({status:'cancelled',outcome:'Décision obsolète',completed_at:new Date().toISOString()}).eq('id',cmd.id).eq('status','queued');
+    const {data:account,error:accountError}=await service.from('network_access_accounts')
+     .select('id,company_id,order_id,username,protocol,desired_state,expires_at,grace_until,extension_until,administrative_hold,upload_kbps,download_kbps')
+     .eq('id',cmd.account_id).eq('company_id',router.company_id).eq('router_id',routerId).maybeSingle();
+    if(accountError)return json({error:'Droit réseau indisponible.'},503);
+    const resume=cmd.action==='resume_account';
+    const expiry=account?.expires_at?Math.max(...[account.expires_at,account.grace_until,account.extension_until]
+     .filter((v):v is string=>typeof v==='string').map(v=>new Date(v).getTime())):0;
+    let payable=!!account?.order_id;
+    if(resume&&account?.order_id){
+     const {data:order,error:orderError}=await service.from('subscription_orders')
+      .select('id,status,paid_at,site_id').eq('id',account.order_id).eq('company_id',router.company_id).maybeSingle();
+     if(orderError)return json({error:'Paiement de l’abonnement indisponible.'},503);
+     payable=!!order?.paid_at&&!!order?.site_id&&order.site_id===router.site_id&&
+      ['paid','active','activation_pending'].includes(order.status);
+    }
+    if(!account||account.username!==cmd.username||account.protocol!==cmd.protocol||
+      (resume?account.desired_state!=='active'||account.administrative_hold||!siteActive||!payable||!Number.isFinite(expiry)||expiry<=Date.now():
+      account.desired_state!=='suspended')){
+     await service.from('network_commands').update({status:'cancelled',outcome:'Droit modifié ou paiement/échéance invalide',completed_at:new Date().toISOString()})
+      .eq('id',cmd.id).eq('router_id',routerId).in('status',['queued','dispatched']);
      continue;
     }
+    if(resume){
+     // RouterOS :timestamp and :tonsec both represent nanoseconds from Unix epoch.
+     // The router stores the deadline in its owned account comment for offline checks.
+     accountPayload={accountId:account.id,deadlineEpochNs:(BigInt(expiry)*BigInt(1000000)).toString()};
+     if(Number.isInteger(account.upload_kbps)&&Number.isInteger(account.download_kbps))
+      accountPayload={...accountPayload,uploadKbps:account.upload_kbps,downloadKbps:account.download_kbps};
+    }
    }
-   const {data:claimed}=await service.from('network_commands').update({status:'dispatched',dispatched_at:new Date().toISOString()})
-    .eq('id',cmd.id).eq('status','queued').select('id').maybeSingle();
-   if(claimed)commands.push({id:cmd.id,action:cmd.action,protocol:cmd.protocol,username:cmd.username,sessionId:cmd.session_id,macAddress:cmd.mac_address,...voucherPayload});
+   let claim=service.from('network_commands').update({status:'dispatched',dispatched_at:new Date().toISOString()})
+    .eq('id',cmd.id).eq('router_id',routerId).eq('status',cmd.status);
+   if(cmd.status==='dispatched')claim=claim.eq('dispatched_at',cmd.dispatched_at);
+   const {data:claimed}=await claim.select('id').maybeSingle();
+   if(claimed)commands.push({id:cmd.id,action:cmd.action,protocol:cmd.protocol,username:cmd.username,sessionId:cmd.session_id,macAddress:cmd.mac_address,...voucherPayload,...accountPayload});
   }
   return json({commands,controlEnabled:true});
  }
  // Results are accepted only for commands that were actually dispatched to this connector.
  const commandId=clean(b?.commandId,36),ok=b?.ok===true;
  if(!uuid.test(commandId)||typeof b?.ok!=='boolean')return json({error:'Résultat invalide.'},400);
- const {data:command,error}=await service.from('network_commands').update({
+ const {data:recorded,error}=await service.from('network_commands').update({
   status:ok?'success':'failed',outcome:clean(b?.outcome,600)||null,completed_at:new Date().toISOString()
  }).eq('id',commandId).eq('router_id',routerId).eq('status','dispatched')
  .select('id,account_id,voucher_id,action,mac_address').maybeSingle();
- if(error||!command)return json({error:'Commande déjà clôturée ou inconnue.'},409);
+ if(error)return json({error:'Enregistrement du résultat impossible.'},503);
+ // Replays with the same outcome are idempotent. Retry downstream side effects
+ // after a partial server failure without treating the router's receipt as lost.
+ let command=recorded;
+ if(!command){
+  const {data:previous,error:previousError}=await service.from('network_commands')
+   .select('id,account_id,voucher_id,action,mac_address,status')
+   .eq('id',commandId).eq('router_id',routerId).maybeSingle();
+  if(previousError)return json({error:'Résultat indisponible.'},503);
+  if(!previous||previous.status!==(ok?'success':'failed'))
+   return json({error:'Commande inconnue ou résultat contradictoire.'},409);
+  command=previous;
+ }
  if(ok&&command.account_id&&['suspend_account','resume_account'].includes(command.action)){
   const applied=command.action==='resume_account'?'active':'suspended';
   const {data:updatedAccount,error:accountSyncError}=await service.from('network_access_accounts')
