@@ -5,7 +5,7 @@ import {deriveVoucherPassword,hashVoucherCredential,type VoucherKeyVersion} from
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const uuid=/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i;
-const kinds=['hotspot','pppoe','dhcp','wifi','neighbor','radius'];
+const kinds=['hotspot','pppoe','dhcp','wifi','neighbor','radius','interface'];
 const json=(data:unknown,status=200)=>NextResponse.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const digest=(s:string)=>createHash('sha256').update(s).digest('hex');
 const clean=(s:unknown,max=128)=>typeof s==='string'?s.trim().slice(0,max):'';
