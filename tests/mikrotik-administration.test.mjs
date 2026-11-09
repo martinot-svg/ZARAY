@@ -103,3 +103,11 @@ test('all existing network write handlers reject unisolated Vercel Previews',()=
   assert.ok(src.includes('status:403'),path);
  }
 });
+
+test('generated local and native agents target the preview deployment, never the production alias by default',()=>{
+ assert.ok(native.includes('__ZARAY_AGENT_ENDPOINT__'));
+ assert.ok(!native.includes('https://zaray.vercel.app/api/network/agent'));
+ assert.ok(ui.includes(".replaceAll('__ZARAY_AGENT_ENDPOINT__',currentZarayOrigin()+'/api/network/agent')"));
+ assert.ok(ui.includes("'ZARAY_URL='+currentZarayOrigin()"));
+ assert.ok(ui.includes("url.protocol!=='https:'"));
+});
