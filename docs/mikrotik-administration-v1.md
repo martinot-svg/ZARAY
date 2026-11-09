@@ -71,6 +71,12 @@ de prévisualisation. Si elle n'existe pas dans l'environnement de
 prévisualisation, la vue l'indique `migration_required` et évite de
 prétendre que le nouvel inventaire fonctionne.
 
+Les nouvelles commandes de déconnexion sont **désactivées par défaut**
+dans les déploiements Vercel `preview`, même pour un administrateur, car une
+Preview peut partager les secrets Supabase de production. L'activation
+`ZARAY_PREVIEW_NETWORK_MUTATIONS=enabled` est réservée à un environnement
+Preview **réellement isolé**, branché sur une base et un routeur de laboratoire.
+
 Déployer la branche `codex/mikrotik-administration` en **Preview**, puis
 vérifier : connexion, lecture par entreprise, invalidation d'un routeur
 étranger, état des sources, droits lecteur/admin, requêtes invalides et
