@@ -1,3 +1,4 @@
+import {networkWritesBlockedInPreview} from '@/lib/network-preview-guard';
 import {NextRequest,NextResponse} from 'next/server';
 import {createClient} from '@/lib/supabase/server';
 import {createServiceClient} from '@/lib/supabase/service';
@@ -27,6 +28,7 @@ export async function GET(req:NextRequest){
  return json({accounts:accounts.data||[],orders:orders.data||[],policy:policies.data||{grace_hours:72,extension_max_hours:24},commands:commands.data||[]});
 }
 export async function POST(req:NextRequest){
+ if(networkWritesBlockedInPreview())return NextResponse.json({error:'Prévisualisation réseau en lecture seule.'},{status:403,headers:{'Cache-Control':'no-store'}});
  const b=await req.json().catch(()=>null) as Record<string,unknown>|null;
  const companyId=typeof b?.companyId==='string'?b.companyId:'';
  const routerId=typeof b?.routerId==='string'?b.routerId:'';
@@ -74,6 +76,7 @@ export async function POST(req:NextRequest){
  return json({account,message:'Compte associé. La synchronisation sera confirmée par le connecteur.'},201);
 }
 export async function PATCH(req:NextRequest){
+ if(networkWritesBlockedInPreview())return NextResponse.json({error:'Prévisualisation réseau en lecture seule.'},{status:403,headers:{'Cache-Control':'no-store'}});
  const b=await req.json().catch(()=>null) as Record<string,unknown>|null;
  const companyId=typeof b?.companyId==='string'?b.companyId:'';
  const kind=b?.kind,reason=typeof b?.reason==='string'?b.reason.trim().slice(0,600):'';
