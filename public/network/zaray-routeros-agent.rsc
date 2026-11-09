@@ -24,6 +24,35 @@
  :if ([:typeof $token] != "str" || !($token ~ "^[a-f0-9]{64}$")) do={ :error "ZARAY: connector key missing"; };
  :local endpoint "https://zaray.vercel.app/api/network/agent";
  :local headers ("Authorization: Bearer " . $token . ",Content-Type: application/json");
+ # Offline guard runs BEFORE all cloud requests, including when HTTPS is unreachable.
+ # A missing/invalid router clock cannot be trusted for a calendar expiration.
+ :local nowNs [:tonsec value=[:timestamp]];
+ :if ($nowNs < 1704067200000000000) do={
+  :log warning "ZARAY: RouterOS clock invalid, offline calendar enforcement paused";
+ } else={
+  :foreach user in=[/ip hotspot user find where comment~"^zaray:access:"] do={
+   :local note [/ip hotspot user get $user comment];
+   :if ($note ~ "^zaray:access:[0-9a-f-]{36}:[0-9]{19}$") do={
+    :local due [:tonum [:pick $note 50 [:len $note]]];
+    :if ($due > 0 && $nowNs >= $due) do={
+     :local name [/ip hotspot user get $user name];
+     :if ([/ip hotspot user get $user disabled] = false) do={ /ip hotspot user disable $user; };
+     :foreach sess in=[/ip hotspot active find where user=$name] do={ /ip hotspot active remove $sess; };
+    };
+   };
+  };
+  :foreach user in=[/ppp secret find where comment~"^zaray:access:"] do={
+   :local note [/ppp secret get $user comment];
+   :if ($note ~ "^zaray:access:[0-9a-f-]{36}:[0-9]{19}$") do={
+    :local due [:tonum [:pick $note 50 [:len $note]]];
+    :if ($due > 0 && $nowNs >= $due) do={
+     :local name [/ppp secret get $user name];
+     :if ([/ppp secret get $user disabled] = false) do={ /ppp secret disable $user; };
+     :foreach sess in=[/ppp active find where name=$name] do={ /ppp active remove $sess; };
+    };
+   };
+  };
+ };
  :local obs [:toarray ""];
  :local kinds [:toarray ""];
  :local count 0;
@@ -126,6 +155,33 @@
       :foreach item in=[/ip hotspot active find where user=$username] do={ /ip hotspot active remove $item; };
      };
      :set success true; :set outcome "ZARAY voucher expired";
+    };
+   };
+   # Paid entitlement timestamp is a signed, tenant-checked instruction from ZARAY.
+   # Only blank or already-owned comments can be claimed; never overwrite a third-party marker.
+   :if ($action = "resume_account") do={
+    :local accountId ($cmd->"accountId");
+    :local expiresNs ($cmd->"deadlineEpochNs");
+    :if ([:typeof $accountId] != "str" || !($accountId ~ "^[0-9a-f-]{36}$") ||
+       [:typeof $expiresNs] != "str" || !($expiresNs ~ "^[0-9]{19}$")) do={ :error "Missing validated offline entitlement"; };
+    :local epochDeadline [:tonum $expiresNs];
+    :local current [:tonsec value=[:timestamp]];
+    :if ($current < 1704067200000000000 || $epochDeadline <= $current) do={ :error "Clock invalid or entitlement expired"; };
+    :local expectedPrefix ("zaray:access:" . $accountId . ":");
+    :local note "";
+    :if ($protocol = "hotspot") do={
+     :local users [/ip hotspot user find where name=$username];
+     :if ([:len $users] != 1) do={ :error "Missing or ambiguous Hotspot account"; };
+     :set note [/ip hotspot user get $users comment];
+     :if ([:len $note] > 0 && [:pick $note 0 [:len $expectedPrefix]] != $expectedPrefix) do={ :error "Unmanaged Hotspot comment"; };
+     /ip hotspot user set $users comment=($expectedPrefix . $expiresNs);
+    } else={
+     :if ($protocol != "pppoe") do={ :error "Unsupported entitlement protocol"; };
+     :local users [/ppp secret find where name=$username];
+     :if ([:len $users] != 1) do={ :error "Missing or ambiguous PPP account"; };
+     :set note [/ppp secret get $users comment];
+     :if ([:len $note] > 0 && [:pick $note 0 [:len $expectedPrefix]] != $expectedPrefix) do={ :error "Unmanaged PPP comment"; };
+     /ppp secret set $users comment=($expectedPrefix . $expiresNs);
     };
    };
    :if ($protocol = "hotspot" && ($action = "suspend_account" || $action = "resume_account")) do={
