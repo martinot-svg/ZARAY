@@ -5,7 +5,7 @@ import {deriveVoucherPassword,hashVoucherCredential,type VoucherKeyVersion} from
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const uuid=/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i;
-const kinds=['hotspot','pppoe','dhcp','wifi','neighbor','radius','interface'];
+const kinds=['hotspot','pppoe','dhcp','wifi','neighbor','radius','interface','hotspot-user','hotspot-profile','ppp-secret','ppp-profile','ip-address','ip-pool','dhcp-server','queue','firewall-filter','firewall-nat','route'];
 const json=(data:unknown,status=200)=>NextResponse.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const digest=(s:string)=>createHash('sha256').update(s).digest('hex');
 const clean=(s:unknown,max=128)=>typeof s==='string'?s.trim().slice(0,max):'';
@@ -55,6 +55,33 @@ export async function POST(request:NextRequest){
   for(const kind of completed){
    const {error}=await service.from('network_observations').update({active:false}).eq('router_id',routerId).eq('observed_kind',kind).lt('observed_at',now);
    if(error)return json({error:'Inventaire partiellement mis à jour.'},503);
+  }
+  // Optional source status is written only by the paired connector; never by a browser.
+  // Reported totals are only inventory sizes, not network health measurements.
+  if(b?.sourceStats!==undefined){
+   if(!Array.isArray(b.sourceStats)||b.sourceStats.length>kinds.length)
+    return json({error:'État des sources invalide.'},400);
+   const unique=new Set<string>();
+   const entries=[];
+   for(const value of b.sourceStats){
+    if(!value||typeof value!=='object'||Array.isArray(value))
+     return json({error:'État des sources invalide.'},400);
+    const item=value as Record<string,unknown>;
+    const kind=clean(item.kind,32),reported=item.reportedCount,collected=item.collectedCount;
+    if(!completed.includes(kind)||unique.has(kind)||
+       typeof reported!=='number'||!Number.isInteger(reported)||reported<0||reported>100000||
+       typeof collected!=='number'||!Number.isInteger(collected)||collected<0||collected>500||collected>reported||
+       typeof item.complete!=='boolean'||(item.complete&&collected!==reported))
+     return json({error:'État des sources invalide.'},400);
+    unique.add(kind);
+    entries.push({router_id:routerId,company_id:router.company_id,observed_kind:kind,
+     reported_count:reported,collected_count:collected,complete:item.complete,observed_at:now});
+   }
+   if(entries.length){
+    const {error:sourceError}=await service.from('network_inventory_sources')
+     .upsert(entries,{onConflict:'router_id,observed_kind'});
+    if(sourceError)return json({error:'État de couverture des inventaires indisponible.'},503);
+   }
   }
   // A first authenticated Hotspot session activates the voucher's usage window.
   const connectedNames=new Set(observations.filter(o=>o.observed_kind==='hotspot'&&o.active&&o.client_label).map(o=>o.client_label));
