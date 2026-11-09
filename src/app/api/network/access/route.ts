@@ -130,7 +130,8 @@ export async function PATCH(req:NextRequest){
  await c.service!.from('network_commands').update({status:'cancelled',completed_at:new Date().toISOString(),outcome:'Règle mise à jour'})
   .eq('account_id',accountId).eq('status','queued');
  const {data:router}=await c.service!.from('network_routers').select('control_enabled').eq('id',a.router_id).maybeSingle();
- if(router?.control_enabled&&a.applied_state!==(active?'active':'suspended')){
+ // Renew local calendar guard even if the account is already connected.
+ if(router?.control_enabled&&(a.applied_state!==(active?'active':'suspended')||(kind==='extend'&&active))){
   await c.service!.from('network_commands').insert({company_id:companyId,router_id:a.router_id,account_id:accountId,
    action:active?'resume_account':'suspend_account',protocol:a.protocol,username:a.username,created_by:c.access!.user.id,reason});
  }
