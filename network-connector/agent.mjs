@@ -55,8 +55,8 @@ const sources=[
  {kind:'hotspot',path:'ip/hotspot/active',key:o=>o['.id'],label:o=>o.user,ip:o=>o.address,mac:o=>o['mac-address'],active:()=>true},
  {kind:'pppoe',path:'ppp/active',key:o=>o['.id'],label:o=>o.name,ip:o=>o.address,mac:o=>o['caller-id'],active:()=>true},
  {kind:'dhcp',path:'ip/dhcp-server/lease',key:o=>o['.id'],label:o=>o['host-name'],ip:o=>o.address,mac:o=>o['mac-address'],active:o=>o.status==='bound'},
- {kind:'wifi',path:'interface/wifi/registration-table',key:o=>o['.id']||o['mac-address'],label:o=>o.interface,ip:o=>o['last-ip'],mac:o=>o['mac-address'],active:()=>true},
- {kind:'wifi',path:'interface/wireless/registration-table',key:o=>o['.id']||o['mac-address'],label:o=>o.interface,ip:o=>o['last-ip'],mac:o=>o['mac-address'],active:()=>true},
+ {kind:'wifi',path:'interface/wifi/registration-table',key:o=>'wifi:'+(o['.id']||o['mac-address']||''),label:o=>o.interface,ip:o=>o['last-ip'],mac:o=>o['mac-address'],active:()=>true},
+ {kind:'wifi',path:'interface/wireless/registration-table',key:o=>'wireless:'+(o['.id']||o['mac-address']||''),label:o=>o.interface,ip:o=>o['last-ip'],mac:o=>o['mac-address'],active:()=>true},
  {kind:'neighbor',path:'ip/neighbor',key:o=>o['.id']||o['mac-address']||o.address,label:o=>o.identity||o['interface-name'],ip:o=>o.address,mac:o=>o['mac-address'],active:()=>false},
  // Admin inventories are strictly summaries, never raw RouterOS objects: exclude passwords,
  // shared keys, scripts, firewall exports and all sensitive fields by construction.
