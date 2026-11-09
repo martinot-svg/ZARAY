@@ -45,6 +45,9 @@ if(!token){
  console.log('[ZARAY] Connecteur appairé, secret enregistré localement.');
 }
 const sources=[
+ // Read-only RouterOS interface inventory, equivalent to a safe part of Winbox Interfaces.
+ {kind:'interface',path:'interface',key:o=>o['.id']||o.name,label:o=>[o.name||'interface',o.type||'type inconnu'].join(' · '),
+  ip:()=>'',mac:o=>o['mac-address'],active:o=>o.running==='true'&&o.disabled!=='true'},
  // Read-only RouterOS RADIUS inventory: never collect shared secrets or claim auth is healthy.
  {kind:'radius',path:'radius',key:o=>o['.id']||[o.service,o.address].join(':'),
   label:o=>['RADIUS',o.service||'service inconnu',o.address||'adresse inconnue'].join(' · '),
