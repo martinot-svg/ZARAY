@@ -68,5 +68,6 @@ jobs:
             tests/seamless-global-navigation.test.mjs \
             tests/site-performance-overview.test.mjs \
             tests/fiveonepay-hybrid.test.mjs
+      - run: node --check network-connector/agent.mjs
       - run: npm run typecheck
       - run: npm run build
