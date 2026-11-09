@@ -10,6 +10,8 @@ export function checkPreviewSupabaseIsolation(env:PreviewEnvironment){
  const expected=env.ZARAY_PREVIEW_SUPABASE_REF||'';
  if(!/^[a-z]{20}$/.test(expected)||expected===PROD_REF)
   return {ok:false as const,reason:'missing_or_production_lab_ref'};
+ if(env.NEXT_PUBLIC_ZARAY_LAB_PROJECT_REF!==expected)
+  return {ok:false as const,reason:'mismatched_browser_lab_ref'};
  const urls=[env.NEXT_PUBLIC_SUPABASE_URL,env.SUPABASE_URL];
  if(urls.some(x=>!x))return {ok:false as const,reason:'missing_preview_urls'};
  for(const url of urls){
