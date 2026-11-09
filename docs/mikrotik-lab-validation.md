@@ -24,7 +24,35 @@ Ce document décrit les conditions indispensables avant d'autoriser les écritur
 
 Supabase production : projet `hosyeygtaksbahnxxiqf`.
 La vérification des projets a trouvé **une seule organisation Supabase ZARAY
-et un seul projet actif**. La création du second projet exige la sélection
+et un seul projet visible par cette connexion**. Le 9 novembre 2026, l'organisation
+a été confirmée en **Free** et Supabase a coté la création à **0 USD/mois**.
+Toutefois, l'appel de création de `ZARAY-LAB` a été **refusé** : le membre
+`martinot-svg` aurait déjà atteint sa limite personnelle de **deux projets
+gratuits actifs** dans les organisations où il est propriétaire/administrateur.
+Le second projet n'est pas visible dans cette connexion et n'a pas été
+modifié. **Aucun projet ZARAY-LAB n'a été créé**, aucune option payante activée.
+Libérer une place gratuitement exige que le propriétaire examine ses projets
+dans Supabase et choisisse lui-même de mettre en pause un projet qui n'est
+plus nécessaire. Ne jamais arrêter, supprimer ou migrer une base en production
+sans sa sélection explicite.
+
+Pour poursuivre gratuitement sans second projet Supabase, la CI GitHub
+utilise PostgreSQL 16 dans un conteneur **éphémère** :
+`.github/workflows/mikrotik-lab-postgres.yml`.
+Le job `migration-rls` crée deux tenants fictifs A/B et applique la
+migration exacte `20261109121500_mikrotik_administration_inventory.sql`,
+puis confirme par SQL :
+- RLS A/B sous `SET ROLE authenticated` et `auth.uid()` simulé ;
+- 54 observations du tenant A, pages de 50 puis 4 ;
+- statut des sources partiellement collectées ou obsolètes ;
+- absence de permission INSERT/UPDATE/DELETE pour le navigateur ;
+- refus d'une déconnexion simultanée en doublon, puis nouveau départ
+  autorisé après clôture.
+Ce test a réussi sur GitHub Actions sans accéder aux données de production.
+Il **ne remplace pas** la validation d'une instance Supabase Lab complète
+(GoTrue, Data API et auth réel restent à éprouver).
+
+La création du second projet exige la sélection
 explicite de l'organisation par le propriétaire et la confirmation
 éventuelle du coût si demandé par Supabase. **Ne jamais créer un projet
 facturé sans consentement**. L'offre Free peut permettre deux projets,
