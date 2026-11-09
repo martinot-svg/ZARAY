@@ -24,7 +24,12 @@ export default function NetworkPage(){
  const canManage=role==='owner'||role==='admin';
  const chosen=routers.find(r=>r.id===routerId);
  const [adminSource,setAdminSource]=useState('interface');
- const routerInventory=devices.filter(d=>d.router_id===routerId&&d.observed_kind===adminSource);
+ const [inventoryPage,setInventoryPage]=useState(1),[inventoryVersion,setInventoryVersion]=useState(0);
+ const [adminInventory,setAdminInventory]=useState<Observation[]>([]);
+ const [adminCount,setAdminCount]=useState(0),[adminLoading,setAdminLoading]=useState(false),[adminError,setAdminError]=useState('');
+ const [adminCoverage,setAdminCoverage]=useState<{reported_count:number;collected_count:number;complete:boolean;observed_at:string}|null>(null);
+ const [adminState,setAdminState]=useState('not_collected');
+ const routerInventory=adminInventory;
  const routerCommands=commands.filter(c=>c.router_id===routerId);
  const chosenResources=resources.find(r=>r.router_id===routerId);
  const healthy=chosenResources&&fresh(chosenResources.observed_at)&&chosen&&fresh(chosen.last_seen_at);
@@ -75,6 +80,30 @@ export default function NetworkPage(){
   setSites(list);setSiteId(list.find((s:Site)=>s.id===requestedSite)?.id||list[0]?.id||'');await refresh(id);
  }catch(e){setError(e instanceof Error?e.message:'Erreur de chargement');}})();},[]);
  useEffect(()=>{if(!companyId)return;const handle=setInterval(()=>void refresh(companyId),30000);return()=>clearInterval(handle);},[companyId]);
+ useEffect(()=>{
+  if(!companyId||!routerId)return;
+  const ctl=new AbortController();
+  setAdminLoading(true);setAdminError('');setAdminInventory([]);setAdminCoverage(null);
+  const params=new URLSearchParams({companyId,routerId,kind:adminSource,page:String(inventoryPage)});
+  fetch('/api/network/inventory?'+params.toString(),{cache:'no-store',signal:ctl.signal})
+   .then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error||'Inventaire indisponible');return d;})
+   .then(d=>{if(ctl.signal.aborted)return;
+    setAdminInventory(d.items||[]);setAdminCount(d.total||0);
+    setAdminCoverage(d.source||null);setAdminState(d.sourceState||'not_collected');})
+   .catch(e=>{if(!ctl.signal.aborted){setAdminError(e instanceof Error?e.message:'Lecture impossible');setAdminState('error');}})
+   .finally(()=>{if(!ctl.signal.aborted)setAdminLoading(false);});
+  return()=>ctl.abort();
+ },[companyId,routerId,adminSource,inventoryPage,inventoryVersion]);
+ async function disconnectObserved(d:Observation){
+  if(!chosen||!canManage||busy||!fresh(chosen.last_seen_at)||!fresh(d.observed_at))return;
+  const kind=d.observed_kind==='hotspot'?'Hotspot':'PPPoE';
+  const identity=d.client_label||'session inconnue';
+  const reason=prompt('Déconnecter '+identity+' ('+kind+') sur '+chosen.name+' ? Motif obligatoire :')?.trim();
+  if(!reason)return;
+  if(!confirm('Confirmer la déconnexion de cette session uniquement ? La commande sera envoyée au routeur ; le résultat ne sera confirmé qu’après vérification par RouterOS.'))return;
+  await run('/api/network/operations',{routerId:chosen.id,observationId:d.id,reason,confirmation:'DECONNECTER'});
+  setInventoryVersion(v=>v+1);
+ }
  async function run(endpoint:string,payload:Record<string,unknown>,method='POST'){
   setBusy(true);setError('');setNotice('');
   try{const response=await fetch(endpoint,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,companyId})});const data=await response.json();if(!response.ok)throw Error(data.error||'Action impossible');setNotice(data.message||'Action enregistrée.');await refresh();return data;}
@@ -224,13 +253,28 @@ export default function NetworkPage(){
      <div className="panel" style={{padding:16}}>
       <h3>Inventaire du routeur sélectionné</h3>
       <p className="muted">Site : {sites.find(s=>s.id===chosen.site_id)?.name||'Non disponible'} · Agent : {chosen.agent_kind==='routeros-native'?'RouterOS natif':chosen.agent_kind==='node-local'?'Connecteur local':'Non identifié'} · Contrôle : {chosen.control_enabled?'activé':'désactivé'}</p>
-      <label>Source d’inventaire<select value={adminSource} onChange={e=>setAdminSource(e.target.value)}>
-       <option value="interface">Interfaces</option><option value="hotspot">Sessions Hotspot</option><option value="pppoe">Sessions PPPoE</option><option value="dhcp">Baux DHCP</option><option value="wifi">Stations Wi-Fi</option><option value="neighbor">Voisins</option>
+      <label>Source d’inventaire<select value={adminSource} onChange={e=>{setAdminSource(e.target.value);setInventoryPage(1);}}>
+       <optgroup label="Vue générale et interfaces"><option value="interface">Interfaces</option><option value="wifi">Stations Wi-Fi</option><option value="neighbor">Voisins</option><option value="radius">Serveurs RADIUS déclarés</option></optgroup>
+       <optgroup label="Hotspot et PPPoE"><option value="hotspot">Sessions Hotspot</option><option value="hotspot-user">Comptes Hotspot</option><option value="hotspot-profile">Profils Hotspot</option><option value="pppoe">Sessions PPPoE</option><option value="ppp-secret">Comptes PPP</option><option value="ppp-profile">Profils PPP</option></optgroup>
+       <optgroup label="IP et DHCP"><option value="ip-address">Adresses IP</option><option value="ip-pool">Pools IP</option><option value="dhcp-server">Serveurs DHCP</option><option value="dhcp">Baux DHCP</option></optgroup>
+       <optgroup label="Débits et sécurité"><option value="queue">Files d’attente</option><option value="firewall-filter">Règles pare-feu</option><option value="firewall-nat">Règles NAT</option><option value="route">Routes IP</option></optgroup>
       </select></label>
-      <p className="muted">Dernières observations reçues, parfois partielles selon l’agent. Une source vide ne garantit pas l’absence d’équipements.</p>
-      {routerInventory.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Nom</th><th>Adresse IP</th><th>Adresse MAC</th><th>État observé</th><th>Dernière observation</th></tr></thead><tbody>
-       {routerInventory.map(d=><tr key={d.id}><td>{d.client_label||d.identity_key}</td><td>{d.ip_address||'—'}</td><td>{d.mac_address||'—'}</td><td>{fresh(d.observed_at)&&fresh(chosen.last_seen_at)?(d.active?'Actif':'Inactif'):'Non vérifié récemment'}</td><td>{fmt(d.observed_at)}</td></tr>)}
-      </tbody></table></div>:<p className="muted">Aucune observation reçue pour cette source sur ce routeur.</p>}
+      <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+       <p className="muted" role="status">{adminLoading?'Chargement des observations…':adminState==='migration_required'?'Migration des inventaires non appliquée.':adminState==='requires_local_connector'?'Source avancée réservée au connecteur local HTTPS.':adminState==='stale'?'Inventaire ancien : aucune donnée considérée comme actuelle.':adminState==='partial'?'Inventaire partiel : limite de collecte atteinte.':adminState==='complete'?'Source lue par le connecteur (instantané, pas une mesure en direct).':adminState==='error'?'Lecture impossible.':'Source non encore collectée ou non compatible avec ce routeur.'}</p>
+       <button type="button" disabled={adminLoading} onClick={()=>setInventoryVersion(v=>v+1)}>Actualiser l’affichage</button>
+      </div>
+      {adminCoverage&&<p className="muted">Collectés : {adminCoverage.collected_count} / {adminCoverage.reported_count} éléments observés sur cette source · dernier relevé : {fmt(adminCoverage.observed_at)} · {adminCoverage.complete?'Collecte déclarée complète':'Collecte tronquée'}</p>}
+      {adminError&&<p role="alert" className="muted">{adminError}</p>}
+      {routerInventory.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Nom</th><th>Adresse IP</th><th>Adresse MAC</th><th>État observé</th><th>Dernière observation</th><th>Intervention</th></tr></thead><tbody>
+       {routerInventory.map(d=><tr key={d.id}><td>{d.client_label||d.identity_key}</td><td>{d.ip_address||'—'}</td><td>{d.mac_address||'—'}</td><td>{fresh(d.observed_at)&&fresh(chosen.last_seen_at)?(d.active?'Actif':'Inactif'):'Non vérifié récemment'}</td><td>{fmt(d.observed_at)}</td><td>{(d.observed_kind==='hotspot'||d.observed_kind==='pppoe')&&canManage&&chosen.control_enabled&&d.active&&fresh(d.observed_at)&&fresh(chosen.last_seen_at)?
+        <button type="button" disabled={busy} onClick={()=>void disconnectObserved(d)}>Déconnecter</button>:
+        <span className="muted">{d.observed_kind==='hotspot'||d.observed_kind==='pppoe'?'Non disponible':'Lecture seule'}</span>}</td></tr>)}
+      </tbody></table></div>:<p className="muted">Aucune observation vérifiable pour cette source sur ce routeur.</p>}
+      <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginTop:8}}>
+       <span className="muted">{adminCount} lignes mémorisées (incluant l’historique) · page {inventoryPage}</span>
+       <button type="button" disabled={adminLoading||inventoryPage<=1} onClick={()=>setInventoryPage(p=>p-1)}>Précédent</button>
+       <button type="button" disabled={adminLoading||inventoryPage*50>=adminCount} onClick={()=>setInventoryPage(p=>p+1)}>Suivant</button>
+      </div>
      </div>
      <div className="panel" style={{padding:16}}>
       <h3>Commandes du routeur sélectionné</h3>
@@ -239,7 +283,7 @@ export default function NetworkPage(){
        {routerCommands.map(c=><tr key={c.id}><td>{fmt(c.created_at)}</td><td>{c.action}</td><td>{c.username}</td><td>{c.status}</td><td>{c.outcome||'—'}</td></tr>)}
       </tbody></table></div>:<p className="muted">Aucune commande pour ce routeur dans cet extrait.</p>}
      </div>
-     <p className="muted">La configuration avancée du pare-feu, du NAT, du routage, des serveurs DHCP et le terminal RouterOS ne sont pas encore disponibles dans cette console.</p>
+     <p className="muted">Les inventaires pare-feu, NAT, routage, DHCP et files d’attente sont disponibles uniquement en lecture avec le connecteur local si RouterOS prend en charge leurs API. Le moteur natif conserve ses sources limitées. Les modifications de pare-feu, NAT, routes, DHCP, le terminal libre et les journaux sensibles restent désactivés jusqu’à validation sur routeur de test et retour arrière local sûr.</p>
     </>}
     <div className="panel" style={{padding:16}}>
      <h3>WinBox officiel — application locale</h3>
