@@ -1,3 +1,4 @@
+import {previewSupabaseIsolationReady} from './preview-isolation';
 import 'server-only';
 import { createClient } from '@supabase/supabase-js';
 
@@ -7,6 +8,7 @@ import { createClient } from '@supabase/supabase-js';
  * variables are accepted, without copying secret values into source code.
  */
 export function createServiceClient() {
+  if (!previewSupabaseIsolationReady()) return null;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key =
     process.env.zaray_SUPABASE_SECRET_KEY ||
