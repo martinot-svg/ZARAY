@@ -71,7 +71,8 @@ de prévisualisation. Si elle n'existe pas dans l'environnement de
 prévisualisation, la vue l'indique `migration_required` et évite de
 prétendre que le nouvel inventaire fonctionne.
 
-Les nouvelles commandes de déconnexion sont **désactivées par défaut**
+Toutes les opérations réseau avec écriture (appairage, comptes, commandes,
+RADIUS, synchronisation des agents) sont **désactivées par défaut**
 dans les déploiements Vercel `preview`, même pour un administrateur, car une
 Preview peut partager les secrets Supabase de production. L'activation
 `ZARAY_PREVIEW_NETWORK_MUTATIONS=enabled` est réservée à un environnement
