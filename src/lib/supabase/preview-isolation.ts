@@ -8,7 +8,7 @@ type PreviewEnvironment=Record<string,string|undefined>;
 export function checkPreviewSupabaseIsolation(env:PreviewEnvironment){
  if(env.VERCEL_ENV!=='preview')return {ok:true as const,reason:'not_preview'};
  const expected=env.ZARAY_PREVIEW_SUPABASE_REF||'';
- if(!/^[a-z]{20}$/.test(expected)||expected===PROD_REF)
+ if(!/^[a-z0-9]{20}$/.test(expected)||expected===PROD_REF)
   return {ok:false as const,reason:'missing_or_production_lab_ref'};
  if(env.NEXT_PUBLIC_ZARAY_LAB_PROJECT_REF!==expected)
   return {ok:false as const,reason:'mismatched_browser_lab_ref'};
