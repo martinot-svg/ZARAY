@@ -1,0 +1,11 @@
+# Example for FreeRADIUS 3.x rlm_rest, adapt to the installed distribution.
+# Copy into mods-available/zaray_rest and enable with a symlink in mods-enabled/.
+# The local bridge accepts requests only from loopback.
+rest zaray_rest {
+ authenticate {
+  uri = "http://127.0.0.1:18120/authenticate"
+  method = 'post'
+  body = 'post'
+  data = "username=%{urlquote:%{User-Name}}&password=%{urlquote:%{User-Password}}&framedProtocol=%{urlquote:%{Framed-Protocol}}"
+ }
+}
