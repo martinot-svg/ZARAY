@@ -1,9 +1,11 @@
+import {networkWritesBlockedInPreview} from '@/lib/network-preview-guard';
 import {NextRequest,NextResponse} from 'next/server';
 import {createClient} from '@/lib/supabase/server';
 import {createServiceClient} from '@/lib/supabase/service';
 import {authorizeTenant} from '@/lib/tenant-context';
 export const dynamic='force-dynamic';
 export async function POST(req:NextRequest){
+ if(networkWritesBlockedInPreview())return NextResponse.json({error:'Prévisualisation réseau en lecture seule.'},{status:403,headers:{'Cache-Control':'no-store'}});
  const body=await req.json().catch(()=>null) as Record<string,unknown>|null;
  const companyId=typeof body?.companyId==='string'?body.companyId:'';
  const routerId=typeof body?.routerId==='string'?body.routerId:'';
