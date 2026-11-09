@@ -4,6 +4,7 @@ import {useEffect,useMemo,useState,type FormEvent} from 'react';
 import AppShell from '@/components/app-shell';
 import {ZarayIcon} from '@/components/ui/zaray-icon';
 type Router={id:string;site_id:string;name:string;host:string;model:string|null;routeros_version:string|null;status:string;control_enabled:boolean;last_seen_at:string|null};
+type RouterResource={router_id:string;cpu_load_percent:number;total_memory_bytes:number;free_memory_bytes:number;router_uptime:string;observed_at:string};
 type Observation={id:string;router_id:string;observed_kind:string;identity_key:string;ip_address:string|null;mac_address:string|null;client_label:string|null;active:boolean;observed_at:string};
 type Account={id:string;router_id:string;order_id:string|null;username:string;protocol:string;expires_at:string|null;grace_until:string|null;extension_until:string|null;administrative_hold:boolean;desired_state:string;applied_state:string};
 type Order={id:string;site_id:string;public_reference:string;customer_name:string;status:string;validity_days:number};
@@ -14,7 +15,7 @@ const status=(r:Router)=>fresh(r.last_seen_at)?'En ligne':r.last_seen_at?'Hors l
 const fmt=(d:string|null)=>d?new Date(d).toLocaleString('fr-FR'):'—';
 export default function NetworkPage(){
  const [companyId,setCompanyId]=useState(''),[role,setRole]=useState(''),[sites,setSites]=useState<Site[]>([]),[siteId,setSiteId]=useState('');
- const [routers,setRouters]=useState<Router[]>([]),[devices,setDevices]=useState<Observation[]>([]),[accounts,setAccounts]=useState<Account[]>([]),[orders,setOrders]=useState<Order[]>([]),[commands,setCommands]=useState<Command[]>([]);
+ const [routers,setRouters]=useState<Router[]>([]),[resources,setResources]=useState<RouterResource[]>([]),[devices,setDevices]=useState<Observation[]>([]),[accounts,setAccounts]=useState<Account[]>([]),[orders,setOrders]=useState<Order[]>([]),[commands,setCommands]=useState<Command[]>([]);
  const [name,setName]=useState(''),[host,setHost]=useState(''),[routerId,setRouterId]=useState(''),[username,setUsername]=useState(''),[protocol,setProtocol]=useState('hotspot'),[orderId,setOrderId]=useState('');
  const [pair,setPair]=useState<{token:string;routerId:string;expiresAt:string}|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [grace,setGrace]=useState('72'),[extensionLimit,setExtensionLimit]=useState('24'),[filter,setFilter]=useState('all'),[selectedDevice,setSelectedDevice]=useState('');
@@ -22,6 +23,8 @@ export default function NetworkPage(){
  const [radiusToken,setRadiusToken]=useState(''),[radiusAccountId,setRadiusAccountId]=useState(''),[radiusPassword,setRadiusPassword]=useState('');
  const canManage=role==='owner'||role==='admin';
  const chosen=routers.find(r=>r.id===routerId);
+ const chosenResources=resources.find(r=>r.router_id===routerId);
+ const healthy=chosenResources&&fresh(chosenResources.observed_at)&&chosen&&fresh(chosen.last_seen_at);
  const recentlySeenRouters=routers.filter(r=>fresh(r.last_seen_at));
  // This configuration template intentionally contains no pairing token or RouterOS credentials.
  function downloadConnectorConfig(router:Router){
@@ -53,7 +56,7 @@ export default function NetworkPage(){
    const [network,access]=await Promise.all([fetch('/api/network?companyId='+encodeURIComponent(id),{cache:'no-store'}),fetch('/api/network/access?companyId='+encodeURIComponent(id),{cache:'no-store'})]);
    const n=await network.json(),a=await access.json();
    if(!network.ok||!access.ok)throw Error(n.error||a.error||'Données réseau indisponibles');
-   setRouters(n.routers||[]);setDevices(n.observations||[]);setAccounts(a.accounts||[]);setOrders(a.orders||[]);setCommands(a.commands||[]);
+   setRouters(n.routers||[]);setDevices(n.observations||[]);setResources(n.resources||[]);setAccounts(a.accounts||[]);setOrders(a.orders||[]);setCommands(a.commands||[]);
    setGrace(String(a.policy.grace_hours));setExtensionLimit(String(a.policy.extension_max_hours));
    setRouterId(v=>(n.routers||[]).some((x:Router)=>x.id===v)?v:(n.routers?.[0]?.id||''));
   }catch(e){setError(e instanceof Error?e.message:'Erreur réseau');}
@@ -145,6 +148,48 @@ export default function NetworkPage(){
      <button type="submit" disabled={!canManage||busy||!radiusAccountId||radiusPassword.length<12}>Enregistrer le secret du compte</button>
      <p className="muted">Le mot de passe n’est jamais réaffiché. Ce formulaire ne crée pas d’accès Internet. Les tickets occasionnels restent gérés par le connecteur Hotspot existant.</p>
     </form>
+   </section>
+  </details>
+  <details className="workspace-disclosure"><summary>WinBox · console MikroTik</summary>
+   <section className="panel">
+    <div className="panel-head"><div><h2 className="panel-title">Console MikroTik intégrée à ZARAY</h2><span className="muted">Diagnostics RouterOS en lecture seule</span></div></div>
+    <p className="muted">Ce tableau de bord reprend certaines fonctions de supervision de WinBox, sans lancer d'exécutable Windows ni ouvrir l'administration du routeur sur Internet. Les données sont remontées par le connecteur privé ZARAY.</p>
+    <div className="form-stack compact-form">
+     <label>Routeur<select value={routerId} onChange={e=>setRouterId(e.target.value)}>{routers.map(r=><option value={r.id} key={r.id}>{r.name}</option>)}</select></label>
+    </div>
+    {chosen?<div className="workspace-grid">
+      <div className="panel" style={{padding:16}}>
+       <h3>{chosen.name}</h3>
+       <p className="muted">Modèle : {chosen.model||'Non détecté'}</p>
+       <p className="muted">RouterOS : {chosen.routeros_version||'Non détecté'}</p>
+       <p>Connecteur : <strong>{status(chosen)}</strong></p>
+       <p className="muted">Dernière connexion : {fmt(chosen.last_seen_at)}</p>
+       <button type="button" onClick={()=>void navigator.clipboard.writeText(chosen.host)}>Copier l'adresse du routeur</button>
+      </div>
+      <div className="panel" style={{padding:16}}>
+       <h3>Ressources système</h3>
+       {healthy&&chosenResources?<div>
+        <p>CPU : <strong>{chosenResources.cpu_load_percent} %</strong></p>
+        <p>Mémoire : <strong>{(chosenResources.free_memory_bytes/1048576).toFixed(1)} Mo libres sur {(chosenResources.total_memory_bytes/1048576).toFixed(1)} Mo</strong></p>
+        <p>Uptime : <strong>{chosenResources.router_uptime}</strong></p>
+        <p className="muted">Observé : {fmt(chosenResources.observed_at)}</p>
+       </div>:<p className="muted">Ressources non disponibles ou données trop anciennes. Un connecteur MikroTik actif est nécessaire.</p>}
+      </div>
+      <div className="panel" style={{padding:16}}>
+       <h3>Activité du routeur</h3>
+       <p>Interfaces : <strong>{devices.filter(d=>d.router_id===routerId&&d.observed_kind==='interface').length}</strong></p>
+       <p>Interfaces en fonctionnement : <strong>{devices.filter(d=>d.router_id===routerId&&d.observed_kind==='interface'&&d.active&&fresh(d.observed_at)).length}</strong></p>
+       <p>Sessions Hotspot : <strong>{devices.filter(d=>d.router_id===routerId&&d.observed_kind==='hotspot'&&d.active&&fresh(d.observed_at)).length}</strong></p>
+       <p>Sessions PPPoE : <strong>{devices.filter(d=>d.router_id===routerId&&d.observed_kind==='pppoe'&&d.active&&fresh(d.observed_at)).length}</strong></p>
+       <p className="muted">Les nombres représentent uniquement les dernières observations reçues, pas un contrôle d'accès Internet.</p>
+      </div>
+     </div>:<div className="empty-state"><strong>Aucun routeur sélectionné</strong><p>Ajoutez puis associez un MikroTik pour afficher ses diagnostics.</p></div>}
+    <div className="panel" style={{padding:16}}>
+     <h3>WinBox officiel — application locale</h3>
+     <p className="muted">L'archive Windows fournie correspond à WinBox v4.5. Pour ouvrir l'application, téléchargez-la sur votre ordinateur Windows, extrayez WinBox.exe et connectez-vous à l'adresse du routeur depuis un réseau autorisé.</p>
+     <a className="primary-link" href="https://download.mikrotik.com/routeros/winbox/4.5/WinBox_Windows.zip" target="_blank" rel="noopener noreferrer">Télécharger WinBox 4.5 pour Windows</a>
+     <p className="muted"><a href="https://mikrotik.com/download/winbox" target="_blank" rel="noopener noreferrer">WinBox officiel pour Linux, macOS et autres versions</a></p>
+    </div>
    </section>
   </details>
   <details className="workspace-disclosure"><summary>Cartographie</summary><section className="panel"><div className="panel-head"><div><h2 className="panel-title">Cartographie du réseau</h2></div></div>
