@@ -13,6 +13,10 @@ type Site={id:string;company_id:string;name:string};
 const fresh=(stamp:string|null)=>!!stamp&&Date.now()-new Date(stamp).getTime()<150000;
 const status=(r:Router)=>fresh(r.last_seen_at)?'En ligne':r.last_seen_at?'Hors ligne':'Non appairé';
 const fmt=(d:string|null)=>d?new Date(d).toLocaleString('fr-FR'):'—';
+const commandStatus:Record<string,string>={
+ queued:'Demande enregistrée',dispatched:'Mise à disposition de l’agent — confirmation attendue',
+ success:'Application confirmée par le connecteur',failed:'Échec du connecteur',cancelled:'Annulée'
+};
 export default function NetworkPage(){
  const [companyId,setCompanyId]=useState(''),[role,setRole]=useState(''),[sites,setSites]=useState<Site[]>([]),[siteId,setSiteId]=useState('');
  const [routers,setRouters]=useState<Router[]>([]),[resources,setResources]=useState<RouterResource[]>([]),[devices,setDevices]=useState<Observation[]>([]),[accounts,setAccounts]=useState<Account[]>([]),[orders,setOrders]=useState<Order[]>([]),[commands,setCommands]=useState<Command[]>([]);
@@ -280,7 +284,7 @@ export default function NetworkPage(){
       <h3>Commandes du routeur sélectionné</h3>
       <p className="muted">Extrait des 50 dernières commandes de l’entreprise. Une commande demandée ou envoyée reste en attente de confirmation du routeur.</p>
       {routerCommands.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Heure</th><th>Action</th><th>Compte</th><th>Statut</th><th>Retour du routeur</th></tr></thead><tbody>
-       {routerCommands.map(c=><tr key={c.id}><td>{fmt(c.created_at)}</td><td>{c.action}</td><td>{c.username}</td><td>{c.status}</td><td>{c.outcome||'—'}</td></tr>)}
+       {routerCommands.map(c=><tr key={c.id}><td>{fmt(c.created_at)}</td><td>{c.action}</td><td>{c.username}</td><td>{commandStatus[c.status]||'État inconnu'}</td><td>{c.outcome||'—'}</td></tr>)}
       </tbody></table></div>:<p className="muted">Aucune commande pour ce routeur dans cet extrait.</p>}
      </div>
      <p className="muted">Les inventaires pare-feu, NAT, routage, DHCP et files d’attente sont disponibles uniquement en lecture avec le connecteur local si RouterOS prend en charge leurs API. Le moteur natif conserve ses sources limitées. Les modifications de pare-feu, NAT, routes, DHCP, le terminal libre et les journaux sensibles restent désactivés jusqu’à validation sur routeur de test et retour arrière local sûr.</p>
@@ -346,7 +350,7 @@ export default function NetworkPage(){
   <details className="workspace-disclosure"><summary>Comptes et suspensions</summary><section className="panel"><div className="panel-head"><h2 className="panel-title">Comptes et suspensions</h2><span className="muted">{accounts.length} comptes</span></div>
    {accounts.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Compte</th><th>Expiration / grâce</th><th>Décision</th><th>Appliqué sur MikroTik</th><th>Actions</th></tr></thead><tbody>{accounts.map(a=><tr key={a.id}><td><strong>{a.username}</strong><small>{a.protocol.toUpperCase()}{a.administrative_hold?' · Suspension administrative':''}</small></td><td>{fmt(a.expires_at)}<small>Grâce : {fmt(a.grace_until)} · Exception : {fmt(a.extension_until)}</small></td><td>{a.desired_state}</td><td>{a.applied_state}</td><td><button type="button" disabled={!canManage||busy} onClick={()=>void hold(a)}>{a.administrative_hold?'Lever le blocage':'Suspendre'}</button> <button type="button" disabled={!canManage||busy} onClick={()=>void extend(a)}>Prolonger</button></td></tr>)}</tbody></table></div>:<div className="empty-state"><strong>Aucun compte associé</strong><p>Associez une commande à un utilisateur Hotspot ou PPPoE.</p></div>}
   </section></details>
-  <details className="workspace-disclosure"><summary>Historique des commandes</summary><section className="panel"><h2 className="panel-title">Historique des commandes réseau</h2>{commands.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Heure</th><th>Action</th><th>Compte</th><th>Statut</th><th>Retour</th></tr></thead><tbody>{commands.map(c=><tr key={c.id}><td>{fmt(c.created_at)}</td><td>{c.action}</td><td>{c.username}</td><td>{c.status}</td><td>{c.outcome||'—'}</td></tr>)}</tbody></table></div>:<p className="muted">Aucune commande pour cette entreprise.</p>}</section></details>
+  <details className="workspace-disclosure"><summary>Historique des commandes</summary><section className="panel"><h2 className="panel-title">Historique des commandes réseau</h2>{commands.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Heure</th><th>Action</th><th>Compte</th><th>Statut</th><th>Retour</th></tr></thead><tbody>{commands.map(c=><tr key={c.id}><td>{fmt(c.created_at)}</td><td>{c.action}</td><td>{c.username}</td><td>{commandStatus[c.status]||'État inconnu'}</td><td>{c.outcome||'—'}</td></tr>)}</tbody></table></div>:<p className="muted">Aucune commande pour cette entreprise.</p>}</section></details>
   {(error||notice)&&<section className="panel" role={error?'alert':'status'}>{error||notice}</section>}
  </AppShell>;
 }
