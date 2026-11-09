@@ -248,13 +248,19 @@
     :foreach item in=[/ip hotspot active find where user=$username] do={
      :if ([:typeof $sessionId] = "nil" || $sessionId = "" || [:tostr $item] = $sessionId) do={ /ip hotspot active remove $item; };
     };
-    :set success true; :set outcome "Hotspot sessions updated";
+    :foreach remaining in=[/ip hotspot active find where user=$username] do={
+     :if ([:typeof $sessionId] = "nil" || $sessionId = "" || [:tostr $remaining] = $sessionId) do={ :error "Hotspot session still active"; };
+    };
+    :set success true; :set outcome "Hotspot session removal confirmed";
    };
    :if ($protocol = "pppoe" && ($action = "suspend_account" || $action = "disconnect_ppp")) do={
     :foreach item in=[/ppp active find where name=$username] do={
      :if ([:typeof $sessionId] = "nil" || $sessionId = "" || [:tostr $item] = $sessionId) do={ /ppp active remove $item; };
     };
-    :set success true; :set outcome "PPP sessions updated";
+    :foreach remaining in=[/ppp active find where name=$username] do={
+     :if ([:typeof $sessionId] = "nil" || $sessionId = "" || [:tostr $remaining] = $sessionId) do={ :error "PPP session still active"; };
+    };
+    :set success true; :set outcome "PPP session removal confirmed";
    };
   } on-error={ :set success false; :set outcome "RouterOS execution not confirmed"; };
   :local resultBody [:serialize to=json value=({"routerId"=$rid;"action"="result";"commandId"=$id;"ok"=$success;"outcome"=$outcome}) options=json.no-string-conversion];
