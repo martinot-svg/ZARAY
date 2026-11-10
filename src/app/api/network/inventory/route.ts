@@ -13,7 +13,9 @@ export async function GET(req:NextRequest){
  const params=req.nextUrl.searchParams,companyId=params.get('companyId')||'',
   routerId=params.get('routerId')||'',kind=params.get('kind')||'interface';
  const rawPage=params.get('page')||'1',page=/^[1-9][0-9]{0,4}$/.test(rawPage)?Number(rawPage):0;
- if(!uuid.test(routerId)||!kinds.includes(kind as typeof kinds[number])||page<1||page>10000)
+ const search=(params.get('search')||'').trim();
+ if(!uuid.test(routerId)||!kinds.includes(kind as typeof kinds[number])||page<1||page>10000||
+    search.length>64||/[\u0000-\u001f\u007f]/.test(search))
   return err('Paramètres de l’inventaire invalides.',400);
  const client=await createClient();
  const auth=await authorizeTenant(client,companyId);
@@ -23,11 +25,27 @@ export async function GET(req:NextRequest){
   .eq('id',routerId).eq('company_id',companyId).maybeSingle();
  if(routerError||!router)return err('Routeur inaccessible dans cette entreprise.',404);
  const size=50,offset=(page-1)*size;
- const {data:rows,error:observationsError,count}=await client.from('network_observations')
-  .select('id,router_id,observed_kind,identity_key,ip_address,mac_address,client_label,active,observed_at',{count:'exact'})
-  .eq('router_id',routerId).eq('company_id',companyId).eq('observed_kind',kind)
-  .order('observed_at',{ascending:false}).range(offset,offset+size-1);
- if(observationsError)return err('Lecture de l’inventaire impossible.',503);
+ let items:Record<string,unknown>[]=[];
+ let total=0;
+ if(search){
+  // SQL SECURITY INVOKER RPC: tenant RLS, typed IP/MAC substring search,
+  // stable server-side pagination. Never build a raw PostgREST OR filter.
+  const {data,error:searchError}=await client.rpc('network_inventory_search',{
+   p_company_id:companyId,p_router_id:routerId,p_kind:kind,p_term:search,p_page:page
+  });
+  if(searchError)return err('Recherche globale indisponible : migration de l’inventaire requise.',503);
+  const found=(data||[]) as Array<Record<string,unknown>>;
+  total=Number(found[0]?.total_count||0);
+  items=found.map(({total_count:_,...row})=>row);
+ }else{
+  const {data:rows,error:observationsError,count}=await client.from('network_observations')
+   .select('id,router_id,observed_kind,identity_key,ip_address,mac_address,client_label,active,observed_at',{count:'exact'})
+   .eq('router_id',routerId).eq('company_id',companyId).eq('observed_kind',kind)
+   .order('observed_at',{ascending:false}).range(offset,offset+size-1);
+  if(observationsError)return err('Lecture de l’inventaire impossible.',503);
+  items=rows||[];
+  total=count||0;
+ }
  const {data:source,error:sourceError}=await client.from('network_inventory_sources')
   .select('reported_count,collected_count,complete,observed_at')
   .eq('router_id',routerId).eq('company_id',companyId).eq('observed_kind',kind).maybeSingle();
@@ -37,7 +55,7 @@ export async function GET(req:NextRequest){
  const recentlyReported=inventorySourceIsCurrent(kind,latest);
  const nativeSupported=['interface','hotspot','pppoe'].includes(kind);
  return NextResponse.json({
-  routerId,kind,items:rows??[],page,pageSize:size,total:count??0,
+  routerId,kind,items,page,pageSize:size,total,searchApplied:search.length>0,
   source:inventorySchemaReady?source:null,
   schemaReady:inventorySchemaReady,
   sourceState:!inventorySchemaReady?'migration_required':
