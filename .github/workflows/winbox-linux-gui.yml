@@ -1,8 +1,5 @@
 name: WinBox 4.5 Linux GUI runtime Xvfb (isolated)
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/winbox-linux-gui.yml'
   workflow_dispatch:
 permissions:
   contents: read
