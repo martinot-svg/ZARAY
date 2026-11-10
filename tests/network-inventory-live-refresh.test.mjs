@@ -6,7 +6,7 @@ const read=p=>readFileSync(p,'utf8');
 const connector=read('network-connector/agent.mjs');
 const agent=read('src/app/api/network/agent/route.ts');
 const route=read('src/app/api/network/inventory/refresh/route.ts');
-const migration=read('supabase/migrations/20261109121500_mikrotik_administration_inventory.sql');
+const migration=read('supabase/migrations/20261110152239_mikrotik_administration_inventory.sql');
 const ui=read('src/app/gestion-reseau/page.tsx');
 
 test('refresh requests require tenant admin, local connector and preview isolation',()=>{
