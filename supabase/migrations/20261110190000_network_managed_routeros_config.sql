@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS public.network_managed_config_jobs (
   CHECK(status IN ('queued','dispatched','success','failed','manual_review')),
  created_at timestamptz NOT NULL DEFAULT now(),
  dispatched_at timestamptz,
+ review_attempted_at timestamptz,
  completed_at timestamptz,
  expires_at timestamptz NOT NULL DEFAULT (now()+interval '10 minutes'),
  before_state jsonb,
