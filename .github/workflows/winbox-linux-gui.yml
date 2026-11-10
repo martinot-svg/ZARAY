@@ -18,6 +18,8 @@ jobs:
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
             xvfb xauth x11-utils x11-apps xdotool libxcb-cursor0 libxkbcommon-x11-0 \
+            libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 \
+            libxcb-xinerama0 libxcb-xkb1 libxcb-randr0 libxcb-shape0 \
             libopengl0 libgl1 libegl1 libfontconfig1 libxrender1 imagemagick iproute2
       - name: Download hash-pinned official WinBox Linux 4.5
         run: |
@@ -31,6 +33,11 @@ jobs:
           exe=$(find winbox-input -maxdepth 4 -type f -name 'WinBox' | head -n 1)
           test -n "$exe"
           chmod +x "$exe"
+          ldd "$exe" | tee winbox-evidence/linked-libraries.txt
+          if grep -q 'not found' winbox-evidence/linked-libraries.txt; then
+            echo "Required Qt/X11 library missing" >&2
+            exit 1
+          fi
           echo "WINBOX_EXE=$PWD/$exe" >> "$GITHUB_ENV"
       - name: Run WinBox GUI without network and capture real window tree
         run: |
