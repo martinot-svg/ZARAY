@@ -88,11 +88,19 @@ test('paired agent acknowledges only dispatched jobs and validates size',()=>{
   ".eq('id',id).eq('router_id',routerId).eq('company_id',router.company_id)",
   ".eq('status','dispatched')",
   ".eq('status','queued')",
-  "diagnostics.push({id:job.id,kind:'ping',target:job.target})",
-  "router.agent_kind==='node-local'"
+  "diagnostics.push({id:job.id,kind:'ping',target:job.target,dispatchedAt:claimed.dispatched_at})",
+  "router.agent_kind==='node-local'",
+  ".eq('status','dispatched').eq('dispatched_at',dispatchedAt)",
+  "Date.parse(job.dispatched_at)>now-90000",
+  "claim=claim.eq('dispatched_at',job.dispatched_at)",
+  "data:claimed,error:claimError",
+  "ok&&b.samples.length===0",
+  "!out.seq||!/^[0-2]$/.test(out.seq)"
  ])assert.ok(api.includes(part),part);
  assert.ok(readFileSync('network-connector/routeros/bounded-ping.mjs','utf8').includes("ros('ping','POST'"));
  assert.ok(connector.includes("api('diagnostic-result'"));
+ assert.ok(connector.includes('dispatchedAt:job.dispatchedAt'));
+ assert.ok(api.includes("if(!recorded)return json("));
 });
 
 test('WinBox-style diagnostics panel displays actual queued/readback state',()=>{
