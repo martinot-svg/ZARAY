@@ -309,6 +309,56 @@
  } on-error={ :log warning "ZARAY: poll failed"; :error "ZARAY: poll failed"; };
  :local state [:deserialize from=json value=($fetched->"data") options=json.no-string-conversion];
  :if (($state->"controlEnabled") != true) do={ :return; };
+ # Online-only native RouterOS ping: fixed 3 packets, no terminal access.
+ # Cloud controls tenant, IP target, assignment token and expiry.
+ :if ([:typeof ($state->"diagnostics")] = "array") do={
+  :foreach job in=($state->"diagnostics") do={
+   :local jobId ($job->"id");
+   :local target ($job->"target");
+   :local lease ($job->"dispatchedAt");
+   :local kind ($job->"kind");
+   :if ([:typeof $jobId] = "str" && [:len $jobId] = 36 &&
+        [:typeof $target] = "str" && [:len $target] >= 7 && [:len $target] <= 15 &&
+        $target ~ "^[0-9.]+$" && $kind = "ping" &&
+        [:typeof $lease] = "str" && [:len $lease] >= 20 && [:len $lease] <= 40) do={
+    :local success false;
+    :local samples [:toarray ""];
+    :local failure "Native RouterOS ping did not return a valid result";
+    :do {
+     :local packets [/ping address=$target count=3 as-value];
+     :foreach packet in=$packets do={
+      :if ([:len $samples] < 3) do={
+       :local sequence [:tostr ($packet->"seq")];
+       :if ($sequence ~ "^[0-2]$") do={
+        :local duration "";
+        :local status "timeout";
+        :local ttl "";
+        :if ([:typeof ($packet->"time")] != "nil") do={
+         :set duration [:pick [:tostr ($packet->"time")] 0 64];
+        };
+        :if ([:typeof ($packet->"ttl")] != "nil") do={
+         :set ttl [:pick [:tostr ($packet->"ttl")] 0 64];
+        };
+        :if ([:len $duration] > 0) do={ :set status "received"; };
+        :if ([:typeof ($packet->"status")] = "str") do={
+         :set status [:pick ($packet->"status") 0 64];
+        };
+        :local sample ({"seq"=$sequence;"status"=$status});
+        :if ([:len $duration] > 0) do={ :set ($sample->"time") $duration; };
+        :if ([:len $ttl] > 0) do={ :set ($sample->"ttl") $ttl; };
+        :set samples ($samples,$sample);
+       };
+      };
+     };
+     :if ([:len $samples] > 0) do={ :set success true; :set failure ""; };
+    } on-error={ :set success false; :set samples [:toarray ""]; :set failure "Native RouterOS ping failed"; };
+    :local report [:serialize to=json value=({"routerId"=$rid;"action"="diagnostic-result";"jobId"=$jobId;"dispatchedAt"=$lease;"ok"=$success;"samples"=$samples;"error"=$failure}) options=json.no-string-conversion];
+    :do {
+     /tool fetch url=$endpoint http-method=post http-data=$report http-header-field=$headers check-certificate=yes output=none;
+    } on-error={ :log warning "ZARAY: native ping result not acknowledged"; };
+   };
+  };
+ };
  :foreach cmd in=($state->"commands") do={
   :local id ($cmd->"id"); :local action ($cmd->"action");
   :local protocol ($cmd->"protocol"); :local username ($cmd->"username");
