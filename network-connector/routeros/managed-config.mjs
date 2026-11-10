@@ -146,3 +146,41 @@ export async function executeManagedConfig(ros,job){
  }catch{}
  return {state:'manual_review',message:'Configuration could not be verified or restored. Inspect the router before another change.',before,after:null};
 }
+
+/**
+ * Reconcile an uncertain previous write WITHOUT issuing any new write.
+ * A lost acknowledgement must never trigger a second blind mutation.
+ */
+export async function reconcileManagedConfig(ros,job){
+ const schema=validateManagedChange(job.kind,job.operation,job.values,job.targetId);
+ if(!/^[0-9a-f-]{36}$/i.test(job.id))throw Error('Invalid operation id.');
+ const rows=safeList(await ros(schema.path,'GET',undefined,projected(schema)));
+ const tag=commentFor(job.id);
+ if(job.operation==='create'){
+  const tagged=rows.find(row=>row.comment===tag);
+  if(tagged&&matchProperties(tagged,job.values))
+   return {state:'success',message:'Created record confirmed by read-only RouterOS reconciliation.',after:project(tagged,schema)};
+  if(!tagged&&!rows.some(row=>row.name===job.values.name))
+   return {state:'failed',message:'No matching record exists after reconnection.',after:null};
+  return {state:'manual_review',message:'Uncertain created record: manual reconciliation required.',after:tagged?project(tagged,schema):null};
+ }
+ const row=rows.find(item=>item['.id']===job.targetId);
+ if(job.operation==='delete'){
+  if(!row&&job.before?.comment?.startsWith('zaray:managed:'))
+   return {state:'success',message:'Deleted record absence confirmed by read-only RouterOS reconciliation.',after:null};
+  if(row&&row.comment===job.before?.comment)
+   return {state:'failed',message:'Previously deleted record still exists.',after:project(row,schema)};
+  return {state:'manual_review',message:'Deletion status remains uncertain.',after:row?project(row,schema):null};
+ }
+ if(!row||typeof row.comment!=='string'||!row.comment.startsWith('zaray:managed:'))
+  return {state:'manual_review',message:'Cannot identify previously managed record.',after:row?project(row,schema):null};
+ const desired=job.operation==='update'?job.values:
+  job.operation==='enable'?{disabled:'false'}:{disabled:'true'};
+ if(matchProperties(row,desired))
+  return {state:'success',message:'Desired configuration confirmed by RouterOS readback.',after:project(row,schema)};
+ if(job.before&&matchProperties(row,Object.fromEntries(
+  Object.entries(job.before).filter(([key])=>schema.fields.includes(key)||key==='disabled')
+ )))
+  return {state:'failed',message:'Prior configuration still present; no modification needed.',after:project(row,schema)};
+ return {state:'manual_review',message:'RouterOS differs from both requested and prior state.',after:project(row,schema)};
+}
