@@ -4,6 +4,7 @@ import {readFile,writeFile,mkdir,chmod} from 'node:fs/promises';
 import {dirname,join} from 'node:path';
 import {readOnlyInventoryProjection} from './routeros/inventory-projections.mjs';
 import {readBoundedResponseText} from './routeros/bounded-response.mjs';
+import {chooseRouterOsSources} from './routeros/inventory-schedule.mjs';
 import {homedir} from 'node:os';
 const env=process.env;
 const CLOUD=env.ZARAY_URL||'https://zaray.vercel.app';
@@ -127,13 +128,15 @@ async function voucherUptimeReadings(){
 }
 
 function normalize(v){return typeof v==='string'?v:'';}
+let inventoryCycle=0;
 async function sync(){
+ const selectedSources=chooseRouterOsSources(sources,inventoryCycle++);
  const resource=await ros('system/resource');
  const board=await ros('system/routerboard').catch(()=>null);
  const kinds=new Set(),items=[],sourceStats=new Map(),failedKinds=new Set();
  let voucherUsage=[];
  try{voucherUsage=await voucherUptimeReadings();}catch(e){console.warn('[ZARAY] Compteurs Hotspot indisponibles',e.message);}
- for(const source of sources){
+ for(const source of selectedSources){
   try{
    const response=await ros(source.path,'GET',undefined,readOnlyInventoryProjection(source.path));
    if(!Array.isArray(response))throw Error('Unexpected RouterOS inventory payload');
