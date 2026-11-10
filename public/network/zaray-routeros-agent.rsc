@@ -101,9 +101,9 @@
  :do {
   :foreach item in=[/ip address find] do={
    :if ($count < 6) do={
-    :local p0 [:tostr [/ip address get $item address]];
-    :local p1 [:tostr [/ip address get $item interface]];
-    :local p2 [:tostr [/ip address get $item disabled]];
+    :local p0 [:pick [:tostr [/ip address get $item address]] 0 120];
+    :local p1 [:pick [:tostr [/ip address get $item interface]] 0 120];
+    :local p2 [:pick [:tostr [/ip address get $item disabled]] 0 120];
     :set obs ($obs,({"kind"="ip-address";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/ip address get $item disabled] = false);"props"=({"address"=$p0;"interface"=$p1;"disabled"=$p2})}));
     :set count ($count + 1);
    };
@@ -117,10 +117,10 @@
  :do {
   :foreach item in=[/interface vlan find] do={
    :if ($count < 6) do={
-    :local p0 [:tostr [/interface vlan get $item name]];
-    :local p1 [:tostr [/interface vlan get $item interface]];
-    :local p2 [:tostr [/interface vlan get $item vlan-id]];
-    :local p3 [:tostr [/interface vlan get $item disabled]];
+    :local p0 [:pick [:tostr [/interface vlan get $item name]] 0 120];
+    :local p1 [:pick [:tostr [/interface vlan get $item interface]] 0 120];
+    :local p2 [:pick [:tostr [/interface vlan get $item vlan-id]] 0 120];
+    :local p3 [:pick [:tostr [/interface vlan get $item disabled]] 0 120];
     :set obs ($obs,({"kind"="vlan";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/interface vlan get $item disabled] = false);"props"=({"name"=$p0;"interface"=$p1;"vlan-id"=$p2;"disabled"=$p3})}));
     :set count ($count + 1);
    };
@@ -134,9 +134,9 @@
  :do {
   :foreach item in=[/interface bridge find] do={
    :if ($count < 6) do={
-    :local p0 [:tostr [/interface bridge get $item name]];
-    :local p1 [:tostr [/interface bridge get $item protocol-mode]];
-    :local p2 [:tostr [/interface bridge get $item disabled]];
+    :local p0 [:pick [:tostr [/interface bridge get $item name]] 0 120];
+    :local p1 [:pick [:tostr [/interface bridge get $item protocol-mode]] 0 120];
+    :local p2 [:pick [:tostr [/interface bridge get $item disabled]] 0 120];
     :set obs ($obs,({"kind"="bridge";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/interface bridge get $item disabled] = false);"props"=({"name"=$p0;"protocol-mode"=$p1;"disabled"=$p2})}));
     :set count ($count + 1);
    };
@@ -150,10 +150,10 @@
  :do {
   :foreach item in=[/ip dhcp-server lease find] do={
    :if ($count < 6) do={
-    :local p0 [:tostr [/ip dhcp-server lease get $item host-name]];
-    :local p1 [:tostr [/ip dhcp-server lease get $item address]];
-    :local p2 [:tostr [/ip dhcp-server lease get $item mac-address]];
-    :local p3 [:tostr [/ip dhcp-server lease get $item status]];
+    :local p0 [:pick [:tostr [/ip dhcp-server lease get $item host-name]] 0 120];
+    :local p1 [:pick [:tostr [/ip dhcp-server lease get $item address]] 0 120];
+    :local p2 [:pick [:tostr [/ip dhcp-server lease get $item mac-address]] 0 120];
+    :local p3 [:pick [:tostr [/ip dhcp-server lease get $item status]] 0 120];
     :set obs ($obs,({"kind"="dhcp";"key"=[:tostr $item];"label"=($p1 . " · " . $p2);"ip"=$p1;"mac"=$p2;"active"=([/ip dhcp-server lease get $item status] = "bound");"props"=({"host-name"=$p0;"address"=$p1;"mac-address"=$p2;"status"=$p3})}));
     :set count ($count + 1);
    };
@@ -167,9 +167,9 @@
  :do {
   :foreach item in=[/ip dhcp-server find] do={
    :if ($count < 6) do={
-    :local p0 [:tostr [/ip dhcp-server get $item name]];
-    :local p1 [:tostr [/ip dhcp-server get $item interface]];
-    :local p2 [:tostr [/ip dhcp-server get $item disabled]];
+    :local p0 [:pick [:tostr [/ip dhcp-server get $item name]] 0 120];
+    :local p1 [:pick [:tostr [/ip dhcp-server get $item interface]] 0 120];
+    :local p2 [:pick [:tostr [/ip dhcp-server get $item disabled]] 0 120];
     :set obs ($obs,({"kind"="dhcp-server";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/ip dhcp-server get $item disabled] = false);"props"=({"name"=$p0;"interface"=$p1;"disabled"=$p2})}));
     :set count ($count + 1);
    };
@@ -183,9 +183,9 @@
  :do {
   :foreach item in=[/ip dhcp-client find] do={
    :if ($count < 6) do={
-    :local p0 [:tostr [/ip dhcp-client get $item interface]];
-    :local p1 [:tostr [/ip dhcp-client get $item status]];
-    :local p2 [:tostr [/ip dhcp-client get $item disabled]];
+    :local p0 [:pick [:tostr [/ip dhcp-client get $item interface]] 0 120];
+    :local p1 [:pick [:tostr [/ip dhcp-client get $item status]] 0 120];
+    :local p2 [:pick [:tostr [/ip dhcp-client get $item disabled]] 0 120];
     :set obs ($obs,({"kind"="dhcp-client";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/ip dhcp-client get $item disabled] = false);"props"=({"interface"=$p0;"status"=$p1;"disabled"=$p2})}));
     :set count ($count + 1);
    };
@@ -199,9 +199,9 @@
  :do {
   :foreach item in=[/ip arp find] do={
    :if ($count < 6) do={
-    :local p0 [:tostr [/ip arp get $item address]];
-    :local p1 [:tostr [/ip arp get $item mac-address]];
-    :local p2 [:tostr [/ip arp get $item interface]];
+    :local p0 [:pick [:tostr [/ip arp get $item address]] 0 120];
+    :local p1 [:pick [:tostr [/ip arp get $item mac-address]] 0 120];
+    :local p2 [:pick [:tostr [/ip arp get $item interface]] 0 120];
     :set obs ($obs,({"kind"="arp";"key"=[:tostr $item];"label"=($p0 . " · " . $p2);"ip"=$p0;"mac"=$p1;"active"=true;"props"=({"address"=$p0;"mac-address"=$p1;"interface"=$p2})}));
     :set count ($count + 1);
    };
@@ -215,9 +215,9 @@
  :do {
   :foreach item in=[/ip route find] do={
    :if ($count < 6) do={
-    :local p0 [:tostr [/ip route get $item dst-address]];
-    :local p1 [:tostr [/ip route get $item gateway]];
-    :local p2 [:tostr [/ip route get $item disabled]];
+    :local p0 [:pick [:tostr [/ip route get $item dst-address]] 0 120];
+    :local p1 [:pick [:tostr [/ip route get $item gateway]] 0 120];
+    :local p2 [:pick [:tostr [/ip route get $item disabled]] 0 120];
     :set obs ($obs,({"kind"="route";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/ip route get $item disabled] = false);"props"=({"dst-address"=$p0;"gateway"=$p1;"disabled"=$p2})}));
     :set count ($count + 1);
    };
@@ -231,9 +231,9 @@
  :do {
   :foreach item in=[/ip firewall filter find] do={
    :if ($count < 6) do={
-    :local p0 [:tostr [/ip firewall filter get $item chain]];
-    :local p1 [:tostr [/ip firewall filter get $item action]];
-    :local p2 [:tostr [/ip firewall filter get $item disabled]];
+    :local p0 [:pick [:tostr [/ip firewall filter get $item chain]] 0 120];
+    :local p1 [:pick [:tostr [/ip firewall filter get $item action]] 0 120];
+    :local p2 [:pick [:tostr [/ip firewall filter get $item disabled]] 0 120];
     :set obs ($obs,({"kind"="firewall-filter";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/ip firewall filter get $item disabled] = false);"props"=({"chain"=$p0;"action"=$p1;"disabled"=$p2})}));
     :set count ($count + 1);
    };
@@ -247,9 +247,9 @@
  :do {
   :foreach item in=[/ip firewall nat find] do={
    :if ($count < 6) do={
-    :local p0 [:tostr [/ip firewall nat get $item chain]];
-    :local p1 [:tostr [/ip firewall nat get $item action]];
-    :local p2 [:tostr [/ip firewall nat get $item disabled]];
+    :local p0 [:pick [:tostr [/ip firewall nat get $item chain]] 0 120];
+    :local p1 [:pick [:tostr [/ip firewall nat get $item action]] 0 120];
+    :local p2 [:pick [:tostr [/ip firewall nat get $item disabled]] 0 120];
     :set obs ($obs,({"kind"="firewall-nat";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/ip firewall nat get $item disabled] = false);"props"=({"chain"=$p0;"action"=$p1;"disabled"=$p2})}));
     :set count ($count + 1);
    };
@@ -263,10 +263,10 @@
  :do {
   :foreach item in=[/queue simple find] do={
    :if ($count < 6) do={
-    :local p0 [:tostr [/queue simple get $item name]];
-    :local p1 [:tostr [/queue simple get $item target]];
-    :local p2 [:tostr [/queue simple get $item max-limit]];
-    :local p3 [:tostr [/queue simple get $item disabled]];
+    :local p0 [:pick [:tostr [/queue simple get $item name]] 0 120];
+    :local p1 [:pick [:tostr [/queue simple get $item target]] 0 120];
+    :local p2 [:pick [:tostr [/queue simple get $item max-limit]] 0 120];
+    :local p3 [:pick [:tostr [/queue simple get $item disabled]] 0 120];
     :set obs ($obs,({"kind"="queue";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/queue simple get $item disabled] = false);"props"=({"name"=$p0;"target"=$p1;"max-limit"=$p2;"disabled"=$p3})}));
     :set count ($count + 1);
    };
@@ -280,9 +280,9 @@
  :do {
   :foreach item in=[/ip dns static find] do={
    :if ($count < 6) do={
-    :local p0 [:tostr [/ip dns static get $item name]];
-    :local p1 [:tostr [/ip dns static get $item address]];
-    :local p2 [:tostr [/ip dns static get $item disabled]];
+    :local p0 [:pick [:tostr [/ip dns static get $item name]] 0 120];
+    :local p1 [:pick [:tostr [/ip dns static get $item address]] 0 120];
+    :local p2 [:pick [:tostr [/ip dns static get $item disabled]] 0 120];
     :set obs ($obs,({"kind"="dns-static";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/ip dns static get $item disabled] = false);"props"=({"name"=$p0;"address"=$p1;"disabled"=$p2})}));
     :set count ($count + 1);
    };
@@ -301,7 +301,8 @@
  # The owner must explicitly enable RouterOS control in ZARAY after pairing.
  # A native script only claims the actions it implements.
  :local supported {"disconnect_hotspot";"disconnect_ppp";"suspend_account";"resume_account";"provision_voucher";"expire_voucher"};
- :local pollBody [:serialize to=json value=({"routerId"=$rid;"action"="poll";"supportedActions"=$supported}) options=json.no-string-conversion];
+ :local supportedDiagnostics {"ping"};
+ :local pollBody [:serialize to=json value=({"routerId"=$rid;"action"="poll";"supportedActions"=$supported;"supportedDiagnostics"=$supportedDiagnostics}) options=json.no-string-conversion];
  :local fetched;
  :do {
   :set fetched [/tool fetch url=$endpoint http-method=post http-data=$pollBody http-header-field=$headers check-certificate=yes as-value output=user];
