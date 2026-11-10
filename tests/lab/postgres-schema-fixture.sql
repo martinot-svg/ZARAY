@@ -22,6 +22,7 @@ CREATE TABLE public.network_routers(
 CREATE TABLE public.network_observations(
  id uuid PRIMARY KEY, company_id uuid NOT NULL,router_id uuid NOT NULL,
  observed_kind text NOT NULL,identity_key text NOT NULL,observed_at timestamptz NOT NULL DEFAULT now(),
+ ip_address inet,mac_address macaddr,client_label text,active boolean NOT NULL DEFAULT false,
  CONSTRAINT network_observations_observed_kind_check
  CHECK (observed_kind IN ('interface','hotspot','pppoe'))
 );
