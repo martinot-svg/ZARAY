@@ -127,6 +127,19 @@ with (out/"qemu.log").open("wb") as log:
        results["interfaces-rest"]=projections
        results["address-rest"]=ipaddresses
        results["ping-rest"]=ping
+       # Exercise the actual ZARAY JavaScript projection and bounded ping engine
+       # against this very same live disposable RouterOS CHR instance.
+       env=os.environ.copy()
+       env["CHR_LAB_PASSWORD"]=passwd
+       env["CHR_EVIDENCE_PATH"]=str(out/"chr-zaray-js-evidence.json")
+       node=subprocess.run(
+        ["node","tools/winbox-lab/chr-zaray-js-client.mjs"],
+        cwd=os.getcwd(),env=env,stdin=subprocess.DEVNULL,
+        capture_output=True,text=True,timeout=20)
+       if node.returncode!=0:
+        raise RuntimeError("ZARAY JS engine could not confirm CHR REST: "+
+          node.stderr.replace(passwd,"[REDACTED]")[-180:])
+       results["zaray-js"]=True
        change("done")
       except Exception as error:
        results["last_rest_error"]=str(error)[:160]
@@ -162,7 +175,8 @@ checks={
  "projected_interface_rest": isinstance(interfaces,list) and any(x.get("name")=="ether1" for x in interfaces),
  "projected_ip_rest": isinstance(addresses,list) and any("10.0.2.15" in x.get("address","") for x in addresses),
  "bounded_ping_rest": isinstance(ping,list) and 1<=len(ping)<=3 and any(
-   x.get("host")=="127.0.0.1" or x.get("seq") is not None for x in ping if isinstance(x,dict))
+   x.get("host")=="127.0.0.1" or x.get("seq") is not None for x in ping if isinstance(x,dict)),
+ "zaray_js_client_confirmed": results.get("zaray-js") is True
 }
 # Strip potentially sensitive RouterOS metadata; retain only approved fields.
 sanitized={
