@@ -35,13 +35,14 @@ export default function NetworkPage(){
  const [adminCoverage,setAdminCoverage]=useState<{reported_count:number;collected_count:number;complete:boolean;observed_at:string}|null>(null);
  const [adminState,setAdminState]=useState('not_collected');
  const [inventoryQuery,setInventoryQuery]=useState('');
+ const [inventorySearchTerm,setInventorySearchTerm]=useState('');
  const [inventorySort,setInventorySort]=useState<InventorySort>('label');
  const [inventoryDescending,setInventoryDescending]=useState(false);
  const [selectedInventoryId,setSelectedInventoryId]=useState('');
  const routerInventory=adminInventory;
  const visibleInventory=useMemo(()=>filterAndSortRouterInventory(
-  routerInventory,inventoryQuery,inventorySort,inventoryDescending,chosen?.last_seen_at||null
- ),[routerInventory,inventoryQuery,inventorySort,inventoryDescending,chosen?.last_seen_at]);
+  routerInventory,'',inventorySort,inventoryDescending,chosen?.last_seen_at||null
+ ),[routerInventory,inventorySort,inventoryDescending,chosen?.last_seen_at]);
  const selectedInventory=routerInventory.find(item=>item.id===selectedInventoryId)||null;
  const routerCommands=commands.filter(c=>c.router_id===routerId);
  const chosenResources=resources.find(r=>r.router_id===routerId);
@@ -107,10 +108,15 @@ export default function NetworkPage(){
  }catch(e){setError(e instanceof Error?e.message:'Erreur de chargement');}})();},[]);
  useEffect(()=>{if(!companyId)return;const handle=setInterval(()=>void refresh(companyId),30000);return()=>clearInterval(handle);},[companyId]);
  useEffect(()=>{
+  const timer=setTimeout(()=>{setInventorySearchTerm(inventoryQuery.trim());setInventoryPage(1);setSelectedInventoryId('');},350);
+  return()=>clearTimeout(timer);
+ },[inventoryQuery]);
+ useEffect(()=>{
   if(!companyId||!routerId)return;
   const ctl=new AbortController();
   setAdminLoading(true);setAdminError('');setAdminInventory([]);setAdminCoverage(null);
   const params=new URLSearchParams({companyId,routerId,kind:adminSource,page:String(inventoryPage)});
+  if(inventorySearchTerm)params.set('search',inventorySearchTerm);
   fetch('/api/network/inventory?'+params.toString(),{cache:'no-store',signal:ctl.signal})
    .then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error||'Inventaire indisponible');return d;})
    .then(d=>{if(ctl.signal.aborted)return;
@@ -119,7 +125,7 @@ export default function NetworkPage(){
    .catch(e=>{if(!ctl.signal.aborted){setAdminError(e instanceof Error?e.message:'Lecture impossible');setAdminState('error');}})
    .finally(()=>{if(!ctl.signal.aborted)setAdminLoading(false);});
   return()=>ctl.abort();
- },[companyId,routerId,adminSource,inventoryPage,inventoryVersion]);
+ },[companyId,routerId,adminSource,inventoryPage,inventoryVersion,inventorySearchTerm]);
  async function disconnectObserved(d:Observation){
   if(!chosen||!canManage||busy||!inventoryObservationIsFresh(d.observed_at,chosen.last_seen_at))return;
   const kind=d.observed_kind==='hotspot'?'Hotspot':'PPPoE';
@@ -302,9 +308,9 @@ export default function NetworkPage(){
       {adminCoverage&&<p className="muted">Collectés : {adminCoverage.collected_count} / {adminCoverage.reported_count} éléments observés sur cette source · dernier relevé : {fmt(adminCoverage.observed_at)} · {adminCoverage.complete?'Collecte déclarée complète':'Collecte tronquée'}</p>}
       {adminError&&<p role="alert" className="muted">{adminError}</p>}
       <div style={{display:'flex',alignItems:'end',flexWrap:'wrap',gap:12,marginTop:12,marginBottom:10}}>
-       <label style={{flex:'1 1 220px'}}>Rechercher sur cette page
-        <input type="search" autoComplete="off" value={inventoryQuery} onChange={e=>{setInventoryQuery(e.target.value);setSelectedInventoryId('');}}
-         placeholder="Nom, IP, MAC, identifiant…" aria-label="Rechercher dans les observations de cette page"/>
+       <label style={{flex:'1 1 220px'}}>Rechercher dans l’inventaire du routeur
+        <input type="search" autoComplete="off" value={inventoryQuery} onChange={e=>{setInventoryQuery(e.target.value.slice(0,64));setInventoryPage(1);setSelectedInventoryId('');}}
+         placeholder="Nom, IP, MAC, identifiant…" aria-label="Rechercher dans toutes les observations de ce routeur"/>
        </label>
        <label>Trier par
         <select value={inventorySort} onChange={e=>setInventorySort(e.target.value as InventorySort)} aria-label="Trier l’inventaire">
@@ -315,7 +321,7 @@ export default function NetworkPage(){
         {inventoryDescending?'Ordre décroissant':'Ordre croissant'}
        </button>
       </div>
-      <p className="muted" role="status">{visibleInventory.length} résultat(s) sur les {routerInventory.length} observations de cette page. La recherche ne parcourt pas les autres pages.</p>
+      <p className="muted" role="status">{visibleInventory.length} résultat(s) affiché(s) sur {adminCount} observation(s) trouvée(s) dans les données mémorisées du routeur · page {inventoryPage}. {inventoryQuery.trim()!==inventorySearchTerm?'Recherche en préparation…':'Recherche paginée sous contrôle des autorisations.'}</p>
       {routerInventory.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Nom</th><th>Adresse IP</th><th>Adresse MAC</th><th>État observé</th><th>Dernière observation</th><th>Propriétés</th><th>Intervention</th></tr></thead><tbody>
        {visibleInventory.map(d=><tr key={d.id}><td>{d.client_label||d.identity_key}</td><td>{d.ip_address||'—'}</td><td>{d.mac_address||'—'}</td><td>{inventoryObservationIsFresh(d.observed_at,chosen.last_seen_at)?(d.active?'Actif':'Inactif'):'Non vérifié récemment'}</td><td>{fmt(d.observed_at)}</td><td><button type="button" aria-pressed={selectedInventoryId===d.id} onClick={()=>setSelectedInventoryId(d.id)}>Propriétés</button></td><td>{(d.observed_kind==='hotspot'||d.observed_kind==='pppoe')&&canManage&&chosen.control_enabled&&d.active&&inventoryObservationIsFresh(d.observed_at,chosen.last_seen_at)?
         <button type="button" disabled={busy} onClick={()=>void disconnectObserved(d)}>Déconnecter</button>:
