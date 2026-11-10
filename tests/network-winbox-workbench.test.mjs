@@ -63,7 +63,7 @@ test('separate inventory windows keep tenant authorization and never forward arb
 test('WinBox global filter searches across server-side pages without losing tenant scope',()=>{
  const page=readFileSync('src/app/gestion-reseau/page.tsx','utf8');
  const route=readFileSync('src/app/api/network/inventory/route.ts','utf8');
- const migration=readFileSync('supabase/migrations/20261109121500_mikrotik_administration_inventory.sql','utf8');
+ const migration=readFileSync('supabase/migrations/20261110152239_mikrotik_administration_inventory.sql','utf8');
  assert.ok(page.includes("params.set('search',inventorySearchTerm)"));
  assert.ok(page.includes("setTimeout(()=>{setInventorySearchTerm(inventoryQuery.trim())"));
  assert.ok(page.includes("adminSource,inventoryPage,inventoryVersion,inventorySearchTerm"));
