@@ -9,7 +9,7 @@ const api=load('src/app/api/network/agent/route.ts');
 const ui=load('src/components/network/network-diagnostics-panel.tsx');
 const page=load('src/app/gestion-reseau/page.tsx');
 const route=load('src/app/api/network/diagnostics/route.ts');
-const migration=load('supabase/migrations/20261109121500_mikrotik_administration_inventory.sql');
+const migration=load('supabase/migrations/20261110152239_mikrotik_administration_inventory.sql');
 
 test('actual connector uses the same bounded and validated RouterOS ping function',async()=>{
  assert.ok(connector.includes("import {boundedRouterOsPing} from './routeros/bounded-ping.mjs'"));
