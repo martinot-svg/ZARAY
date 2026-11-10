@@ -2,6 +2,7 @@
 import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 import {useEffect,useMemo,useState,type FormEvent} from 'react';
 import AppShell from '@/components/app-shell';
+import {NetworkDiagnosticsPanel} from '@/components/network/network-diagnostics-panel';
 import {ZarayIcon} from '@/components/ui/zaray-icon';
 import {filterAndSortRouterInventory,inventoryObservationIsFresh,type InventorySort} from '@/lib/network-inventory-workbench';
 type Router={id:string;site_id:string;name:string;host:string;model:string|null;routeros_version:string|null;status:string;control_enabled:boolean;agent_kind:'unreported'|'node-local'|'routeros-native';last_seen_at:string|null};
@@ -352,6 +353,10 @@ export default function NetworkPage(){
        <p className="muted">Instantané en lecture seule : les propriétés viennent de la collecte RouterOS avec une liste de champs autorisés, jamais d’une récupération brute de configuration. Certains équipements ou agents ne disposent pas de tous ces champs.</p>
        {(selectedInventory.observed_kind==='hotspot'||selectedInventory.observed_kind==='pppoe')&&canManage&&chosen.control_enabled&&selectedInventory.active&&inventoryObservationIsFresh(selectedInventory.observed_at,chosen.last_seen_at)&&
         <button type="button" disabled={busy} onClick={()=>void disconnectObserved(selectedInventory)}>Déconnecter la session sélectionnée</button>}
+       <NetworkDiagnosticsPanel key={selectedInventory.id} companyId={companyId} routerId={routerId}
+        observationId={selectedInventory.id} ipAddress={selectedInventory.ip_address}
+        canManage={canManage} routerOnline={chosen.agent_kind==='node-local'&&chosen.control_enabled&&
+         selectedInventory.active&&inventoryObservationIsFresh(selectedInventory.observed_at,chosen.last_seen_at)}/>
       </section>}
       <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginTop:8}}>
        <span className="muted">{adminCount} lignes mémorisées (incluant l’historique) · page {inventoryPage}</span>
