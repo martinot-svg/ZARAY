@@ -47,40 +47,44 @@ const ping=await boundedRouterOsPing(ros,'127.0.0.1');
 assert.equal(ping.length,3);
 assert.deepEqual(ping.map(s=>s.seq),['0','1','2']);
 assert.ok(ping.every(s=>s.status==='received'&&s.time));
+const assertManaged=(result,stage)=>{
+ if(result.state!=='success')console.error('[CHR-'+stage+'] '+result.message);
+ assert.equal(result.state,'success',stage+': '+result.message);
+};
 const dnsCreated=await executeManagedConfig(ros,{
  id:'11111111-1111-4111-8111-111111111111',kind:'dns-static',
  operation:'create',targetId:null,values:{name:'zaraylab.example',address:'192.0.2.10'}
 });
-assert.equal(dnsCreated.state,'success');
+assertManaged(dnsCreated,'dns create');
 const dnsId=dnsCreated.after['.id'];
 assert.ok(dnsId?.startsWith('*'));
 const dnsUpdated=await executeManagedConfig(ros,{
  id:'22222222-2222-4222-8222-222222222222',kind:'dns-static',
  operation:'update',targetId:dnsId,values:{name:'zaraylab.example',address:'192.0.2.11'}
 });
-assert.equal(dnsUpdated.state,'success');
+assertManaged(dnsUpdated,'dns update');
 assert.equal(dnsUpdated.after.address,'192.0.2.11');
 const dnsDisabled=await executeManagedConfig(ros,{
  id:'33333333-3333-4333-8333-333333333333',kind:'dns-static',
  operation:'disable',targetId:dnsId,values:{}
 });
-assert.equal(dnsDisabled.state,'success');
+assertManaged(dnsDisabled,'dns disable');
 const dnsDeleted=await executeManagedConfig(ros,{
  id:'44444444-4444-4444-8444-444444444444',kind:'dns-static',
  operation:'delete',targetId:dnsId,values:{}
 });
-assert.equal(dnsDeleted.state,'success');
+assertManaged(dnsDeleted,'dns delete');
 const vlanCreated=await executeManagedConfig(ros,{
  id:'55555555-5555-4555-8555-555555555555',kind:'vlan',
  operation:'create',targetId:null,
  values:{name:'zaraylab100',interface:'ether1','vlan-id':'100'}
 });
-assert.equal(vlanCreated.state,'success');
+assertManaged(vlanCreated,'vlan create');
 const vlanDisabled=await executeManagedConfig(ros,{
  id:'66666666-6666-4666-8666-666666666666',kind:'vlan',
  operation:'disable',targetId:vlanCreated.after['.id'],values:{}
 });
-assert.equal(vlanDisabled.state,'success');
+assertManaged(vlanDisabled,'vlan disable');
 const configVerified={
  dnsCreate:dnsCreated.state,
  dnsUpdate:dnsUpdated.state,
