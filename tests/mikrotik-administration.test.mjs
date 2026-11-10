@@ -55,7 +55,7 @@ test('session command is not an insecure direct RouterOS browser call',()=>{
  assert.ok(!operations.includes("MIKROTIK_PASSWORD"));
 });
 test('disconnect acknowledgement verifies RouterOS session absence in both execution modes',()=>{
- assert.ok(node.includes("const after=await ros(path)"));
+ assert.ok(node.includes("const after=await ros(path,'GET',undefined,operationReadProjection(path))"));
  assert.ok(node.includes("Session encore présente après la commande MikroTik"));
  assert.ok(native.includes("Hotspot session still active"));
  assert.ok(native.includes("PPP session still active"));
