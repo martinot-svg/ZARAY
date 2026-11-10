@@ -81,7 +81,7 @@ jobs:
       - run: node --experimental-strip-types --test tests/network-winbox-workbench.test.mjs
       - run: node --experimental-strip-types --test tests/network-winbox-inspector-properties.test.mjs
       - run: node --experimental-strip-types --test tests/network-winbox-extended-inventory.test.mjs
-      - run: python3 -m py_compile tools/winbox-lab/chr-boot.py tools/winbox-lab/chr-console-test.py
+      - run: python3 -m py_compile tools/winbox-lab/chr-boot.py tools/winbox-lab/chr-console-test.py tools/winbox-lab/verify-native-routeros-lab.py tools/winbox-lab/chr-rest-test.py
       - run: node --check network-connector/agent.mjs
       - run: npm run typecheck
       - run: npm run build
