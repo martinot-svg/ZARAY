@@ -147,8 +147,12 @@ async function findAccount(protocol,username){
 async function disconnect(protocol,username,sessionId){
  const path=protocol==='hotspot'?'ip/hotspot/active':'ppp/active';
  const list=await ros(path);
- const sessions=(Array.isArray(list)?list:[]).filter(o=>
+ if(!Array.isArray(list))throw Error('Liste des sessions MikroTik indisponible.');
+ const sessions=list.filter(o=>
   (protocol==='hotspot'?o.user:o.name)===username&&(!sessionId||o['.id']===sessionId));
+ // A targeted disconnect must never acknowledge success for a stale observation.
+ // The account-wide disconnect used for suspension may legitimately find zero sessions.
+ if(sessionId&&sessions.length!==1)throw Error('Session ciblée absente ou ambiguë : actualiser avant une nouvelle commande.');
  for(const row of sessions){await ros(path+'/'+row['.id'],'DELETE');}
  // A successful DELETE request is not a confirmed disconnect. Verify again.
  const after=await ros(path);
