@@ -140,6 +140,16 @@ with (out/"qemu.log").open("wb") as log:
         raise RuntimeError("ZARAY JS engine could not confirm CHR REST: "+
           node.stderr.replace(passwd,"[REDACTED]")[-180:])
        results["zaray-js"]=True
+       # Execute actual shipped native RouterOS script fragments, not mocks.
+       env["CHR_NATIVE_EVIDENCE_PATH"]=str(out/"chr-native-routeros-evidence.json")
+       native=subprocess.run(
+        ["python3","tools/winbox-lab/verify-native-routeros-lab.py"],
+        cwd=os.getcwd(),env=env,stdin=subprocess.DEVNULL,
+        capture_output=True,text=True,timeout=55)
+       if native.returncode!=0:
+        raise RuntimeError("RouterOS native script validation failed: "+
+         native.stderr.replace(passwd,"[REDACTED]")[-420:])
+       results["native-routeros"]=True
        change("done")
       except Exception as error:
        results["last_rest_error"]=str(error)[:160]
@@ -176,7 +186,8 @@ checks={
  "projected_ip_rest": isinstance(addresses,list) and any("10.0.2.15" in x.get("address","") for x in addresses),
  "bounded_ping_rest": isinstance(ping,list) and 1<=len(ping)<=3 and any(
    x.get("host")=="127.0.0.1" or x.get("seq") is not None for x in ping if isinstance(x,dict)),
- "zaray_js_client_confirmed": results.get("zaray-js") is True
+ "zaray_js_client_confirmed": results.get("zaray-js") is True,
+ "native_routeros_source_and_ping_confirmed": results.get("native-routeros") is True
 }
 # Strip potentially sensitive RouterOS metadata; retain only approved fields.
 sanitized={
