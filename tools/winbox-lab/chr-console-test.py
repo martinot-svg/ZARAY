@@ -97,13 +97,13 @@ with (out/"qemu.log").open("wb") as log:
       send(conn,"/system/resource/print without-paging");change("resource")
     elif state=="authenticated" and prompt(recent):
      send(conn,"/system/resource/print without-paging");change("resource")
-    elif state=="resource" and prompt(recent):
+    elif state=="resource" and prompt(recent) and re.search(r"(?i)version:\\s*7\\.24\\.6",recent):
      results["resource"]=recent
      send(conn,"/interface/print without-paging");change("interfaces")
-    elif state=="interfaces" and prompt(recent):
+    elif state=="interfaces" and prompt(recent) and "ether1" in recent:
      results["interfaces"]=recent
      send(conn,"/ping 127.0.0.1 count=3");change("ping")
-    elif state=="ping" and prompt(recent):
+    elif state=="ping" and prompt(recent) and re.search(r"(?i)(sent=3|packet-loss|seq=)",recent):
      results["ping"]=recent
      change("done")
     if time.monotonic()-phase_start>80 and state!="done":
