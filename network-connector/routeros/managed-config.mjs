@@ -120,20 +120,36 @@ export async function executeManagedConfig(ros,job){
  const patchPath=schema.path+'/'+targetId;
  if(operation!=='delete'&&matchProperties(beforeRow,expected))
   return {state:'success',message:'Desired RouterOS state is already applied.',before,after:before};
- let mutationAttempted=false;
+ // RouterOS DELETE returns HTTP 204 with an empty body. If the response
+ // is lost, it may already have removed the entry; retry READS, never DELETE.
+ if(operation==='delete'){
+  let deletionError=false;
+  try{await ros(patchPath,'DELETE');}
+  catch{deletionError=true;}
+  let verified=false,latest=null;
+  for(let attempt=0;attempt<3;attempt++){
+   try{
+    const rows=await list();
+    latest=rows.find(row=>row['.id']===targetId)||null;
+    if(!latest){verified=true;break;}
+   }catch{}
+   if(attempt<2)await new Promise(resolve=>setTimeout(resolve,100*(attempt+1)));
+  }
+  if(verified)return {state:'success',
+   message:deletionError?'DNS absence verified after a lost DELETE response.':'DNS record removed and verified.',
+   before,after:null};
+  return {state:'manual_review',
+   message:deletionError?'DELETE response failed and item disappearance is unverified.':
+    'DELETE accepted but record disappearance is unverified.',
+   before,after:latest?project(latest,schema):null};
+ }
  try{
-  mutationAttempted=true;
-  if(operation==='delete')await ros(patchPath,'DELETE');
-  else await ros(patchPath,'PATCH',expected);
+  await ros(patchPath,'PATCH',expected);
   const final=await list();
   const after=final.find(row=>row['.id']===targetId);
-  if(operation==='delete'&&!after)
-   return {state:'success',message:'DNS record removed and verified.',before,after:null};
-  if(operation!=='delete'&&after&&after.comment===beforeRow.comment&&matchProperties(after,expected))
+  if(after&&after.comment===beforeRow.comment&&matchProperties(after,expected))
    return {state:'success',message:'Configuration changed and verified.',before,after:project(after,schema)};
  }catch{}
- if(mutationAttempted&&operation==='delete')
-  return {state:'manual_review',message:'Deletion outcome uncertain; do not retry automatically.',before,after:null};
  try{
   const restore={};
   for(const field of schema.fields)if(typeof beforeRow[field]==='string')restore[field]=beforeRow[field];
