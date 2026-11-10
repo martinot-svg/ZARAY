@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const file=(path)=>readFileSync(path,'utf8');
-const migration=file('supabase/migrations/20261109121500_mikrotik_administration_inventory.sql');
+const migration=file('supabase/migrations/20261110152239_mikrotik_administration_inventory.sql');
 const backend=file('src/app/api/network/agent/route.ts');
 const inventory=file('src/app/api/network/inventory/route.ts');
 const operations=file('src/app/api/network/operations/route.ts');
