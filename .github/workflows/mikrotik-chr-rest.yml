@@ -1,9 +1,6 @@
 name: RouterOS CHR real REST interoperability lab
+# Real CHR tests consume hosted QEMU minutes; run on demand after CI.
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/mikrotik-chr-rest.yml'
-      - 'tools/winbox-lab/chr-rest-test.py'
   workflow_dispatch:
 permissions:
   contents: read
