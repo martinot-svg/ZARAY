@@ -6,7 +6,7 @@ import {ZarayIcon} from '@/components/ui/zaray-icon';
 import {filterAndSortRouterInventory,inventoryObservationIsFresh,type InventorySort} from '@/lib/network-inventory-workbench';
 type Router={id:string;site_id:string;name:string;host:string;model:string|null;routeros_version:string|null;status:string;control_enabled:boolean;agent_kind:'unreported'|'node-local'|'routeros-native';last_seen_at:string|null};
 type RouterResource={router_id:string;cpu_load_percent:number;total_memory_bytes:number;free_memory_bytes:number;router_uptime:string;observed_at:string};
-type Observation={id:string;router_id:string;observed_kind:string;identity_key:string;ip_address:string|null;mac_address:string|null;client_label:string|null;active:boolean;observed_at:string};
+type Observation={id:string;router_id:string;observed_kind:string;identity_key:string;ip_address:string|null;mac_address:string|null;client_label:string|null;active:boolean;observed_at:string;safe_properties?:Record<string,string>|null};
 type Account={id:string;router_id:string;order_id:string|null;username:string;protocol:string;expires_at:string|null;grace_until:string|null;extension_until:string|null;administrative_hold:boolean;desired_state:string;applied_state:string};
 type Order={id:string;site_id:string;public_reference:string;customer_name:string;status:string;validity_days:number};
 type Command={id:string;router_id:string;action:string;username:string;status:string;outcome:string|null;created_at:string};
@@ -338,10 +338,14 @@ export default function NetworkPage(){
         <div><dt className="muted">Identifiant observé</dt><dd style={{overflowWrap:'anywhere'}}>{selectedInventory.identity_key}</dd></div>
         <div><dt className="muted">Adresse IP</dt><dd>{selectedInventory.ip_address||'—'}</dd></div>
         <div><dt className="muted">Adresse MAC</dt><dd>{selectedInventory.mac_address||'—'}</dd></div>
+        {Object.entries(selectedInventory.safe_properties||{}).map(([key,value])=><div key={key}>
+         <dt className="muted">{key.replaceAll('-',' ')}</dt>
+         <dd style={{overflowWrap:'anywhere'}}>{value}</dd>
+        </div>)}
         <div><dt className="muted">Dernière observation</dt><dd>{fmt(selectedInventory.observed_at)}</dd></div>
         <div><dt className="muted">État vérifiable</dt><dd>{inventoryObservationIsFresh(selectedInventory.observed_at,chosen.last_seen_at)?(selectedInventory.active?'Actif':'Inactif'):'Non vérifié récemment'}</dd></div>
        </dl>
-       <p className="muted">Instantané en lecture seule : seules les propriétés collectées et autorisées apparaissent ici. Les champs sensibles du routeur ne sont jamais chargés.</p>
+       <p className="muted">Instantané en lecture seule : les propriétés viennent de la collecte RouterOS avec une liste de champs autorisés, jamais d’une récupération brute de configuration. Certains équipements ou agents ne disposent pas de tous ces champs.</p>
        {(selectedInventory.observed_kind==='hotspot'||selectedInventory.observed_kind==='pppoe')&&canManage&&chosen.control_enabled&&selectedInventory.active&&inventoryObservationIsFresh(selectedInventory.observed_at,chosen.last_seen_at)&&
         <button type="button" disabled={busy} onClick={()=>void disconnectObserved(selectedInventory)}>Déconnecter la session sélectionnée</button>}
       </section>}
