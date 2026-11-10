@@ -70,6 +70,16 @@ Implementation:
 | Terminal, file transfer and unrestricted config | WinBox component names observed | Deliberately not enabled in multi-tenant web app |
 | Backup/restore, diagnostics and VPN | Planned gap | Not implemented by this tranche |
 
+## WinBox session-size guard → ZARAY connector fix
+
+The WinBox executable contains diagnostic strings `WinBoxImpl,ERR: too big msg size` and `WinBoxImpl,ERR: too big enc msg size`. This confirms that some WinBox message paths enforce size boundaries; it does **not** disclose their numeric thresholds or private framing protocol.
+
+ZARAY previously capped the *saved* inventory at 25 records per source / 500 per sync but still used an unbounded `Response.text()` on RouterOS replies. This left unnecessary memory and processing exposure when an API returned a huge list or a malicious/unexpected response.
+
+The local Node connector now imports `network-connector/routeros/bounded-response.mjs`, which limits **each HTTP response to 1 MiB before JSON decoding** (checking declared size and streamed bytes). Oversized, interrupted or malformed responses are errors, not empty inventories. This applies to outbound HTTPS communications and does not require a VPS, port exposure or Vercel persistent process. Tests in `tests/network-bounded-response.test.mjs` cover UTF-8 chunk boundaries, excessive declared size, excessive streamed size, aborts and invalid limits.
+
+This is an **independent defensive implementation** of the observed message-bounding principle, not a copy of WinBox's internal wire format.
+
 ## Security and production readiness
 
 - Preserve server-side tenant authorization and read-only views; **do not** connect a browser directly to RouterOS management services.
