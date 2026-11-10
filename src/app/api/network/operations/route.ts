@@ -1,3 +1,4 @@
+import {networkWritesBlockedInPreview} from '@/lib/network-preview-guard';
 import {NextRequest,NextResponse} from 'next/server';
 import {createClient} from '@/lib/supabase/server';
 import {createServiceClient} from '@/lib/supabase/service';
@@ -18,7 +19,7 @@ export async function POST(req:NextRequest){
     confirmation!=='DECONNECTER')return error('Confirmation et motif requis.',400);
  // A Vercel Preview may share credentials with production. Never queue a real
  // network command from Preview unless explicitly enabled for an isolated test lab.
- if(process.env.VERCEL_ENV==='preview'&&process.env.ZARAY_PREVIEW_NETWORK_MUTATIONS!=='enabled')
+ if(networkWritesBlockedInPreview())
   return error('Prévisualisation en lecture seule : opérations réelles désactivées.',403);
  const client=await createClient();
  const auth=await authorizeTenant(client,companyId);
