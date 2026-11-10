@@ -3,6 +3,7 @@
 import {readFile,writeFile,mkdir,chmod} from 'node:fs/promises';
 import {dirname,join} from 'node:path';
 import {readOnlyInventoryProjection} from './routeros/inventory-projections.mjs';
+import {readBoundedResponseText} from './routeros/bounded-response.mjs';
 import {homedir} from 'node:os';
 const env=process.env;
 const CLOUD=env.ZARAY_URL||'https://zaray.vercel.app';
@@ -18,7 +19,7 @@ const cloud=ensureHttps(CLOUD),router=ensureHttps(ROUTER);
 const basic='Basic '+Buffer.from(env.MIKROTIK_USER+':'+env.MIKROTIK_PASSWORD).toString('base64');
 async function request(url,opts={}){
  const r=await fetch(url,{redirect:'error',signal:AbortSignal.timeout(12000),...opts});
- const text=await r.text();
+ const text=await readBoundedResponseText(r);
  let data;try{data=text?JSON.parse(text):null;}catch{data=text;}
  if(!r.ok)throw Error('HTTP '+r.status+' '+String(data?.message||'').slice(0,130));
  return data;
