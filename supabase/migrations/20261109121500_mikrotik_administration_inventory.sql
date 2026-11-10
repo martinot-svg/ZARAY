@@ -44,3 +44,40 @@ CREATE UNIQUE INDEX IF NOT EXISTS network_session_pending_disconnect
  ON public.network_commands(router_id,action,session_id)
  WHERE action IN ('disconnect_hotspot','disconnect_ppp')
  AND session_id IS NOT NULL AND status IN ('queued','dispatched');
+
+-- WinBox-style cross-page inventory search. SECURITY INVOKER preserves
+-- network_observations tenant RLS; no SERVICE ROLE / SECURITY DEFINER bypass.
+-- Positional search treats user-supplied percent, underscore and punctuation
+-- literally, rather than constructing PostgREST OR filter expressions.
+CREATE OR REPLACE FUNCTION public.network_inventory_search(
+ p_company_id uuid, p_router_id uuid, p_kind text, p_term text, p_page integer
+) RETURNS TABLE(
+ id uuid, router_id uuid, observed_kind text, identity_key text,
+ ip_address inet, mac_address macaddr, client_label text,
+ active boolean, observed_at timestamptz, total_count bigint
+)
+LANGUAGE sql STABLE SECURITY INVOKER SET search_path = ''
+AS $inventory_search$
+ WITH matching AS (
+  SELECT n.id,n.router_id,n.observed_kind,n.identity_key,n.ip_address,
+   n.mac_address,n.client_label,n.active,n.observed_at
+  FROM public.network_observations AS n
+  WHERE n.company_id=p_company_id AND n.router_id=p_router_id AND n.observed_kind=p_kind
+   AND p_term IS NOT NULL AND length(btrim(p_term)) BETWEEN 1 AND 64
+   AND (
+    position(lower(btrim(p_term)) in lower(coalesce(n.client_label,'')))>0
+    OR position(lower(btrim(p_term)) in lower(n.identity_key))>0
+    OR position(lower(btrim(p_term)) in lower(coalesce(host(n.ip_address),'')))>0
+    OR position(lower(btrim(p_term)) in lower(coalesce(n.mac_address::text,'')))>0
+   )
+ )
+ SELECT m.id,m.router_id,m.observed_kind,m.identity_key,m.ip_address,
+  m.mac_address,m.client_label,m.active,m.observed_at,count(*) OVER() AS total_count
+ FROM matching AS m
+ ORDER BY m.observed_at DESC,m.id DESC
+ LIMIT 50 OFFSET (greatest(1,least(coalesce(p_page,1),10000))-1)*50;
+$inventory_search$;
+REVOKE ALL ON FUNCTION public.network_inventory_search(uuid,uuid,text,text,integer)
+ FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.network_inventory_search(uuid,uuid,text,text,integer)
+ TO authenticated;
