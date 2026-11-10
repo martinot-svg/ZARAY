@@ -55,6 +55,18 @@ test('ping can be requested only for company-owned, recent, observed device',()=
  assert.ok(!route.includes("api('ping'"));
 });
 
+test('agent actually accepts normal RouterOS ping samples and rejects control characters',()=>{
+ const sourceLine=api.split('\n').find(line=>line.includes('v.length>64||'));
+ assert.ok(sourceLine,'Actual server sanitizer must be present');
+ const literal=sourceLine.match(/\|\|(\/\[[^\]]+\]\/)\.test\(v\)/)?.[1];
+ assert.ok(literal,'Extract a testable regex from the production server validation');
+ const invalid=new Function('return '+literal)();
+ for(const sample of ['0','1','2','u','64','3ms','timeout'])
+  assert.equal(invalid.test(sample),false,'Valid value rejected: '+sample);
+ for(const sample of [String.fromCharCode(0),String.fromCharCode(1),String.fromCharCode(31),String.fromCharCode(127)])
+  assert.equal(invalid.test(sample),true,'Control character accepted');
+});
+
 test('browser cannot modify queued diagnostic records directly',()=>{
  for(const part of [
   'CREATE TABLE IF NOT EXISTS public.network_diagnostic_jobs',
