@@ -46,3 +46,16 @@ test('UI provides list -> filter -> properties and retains guarded session opera
  ])assert.ok(page.includes(part),part);
  assert.ok(!page.includes('new WebSocket('),'browser must not open RouterOS sockets');
 });
+
+test('separate inventory windows keep tenant authorization and never forward arbitrary URL parameters',()=>{
+ const page=readFileSync('src/app/gestion-reseau/page.tsx','utf8');
+ assert.ok(page.includes("const url=new URL('/gestion-reseau',window.location.origin)"));
+ assert.ok(page.includes("url.searchParams.set('companyId',companyId)"));
+ assert.ok(page.includes("url.searchParams.set('routerId',routerId)"));
+ assert.ok(page.includes("url.searchParams.set('kind',adminSource)"));
+ assert.ok(page.includes("window.open(url.toString(),'_blank','noopener,noreferrer')"));
+ assert.ok(page.includes("setRouterId(query.get('routerId')||'')"));
+ assert.ok(page.includes("setAdminSource(requestedKind)"));
+ assert.ok(page.includes("setRouterId(v=>(n.routers||[]).some((x:Router)=>x.id===v)?v:(n.routers?.[0]?.id||''))"));
+ assert.ok(!page.includes('window.open(window.location.href'));
+});
