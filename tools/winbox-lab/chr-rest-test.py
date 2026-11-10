@@ -152,8 +152,12 @@ with (out/"qemu.log").open("wb") as log:
        results["native-routeros"]=True
        change("done")
       except Exception as error:
-       results["last_rest_error"]=str(error)[:160]
-       phase_start=time.monotonic()
+       message=str(error).replace(passwd,"[REDACTED LAB CREDENTIAL]")
+       results["last_rest_error"]=message[-900:]
+       if "RouterOS native script validation failed:" in message:
+        change("done")  # Deterministic script fault: report once, don't retry 3 minutes.
+       else:
+        phase_start=time.monotonic()
 
     elif state=="resource" and prompt(recent) and re.search(r"(?i)version:\s*7\.24\.6",recent):
      results["resource"]=recent
