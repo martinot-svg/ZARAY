@@ -20,7 +20,7 @@ function prepare(initial,{unavailable=false,deleteFails=false}={}){
   if(unavailable)return null;
   return active.map(item=>({...item}));
  };
- const sandbox={ros,Error};
+ const sandbox={ros,Error,operationReadProjection:()=>['.id','name','user']};
  vm.runInNewContext(functionSource+'\nthis.disconnect=disconnect;',sandbox,{timeout:1000});
  return {disconnect:sandbox.disconnect,deletions,remaining:()=>active};
 }
