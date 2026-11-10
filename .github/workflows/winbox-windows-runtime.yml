@@ -1,9 +1,7 @@
 name: WinBox 4.5 Windows runtime evidence (offline only)
+# The full WinBox/CHR runtime tests consume hosted-runner minutes.
+# They are intentionally opt-in; the suite has already been executed via PR CI.
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/winbox-windows-runtime.yml"
-      - "tools/winbox-lab/**"
   workflow_dispatch:
 permissions:
   contents: read
