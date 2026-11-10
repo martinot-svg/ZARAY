@@ -18,7 +18,7 @@ export async function POST(request:NextRequest){
  const token=/^Bearer ([0-9a-f]{64})$/i.exec(auth)?.[1]||'';
  const b=await request.json().catch(()=>null) as Record<string,unknown>|null;
  const routerId=clean(b?.routerId,36),action=b?.action;
- if(!token||!uuid.test(routerId)||!['claim','sync','poll','result','refresh-complete'].includes(String(action)))return json({error:'Requête non autorisée.'},401);
+ if(!token||!uuid.test(routerId)||!['claim','sync','poll','result','refresh-complete','diagnostic-result'].includes(String(action)))return json({error:'Requête non autorisée.'},401);
  const service=createServiceClient();
  if(!service)return json({error:'Service indisponible.'},503);
  if(action==='claim'){
@@ -34,8 +34,36 @@ export async function POST(request:NextRequest){
   .select('router_id,revoked_at').eq('router_id',routerId).eq('secret_hash',digest(token)).is('revoked_at',null).maybeSingle();
  if(credentialError||!credential)return json({error:'Connecteur révoqué ou non associé.'},403);
  const {data:router,error:routerError}=await service.from('network_routers')
-  .select('id,company_id,site_id,control_enabled').eq('id',routerId).maybeSingle();
+  .select('id,company_id,site_id,control_enabled,agent_kind').eq('id',routerId).maybeSingle();
  if(routerError||!router)return json({error:'Routeur introuvable.'},404);
+ if(action==='diagnostic-result'){
+  const id=clean(b?.jobId,36),ok=b?.ok===true;
+  if(!uuid.test(id)||typeof b?.ok!=='boolean')return json({error:'Résultat diagnostic invalide.'},400);
+  if(!Array.isArray(b?.samples)||b.samples.length>3)
+   return json({error:'Taille du diagnostic invalide.'},400);
+  const samples=b.samples.map(sample=>{
+   if(!sample||typeof sample!=='object'||Array.isArray(sample))return null;
+   const r=sample as Record<string,unknown>,out:Record<string,string>={};
+   for(const key of ['seq','time','status','ttl']){
+    const v=r[key];
+    if(v!==undefined){
+     if(typeof v!=='string'||v.length>64||/[\\u0000-\\u001f\\u007f]/.test(v))return null;
+     out[key]=v;
+    }
+   }
+   return out;
+  });
+  if(samples.includes(null)||JSON.stringify(samples).length>1900)
+   return json({error:'Échantillons du diagnostic invalides.'},400);
+  const {data:recorded,error:resultError}=await service.from('network_diagnostic_jobs')
+   .update({status:ok?'success':'failed',reply:ok?samples:[],
+    error_message:ok?null:clean(b?.error,180)||'Diagnostic RouterOS impossible.',
+    completed_at:new Date().toISOString()})
+   .eq('id',id).eq('router_id',routerId).eq('company_id',router.company_id)
+   .eq('status','dispatched').select('id').maybeSingle();
+  if(resultError)return json({error:'Résultat du ping non enregistré.'},503);
+  return json({recorded:!!recorded});
+ }
  if(action==='refresh-complete'){
   const kind=clean(b?.kind,40),requestedAt=b?.requestedAt;
   if(!kinds.includes(kind)||typeof requestedAt!=='string'||requestedAt.length>40||
@@ -308,7 +336,22 @@ export async function POST(request:NextRequest){
    const {data:claimed}=await claim.select('id').maybeSingle();
    if(claimed)commands.push({id:cmd.id,action:cmd.action,protocol:cmd.protocol,username:cmd.username,sessionId:cmd.session_id,macAddress:cmd.mac_address,...voucherPayload,...accountPayload});
   }
-  return json({commands,controlEnabled:true,refresh});
+  let diagnostics:Record<string,unknown>[]=[];
+  if(router.agent_kind==='node-local'){
+   const {data:pending,error:diagnosticError}=await service.from('network_diagnostic_jobs')
+    .select('id,target,kind').eq('router_id',routerId).eq('company_id',router.company_id)
+    .eq('status','queued').order('requested_at',{ascending:true}).limit(1);
+   if(diagnosticError)return json({error:'Diagnostics indisponibles.'},503);
+   for(const job of pending||[]){
+    if(job.kind!=='ping')continue;
+    const {data:claimed}=await service.from('network_diagnostic_jobs')
+     .update({status:'dispatched',dispatched_at:new Date().toISOString()})
+     .eq('id',job.id).eq('router_id',routerId).eq('company_id',router.company_id)
+     .eq('status','queued').select('id').maybeSingle();
+    if(claimed)diagnostics.push({id:job.id,kind:'ping',target:job.target});
+   }
+  }
+  return json({commands,controlEnabled:true,refresh,diagnostics});
  }
  // Results are accepted only for commands that were actually dispatched to this connector.
  const commandId=clean(b?.commandId,36),ok=b?.ok===true;
