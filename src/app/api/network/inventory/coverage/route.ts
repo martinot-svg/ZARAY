@@ -8,7 +8,7 @@ const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const kinds=[
  'interface','hotspot','pppoe','dhcp','wifi','neighbor','radius',
  'hotspot-user','hotspot-profile','ppp-secret','ppp-profile','ip-address',
- 'ip-pool','dhcp-server','dhcp-client','vlan','arp','queue','firewall-filter','firewall-nat','route'
+ 'ip-pool','dhcp-server','dhcp-client','vlan','arp','queue','firewall-filter','firewall-nat','route','bridge','bridge-port','dhcp-network','dns-static','firewall-address-list','queue-tree','wireguard-interface','wireguard-peer','routing-rule','ipv6-address'
 ] as const;
 const nativeKinds=new Set<string>(['interface','hotspot','pppoe']);
 const fail=(error:string,status:number)=>NextResponse.json({error},{status,headers});
