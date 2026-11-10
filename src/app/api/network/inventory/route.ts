@@ -1,4 +1,5 @@
 import {NextRequest,NextResponse} from 'next/server';
+import {inventorySourceIsCurrent} from '@/lib/network-inventory-freshness';
 import {createClient} from '@/lib/supabase/server';
 import {authorizeTenant} from '@/lib/tenant-context';
 export const dynamic='force-dynamic';
@@ -33,7 +34,7 @@ export async function GET(req:NextRequest){
  // During a preview, the additive migration may not yet have been applied.
  const inventorySchemaReady=!sourceError;
  const latest=source?.observed_at||null;
- const recentlyReported=!!latest&&Number.isFinite(Date.parse(latest))&&Date.now()-Date.parse(latest)<180000&&Date.parse(latest)<=Date.now()+30000;
+ const recentlyReported=inventorySourceIsCurrent(kind,latest);
  const nativeSupported=['interface','hotspot','pppoe'].includes(kind);
  return NextResponse.json({
   routerId,kind,items:rows??[],page,pageSize:size,total:count??0,
