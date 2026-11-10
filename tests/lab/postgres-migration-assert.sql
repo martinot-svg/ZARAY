@@ -64,6 +64,66 @@ END $$;
 RESET ROLE;
 RESET request.jwt.claim.sub;
 
+-- Search must operate on typed INET/MACADDR fields without bypassing RLS.
+UPDATE public.network_observations
+ SET ip_address='192.0.2.10',mac_address='aa:bb:cc:dd:ee:ff',
+     client_label='Test Router A'
+ WHERE id='00000000-0000-4000-8000-000000000001';
+DO $
+BEGIN
+ IF NOT has_function_privilege('authenticated',
+  'public.network_inventory_search(uuid,uuid,text,text,integer)','EXECUTE')
+ THEN RAISE EXCEPTION 'Inventory search is not granted to authenticated'; END IF;
+ IF has_function_privilege('anon',
+  'public.network_inventory_search(uuid,uuid,text,text,integer)','EXECUTE')
+ THEN RAISE EXCEPTION 'Anonymous role can execute inventory search'; END IF;
+END $;
+SET ROLE authenticated;
+SET request.jwt.claim.sub='11111111-1111-4111-8111-111111111111';
+DO $
+DECLARE n integer; t bigint;
+BEGIN
+ SELECT count(*) INTO n FROM public.network_inventory_search(
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  'aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa','interface','192.0.2',1);
+ IF n<>1 THEN RAISE EXCEPTION 'INET substring search returned %, expected 1',n; END IF;
+ SELECT count(*) INTO n FROM public.network_inventory_search(
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  'aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa','interface','aa:bb:cc',1);
+ IF n<>1 THEN RAISE EXCEPTION 'MAC substring search returned %, expected 1',n; END IF;
+ SELECT count(*) INTO n FROM public.network_inventory_search(
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  'aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa','interface','%',1);
+ IF n<>0 THEN RAISE EXCEPTION 'Percent wildcard should be treated literally'; END IF;
+ SELECT total_count INTO t FROM public.network_inventory_search(
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  'aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa','interface','ether1',1) LIMIT 1;
+ IF t<>11 THEN RAISE EXCEPTION 'Wrong cross-page count %, expected 11',t; END IF;
+ SELECT count(*) INTO n FROM public.network_inventory_search(
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  'aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa','interface','ether',2);
+ IF n<>3 THEN RAISE EXCEPTION 'Second page should contain 3, found %',n; END IF;
+ SELECT count(*) INTO n FROM public.network_inventory_search(
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  'bbbbbbbb-2000-4000-8000-bbbbbbbbbbbb','interface','ether',1);
+ IF n<>0 THEN RAISE EXCEPTION 'Cross-tenant search leaked tenant B'; END IF;
+END $;
+SET request.jwt.claim.sub='22222222-2222-4222-8222-222222222222';
+DO $
+DECLARE n integer;
+BEGIN
+ SELECT count(*) INTO n FROM public.network_inventory_search(
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  'bbbbbbbb-2000-4000-8000-bbbbbbbbbbbb','interface','ether',1);
+ IF n<>1 THEN RAISE EXCEPTION 'Tenant B should see its own record, found %',n; END IF;
+ SELECT count(*) INTO n FROM public.network_inventory_search(
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  'aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa','interface','ether',1);
+ IF n<>0 THEN RAISE EXCEPTION 'Cross-tenant search leaked tenant A'; END IF;
+END $;
+RESET ROLE;
+RESET request.jwt.claim.sub;
+
 -- Two simultaneous pending disconnect commands for same session are forbidden.
 INSERT INTO public.network_commands(id,router_id,action,session_id,status)
 VALUES('c0000000-0000-4000-8000-000000000001','aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa',
