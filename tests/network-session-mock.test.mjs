@@ -9,7 +9,7 @@ assert.ok(begin>=0&&end>begin,'actual connector disconnect() function must remai
 const functionSource=source.slice(begin,end);
 // The exact production function is exercised with an injectable fake RouterOS REST
 // adapter. This does not claim a physical MikroTik has been exercised.
-const makeDisconnect=(ros)=>new Function('ros','return ('+functionSource+')')(ros);
+const makeDisconnect=(ros)=>new Function('ros','operationReadProjection','return ('+functionSource+')')(ros,()=>['.id','name','user']);
 function simulatedRouter(path,records,{discardDelete=false,failDelete=false}={}){
  const state=[...records],requests=[];
  const ros=async(url,method='GET')=>{
