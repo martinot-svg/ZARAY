@@ -1,0 +1,62 @@
+name: WinBox 4.5 Windows runtime evidence (offline only)
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/winbox-windows-runtime.yml"
+      - "tools/winbox-lab/**"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-runtime:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download verified original WinBox 4.5 Windows package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zip = Join-Path $env:RUNNER_TEMP 'WinBox_Windows.zip'
+          $uri = 'https://download.mikrotik.com/routeros/winbox/4.5/WinBox_Windows.zip'
+          Invoke-WebRequest -Uri $uri -OutFile $zip -TimeoutSec 90
+          $expected = 'c98c23f4d7e9e3c68264a79967e59ede8defc86e4c7af3c7eae05d071ea867fd'
+          $actual = (Get-FileHash -Algorithm SHA256 $zip).Hash.ToLowerInvariant()
+          if($actual -ne $expected) { throw "Official WinBox ZIP hash mismatch" }
+          $dir = Join-Path $env:RUNNER_TEMP 'WinBoxInput'
+          Expand-Archive -LiteralPath $zip -DestinationPath $dir
+          $exe = Get-ChildItem -LiteralPath $dir -Filter 'WinBox.exe' -Recurse | Select-Object -First 1
+          if(-not $exe) { throw 'WinBox.exe absent from official archive' }
+          $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $exe.FullName).Hash.ToLowerInvariant()
+          if($hash -ne '4ec6afb7b308633fd2d9e2354fbb164d727f3552216fd61a19518dbc1aaf6861') {
+            throw "Official Windows executable does not match user-supplied WinBox(3).exe"
+          }
+          "WINBOX_EXE=$($exe.FullName)" >> $env:GITHUB_ENV
+      - name: Deny outbound network for WinBox before execution
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-NetFirewallRule -DisplayName 'WinBox-offline-dynamic-ci' -Direction Outbound -Program $env:WINBOX_EXE -Action Block -Profile Any | Out-Null
+          $rules = Get-NetFirewallRule -DisplayName 'WinBox-offline-dynamic-ci' -ErrorAction Stop
+          if(-not $rules -or $rules.Action -ne 'Block' -or $rules.Enabled -ne 'True') { throw 'WinBox firewall isolation failed' }
+      - name: Execute Windows WinBox offline and capture dynamic process evidence
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $output = Join-Path $env:RUNNER_TEMP 'WinBoxEvidence'
+          & .\tools\winbox-lab\WinBox-offline.ps1 -Executable $env:WINBOX_EXE -OutputDir $output -Seconds 25
+          $snapshots = Join-Path $output 'process-snapshots.jsonl'
+          if(-not (Test-Path -LiteralPath $snapshots)) { throw 'No Windows process evidence collected' }
+          $samples = @(Get-Content -LiteralPath $snapshots | ForEach-Object { $_ | ConvertFrom-Json })
+          if($samples.Count -lt 1) { throw 'WinBox was not observed by Windows' }
+          Write-Host "Collected $($samples.Count) native Windows process samples"
+          $samples | Select-Object -First 4 | ConvertTo-Json -Depth 3
+      - name: Preserve sanitized process and runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: winbox-45-windows-offline-evidence
+          path: ${{ runner.temp }}/WinBoxEvidence/
+          if-no-files-found: warn
+          retention-days: 7
