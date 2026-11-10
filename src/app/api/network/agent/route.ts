@@ -1,4 +1,4 @@
-import {dispatchableNetworkCommand} from '@/lib/network-command-lease';
+import {dispatchableNetworkCommand,dispatchableDiagnosticJob} from '@/lib/network-command-lease';
 import {networkWritesBlockedInPreview} from '@/lib/network-preview-guard';
 import {sanitizeInventoryProperties} from '@/lib/network-inventory-properties';
 import {createHash,randomBytes,timingSafeEqual} from 'node:crypto';
@@ -342,16 +342,13 @@ export async function POST(request:NextRequest){
   if(router.agent_kind==='node-local'){
    const now=Date.now(),cutoff=new Date(now-10*60000).toISOString();
    const {data:pending,error:diagnosticError}=await service.from('network_diagnostic_jobs')
-    .select('id,target,kind,status,dispatched_at').eq('router_id',routerId)
+    .select('id,target,kind,status,dispatched_at,requested_at').eq('router_id',routerId)
     .eq('company_id',router.company_id).in('status',['queued','dispatched'])
     .gte('requested_at',cutoff).order('requested_at',{ascending:true}).limit(3);
    if(diagnosticError)return json({error:'Diagnostics indisponibles.'},503);
    for(const job of pending||[]){
     if(job.kind!=='ping')continue;
-    if(job.status==='dispatched'&&(
-      !job.dispatched_at||!Number.isFinite(Date.parse(job.dispatched_at))||
-      Date.parse(job.dispatched_at)>now-90000
-    ))continue;
+    if(!dispatchableDiagnosticJob(job,now))continue;
     let claim=service.from('network_diagnostic_jobs')
      .update({status:'dispatched',dispatched_at:new Date().toISOString()})
      .eq('id',job.id).eq('router_id',routerId).eq('company_id',router.company_id)
