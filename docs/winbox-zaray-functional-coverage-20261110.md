@@ -126,3 +126,36 @@ Références officielles :
 - https://manual.mikrotik.com/docs/developer-guides/rest-api/
 - https://manual.mikrotik.com/docs/wireless/wifi/
 - https://manual.mikrotik.com/docs/wireless/wifi/capsman/
+
+
+## Tranche d'intégration du 10 novembre — recherche globale et propriétés réelles
+
+La cartographie fonctionnelle a été confrontée aux **65 noms de composants QML compilés** observés dans `WinBox(3).exe`. Il s'agit de composants génériques d'interface, **pas** de 65 modules réseau et **pas** de fichiers sources C++/QML récupérés. Le binaire importe 35 bibliothèques Windows ; la présence d'un import ne prouve pas le protocole employé pour chaque écran.
+
+### Comportements WinBox reproduits indépendamment
+
+| Référence WinBox observée | Comportement ZARAY livré dans la PR | Fichiers principaux | Limite |
+|---|---|---|---|
+| `WFindBar`, `WTableFilter`, `WTable` | Recherche dans **toutes les observations déjà collectées d'un routeur**, pagination 50 éléments, correspondance insensible à la casse pour identifiants, libellés, IP et MAC | `src/app/api/network/inventory/route.ts`, `src/app/gestion-reseau/page.tsx`, `network_inventory_search` SQL | Pas une requête en direct vers RouterOS, ne renvoie pas les éléments non collectés |
+| `panels_ObjectViewPanel` et `panels_QueryPanel` | Panneau de propriétés domaine par domaine avec champs réellement relevés et strictement limités | `network-connector/routeros/inspector-properties.mjs`, `src/lib/network-inventory-properties.ts`, `src/app/gestion-reseau/page.tsx` | La présence et les valeurs dépendent du modèle, de l'API, du paquet et des droits RouterOS |
+| `MdiFactory` et `panels_MdiWindow` | Ouverture isolée d'un inventaire par routeur/source dans un onglet navigateur avec lien explicitement construit | `src/app/gestion-reseau/page.tsx` | Ce n'est pas la gestion native MDI de WinBox |
+| Messages `WinBoxImpl,ERR: too big msg size` | Lecture HTTP à taille limitée, vérification des réponses, préservation de l'état en cas de source partielle | `network-connector/routeros/bounded-response.mjs`, `network-connector/agent.mjs` | Protocole HTTP public et implémentation indépendante, pas le format binaire privé WinBox |
+| `WboxSession` / `WinBoxConnection` | File d'opérations par routeur, autorisations par entreprise, suivi des commandes et acquittements connecteur | API réseau et agent préexistants de la PR #130 | Pas de parité avec le protocole privé WinBox |
+
+### Contrat de sécurité des propriétés
+
+Le connecteur ne transmet pas d'objet RouterOS brut. La liste des propriétés par chemin est définie dans `inventory-projections.mjs` et une sélection plus étroite dans `inspector-properties.mjs`. Le serveur refait une validation **par catégorie** dans `network-inventory-properties.ts` avant de stocker `network_observations.safe_properties`. Les propriétés sont un objet JSONB limité à 2048 octets. Les champs tels que `password`, `secret`, `private-key`, `comment`, scripts et exports bruts ne figurent pas dans le chemin de stockage.
+
+La fonction SQL `public.network_inventory_search` est **SECURITY INVOKER** et ne contourne pas RLS. Elle exige les critères entreprise, routeur et catégorie, puis recherche les valeurs de `identity_key`, `client_label`, `ip_address` et `mac_address` en texte ; elle borne les termes à 64 caractères et les pages à 50 résultats. Le filtrage s'exécute dans PostgreSQL, et non par chargement massif dans le navigateur. Les recherches ne sont pas nécessairement insensibles aux accents selon la collation PostgreSQL.
+
+La migration est additive et **n'a pas été appliquée à la base de production**. L'API de recherche indique une indisponibilité si la fonction SQL n'existe pas encore. Les agents RouterOS natifs et anciens sont compatibles au niveau de la forme de requête en omettant les propriétés, mais leur comportement sur une base migrée nécessite toujours une validation d'intégration.
+
+### Vérifications à cinq niveaux
+
+- Fichiers créés/modifiés et commits : vérifiés par GitHub, branche `codex/mikrotik-administration`.
+- Tests Node : validations des projections, de la fonction de filtrage, des propriétés et de l'interface ; le workflow CI doit réussir pour le SHA considéré.
+- PostgreSQL jetable : tests réels de la fonction invoker et de RLS avec deux entreprises fictives, pagination, IP/MAC, et limite de taille JSONB.
+- Authentification navigateur et RouterOS CHR/physique : **non validés** pour cette tranche.
+- Déploiement de production : **non réalisé**, PR maintenue en brouillon.
+
+Les composants WinBox `TerminalView`, `WFileTransfer`, `Topology`, `WGraph` et les mécanismes de configuration modifiable/retour arrière restent des chantiers distincts : aucun terminal libre ni commande de configuration générique n'est activé par cette tranche.
