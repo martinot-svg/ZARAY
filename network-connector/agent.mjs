@@ -4,6 +4,7 @@ import {readFile,writeFile,mkdir,chmod} from 'node:fs/promises';
 import {dirname,join} from 'node:path';
 import {readOnlyInventoryProjection} from './routeros/inventory-projections.mjs';
 import {boundedRouterOsPing} from './routeros/bounded-ping.mjs';
+import {executeManagedConfig} from './routeros/managed-config.mjs';
 import {operationReadProjection,ROUTEROS_OPERATION_READ_PROJECTIONS} from './routeros/operation-read-projections.mjs';
 import {sanitizedRouterOsDetails} from './routeros/inspector-properties.mjs';
 import {readBoundedResponseText} from './routeros/bounded-response.mjs';
@@ -331,6 +332,32 @@ async function poll(){
    if(collected.includes(requested.kind))
     await api('refresh-complete',{kind:requested.kind,requestedAt:requested.requestedAt});
   }catch(e){console.warn('[ZARAY] Actualisation RouterOS non confirmée',requested.kind,e.message);}
+ }
+ for(const job of (Array.isArray(r.configJobs)?r.configJobs:[]).slice(0,1)){
+  if(!job||typeof job.id!=='string'||typeof job.dispatchedAt!=='string')continue;
+  let result;
+  try{
+   result=await executeManagedConfig(ros,{
+    id:job.id,kind:job.category,operation:job.operation,
+    values:job.values,targetId:job.targetId||null
+   });
+  }catch{
+   // Lost RouterOS response requires manual review; never claim success.
+   result={state:'manual_review',message:'Impossible de vérifier le résultat RouterOS.',before:null,after:null};
+  }
+  for(let attempt=0;attempt<3;attempt++){
+   try{
+    await api('config-result',{
+     jobId:job.id,dispatchedAt:job.dispatchedAt,
+     state:result.state,message:result.message,
+     before:result.before,after:result.after
+    });
+    break;
+   }catch(e){
+    if(attempt===2)console.error('[ZARAY] Configuration non acquittée, revue requise :',job.id);
+    else await sleep(1000*(attempt+1));
+   }
+  }
  }
  for(const job of (Array.isArray(r.diagnostics)?r.diagnostics:[]).slice(0,1)){
   if(!job||job.kind!=='ping'||typeof job.id!=='string'||typeof job.dispatchedAt!=='string')continue;
