@@ -37,8 +37,8 @@ export async function POST(request:NextRequest){
   .select('id,company_id,site_id,control_enabled,agent_kind').eq('id',routerId).maybeSingle();
  if(routerError||!router)return json({error:'Routeur introuvable.'},404);
  if(action==='diagnostic-result'){
-  const id=clean(b?.jobId,36),ok=b?.ok===true;
-  if(!uuid.test(id)||typeof b?.ok!=='boolean')return json({error:'Résultat diagnostic invalide.'},400);
+  const id=clean(b?.jobId,36),ok=b?.ok===true,dispatchedAt=b?.dispatchedAt;
+  if(!uuid.test(id)||typeof b?.ok!=='boolean'||typeof dispatchedAt!=='string'||dispatchedAt.length>40||!Number.isFinite(Date.parse(dispatchedAt))||Date.parse(dispatchedAt)>Date.now()||Date.now()-Date.parse(dispatchedAt)>10*60000)return json({error:'Résultat diagnostic invalide ou expiré.'},400);
   if(!Array.isArray(b?.samples)||b.samples.length>3||(ok&&b.samples.length===0))
    return json({error:'Taille du diagnostic invalide.'},400);
   const samples=b.samples.map(sample=>{
@@ -61,7 +61,7 @@ export async function POST(request:NextRequest){
     error_message:ok?null:clean(b?.error,180)||'Diagnostic RouterOS impossible.',
     completed_at:new Date().toISOString()})
    .eq('id',id).eq('router_id',routerId).eq('company_id',router.company_id)
-   .eq('status','dispatched').select('id').maybeSingle();
+   .eq('status','dispatched').eq('dispatched_at',dispatchedAt).select('id').maybeSingle();
   if(resultError)return json({error:'Résultat du ping non enregistré.'},503);
   if(!recorded)return json({error:'Diagnostic déjà terminé ou non attribué à ce connecteur.'},409);
   return json({recorded:true});
@@ -357,10 +357,10 @@ export async function POST(request:NextRequest){
      .eq('id',job.id).eq('router_id',routerId).eq('company_id',router.company_id)
      .eq('status',job.status);
     if(job.status==='dispatched')claim=claim.eq('dispatched_at',job.dispatched_at);
-    const {data:claimed,error:claimError}=await claim.select('id').maybeSingle();
+    const {data:claimed,error:claimError}=await claim.select('id,dispatched_at').maybeSingle();
     if(claimError)return json({error:'Attribution du diagnostic indisponible.'},503);
     if(claimed){
-     diagnostics.push({id:job.id,kind:'ping',target:job.target});
+     diagnostics.push({id:job.id,kind:'ping',target:job.target,dispatchedAt:claimed.dispatched_at});
      break;
     }
    }
