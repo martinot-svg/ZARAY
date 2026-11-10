@@ -84,6 +84,16 @@ const sources=[
  {kind:'queue',path:'queue/simple',key:o=>o['.id'],label:o=>[o.name,o.target,o['max-limit']].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
  {kind:'firewall-filter',path:'ip/firewall/filter',key:o=>o['.id'],label:o=>[o.chain,o.action].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
  {kind:'firewall-nat',path:'ip/firewall/nat',key:o=>o['.id'],label:o=>[o.chain,o.action].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'bridge',path:'interface/bridge',key:o=>o['.id'],label:o=>[o.name,o['protocol-mode']].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.running==='true'&&o.disabled!=='true'},
+ {kind:'bridge-port',path:'interface/bridge/port',key:o=>o['.id'],label:o=>[o.interface,o.bridge].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'dhcp-network',path:'ip/dhcp-server/network',key:o=>o['.id'],label:o=>[o.address,o.gateway].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:()=>true},
+ {kind:'dns-static',path:'ip/dns/static',key:o=>o['.id'],label:o=>[o.name,o.type].filter(Boolean).join(' · '),ip:o=>o.address,mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'firewall-address-list',path:'ip/firewall/address-list',key:o=>o['.id'],label:o=>[o.list,o.address].filter(Boolean).join(' · '),ip:o=>String(o.address||'').split('/')[0],mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'queue-tree',path:'queue/tree',key:o=>o['.id'],label:o=>[o.name,o.parent,o['max-limit']].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'wireguard-interface',path:'interface/wireguard',key:o=>o['.id'],label:o=>[o.name,'WireGuard'].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.running==='true'&&o.disabled!=='true'},
+ {kind:'wireguard-peer',path:'interface/wireguard/peers',key:o=>o['.id'],label:o=>[o.name||'Peer',o.interface].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'routing-rule',path:'routing/rule',key:o=>o['.id'],label:o=>[o.action,o.table].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'ipv6-address',path:'ipv6/address',key:o=>o['.id'],label:o=>[o.address,o.interface].filter(Boolean).join(' · '),ip:o=>String(o.address||'').split('/')[0],mac:()=>'',active:o=>o.disabled!=='true'},
  {kind:'route',path:'ip/route',key:o=>o['.id'],label:o=>[o['dst-address'],o.gateway].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.active==='true'&&o.disabled!=='true'}
 ];
 
