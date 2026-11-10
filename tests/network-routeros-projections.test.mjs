@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {INVENTORY_PROJECTIONS,readOnlyInventoryProjection}
  from '../network-connector/routeros/inventory-projections.mjs';
+import {ROUTEROS_OPERATION_READ_PROJECTIONS,operationReadProjection}
+ from '../network-connector/routeros/operation-read-projections.mjs';
 
 const connector=readFileSync('network-connector/agent.mjs','utf8');
 const backend=readFileSync('src/app/api/network/agent/route.ts','utf8');
@@ -32,9 +34,9 @@ test('real REST adapter sends safe RouterOS .proplist and rejects writes with pr
  assert.ok(begin>0&&end>begin);
  const calls=[];
  const request=async(url,opts)=>{calls.push({url,opts});return [];};
- const fn=new Function('router','request','basic','URLSearchParams','encodeURIComponent','readOnlyInventoryProjection',
+ const fn=new Function('router','request','basic','URLSearchParams','encodeURIComponent','readOnlyInventoryProjection','ROUTEROS_OPERATION_READ_PROJECTIONS','operationReadProjection',
   connector.slice(begin,end)+'\nreturn ros;');
- const ros=fn('https://192.0.2.1',request,'Basic mock',URLSearchParams,encodeURIComponent,readOnlyInventoryProjection);
+ const ros=fn('https://192.0.2.1',request,'Basic mock',URLSearchParams,encodeURIComponent,readOnlyInventoryProjection,ROUTEROS_OPERATION_READ_PROJECTIONS,operationReadProjection);
  const fields=readOnlyInventoryProjection('ip/address');
  await ros('ip/address','GET',undefined,fields);
  assert.equal(calls.length,1);
