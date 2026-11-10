@@ -4,7 +4,7 @@ import {authorizeTenant} from '@/lib/tenant-context';
 export const dynamic='force-dynamic';
 const kinds=['hotspot','pppoe','dhcp','wifi','neighbor','radius','interface',
  'hotspot-user','hotspot-profile','ppp-secret','ppp-profile','ip-address',
- 'ip-pool','dhcp-server','dhcp-client','vlan','arp','queue','firewall-filter','firewall-nat','route'] as const;
+ 'ip-pool','dhcp-server','dhcp-client','vlan','arp','queue','firewall-filter','firewall-nat','route','bridge','bridge-port','dhcp-network','dns-static','firewall-address-list','queue-tree','wireguard-interface','wireguard-peer','routing-rule','ipv6-address'] as const;
 const uuid=/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i;
 const headers={'Cache-Control':'no-store'};
 const err=(error:string,status:number)=>NextResponse.json({error},{status,headers});
