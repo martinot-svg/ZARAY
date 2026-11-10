@@ -18,7 +18,7 @@ export async function POST(request:NextRequest){
  const token=/^Bearer ([0-9a-f]{64})$/i.exec(auth)?.[1]||'';
  const b=await request.json().catch(()=>null) as Record<string,unknown>|null;
  const routerId=clean(b?.routerId,36),action=b?.action;
- if(!token||!uuid.test(routerId)||!['claim','sync','poll','result'].includes(String(action)))return json({error:'Requête non autorisée.'},401);
+ if(!token||!uuid.test(routerId)||!['claim','sync','poll','result','refresh-complete'].includes(String(action)))return json({error:'Requête non autorisée.'},401);
  const service=createServiceClient();
  if(!service)return json({error:'Service indisponible.'},503);
  if(action==='claim'){
@@ -36,6 +36,24 @@ export async function POST(request:NextRequest){
  const {data:router,error:routerError}=await service.from('network_routers')
   .select('id,company_id,site_id,control_enabled').eq('id',routerId).maybeSingle();
  if(routerError||!router)return json({error:'Routeur introuvable.'},404);
+ if(action==='refresh-complete'){
+  const kind=clean(b?.kind,40),requestedAt=b?.requestedAt;
+  if(!kinds.includes(kind)||typeof requestedAt!=='string'||requestedAt.length>40||
+     !Number.isFinite(Date.parse(requestedAt))||
+     Date.parse(requestedAt)>Date.now()||Date.now()-Date.parse(requestedAt)>10*60000)
+   return json({error:'Demande de collecte invalide ou expirée.'},400);
+  const {data:source,error:sourceError}=await service.from('network_inventory_sources')
+   .select('observed_at').eq('router_id',routerId).eq('company_id',router.company_id)
+   .eq('observed_kind',kind).maybeSingle();
+  if(sourceError||!source||Date.parse(source.observed_at)<Date.parse(requestedAt))
+   return json({error:'Aucune nouvelle collecte vérifiée pour cette demande.'},409);
+  const {data:ack,error:ackError}=await service.from('network_inventory_refresh_requests')
+   .update({fulfilled_at:new Date().toISOString()}).eq('router_id',routerId)
+   .eq('company_id',router.company_id).eq('observed_kind',kind)
+   .eq('requested_at',requestedAt).is('fulfilled_at',null).select('router_id').maybeSingle();
+  if(ackError)return json({error:'Acquittement de la collecte indisponible.'},503);
+  return json({acknowledged:!!ack});
+ }
  if(action==='sync'){
   if(!Array.isArray(b?.observations)||b!.observations.length>500||!Array.isArray(b?.kinds))return json({error:'Inventaire invalide.'},400);
   const completed=[...new Set((b!.kinds as unknown[]).filter((x):x is string=>typeof x==='string'&&kinds.includes(x)))];
@@ -170,7 +188,15 @@ export async function POST(request:NextRequest){
  }
  await service.from('network_connector_credentials').update({last_poll_at:new Date().toISOString()}).eq('router_id',routerId);
  if(action==='poll'){
-  if(!router.control_enabled)return json({commands:[],controlEnabled:false});
+  const {data:refreshRequests,error:refreshError}=await service.from('network_inventory_refresh_requests')
+   .select('observed_kind,requested_at').eq('router_id',routerId)
+   .eq('company_id',router.company_id).is('fulfilled_at',null)
+   .gte('requested_at',new Date(Date.now()-10*60000).toISOString())
+   .order('requested_at',{ascending:true}).limit(2);
+  if(refreshError)return json({error:'Demandes de collecte indisponibles.'},503);
+  const refresh=(refreshRequests||[]).filter(v=>kinds.includes(v.observed_kind))
+   .map(v=>({kind:v.observed_kind,requestedAt:v.requested_at}));
+  if(!router.control_enabled)return json({commands:[],controlEnabled:false,refresh});
   // Keep observations and accounting working when suspended, but never
   // provision, resume or unblock clients for a site that is no longer active.
   const [{data:siteState,error:siteError},{data:companyState,error:companyError}]=await Promise.all([
@@ -282,7 +308,7 @@ export async function POST(request:NextRequest){
    const {data:claimed}=await claim.select('id').maybeSingle();
    if(claimed)commands.push({id:cmd.id,action:cmd.action,protocol:cmd.protocol,username:cmd.username,sessionId:cmd.session_id,macAddress:cmd.mac_address,...voucherPayload,...accountPayload});
   }
-  return json({commands,controlEnabled:true});
+  return json({commands,controlEnabled:true,refresh});
  }
  // Results are accepted only for commands that were actually dispatched to this connector.
  const commandId=clean(b?.commandId,36),ok=b?.ok===true;
