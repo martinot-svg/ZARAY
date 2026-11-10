@@ -33,7 +33,7 @@ test('new WinBox-equivalent inventory families are wired end to end',()=>{
   assert.ok(agent.includes("'"+kind+"'"),kind);
   assert.ok(inventory.includes("'"+kind+"'"),kind);
   assert.ok(coverage.includes("'"+kind+"'"),kind);
-  assert.equal(migration.split("'"+kind+"'").length,3,kind+' must appear in both SQL CHECK constraints');
+  assert.equal(migration.split("'"+kind+"'").length,4,kind+' must appear in observation, source and refresh CHECK constraints');
   assert.ok(ui.includes('value="'+kind+'"'),kind);
  }
 });
