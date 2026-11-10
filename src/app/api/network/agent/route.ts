@@ -47,7 +47,7 @@ export async function POST(request:NextRequest){
    for(const key of ['seq','time','status','ttl']){
     const v=r[key];
     if(v!==undefined){
-     if(typeof v!=='string'||v.length>64||/[\\u0000-\\u001f\\u007f]/.test(v))return null;
+     if(typeof v!=='string'||v.length>64||/[\u0000-\u001f\u007f]/.test(v))return null;
      out[key]=v;
     }
    }
