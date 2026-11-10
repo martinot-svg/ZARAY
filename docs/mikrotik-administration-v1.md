@@ -115,3 +115,19 @@ tierces. Le terminal arbitraire RouterOS reste désactivé.
 Références :
 - https://manual.mikrotik.com/docs/networking/remote-access/rest-api/
 - https://manual.mikrotik.com/docs/tooling-and-management/fetch/
+
+## P1 — Réconciliation et extensions du 10 novembre 2026
+
+- L'inventaire comporte désormais une route de couverture dédiée, avec état par source, ancienneté et appartenance entreprise/routeur.
+- Le connecteur Node lit les inventaires REST via une liste de propriétés autorisées par chemin (fichier `network-connector/routeros/inventory-projections.mjs`), plutôt que des réponses complètes contenant éventuellement des secrets. La lecture des compteurs de tickets conserve uniquement `name`, `comment` et `uptime` nécessaires à la comptabilisation.
+- Sources supplémentaires en **lecture seule** : VLAN (`interface/vlan`), clients DHCP (`ip/dhcp-client`) et ARP (`ip/arp`). Ces sources nécessitent le connecteur Node local et une API REST RouterOS compatible ; l'agent natif ne les fournit pas.
+- La liste de types et la migration additive étendent `network_observations` et `network_inventory_sources`. La migration de cette PR n'est pas encore appliquée dans la base Supabase de production.
+- La route de déconnexion ciblée utilise le même garde-fou que les autres routes d'écriture en Preview : projet Supabase de labo distinct, accord explicite et activation explicite.
+- **Protection contre les faux déconnectés** : un relevé tronqué ou sans métadonnées complètes ne désactive plus les anciennes observations absentes ; une déclaration `complete=true` doit concorder avec le nombre d'observations fournies. Si l'une des API Wi-Fi échoue, le résultat Wi-Fi reste partiel.
+- Les tests de projections, types d'inventaire, isolation par routeur, sessions et états de couverture sont inclus au workflow GitHub CI.
+
+**États de validation à distinguer** : code commité et tests GitHub ne sont pas une validation sur routeur réel. Aucun changement de pare-feu, route, adresse IP, VLAN ou DHCP n'est autorisé en écriture par ces ajouts. Aucune migration de production n'est exécutée et la PR reste en Preview.
+
+### Compatibilité et limites de collecte
+
+La collecte REST nécessite un RouterOS compatible avec le service HTTPS REST activé sur le réseau privé et un certificat validé. Chaque source doit avoir un droit de lecture approprié et peut être indisponible selon la version ou les packages installés. Un source indisponible ou partiellement lue ne constitue **jamais** un inventaire vide fiable. La fréquence de synchronisation du connecteur reste bornée et les données sont des instantanés, non un flux de trafic temps réel.
