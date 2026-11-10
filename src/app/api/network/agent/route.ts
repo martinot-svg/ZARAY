@@ -69,7 +69,7 @@ export async function POST(request:NextRequest){
      job.operation==='disable'?{disabled:'true'}:{};
    if(job.operation==='delete'){
     if(after!==null||!before?.comment?.startsWith('zaray:managed:'))
-     return json({error:'Suppression non vérifiée.'},400});
+     return json({error:'Suppression non vérifiée.'},400);
    }else if(!after||typeof after.comment!=='string'||
     (job.operation==='create'?after.comment!=='zaray:managed:'+job.id:
      !after.comment.startsWith('zaray:managed:'))||
