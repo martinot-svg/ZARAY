@@ -267,3 +267,34 @@ INSERT INTO public.network_commands(id,router_id,action,session_id,status)
 VALUES('c0000000-0000-4000-8000-000000000003','aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa',
  'disconnect_hotspot','*A','queued');
 SELECT 'PASS: isolation, 50-row pagination, stale/partial metadata, read-only RLS and pending disconnect index' AS result;
+
+-- RouterOS native capabilities are a privileged agent declaration; the
+-- existing table-level authenticated UPDATE grant must not permit spoofing.
+GRANT UPDATE ON public.network_routers TO authenticated;
+SET ROLE authenticated;
+DO $native_ping_guard$
+BEGIN
+ BEGIN
+  UPDATE public.network_routers
+   SET native_ping_supported=true
+   WHERE id='aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa';
+  RAISE EXCEPTION 'A browser forged the RouterOS native Ping capability';
+ EXCEPTION WHEN insufficient_privilege THEN NULL;
+ END;
+END
+$native_ping_guard$;
+RESET ROLE;
+REVOKE UPDATE ON public.network_routers FROM authenticated;
+DO $native_ping_admin$
+DECLARE flag boolean;
+BEGIN
+ SELECT native_ping_supported INTO flag FROM public.network_routers
+  WHERE id='aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa';
+ IF flag THEN RAISE EXCEPTION 'Rejected browser write persisted'; END IF;
+ UPDATE public.network_routers SET native_ping_supported=true
+  WHERE id='aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa';
+ SELECT native_ping_supported INTO flag FROM public.network_routers
+  WHERE id='aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa';
+ IF NOT flag THEN RAISE EXCEPTION 'Trusted backend cannot update agent capability'; END IF;
+END
+$native_ping_admin$;
