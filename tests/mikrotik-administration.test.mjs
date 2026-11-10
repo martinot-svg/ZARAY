@@ -44,8 +44,7 @@ test('session command is not an insecure direct RouterOS browser call',()=>{
  assert.ok(operations.includes("confirmation!=='DECONNECTER'"));
  assert.ok(operations.includes("router.control_enabled"));
  assert.ok(operations.includes("credential?.paired_at"));
- assert.ok(operations.includes("ZARAY_PREVIEW_NETWORK_MUTATIONS"));
- assert.ok(operations.includes("process.env.VERCEL_ENV==='preview'"));
+ assert.ok(operations.includes("networkWritesBlockedInPreview()"));
  assert.ok(operations.includes("recent(observation.observed_at)"));
  assert.ok(operations.includes(".eq('router_id',routerId).eq('company_id',companyId)"));
  assert.ok(operations.includes("observed_kind==='hotspot'"));
@@ -90,6 +89,7 @@ test('all existing network write handlers reject unisolated Vercel Previews',()=
  assert.ok(guard.includes("ZARAY_PREVIEW_NETWORK_MUTATIONS"));
  for(const path of [
   'src/app/api/network/route.ts',
+  'src/app/api/network/operations/route.ts',
   'src/app/api/network/access/route.ts',
   'src/app/api/network/device-action/route.ts',
   'src/app/api/network/pair/route.ts',
