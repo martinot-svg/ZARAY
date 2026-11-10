@@ -4,7 +4,7 @@ import {readFile,writeFile,mkdir,chmod} from 'node:fs/promises';
 import {dirname,join} from 'node:path';
 import {readOnlyInventoryProjection} from './routeros/inventory-projections.mjs';
 import {boundedRouterOsPing} from './routeros/bounded-ping.mjs';
-import {executeManagedConfig} from './routeros/managed-config.mjs';
+import {executeManagedConfig,reconcileManagedConfig} from './routeros/managed-config.mjs';
 import {operationReadProjection,ROUTEROS_OPERATION_READ_PROJECTIONS} from './routeros/operation-read-projections.mjs';
 import {sanitizedRouterOsDetails} from './routeros/inspector-properties.mjs';
 import {readBoundedResponseText} from './routeros/bounded-response.mjs';
@@ -358,6 +358,25 @@ async function poll(){
     else await sleep(1000*(attempt+1));
    }
   }
+ }
+ for(const item of (Array.isArray(r.configReviewJobs)?r.configReviewJobs:[]).slice(0,1)){
+  if(!item||typeof item.id!=='string'||typeof item.dispatchedAt!=='string')continue;
+  let result;
+  try{
+   result=await reconcileManagedConfig(ros,{
+    id:item.id,kind:item.category,operation:item.operation,
+    values:item.values,targetId:item.targetId||null,before:item.before
+   });
+  }catch{
+   result={state:'manual_review',message:'Lecture RouterOS impossible, vérification toujours nécessaire.',after:null};
+  }
+  try{
+   await api('config-review-result',{
+    jobId:item.id,dispatchedAt:item.dispatchedAt,
+    state:result.state,message:result.message,
+    before:item.before,after:result.after
+   });
+  }catch(e){console.warn('[ZARAY] Relecture de configuration non acquittée :',item.id);}
  }
  for(const job of (Array.isArray(r.diagnostics)?r.diagnostics:[]).slice(0,1)){
   if(!job||job.kind!=='ping'||typeof job.id!=='string'||typeof job.dispatchedAt!=='string')continue;
