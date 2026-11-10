@@ -144,6 +144,56 @@ END $$;
 RESET ROLE;
 RESET request.jwt.claim.sub;
 
+-- Rate-limited on-demand source refresh: owners only, scoped to one router,
+-- and never directly writable from the browser.
+DO $refreshprivs$
+BEGIN
+ IF has_table_privilege('authenticated','public.network_inventory_refresh_requests','INSERT')
+ OR has_table_privilege('authenticated','public.network_inventory_refresh_requests','UPDATE')
+ OR has_table_privilege('authenticated','public.network_inventory_refresh_requests','DELETE')
+ THEN RAISE EXCEPTION 'Browser may directly alter refresh requests'; END IF;
+ IF has_function_privilege('anon',
+  'public.request_network_inventory_refresh(uuid,uuid,text)','EXECUTE')
+ THEN RAISE EXCEPTION 'Anonymous refresh requests allowed'; END IF;
+END $refreshprivs$;
+SET ROLE authenticated;
+SET request.jwt.claim.sub='11111111-1111-4111-8111-111111111111';
+DO $refreshowner$
+DECLARE ok boolean; count_rows integer;
+BEGIN
+ SELECT public.request_network_inventory_refresh(
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  'aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa','dhcp') INTO ok;
+ IF NOT ok THEN RAISE EXCEPTION 'Owner refresh request was rejected'; END IF;
+ SELECT public.request_network_inventory_refresh(
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  'aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa','interface') INTO ok;
+ IF ok THEN RAISE EXCEPTION 'Per-router cooldown was bypassed'; END IF;
+ SELECT public.request_network_inventory_refresh(
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  'bbbbbbbb-2000-4000-8000-bbbbbbbbbbbb','interface') INTO ok;
+ IF ok THEN RAISE EXCEPTION 'Cross-tenant refresh was accepted'; END IF;
+ SELECT count(*) INTO count_rows FROM public.network_inventory_refresh_requests
+  WHERE router_id='aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa';
+ IF count_rows<>1 THEN RAISE EXCEPTION 'Expected exactly one request, got %',count_rows; END IF;
+END $refreshowner$;
+RESET ROLE;
+RESET request.jwt.claim.sub;
+UPDATE public.company_members SET role='viewer'
+ WHERE company_id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+SET ROLE authenticated;
+SET request.jwt.claim.sub='22222222-2222-4222-8222-222222222222';
+DO $refreshviewer$
+DECLARE ok boolean;
+BEGIN
+ SELECT public.request_network_inventory_refresh(
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  'bbbbbbbb-2000-4000-8000-bbbbbbbbbbbb','interface') INTO ok;
+ IF ok THEN RAISE EXCEPTION 'Read-only tenant member can refresh RouterOS'; END IF;
+END $refreshviewer$;
+RESET ROLE;
+RESET request.jwt.claim.sub;
+
 -- Two simultaneous pending disconnect commands for same session are forbidden.
 INSERT INTO public.network_commands(id,router_id,action,session_id,status)
 VALUES('c0000000-0000-4000-8000-000000000001','aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa',
