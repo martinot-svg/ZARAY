@@ -92,7 +92,7 @@ test('paired agent acknowledges only dispatched jobs and validates size',()=>{
   "diagnostics.push({id:job.id,kind:'ping',target:job.target,dispatchedAt:claimed.dispatched_at})",
   "router.agent_kind==='node-local'",
   ".eq('status','dispatched').eq('dispatched_at',dispatchedAt)",
-  "Date.parse(job.dispatched_at)>now-90000",
+  "dispatchableDiagnosticJob(job,now)",
   "claim=claim.eq('dispatched_at',job.dispatched_at)",
   "data:claimed,error:claimError",
   "ok&&b.samples.length===0",
