@@ -13,7 +13,6 @@ test('inventory coverage is tenant scoped and never mutates RouterOS',()=>{
 test('coverage is explicit for incomplete, stale and unsupported inventory',()=>{
  for(const state of ['migration_required','requires_local_connector','not_collected','stale','complete','partial'])
   assert.ok(route.includes(state),state);
- assert.ok(route.includes('now-time<180000'));
- assert.ok(route.includes('time<=now+30000'));
+ assert.ok(route.includes('inventorySourceIsCurrent(kind,source.observed_at,now)'));
  assert.ok(route.includes(".limit(100)"));
 });
