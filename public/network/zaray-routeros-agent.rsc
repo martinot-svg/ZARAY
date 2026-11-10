@@ -95,6 +95,203 @@
   :local reported [:len [/ppp active find]];
   :set sourceStats ($sourceStats,({"kind"="pppoe";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
  } on-error={ :log warning "ZARAY: PPP discovery unavailable"; };
+ # BEGIN ZARAY NATIVE READ-ONLY NETWORK DISCOVERY
+ # ip-address: RouterOS-originated collection; six rows maximum per minute.
+ :set count 0;
+ :do {
+  :foreach item in=[/ip address find] do={
+   :if ($count < 6) do={
+    :local p0 [:pick [:tostr [/ip address get $item address]] 0 120];
+    :local p1 [:pick [:tostr [/ip address get $item interface]] 0 120];
+    :local p2 [:pick [:tostr [/ip address get $item disabled]] 0 120];
+    :set obs ($obs,({"kind"="ip-address";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/ip address get $item disabled] = false);"props"=({"address"=$p0;"interface"=$p1;"disabled"=$p2})}));
+    :set count ($count + 1);
+   };
+  };
+  :local reported [:len [/ip address find]];
+  :set kinds ($kinds,"ip-address");
+  :set sourceStats ($sourceStats,({"kind"="ip-address";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
+ } on-error={ :log warning "ZARAY: ip-address inventory unavailable"; };
+ # vlan: RouterOS-originated collection; six rows maximum per minute.
+ :set count 0;
+ :do {
+  :foreach item in=[/interface vlan find] do={
+   :if ($count < 6) do={
+    :local p0 [:pick [:tostr [/interface vlan get $item name]] 0 120];
+    :local p1 [:pick [:tostr [/interface vlan get $item interface]] 0 120];
+    :local p2 [:pick [:tostr [/interface vlan get $item vlan-id]] 0 120];
+    :local p3 [:pick [:tostr [/interface vlan get $item disabled]] 0 120];
+    :set obs ($obs,({"kind"="vlan";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/interface vlan get $item disabled] = false);"props"=({"name"=$p0;"interface"=$p1;"vlan-id"=$p2;"disabled"=$p3})}));
+    :set count ($count + 1);
+   };
+  };
+  :local reported [:len [/interface vlan find]];
+  :set kinds ($kinds,"vlan");
+  :set sourceStats ($sourceStats,({"kind"="vlan";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
+ } on-error={ :log warning "ZARAY: vlan inventory unavailable"; };
+ # bridge: RouterOS-originated collection; six rows maximum per minute.
+ :set count 0;
+ :do {
+  :foreach item in=[/interface bridge find] do={
+   :if ($count < 6) do={
+    :local p0 [:pick [:tostr [/interface bridge get $item name]] 0 120];
+    :local p1 [:pick [:tostr [/interface bridge get $item protocol-mode]] 0 120];
+    :local p2 [:pick [:tostr [/interface bridge get $item disabled]] 0 120];
+    :set obs ($obs,({"kind"="bridge";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/interface bridge get $item disabled] = false);"props"=({"name"=$p0;"protocol-mode"=$p1;"disabled"=$p2})}));
+    :set count ($count + 1);
+   };
+  };
+  :local reported [:len [/interface bridge find]];
+  :set kinds ($kinds,"bridge");
+  :set sourceStats ($sourceStats,({"kind"="bridge";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
+ } on-error={ :log warning "ZARAY: bridge inventory unavailable"; };
+ # dhcp: RouterOS-originated collection; six rows maximum per minute.
+ :set count 0;
+ :do {
+  :foreach item in=[/ip dhcp-server lease find] do={
+   :if ($count < 6) do={
+    :local p0 [:pick [:tostr [/ip dhcp-server lease get $item host-name]] 0 120];
+    :local p1 [:pick [:tostr [/ip dhcp-server lease get $item address]] 0 120];
+    :local p2 [:pick [:tostr [/ip dhcp-server lease get $item mac-address]] 0 120];
+    :local p3 [:pick [:tostr [/ip dhcp-server lease get $item status]] 0 120];
+    :set obs ($obs,({"kind"="dhcp";"key"=[:tostr $item];"label"=($p1 . " · " . $p2);"ip"=$p1;"mac"=$p2;"active"=([/ip dhcp-server lease get $item status] = "bound");"props"=({"host-name"=$p0;"address"=$p1;"mac-address"=$p2;"status"=$p3})}));
+    :set count ($count + 1);
+   };
+  };
+  :local reported [:len [/ip dhcp-server lease find]];
+  :set kinds ($kinds,"dhcp");
+  :set sourceStats ($sourceStats,({"kind"="dhcp";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
+ } on-error={ :log warning "ZARAY: dhcp inventory unavailable"; };
+ # dhcp-server: RouterOS-originated collection; six rows maximum per minute.
+ :set count 0;
+ :do {
+  :foreach item in=[/ip dhcp-server find] do={
+   :if ($count < 6) do={
+    :local p0 [:pick [:tostr [/ip dhcp-server get $item name]] 0 120];
+    :local p1 [:pick [:tostr [/ip dhcp-server get $item interface]] 0 120];
+    :local p2 [:pick [:tostr [/ip dhcp-server get $item disabled]] 0 120];
+    :set obs ($obs,({"kind"="dhcp-server";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/ip dhcp-server get $item disabled] = false);"props"=({"name"=$p0;"interface"=$p1;"disabled"=$p2})}));
+    :set count ($count + 1);
+   };
+  };
+  :local reported [:len [/ip dhcp-server find]];
+  :set kinds ($kinds,"dhcp-server");
+  :set sourceStats ($sourceStats,({"kind"="dhcp-server";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
+ } on-error={ :log warning "ZARAY: dhcp-server inventory unavailable"; };
+ # dhcp-client: RouterOS-originated collection; six rows maximum per minute.
+ :set count 0;
+ :do {
+  :foreach item in=[/ip dhcp-client find] do={
+   :if ($count < 6) do={
+    :local p0 [:pick [:tostr [/ip dhcp-client get $item interface]] 0 120];
+    :local p1 [:pick [:tostr [/ip dhcp-client get $item status]] 0 120];
+    :local p2 [:pick [:tostr [/ip dhcp-client get $item disabled]] 0 120];
+    :set obs ($obs,({"kind"="dhcp-client";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/ip dhcp-client get $item disabled] = false);"props"=({"interface"=$p0;"status"=$p1;"disabled"=$p2})}));
+    :set count ($count + 1);
+   };
+  };
+  :local reported [:len [/ip dhcp-client find]];
+  :set kinds ($kinds,"dhcp-client");
+  :set sourceStats ($sourceStats,({"kind"="dhcp-client";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
+ } on-error={ :log warning "ZARAY: dhcp-client inventory unavailable"; };
+ # arp: RouterOS-originated collection; six rows maximum per minute.
+ :set count 0;
+ :do {
+  :foreach item in=[/ip arp find] do={
+   :if ($count < 6) do={
+    :local p0 [:pick [:tostr [/ip arp get $item address]] 0 120];
+    :local p1 [:pick [:tostr [/ip arp get $item mac-address]] 0 120];
+    :local p2 [:pick [:tostr [/ip arp get $item interface]] 0 120];
+    :set obs ($obs,({"kind"="arp";"key"=[:tostr $item];"label"=($p0 . " · " . $p2);"ip"=$p0;"mac"=$p1;"active"=true;"props"=({"address"=$p0;"mac-address"=$p1;"interface"=$p2})}));
+    :set count ($count + 1);
+   };
+  };
+  :local reported [:len [/ip arp find]];
+  :set kinds ($kinds,"arp");
+  :set sourceStats ($sourceStats,({"kind"="arp";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
+ } on-error={ :log warning "ZARAY: arp inventory unavailable"; };
+ # route: RouterOS-originated collection; six rows maximum per minute.
+ :set count 0;
+ :do {
+  :foreach item in=[/ip route find] do={
+   :if ($count < 6) do={
+    :local p0 [:pick [:tostr [/ip route get $item dst-address]] 0 120];
+    :local p1 [:pick [:tostr [/ip route get $item gateway]] 0 120];
+    :local p2 [:pick [:tostr [/ip route get $item disabled]] 0 120];
+    :set obs ($obs,({"kind"="route";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/ip route get $item disabled] = false);"props"=({"dst-address"=$p0;"gateway"=$p1;"disabled"=$p2})}));
+    :set count ($count + 1);
+   };
+  };
+  :local reported [:len [/ip route find]];
+  :set kinds ($kinds,"route");
+  :set sourceStats ($sourceStats,({"kind"="route";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
+ } on-error={ :log warning "ZARAY: route inventory unavailable"; };
+ # firewall-filter: RouterOS-originated collection; six rows maximum per minute.
+ :set count 0;
+ :do {
+  :foreach item in=[/ip firewall filter find] do={
+   :if ($count < 6) do={
+    :local p0 [:pick [:tostr [/ip firewall filter get $item chain]] 0 120];
+    :local p1 [:pick [:tostr [/ip firewall filter get $item action]] 0 120];
+    :local p2 [:pick [:tostr [/ip firewall filter get $item disabled]] 0 120];
+    :set obs ($obs,({"kind"="firewall-filter";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/ip firewall filter get $item disabled] = false);"props"=({"chain"=$p0;"action"=$p1;"disabled"=$p2})}));
+    :set count ($count + 1);
+   };
+  };
+  :local reported [:len [/ip firewall filter find]];
+  :set kinds ($kinds,"firewall-filter");
+  :set sourceStats ($sourceStats,({"kind"="firewall-filter";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
+ } on-error={ :log warning "ZARAY: firewall-filter inventory unavailable"; };
+ # firewall-nat: RouterOS-originated collection; six rows maximum per minute.
+ :set count 0;
+ :do {
+  :foreach item in=[/ip firewall nat find] do={
+   :if ($count < 6) do={
+    :local p0 [:pick [:tostr [/ip firewall nat get $item chain]] 0 120];
+    :local p1 [:pick [:tostr [/ip firewall nat get $item action]] 0 120];
+    :local p2 [:pick [:tostr [/ip firewall nat get $item disabled]] 0 120];
+    :set obs ($obs,({"kind"="firewall-nat";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/ip firewall nat get $item disabled] = false);"props"=({"chain"=$p0;"action"=$p1;"disabled"=$p2})}));
+    :set count ($count + 1);
+   };
+  };
+  :local reported [:len [/ip firewall nat find]];
+  :set kinds ($kinds,"firewall-nat");
+  :set sourceStats ($sourceStats,({"kind"="firewall-nat";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
+ } on-error={ :log warning "ZARAY: firewall-nat inventory unavailable"; };
+ # queue: RouterOS-originated collection; six rows maximum per minute.
+ :set count 0;
+ :do {
+  :foreach item in=[/queue simple find] do={
+   :if ($count < 6) do={
+    :local p0 [:pick [:tostr [/queue simple get $item name]] 0 120];
+    :local p1 [:pick [:tostr [/queue simple get $item target]] 0 120];
+    :local p2 [:pick [:tostr [/queue simple get $item max-limit]] 0 120];
+    :local p3 [:pick [:tostr [/queue simple get $item disabled]] 0 120];
+    :set obs ($obs,({"kind"="queue";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/queue simple get $item disabled] = false);"props"=({"name"=$p0;"target"=$p1;"max-limit"=$p2;"disabled"=$p3})}));
+    :set count ($count + 1);
+   };
+  };
+  :local reported [:len [/queue simple find]];
+  :set kinds ($kinds,"queue");
+  :set sourceStats ($sourceStats,({"kind"="queue";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
+ } on-error={ :log warning "ZARAY: queue inventory unavailable"; };
+ # dns-static: RouterOS-originated collection; six rows maximum per minute.
+ :set count 0;
+ :do {
+  :foreach item in=[/ip dns static find] do={
+   :if ($count < 6) do={
+    :local p0 [:pick [:tostr [/ip dns static get $item name]] 0 120];
+    :local p1 [:pick [:tostr [/ip dns static get $item address]] 0 120];
+    :local p2 [:pick [:tostr [/ip dns static get $item disabled]] 0 120];
+    :set obs ($obs,({"kind"="dns-static";"key"=[:tostr $item];"label"=($p0 . " · " . $p1);"ip"="";"mac"="";"active"=([/ip dns static get $item disabled] = false);"props"=({"name"=$p0;"address"=$p1;"disabled"=$p2})}));
+    :set count ($count + 1);
+   };
+  };
+  :local reported [:len [/ip dns static find]];
+  :set kinds ($kinds,"dns-static");
+  :set sourceStats ($sourceStats,({"kind"="dns-static";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
+ } on-error={ :log warning "ZARAY: dns-static inventory unavailable"; };
+ # END ZARAY NATIVE READ-ONLY NETWORK DISCOVERY
  :if ([:len $kinds] = 0) do={ :error "ZARAY: no RouterOS inventory available"; };
  :local metrics ({"cpuLoad"=[/system resource get cpu-load];"totalMemory"=[/system resource get total-memory];"freeMemory"=[/system resource get free-memory];"uptime"=[:tostr [/system resource get uptime]]});
  :local syncBody [:serialize to=json value=({"routerId"=$rid;"action"="sync";"agentKind"="routeros-native";"model"=[/system resource get board-name];"version"=[/system resource get version];"kinds"=$kinds;"observations"=$obs;"sourceStats"=$sourceStats;"resources"=$metrics}) options=json.no-string-conversion];
@@ -104,13 +301,64 @@
  # The owner must explicitly enable RouterOS control in ZARAY after pairing.
  # A native script only claims the actions it implements.
  :local supported {"disconnect_hotspot";"disconnect_ppp";"suspend_account";"resume_account";"provision_voucher";"expire_voucher"};
- :local pollBody [:serialize to=json value=({"routerId"=$rid;"action"="poll";"supportedActions"=$supported}) options=json.no-string-conversion];
+ :local supportedDiagnostics {"ping"};
+ :local pollBody [:serialize to=json value=({"routerId"=$rid;"action"="poll";"supportedActions"=$supported;"supportedDiagnostics"=$supportedDiagnostics}) options=json.no-string-conversion];
  :local fetched;
  :do {
   :set fetched [/tool fetch url=$endpoint http-method=post http-data=$pollBody http-header-field=$headers check-certificate=yes as-value output=user];
  } on-error={ :log warning "ZARAY: poll failed"; :error "ZARAY: poll failed"; };
  :local state [:deserialize from=json value=($fetched->"data") options=json.no-string-conversion];
  :if (($state->"controlEnabled") != true) do={ :return; };
+ # Online-only native RouterOS ping: fixed 3 packets, no terminal access.
+ # Cloud controls tenant, IP target, assignment token and expiry.
+ :if ([:typeof ($state->"diagnostics")] = "array") do={
+  :foreach job in=($state->"diagnostics") do={
+   :local jobId ($job->"id");
+   :local target ($job->"target");
+   :local lease ($job->"dispatchedAt");
+   :local kind ($job->"kind");
+   :if ([:typeof $jobId] = "str" && [:len $jobId] = 36 &&
+        [:typeof $target] = "str" && [:len $target] >= 7 && [:len $target] <= 15 &&
+        $target ~ "^[0-9.]+$" && $kind = "ping" &&
+        [:typeof $lease] = "str" && [:len $lease] >= 20 && [:len $lease] <= 40) do={
+    :local success false;
+    :local samples [:toarray ""];
+    :local failure "Native RouterOS ping did not return a valid result";
+    :do {
+     :local packets [/ping address=$target count=3 as-value];
+     :foreach packet in=$packets do={
+      :if ([:len $samples] < 3) do={
+       :local sequence [:tostr ($packet->"seq")];
+       :if ($sequence ~ "^[0-2]$") do={
+        :local duration "";
+        :local status "timeout";
+        :local ttl "";
+        :if ([:typeof ($packet->"time")] != "nil") do={
+         :set duration [:pick [:tostr ($packet->"time")] 0 64];
+        };
+        :if ([:typeof ($packet->"ttl")] != "nil") do={
+         :set ttl [:pick [:tostr ($packet->"ttl")] 0 64];
+        };
+        :if ([:len $duration] > 0) do={ :set status "received"; };
+        :if ([:typeof ($packet->"status")] = "str") do={
+         :set status [:pick ($packet->"status") 0 64];
+        };
+        :local sample ({"seq"=$sequence;"status"=$status});
+        :if ([:len $duration] > 0) do={ :set ($sample->"time") $duration; };
+        :if ([:len $ttl] > 0) do={ :set ($sample->"ttl") $ttl; };
+        :set samples ($samples,$sample);
+       };
+      };
+     };
+     :if ([:len $samples] > 0) do={ :set success true; :set failure ""; };
+    } on-error={ :set success false; :set samples [:toarray ""]; :set failure "Native RouterOS ping failed"; };
+    :local report [:serialize to=json value=({"routerId"=$rid;"action"="diagnostic-result";"jobId"=$jobId;"dispatchedAt"=$lease;"ok"=$success;"samples"=$samples;"error"=$failure}) options=json.no-string-conversion];
+    :do {
+     /tool fetch url=$endpoint http-method=post http-data=$report http-header-field=$headers check-certificate=yes output=none;
+    } on-error={ :log warning "ZARAY: native ping result not acknowledged"; };
+   };
+  };
+ };
  :foreach cmd in=($state->"commands") do={
   :local id ($cmd->"id"); :local action ($cmd->"action");
   :local protocol ($cmd->"protocol"); :local username ($cmd->"username");

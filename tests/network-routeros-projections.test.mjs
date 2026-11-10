@@ -8,7 +8,7 @@ import {ROUTEROS_OPERATION_READ_PROJECTIONS,operationReadProjection}
 
 const connector=readFileSync('network-connector/agent.mjs','utf8');
 const backend=readFileSync('src/app/api/network/agent/route.ts','utf8');
-const migration=readFileSync('supabase/migrations/20261109121500_mikrotik_administration_inventory.sql','utf8');
+const migration=readFileSync('supabase/migrations/20261110152239_mikrotik_administration_inventory.sql','utf8');
 const ui=readFileSync('src/app/gestion-reseau/page.tsx','utf8');
 
 test('REST reads request an explicit allowlist without sensitive properties',()=>{

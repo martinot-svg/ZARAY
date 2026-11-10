@@ -65,5 +65,5 @@ test('existing control gate and bounded RouterOS actions are intact',()=>{
  assert.match(api,/credential_hash/);
  assert.match(routeros,/check-certificate=yes/g);
  assert.doesNotMatch(routeros,/check-certificate=no/);
- assert.doesNotMatch(routeros,/\/ip firewall|\/ip route add|\/user add/i);
+ assert.doesNotMatch(routeros,/\/ip firewall (?:filter|nat) (?:add|set|remove|enable|disable)|\/ip route (?:add|set|remove)|\/user add/i);
 });

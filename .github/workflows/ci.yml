@@ -77,10 +77,42 @@ jobs:
       - run: node --test tests/network-bounded-response.test.mjs
       - run: node --test tests/network-inventory-live-refresh.test.mjs
       - run: node --test tests/network-diagnostics-ping.test.mjs
+      - run: node --test tests/native-routeros-online-parity.test.mjs
       - run: node --experimental-strip-types --test tests/network-winbox-workbench.test.mjs
       - run: node --experimental-strip-types --test tests/network-winbox-inspector-properties.test.mjs
       - run: node --experimental-strip-types --test tests/network-winbox-extended-inventory.test.mjs
-      - run: python3 -m py_compile tools/winbox-lab/chr-boot.py tools/winbox-lab/chr-console-test.py
+      - run: python3 -m py_compile tools/winbox-lab/chr-boot.py tools/winbox-lab/chr-console-test.py tools/winbox-lab/verify-native-routeros-lab.py tools/winbox-lab/chr-rest-test.py
       - run: node --check network-connector/agent.mjs
       - run: npm run typecheck
       - run: npm run build
+
+  # Temporary proof gate for the RouterOS-native agent. Runs only for this PR;
+  # the disposable CHR is entirely private to the GitHub-hosted runner.
+  native-chr-proof:
+    if: github.ref == 'refs/heads/feature/winbox-native-online-administration-20261110' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 11
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install QEMU TCG
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq qemu-system-x86
+      - name: Download verified RouterOS CHR image
+        run: |
+          mkdir -p chr-evidence
+          curl -fsSL --max-time 100 --retry 3 https://download.mikrotik.com/routeros/7.24.6/chr-7.24.6.img.zip -o chr-evidence/chr.zip
+          echo "692672e6cac9cfaa4f37c6334d07760d49e074b50befc61f0904270553f17126  chr-evidence/chr.zip" | sha256sum -c -
+          unzip -p chr-evidence/chr.zip > chr-evidence/chr.img
+      - name: Execute shipping native RouterOS inventory and Ping through real CHR
+        run: python3 tools/winbox-lab/chr-rest-test.py chr-evidence/chr.img chr-evidence
+      - name: Upload sanitized proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chr-native-routeros-validation
+          path: |
+            chr-evidence/*.json
+            chr-evidence/*.log
+          retention-days: 7
+          if-no-files-found: warn

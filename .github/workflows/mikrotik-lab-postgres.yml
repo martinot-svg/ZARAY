@@ -37,6 +37,8 @@ jobs:
       - name: Prepare synthetic tenants in ephemeral PostgreSQL
         run: psql -v ON_ERROR_STOP=1 -f tests/lab/postgres-schema-fixture.sql
       - name: Apply the proposed MikroTik inventory migration
-        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261109121500_mikrotik_administration_inventory.sql
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261110152239_mikrotik_administration_inventory.sql
+      - name: Apply online native RouterOS capability guard
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261110192500_routeros_native_online_ping.sql
       - name: Assert tenant RLS, 50-row pagination, staleness, partial observations, and command uniqueness
         run: psql -v ON_ERROR_STOP=1 -f tests/lab/postgres-migration-assert.sql

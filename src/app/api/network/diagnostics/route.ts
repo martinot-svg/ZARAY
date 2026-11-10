@@ -54,7 +54,7 @@ export async function POST(req:NextRequest){
  const service=createServiceClient();
  if(!service)return fail('Connecteur réseau indisponible.',503);
  const [{data:router},{data:observation},{data:credential}]=await Promise.all([
-  service.from('network_routers').select('id,company_id,agent_kind,control_enabled,last_seen_at')
+  service.from('network_routers').select('id,company_id,agent_kind,native_ping_supported,control_enabled,last_seen_at')
    .eq('id',routerId).eq('company_id',companyId).maybeSingle(),
   service.from('network_observations').select('id,router_id,company_id,ip_address,observed_at,active')
    .eq('id',observationId).eq('company_id',companyId).eq('router_id',routerId).maybeSingle(),
@@ -62,9 +62,11 @@ export async function POST(req:NextRequest){
    .eq('router_id',routerId).maybeSingle()
  ]);
  if(!router||!observation)return fail('Routeur ou destination inaccessible.',404);
- if(!router.control_enabled||router.agent_kind!=='node-local'||!credential?.paired_at||
+ const pingAvailable=router.agent_kind==='node-local'||
+  (router.agent_kind==='routeros-native'&&router.native_ping_supported===true);
+ if(!router.control_enabled||!pingAvailable||!credential?.paired_at||
     credential.revoked_at||!fresh(router.last_seen_at))
-  return fail('Connecteur local non disponible pour ce diagnostic.',409);
+  return fail('Agent MikroTik en ligne non compatible avec le diagnostic Ping.',409);
  if(!fresh(observation.observed_at)||!observation.active||!observation.ip_address)
   return fail('Adresse observée trop ancienne ou inactive.',409);
  // No arbitrary target: resolve it exclusively from a recent tenant-owned row.

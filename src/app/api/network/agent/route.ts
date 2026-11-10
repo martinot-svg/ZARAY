@@ -218,6 +218,19 @@ export async function POST(request:NextRequest){
  }
  await service.from('network_connector_credentials').update({last_poll_at:new Date().toISOString()}).eq('router_id',routerId);
  if(action==='poll'){
+  // Only a paired router agent may advertise the native Ping capability.
+  // Existing older RouterOS scripts are explicitly unsupported by default.
+  const declaredDiagnostics=b?.supportedDiagnostics;
+  if(declaredDiagnostics!==undefined&&(!Array.isArray(declaredDiagnostics)||
+    declaredDiagnostics.length>2||declaredDiagnostics.some(v=>v!=='ping')))
+   return json({error:'Capacités de diagnostic invalides.'},400);
+  const nativePingAdvertised=Array.isArray(declaredDiagnostics)&&declaredDiagnostics.includes('ping');
+  if(router.agent_kind==='routeros-native'){
+   const {error:capabilityError}=await service.from('network_routers')
+    .update({native_ping_supported:nativePingAdvertised})
+    .eq('id',routerId).eq('company_id',router.company_id);
+   if(capabilityError)return json({error:'Capacités du routeur non synchronisées.'},503);
+  }
   const {data:refreshRequests,error:refreshError}=await service.from('network_inventory_refresh_requests')
    .select('observed_kind,requested_at').eq('router_id',routerId)
    .eq('company_id',router.company_id).is('fulfilled_at',null)
@@ -339,7 +352,7 @@ export async function POST(request:NextRequest){
    if(claimed)commands.push({id:cmd.id,action:cmd.action,protocol:cmd.protocol,username:cmd.username,sessionId:cmd.session_id,macAddress:cmd.mac_address,...voucherPayload,...accountPayload});
   }
   const diagnostics:Record<string,unknown>[]=[];
-  if(router.agent_kind==='node-local'){
+  if(router.agent_kind==='node-local'||(router.agent_kind==='routeros-native'&&nativePingAdvertised)){
    const now=Date.now(),cutoff=new Date(now-10*60000).toISOString();
    const {data:pending,error:diagnosticError}=await service.from('network_diagnostic_jobs')
     .select('id,target,kind,status,dispatched_at,requested_at').eq('router_id',routerId)

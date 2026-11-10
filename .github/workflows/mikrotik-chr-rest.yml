@@ -1,7 +1,17 @@
 name: RouterOS CHR real REST interoperability lab
-# Real CHR tests consume hosted QEMU minutes; run on demand after CI.
+# CI proof: rerun native RouterOS payload shape and extracted Ping script on disposable CHR.
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/mikrotik-chr-rest.yml'
+      - 'tools/winbox-lab/chr-rest-test.py'
+      - 'tools/winbox-lab/verify-native-routeros-lab.py'
+      - 'public/network/zaray-routeros-agent.rsc'
+      - 'network-connector/routeros/bounded-ping.mjs'
   workflow_dispatch:
+concurrency:
+  group: chr-native-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:

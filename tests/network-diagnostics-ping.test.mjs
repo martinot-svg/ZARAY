@@ -9,7 +9,7 @@ const api=load('src/app/api/network/agent/route.ts');
 const ui=load('src/components/network/network-diagnostics-panel.tsx');
 const page=load('src/app/gestion-reseau/page.tsx');
 const route=load('src/app/api/network/diagnostics/route.ts');
-const migration=load('supabase/migrations/20261109121500_mikrotik_administration_inventory.sql');
+const migration=load('supabase/migrations/20261110152239_mikrotik_administration_inventory.sql');
 
 test('actual connector uses the same bounded and validated RouterOS ping function',async()=>{
  assert.ok(connector.includes("import {boundedRouterOsPing} from './routeros/bounded-ping.mjs'"));
@@ -42,7 +42,8 @@ test('ping can be requested only for company-owned, recent, observed device',()=
   "['owner','admin'].includes(auth.member.role)",
   ".eq('router_id',routerId).maybeSingle()",
   ".eq('company_id',companyId).eq('router_id',routerId)",
-  "router.agent_kind!=='node-local'",
+  "const pingAvailable=router.agent_kind==='node-local'||",
+  "router.native_ping_supported===true",
   "fresh(observation.observed_at)",
   "observation.ip_address",
   "kind:'ping',status:'queued'",
