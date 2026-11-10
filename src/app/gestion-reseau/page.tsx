@@ -6,7 +6,7 @@ import {NetworkDiagnosticsPanel} from '@/components/network/network-diagnostics-
 import {ZarayIcon} from '@/components/ui/zaray-icon';
 import {filterAndSortRouterInventory,inventoryObservationIsFresh,type InventorySort} from '@/lib/network-inventory-workbench';
 import {routerHeartbeatIsFresh} from '@/lib/network-inventory-freshness';
-type Router={id:string;site_id:string;name:string;host:string;model:string|null;routeros_version:string|null;status:string;control_enabled:boolean;agent_kind:'unreported'|'node-local'|'routeros-native';last_seen_at:string|null};
+type Router={id:string;site_id:string;name:string;host:string;model:string|null;routeros_version:string|null;status:string;control_enabled:boolean;native_ping_supported?:boolean;agent_kind:'unreported'|'node-local'|'routeros-native';last_seen_at:string|null};
 type RouterResource={router_id:string;cpu_load_percent:number;total_memory_bytes:number;free_memory_bytes:number;router_uptime:string;observed_at:string};
 type Observation={id:string;router_id:string;observed_kind:string;identity_key:string;ip_address:string|null;mac_address:string|null;client_label:string|null;active:boolean;observed_at:string;safe_properties?:Record<string,string>|null};
 type Account={id:string;router_id:string;order_id:string|null;username:string;protocol:string;expires_at:string|null;grace_until:string|null;extension_until:string|null;administrative_hold:boolean;desired_state:string;applied_state:string};
@@ -356,7 +356,7 @@ export default function NetworkPage(){
         <button type="button" disabled={busy} onClick={()=>void disconnectObserved(selectedInventory)}>Déconnecter la session sélectionnée</button>}
        <NetworkDiagnosticsPanel key={selectedInventory.id} companyId={companyId} routerId={routerId}
         observationId={selectedInventory.id} ipAddress={selectedInventory.ip_address}
-        canManage={canManage} routerOnline={chosen.agent_kind==='node-local'&&chosen.control_enabled&&
+        canManage={canManage} routerOnline={(chosen.agent_kind==='node-local'||(chosen.agent_kind==='routeros-native'&&chosen.native_ping_supported===true))&&chosen.control_enabled&&
          selectedInventory.active&&inventoryObservationIsFresh(selectedInventory.observed_at,chosen.last_seen_at)}/>
       </section>}
       <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginTop:8}}>
