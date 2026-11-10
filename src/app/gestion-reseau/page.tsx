@@ -12,7 +12,11 @@ type Account={id:string;router_id:string;order_id:string|null;username:string;pr
 type Order={id:string;site_id:string;public_reference:string;customer_name:string;status:string;validity_days:number};
 type Command={id:string;router_id:string;action:string;username:string;status:string;outcome:string|null;created_at:string};
 type Site={id:string;company_id:string;name:string};
-const fresh=(stamp:string|null)=>!!stamp&&Date.now()-new Date(stamp).getTime()<150000;
+const fresh=(stamp:string|null)=>{
+ if(!stamp)return false;
+ const at=Date.parse(stamp),age=Date.now()-at;
+ return Number.isFinite(at)&&age>=0&&age<150000;
+};
 const status=(r:Router)=>fresh(r.last_seen_at)?'En ligne':r.last_seen_at?'Hors ligne':'Non appairé';
 const fmt=(d:string|null)=>d?new Date(d).toLocaleString('fr-FR'):'—';
 const commandStatus:Record<string,string>={
