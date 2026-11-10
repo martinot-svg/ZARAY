@@ -6,7 +6,7 @@ ALTER TABLE public.network_observations
  ADD CONSTRAINT network_observations_observed_kind_check CHECK (observed_kind IN (
   'hotspot','pppoe','dhcp','wifi','neighbor','radius','interface',
   'hotspot-user','hotspot-profile','ppp-secret','ppp-profile',
-  'ip-address','ip-pool','dhcp-server','queue','firewall-filter',
+  'ip-address','ip-pool','dhcp-server','dhcp-client','vlan','arp','queue','firewall-filter',
   'firewall-nat','route'
  ));
 
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS public.network_inventory_sources (
  CONSTRAINT network_inventory_kind_check CHECK (observed_kind IN (
   'hotspot','pppoe','dhcp','wifi','neighbor','radius','interface',
   'hotspot-user','hotspot-profile','ppp-secret','ppp-profile',
-  'ip-address','ip-pool','dhcp-server','queue','firewall-filter','firewall-nat','route'
+  'ip-address','ip-pool','dhcp-server','dhcp-client','vlan','arp','queue','firewall-filter','firewall-nat','route'
  )),
  CONSTRAINT network_inventory_count_check CHECK (collected_count <= reported_count OR NOT complete)
 );
