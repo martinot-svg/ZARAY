@@ -150,9 +150,8 @@ async function disconnect(protocol,username,sessionId){
  if(!Array.isArray(list))throw Error('Liste des sessions MikroTik indisponible.');
  const sessions=list.filter(o=>
   (protocol==='hotspot'?o.user:o.name)===username&&(!sessionId||o['.id']===sessionId));
- // A targeted disconnect must never acknowledge success for a stale observation.
- // The account-wide disconnect used for suspension may legitimately find zero sessions.
- if(sessionId&&sessions.length!==1)throw Error('Session ciblée absente ou ambiguë : actualiser avant une nouvelle commande.');
+ // Retries of already absent sessions remain idempotent, but an unavailable
+ // RouterOS inventory is an error and must never be mistaken for an empty list.
  for(const row of sessions){await ros(path+'/'+row['.id'],'DELETE');}
  // A successful DELETE request is not a confirmed disconnect. Verify again.
  const after=await ros(path);
