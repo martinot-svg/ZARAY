@@ -27,9 +27,9 @@ function prepare(initial,{unavailable=false,deleteFails=false}={}){
 
 for(const [protocol,username] of [['hotspot','customer'],['pppoe','subscriber']]){
  const userKey=protocol==='hotspot'?'user':'name';
- test(protocol+': absent targeted session fails without deleting another session',async()=>{
+ test(protocol+': absent targeted session is idempotent without deleting another session',async()=>{
   const t=prepare([{'.id':'*2',[userKey]:username}]);
-  await assert.rejects(()=>t.disconnect(protocol,username,'*1'),/Session ciblée absente/);
+  assert.equal(await t.disconnect(protocol,username,'*1'),0);
   assert.equal(t.deletions.length,0);
  });
  test(protocol+': targeted session removal is confirmed',async()=>{
