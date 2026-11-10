@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {boundedRouterOsPing} from '../network-connector/routeros/bounded-ping.mjs';
 
 const load=p=>readFileSync(p,'utf8');
 const connector=load('network-connector/agent.mjs');
@@ -10,10 +11,9 @@ const page=load('src/app/gestion-reseau/page.tsx');
 const route=load('src/app/api/network/diagnostics/route.ts');
 const migration=load('supabase/migrations/20261109121500_mikrotik_administration_inventory.sql');
 
-test('real ping implementation is fixed to three packets and one validated IPv4',async()=>{
- const begin=connector.indexOf('async function diagnosticPing(');
- const end=connector.indexOf('\nasync function poll(',begin);
- assert.ok(begin>=0&&end>begin);
+test('actual connector uses the same bounded and validated RouterOS ping function',async()=>{
+ assert.ok(connector.includes("import {boundedRouterOsPing} from './routeros/bounded-ping.mjs'"));
+ assert.ok(connector.includes('return boundedRouterOsPing(ros,address)'));
  const calls=[];
  const ros=async(path,method,params)=>{
   calls.push({path,method,params});
@@ -21,15 +21,19 @@ test('real ping implementation is fixed to three packets and one validated IPv4'
    {seq:'2',status:'timeout'},{seq:'3',time:'should-be-capped'},
    {seq:'4',private_key:'must-not-leak'}];
  };
- const ping=new Function('ros','return ('+connector.slice(begin,end)+')')(ros);
- const records=await ping('192.0.2.7');
+ const records=await boundedRouterOsPing(ros,'192.0.2.7');
  assert.deepEqual(calls,[{path:'ping',method:'POST',params:{address:'192.0.2.7',count:'3'}}]);
  assert.equal(records.length,3);
+ assert.equal(records[0].status,'received');
+ assert.equal(records[2].status,'timeout');
  assert.ok(!JSON.stringify(records).includes('private_key'));
- for(const invalid of ['example.com','192.0.2.256','172.16.0.1;reboot','1.1.1.1/24','::1']){
-  await assert.rejects(()=>ping(invalid),/Cible IPv4/);
+ for(const invalid of ['example.com','192.0.2.256','172.16.0.1;reboot','1.1.1.1/24','::1','001.2.3.4']){
+  await assert.rejects(()=>boundedRouterOsPing(ros,invalid),/Cible IPv4/);
  }
  assert.equal(calls.length,1);
+ await assert.rejects(()=>boundedRouterOsPing(async()=>[],'192.0.2.7'),/Aucun résultat/);
+ await assert.rejects(()=>boundedRouterOsPing(async()=>[null],'192.0.2.7'),/mal formé/);
+ await assert.rejects(()=>boundedRouterOsPing(async()=>[{seq:'0',time:'1ms\\u0000'}],'192.0.2.7'),/invalide/);
 });
 
 test('ping can be requested only for company-owned, recent, observed device',()=>{
