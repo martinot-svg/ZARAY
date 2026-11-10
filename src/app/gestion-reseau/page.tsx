@@ -303,7 +303,11 @@ export default function NetworkPage(){
         url.searchParams.set('kind',adminSource);
         window.open(url.toString(),'_blank','noopener,noreferrer');
        }}>Ouvrir cette vue dans un nouvel onglet</button>
-       <button type="button" disabled={adminLoading} onClick={()=>setInventoryVersion(v=>v+1)}>Actualiser l’affichage</button>
+       <button type="button" disabled={busy||!canManage||chosen.agent_kind!=='node-local'||!fresh(chosen.last_seen_at)}
+        onClick={()=>void run('/api/network/inventory/refresh',{routerId:chosen.id,kind:adminSource})}>
+        Demander une nouvelle collecte RouterOS
+       </button>
+       <button type="button" disabled={adminLoading} onClick={()=>setInventoryVersion(v=>v+1)}>Relire les données collectées</button>
       </div>
       {adminCoverage&&<p className="muted">Collectés : {adminCoverage.collected_count} / {adminCoverage.reported_count} éléments observés sur cette source · dernier relevé : {fmt(adminCoverage.observed_at)} · {adminCoverage.complete?'Collecte déclarée complète':'Collecte tronquée'}</p>}
       {adminError&&<p role="alert" className="muted">{adminError}</p>}
