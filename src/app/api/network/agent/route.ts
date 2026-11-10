@@ -450,7 +450,35 @@ export async function POST(request:NextRequest){
     });
    }
   }
-  return json({commands,controlEnabled:true,refresh,diagnostics,configJobs});
+  const configReviewJobs:Record<string,unknown>[]=[];
+  if(router.agent_kind==='node-local'&&siteActive&&(data||[]).length===0&&configJobs.length===0){
+   const {data:reviewRows,error:reviewError}=await service.from('network_managed_config_jobs')
+    .select('id,category,operation,target_id,requested_values,before_state,review_attempted_at')
+    .eq('router_id',routerId).eq('company_id',router.company_id)
+    .eq('status','manual_review').order('created_at',{ascending:true}).limit(1);
+   if(reviewError)return json({error:'Relecture de configuration indisponible.'},503);
+   const item=reviewRows?.[0],now=Date.now();
+   if(item&&(!item.review_attempted_at||
+      Number.isFinite(Date.parse(item.review_attempted_at))&&
+      now-Date.parse(item.review_attempted_at)>=120000)){
+    let claim=service.from('network_managed_config_jobs')
+     .update({review_attempted_at:new Date(now).toISOString()})
+     .eq('id',item.id).eq('router_id',routerId).eq('company_id',router.company_id)
+     .eq('status','manual_review');
+    claim=item.review_attempted_at
+     ?claim.eq('review_attempted_at',item.review_attempted_at)
+     :claim.is('review_attempted_at',null);
+    const {data:reviewClaim,error:reviewClaimError}=await claim
+     .select('id,review_attempted_at').maybeSingle();
+    if(reviewClaimError)return json({error:'Attribution de la relecture impossible.'},503);
+    if(reviewClaim)configReviewJobs.push({
+     id:item.id,category:item.category,operation:item.operation,
+     targetId:item.target_id,values:item.requested_values,
+     before:item.before_state,dispatchedAt:reviewClaim.review_attempted_at
+    });
+   }
+  }
+  return json({commands,controlEnabled:true,refresh,diagnostics,configJobs,configReviewJobs});
  }
  // Results are accepted only for commands that were actually dispatched to this connector.
  const commandId=clean(b?.commandId,36),ok=b?.ok===true;
