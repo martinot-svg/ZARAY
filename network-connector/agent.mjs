@@ -3,6 +3,7 @@
 import {readFile,writeFile,mkdir,chmod} from 'node:fs/promises';
 import {dirname,join} from 'node:path';
 import {readOnlyInventoryProjection} from './routeros/inventory-projections.mjs';
+import {boundedRouterOsPing} from './routeros/bounded-ping.mjs';
 import {operationReadProjection,ROUTEROS_OPERATION_READ_PROJECTIONS} from './routeros/operation-read-projections.mjs';
 import {sanitizedRouterOsDetails} from './routeros/inspector-properties.mjs';
 import {readBoundedResponseText} from './routeros/bounded-response.mjs';
@@ -311,21 +312,7 @@ async function reportResult(commandId,ok,outcome){
 }
 /** Fixed, explicitly allowed RouterOS diagnostic command; never user CLI. */
 async function diagnosticPing(address){
- const chunks=String(address||'').split('.');
- if(chunks.length!==4||!chunks.every(v=>/^[0-9]{1,3}$/.test(v)&&Number(v)<=255))
-  throw Error('Cible IPv4 de diagnostic invalide.');
- const response=await ros('ping','POST',{address:chunks.join('.'),count:'3'});
- if(!Array.isArray(response))throw Error('Réponse du ping MikroTik invalide.');
- return response.slice(0,3).map(row=>{
-  const entry={};
-  if(row&&typeof row==='object'&&!Array.isArray(row)){
-   for(const key of ['seq','time','status','ttl']){
-    const value=row[key];
-    if(typeof value==='string'&&value.length<=64)entry[key]=value;
-   }
-  }
-  return entry;
- });
+ return boundedRouterOsPing(ros,address);
 }
 async function poll(){
  const r=await api('poll');
