@@ -2,7 +2,14 @@ name: MikroTik CHR isolated VM boot smoke
 # The full WinBox/CHR runtime tests consume hosted-runner minutes.
 # They are intentionally opt-in; the suite has already been executed via PR CI.
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/mikrotik-chr-boot.yml"
+      - "tools/winbox-lab/chr-boot.py"
   workflow_dispatch:
+concurrency:
+  group: chr-boot-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
