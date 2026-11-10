@@ -1,4 +1,4 @@
-// RouterOS REST GET projections. Deliberately excludes credentials, scripts,
+// RouterOS REST read-only projections. Deliberately excludes credentials, scripts,
 // private keys, raw firewall rules and user-configured secrets.
 // A new source must be explicitly reviewed here before collection.
 const fieldLists={
@@ -23,6 +23,16 @@ const fieldLists={
  'queue/simple':['.id','name','target','max-limit','disabled'],
  'ip/firewall/filter':['.id','chain','action','disabled'],
  'ip/firewall/nat':['.id','chain','action','disabled'],
+ 'interface/bridge':['.id','name','protocol-mode','running','disabled'],
+ 'interface/bridge/port':['.id','interface','bridge','hw','disabled'],
+ 'ip/dhcp-server/network':['.id','address','gateway','dns-server'],
+ 'ip/dns/static':['.id','name','address','type','disabled'],
+ 'ip/firewall/address-list':['.id','list','address','disabled'],
+ 'queue/tree':['.id','name','parent','max-limit','disabled'],
+ 'interface/wireguard':['.id','name','mtu','listen-port','running','disabled'],
+ 'interface/wireguard/peers':['.id','name','interface','allowed-address','disabled'],
+ 'routing/rule':['.id','src-address','dst-address','action','table','disabled'],
+ 'ipv6/address':['.id','address','interface','disabled'],
  'ip/route':['.id','dst-address','gateway','active','disabled']
 };
 export const INVENTORY_PROJECTIONS=Object.freeze(Object.fromEntries(
