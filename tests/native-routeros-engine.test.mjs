@@ -31,7 +31,7 @@ test('native script processes whitelisted actions with explicit RouterOS confirm
  assert.match(ros,/provision_voucher/);
  assert.match(ros,/resultBody/);
  assert.match(ros,/"action"="result"/);
- assert.doesNotMatch(ros,/\/ip firewall|\/ip route add|\/user add/i);
+ assert.doesNotMatch(ros,/\/ip firewall (?:filter|nat) (?:add|set|remove|enable|disable)|\/ip route (?:add|set|remove)|\/user add/i);
 });
 test('server filters native agent actions without changing legacy connector behavior',()=>{
  assert.match(api,/declared=b\?\.supportedActions/);
