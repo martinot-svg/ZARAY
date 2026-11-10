@@ -3,7 +3,7 @@
 # Credentials and all RouterOS actions stay on the router. HTTPS certificates MUST be verified.
 :local routerId "__ZARAY_ROUTER_ID__";
 :local pairCode "__ZARAY_PAIRING_TOKEN__";
-:local endpoint "https://zaray.vercel.app/api/network/agent";
+:local endpoint "__ZARAY_AGENT_ENDPOINT__";
 :if ([:len $routerId] != 36 || [:len $pairCode] != 64) do={ :error "ZARAY: incomplete installation file"; };
 :if ([:len [/system script find where name="zaray-native-cycle"]] > 0) do={ :error "ZARAY: native agent already installed"; };
 :local body [:serialize to=json value=({"routerId"=$routerId;"action"="claim"}) options=json.no-string-conversion];
@@ -22,7 +22,7 @@
  :local rid $zarayNativeRouterId;
  :local token $zarayNativeToken;
  :if ([:typeof $token] != "str" || !($token ~ "^[a-f0-9]{64}$")) do={ :error "ZARAY: connector key missing"; };
- :local endpoint "https://zaray.vercel.app/api/network/agent";
+ :local endpoint "__ZARAY_AGENT_ENDPOINT__";
  :local headers ("Authorization: Bearer " . $token . ",Content-Type: application/json");
  # Offline guard runs BEFORE all cloud requests, including when HTTPS is unreachable.
  # A missing/invalid router clock cannot be trusted for a calendar expiration.
@@ -55,6 +55,7 @@
  };
  :local obs [:toarray ""];
  :local kinds [:toarray ""];
+ :local sourceStats [:toarray ""];
  :local count 0;
  :do {
   :set kinds ($kinds,"interface");
@@ -67,6 +68,8 @@
     :set count ($count + 1);
    };
   };
+  :local reported [:len [/interface find]];
+  :set sourceStats ($sourceStats,({"kind"="interface";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
  } on-error={ :log warning "ZARAY: RouterOS interfaces unavailable"; };
  :set count 0;
  :do {
@@ -77,6 +80,8 @@
     :set count ($count + 1);
    };
   };
+  :local reported [:len [/ip hotspot active find]];
+  :set sourceStats ($sourceStats,({"kind"="hotspot";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
  } on-error={ :log warning "ZARAY: Hotspot discovery unavailable"; };
  :set count 0;
  :do {
@@ -87,10 +92,12 @@
     :set count ($count + 1);
    };
   };
+  :local reported [:len [/ppp active find]];
+  :set sourceStats ($sourceStats,({"kind"="pppoe";"reportedCount"=$reported;"collectedCount"=$count;"complete"=($count = $reported)}));
  } on-error={ :log warning "ZARAY: PPP discovery unavailable"; };
  :if ([:len $kinds] = 0) do={ :error "ZARAY: no RouterOS inventory available"; };
  :local metrics ({"cpuLoad"=[/system resource get cpu-load];"totalMemory"=[/system resource get total-memory];"freeMemory"=[/system resource get free-memory];"uptime"=[:tostr [/system resource get uptime]]});
- :local syncBody [:serialize to=json value=({"routerId"=$rid;"action"="sync";"agentKind"="routeros-native";"model"=[/system resource get board-name];"version"=[/system resource get version];"kinds"=$kinds;"observations"=$obs;"resources"=$metrics}) options=json.no-string-conversion];
+ :local syncBody [:serialize to=json value=({"routerId"=$rid;"action"="sync";"agentKind"="routeros-native";"model"=[/system resource get board-name];"version"=[/system resource get version];"kinds"=$kinds;"observations"=$obs;"sourceStats"=$sourceStats;"resources"=$metrics}) options=json.no-string-conversion];
  :do {
   /tool fetch url=$endpoint http-method=post http-data=$syncBody http-header-field=$headers check-certificate=yes output=none;
  } on-error={ :log warning "ZARAY: sync failed"; :error "ZARAY: sync failed"; };
@@ -248,13 +255,19 @@
     :foreach item in=[/ip hotspot active find where user=$username] do={
      :if ([:typeof $sessionId] = "nil" || $sessionId = "" || [:tostr $item] = $sessionId) do={ /ip hotspot active remove $item; };
     };
-    :set success true; :set outcome "Hotspot sessions updated";
+    :foreach remaining in=[/ip hotspot active find where user=$username] do={
+     :if ([:typeof $sessionId] = "nil" || $sessionId = "" || [:tostr $remaining] = $sessionId) do={ :error "Hotspot session still active"; };
+    };
+    :set success true; :set outcome "Hotspot session removal confirmed";
    };
    :if ($protocol = "pppoe" && ($action = "suspend_account" || $action = "disconnect_ppp")) do={
     :foreach item in=[/ppp active find where name=$username] do={
      :if ([:typeof $sessionId] = "nil" || $sessionId = "" || [:tostr $item] = $sessionId) do={ /ppp active remove $item; };
     };
-    :set success true; :set outcome "PPP sessions updated";
+    :foreach remaining in=[/ppp active find where name=$username] do={
+     :if ([:typeof $sessionId] = "nil" || $sessionId = "" || [:tostr $remaining] = $sessionId) do={ :error "PPP session still active"; };
+    };
+    :set success true; :set outcome "PPP session removal confirmed";
    };
   } on-error={ :set success false; :set outcome "RouterOS execution not confirmed"; };
   :local resultBody [:serialize to=json value=({"routerId"=$rid;"action"="result";"commandId"=$id;"ok"=$success;"outcome"=$outcome}) options=json.no-string-conversion];

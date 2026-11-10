@@ -2,6 +2,12 @@
 // ZARAY Network Connector — Node.js 22+; outbound-only, no third-party packages.
 import {readFile,writeFile,mkdir,chmod} from 'node:fs/promises';
 import {dirname,join} from 'node:path';
+import {readOnlyInventoryProjection} from './routeros/inventory-projections.mjs';
+import {boundedRouterOsPing} from './routeros/bounded-ping.mjs';
+import {operationReadProjection,ROUTEROS_OPERATION_READ_PROJECTIONS} from './routeros/operation-read-projections.mjs';
+import {sanitizedRouterOsDetails} from './routeros/inspector-properties.mjs';
+import {readBoundedResponseText} from './routeros/bounded-response.mjs';
+import {chooseRouterOsSources} from './routeros/inventory-schedule.mjs';
 import {homedir} from 'node:os';
 const env=process.env;
 const CLOUD=env.ZARAY_URL||'https://zaray.vercel.app';
@@ -17,14 +23,22 @@ const cloud=ensureHttps(CLOUD),router=ensureHttps(ROUTER);
 const basic='Basic '+Buffer.from(env.MIKROTIK_USER+':'+env.MIKROTIK_PASSWORD).toString('base64');
 async function request(url,opts={}){
  const r=await fetch(url,{redirect:'error',signal:AbortSignal.timeout(12000),...opts});
- const text=await r.text();
+ const text=await readBoundedResponseText(r);
  let data;try{data=text?JSON.parse(text):null;}catch{data=text;}
  if(!r.ok)throw Error('HTTP '+r.status+' '+String(data?.message||'').slice(0,130));
  return data;
 }
-async function ros(path,method='GET',body){
+async function ros(path,method='GET',body,proplist){
  const safe=path.split('/').map(encodeURIComponent).join('/');
- return request(router+'/rest/'+safe,{method,headers:{Authorization:basic,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+ if(proplist!==undefined){
+  const allowed=Object.hasOwn(ROUTEROS_OPERATION_READ_PROJECTIONS,path)
+   ? operationReadProjection(path) : readOnlyInventoryProjection(path);
+  if(method!=='GET'||!Array.isArray(proplist)||!proplist.length||
+     !proplist.every(field=>typeof field==='string'&&allowed.includes(field)))
+   throw Error('Unsafe RouterOS REST projection.');
+ }
+ const query=proplist?'?'+new URLSearchParams({'.proplist':proplist.join(',')}).toString():'';
+ return request(router+'/rest/'+safe+query,{method,headers:{Authorization:basic,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
 }
 let token='';
 try{const saved=JSON.parse(await readFile(SECRET_FILE,'utf8'));if(saved.routerId===ROUTER_ID&&/^[0-9a-f]{64}$/i.test(saved.secret))token=saved.secret;}catch{}
@@ -55,9 +69,35 @@ const sources=[
  {kind:'hotspot',path:'ip/hotspot/active',key:o=>o['.id'],label:o=>o.user,ip:o=>o.address,mac:o=>o['mac-address'],active:()=>true},
  {kind:'pppoe',path:'ppp/active',key:o=>o['.id'],label:o=>o.name,ip:o=>o.address,mac:o=>o['caller-id'],active:()=>true},
  {kind:'dhcp',path:'ip/dhcp-server/lease',key:o=>o['.id'],label:o=>o['host-name'],ip:o=>o.address,mac:o=>o['mac-address'],active:o=>o.status==='bound'},
- {kind:'wifi',path:'interface/wifi/registration-table',key:o=>o['.id']||o['mac-address'],label:o=>o.interface,ip:o=>o['last-ip'],mac:o=>o['mac-address'],active:()=>true},
- {kind:'wifi',path:'interface/wireless/registration-table',key:o=>o['.id']||o['mac-address'],label:o=>o.interface,ip:o=>o['last-ip'],mac:o=>o['mac-address'],active:()=>true},
- {kind:'neighbor',path:'ip/neighbor',key:o=>o['.id']||o['mac-address']||o.address,label:o=>o.identity||o['interface-name'],ip:o=>o.address,mac:o=>o['mac-address'],active:()=>false}
+ {kind:'wifi',path:'interface/wifi/registration-table',key:o=>'wifi:'+(o['.id']||o['mac-address']||''),label:o=>o.interface,ip:o=>o['last-ip'],mac:o=>o['mac-address'],active:()=>true},
+ {kind:'wifi',path:'interface/wireless/registration-table',key:o=>'wireless:'+(o['.id']||o['mac-address']||''),label:o=>o.interface,ip:o=>o['last-ip'],mac:o=>o['mac-address'],active:()=>true},
+ {kind:'neighbor',path:'ip/neighbor',key:o=>o['.id']||o['mac-address']||o.address,label:o=>o.identity||o['interface-name'],ip:o=>o.address,mac:o=>o['mac-address'],active:()=>false},
+ // Admin inventories are strictly summaries, never raw RouterOS objects: exclude passwords,
+ // shared keys, scripts, firewall exports and all sensitive fields by construction.
+ {kind:'hotspot-user',path:'ip/hotspot/user',key:o=>o['.id'],label:o=>o.name,ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'hotspot-profile',path:'ip/hotspot/user/profile',key:o=>o['.id'],label:o=>[o.name,o['rate-limit']||'débit non défini'].join(' · '),ip:()=>'',mac:()=>'',active:()=>true},
+ {kind:'ppp-secret',path:'ppp/secret',key:o=>o['.id'],label:o=>[o.name,o.service||'ppp'].join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'ppp-profile',path:'ppp/profile',key:o=>o['.id'],label:o=>[o.name,o['rate-limit']||'débit non défini'].join(' · '),ip:()=>'',mac:()=>'',active:()=>true},
+ {kind:'ip-address',path:'ip/address',key:o=>o['.id'],label:o=>[o.address,o.interface].filter(Boolean).join(' · '),ip:o=>String(o.address||'').split('/')[0],mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'ip-pool',path:'ip/pool',key:o=>o['.id'],label:o=>[o.name,o.ranges].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:()=>true},
+ {kind:'dhcp-server',path:'ip/dhcp-server',key:o=>o['.id'],label:o=>[o.name,o.interface].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'dhcp-client',path:'ip/dhcp-client',key:o=>o['.id'],label:o=>[o.interface,o.status].filter(Boolean).join(' · '),ip:o=>String(o.address||'').split('/')[0],mac:()=>'',active:o=>o.status==='bound'&&o.disabled!=='true'},
+ {kind:'vlan',path:'interface/vlan',key:o=>o['.id'],label:o=>[o.name,'VLAN '+(o['vlan-id']||'—'),o.interface].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.running==='true'&&o.disabled!=='true'},
+ {kind:'arp',path:'ip/arp',key:o=>o['.id']||o.address,label:o=>o.interface||'ARP',ip:o=>o.address,mac:o=>o['mac-address'],active:o=>o.disabled!=='true'},
+ {kind:'queue',path:'queue/simple',key:o=>o['.id'],label:o=>[o.name,o.target,o['max-limit']].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'firewall-filter',path:'ip/firewall/filter',key:o=>o['.id'],label:o=>[o.chain,o.action].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'firewall-nat',path:'ip/firewall/nat',key:o=>o['.id'],label:o=>[o.chain,o.action].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'bridge',path:'interface/bridge',key:o=>o['.id'],label:o=>[o.name,o['protocol-mode']].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.running==='true'&&o.disabled!=='true'},
+ {kind:'bridge-port',path:'interface/bridge/port',key:o=>o['.id'],label:o=>[o.interface,o.bridge].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'dhcp-network',path:'ip/dhcp-server/network',key:o=>o['.id'],label:o=>[o.address,o.gateway].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:()=>true},
+ {kind:'dns-static',path:'ip/dns/static',key:o=>o['.id'],label:o=>[o.name,o.type].filter(Boolean).join(' · '),ip:o=>o.address,mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'firewall-address-list',path:'ip/firewall/address-list',key:o=>o['.id'],label:o=>[o.list,o.address].filter(Boolean).join(' · '),ip:o=>String(o.address||'').split('/')[0],mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'queue-tree',path:'queue/tree',key:o=>o['.id'],label:o=>[o.name,o.parent,o['max-limit']].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'wireguard-interface',path:'interface/wireguard',key:o=>o['.id'],label:o=>[o.name,'WireGuard'].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.running==='true'&&o.disabled!=='true'},
+ {kind:'wireguard-peer',path:'interface/wireguard/peers',key:o=>o['.id'],label:o=>[o.name||'Peer',o.interface].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'routing-rule',path:'routing/rule',key:o=>o['.id'],label:o=>[o.action,o.table].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'ipv6-address',path:'ipv6/address',key:o=>o['.id'],label:o=>[o.address,o.interface].filter(Boolean).join(' · '),ip:o=>String(o.address||'').split('/')[0],mac:()=>'',active:o=>o.disabled!=='true'},
+ {kind:'route',path:'ip/route',key:o=>o['.id'],label:o=>[o['dst-address'],o.gateway].filter(Boolean).join(' · '),ip:()=>'',mac:()=>'',active:o=>o.active==='true'&&o.disabled!=='true'}
 ];
 
 function routerUptimeSeconds(input){
@@ -75,7 +115,7 @@ function routerUptimeSeconds(input){
  return Number.isSafeInteger(seconds)&&seconds>=0?seconds:null;
 }
 async function voucherUptimeReadings(){
- const users=await ros('ip/hotspot/user');
+ const users=await ros('ip/hotspot/user','GET',undefined,['name','comment','uptime']);
  if(!Array.isArray(users))return [];
  const readings=[];
  for(const user of users){
@@ -90,59 +130,89 @@ async function voucherUptimeReadings(){
 }
 
 function normalize(v){return typeof v==='string'?v:'';}
-async function sync(){
+let inventoryCycle=0;
+async function sync(forceKinds=null){
+ const selectedSources=forceKinds
+  ? sources.filter(source=>forceKinds.includes(source.kind))
+  : chooseRouterOsSources(sources,inventoryCycle++);
+ if(!selectedSources.length)return [];
  const resource=await ros('system/resource');
  const board=await ros('system/routerboard').catch(()=>null);
- const kinds=new Set(),items=[];
+ const kinds=new Set(),items=[],sourceStats=new Map(),failedKinds=new Set();
  let voucherUsage=[];
  try{voucherUsage=await voucherUptimeReadings();}catch(e){console.warn('[ZARAY] Compteurs Hotspot indisponibles',e.message);}
- for(const source of sources){
+ for(const source of selectedSources){
   try{
-   const response=await ros(source.path);
-   if(!Array.isArray(response))continue;
+   const response=await ros(source.path,'GET',undefined,readOnlyInventoryProjection(source.path));
+   if(!Array.isArray(response))throw Error('Unexpected RouterOS inventory payload');
    kinds.add(source.kind);
-   for(const entry of response){
-    if(items.length>=500)break;
+   const limit=Math.max(0,Math.min(25,500-items.length));
+   let collected=0;
+   for(const entry of response.slice(0,limit)){
     const key=normalize(source.key(entry)).slice(0,255);if(!key)continue;
     items.push({kind:source.kind,key,ip:normalize(source.ip(entry)),mac:normalize(source.mac(entry)),
-     label:normalize(source.label(entry)),active:source.active(entry)});
+     label:normalize(source.label(entry)).slice(0,160),active:source.active(entry),
+     props:sanitizedRouterOsDetails(source.path,entry)});
+    collected++;
    }
-  }catch(e){console.warn('[ZARAY] Source indisponible',source.path,e.message);}
+   const existing=sourceStats.get(source.kind)||{kind:source.kind,reportedCount:0,collectedCount:0,complete:true};
+   existing.reportedCount+=response.length;existing.collectedCount+=collected;
+   existing.complete=existing.complete&&collected===response.length;
+   sourceStats.set(source.kind,existing);
+  }catch(e){
+   failedKinds.add(source.kind);
+   console.warn('[ZARAY] Source indisponible',source.path,e.message);
+  }
+ }
+ // One failed Wi-Fi API must not cause the other Wi-Fi API's partial result
+ // to masquerade as an exhaustive station inventory.
+ for(const kind of failedKinds){
+  const stat=sourceStats.get(kind);
+  if(stat)stat.complete=false;
  }
  if(kinds.size){
   const result=await api('sync',{model:board?.['model']||resource?.['board-name']||'',version:resource?.version||'',
-   agentKind:'node-local',kinds:[...kinds],observations:items,voucherUsage,resources:{
+   agentKind:'node-local',kinds:[...kinds],observations:items,sourceStats:[...sourceStats.values()],voucherUsage,resources:{
     cpuLoad:resource?.['cpu-load'],freeMemory:resource?.['free-memory'],
     totalMemory:resource?.['total-memory'],uptime:resource?.uptime
    }});
   console.log('[ZARAY] Synchronisées :',result.synced,'observations');
  }
+ return [...kinds];
 }
 async function findAccount(protocol,username){
  const path=protocol==='hotspot'?'ip/hotspot/user':'ppp/secret';
- const list=await ros(path);
- const row=Array.isArray(list)?list.find(o=>(protocol==='hotspot'?o.name:o.name)===username):null;
+ const list=await ros(path,'GET',undefined,operationReadProjection(path));
+ const row=Array.isArray(list)?list.find(o=>o.name===username):null;
  if(!row?.['.id'])throw Error('Compte RouterOS introuvable : '+username);
  return {path,id:row['.id']};
 }
 async function disconnect(protocol,username,sessionId){
  const path=protocol==='hotspot'?'ip/hotspot/active':'ppp/active';
- const list=await ros(path);
- const sessions=(Array.isArray(list)?list:[]).filter(o=>
+ const list=await ros(path,'GET',undefined,operationReadProjection(path));
+ if(!Array.isArray(list))throw Error('Liste des sessions MikroTik indisponible.');
+ const sessions=list.filter(o=>
   (protocol==='hotspot'?o.user:o.name)===username&&(!sessionId||o['.id']===sessionId));
+ // Retries of already absent sessions remain idempotent, but an unavailable
+ // RouterOS inventory is an error and must never be mistaken for an empty list.
  for(const row of sessions){await ros(path+'/'+row['.id'],'DELETE');}
+ // A successful DELETE request is not a confirmed disconnect. Verify again.
+ const after=await ros(path,'GET',undefined,operationReadProjection(path));
+ if(!Array.isArray(after)||after.some(o=>
+  (protocol==='hotspot'?o.user:o.name)===username&&(!sessionId||o['.id']===sessionId)))
+  throw Error('Session encore présente après la commande MikroTik.');
  return sessions.length;
 }
 async function hotspotMacRestriction(mac,block){
  if(!/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(mac))throw Error('Adresse MAC invalide');
  const path='ip/hotspot/ip-binding',tag='zaray:device:'+mac.toLowerCase();
- const rows=await ros(path);
+ const rows=await ros(path,'GET',undefined,operationReadProjection(path));
  if(!Array.isArray(rows))throw Error('Liste des règles Hotspot indisponible');
  const matching=rows.filter(row=>String(row['mac-address']||'').toLowerCase()===mac.toLowerCase());
  if(block){
   if(matching.some(row=>row.comment!==tag))throw Error('Règle existante non gérée par ZARAY : intervention manuelle nécessaire');
   if(!matching.some(row=>row.comment===tag))await ros(path,'PUT',{'mac-address':mac,type:'blocked',comment:tag});
-  const active=await ros('ip/hotspot/active');
+  const active=await ros('ip/hotspot/active','GET',undefined,operationReadProjection('ip/hotspot/active'));
   for(const session of Array.isArray(active)?active:[]){
    if(String(session['mac-address']||'').toLowerCase()===mac.toLowerCase())await ros('ip/hotspot/active/'+session['.id'],'DELETE');
   }
@@ -151,7 +221,7 @@ async function hotspotMacRestriction(mac,block){
    await ros(path+'/'+row['.id'],'DELETE');
   }
  }
- const after=await ros(path);
+ const after=await ros(path,'GET',undefined,operationReadProjection(path));
  const existing=Array.isArray(after)&&after.some(row=>String(row['mac-address']||'').toLowerCase()===mac.toLowerCase()&&row.comment===tag&&row.type==='blocked');
  if(existing!==block)throw Error('Etat du blocage non confirmé par RouterOS');
  return block?'Appareil bloqué sur Hotspot':'Restriction ZARAY retirée';
@@ -160,7 +230,7 @@ async function ensureVoucherProfile(maxDevices){
  if(!Number.isInteger(maxDevices)||maxDevices<1||maxDevices>100)throw Error('Limite appareils invalide.');
  const name='zaray-vouchers-'+maxDevices,comment='zaray:managed-hotspot-profile';
  const table='ip/hotspot/user/profile';
- const list=await ros(table);
+ const list=await ros(table,'GET',undefined,operationReadProjection(table));
  if(!Array.isArray(list))throw Error('Profils Hotspot indisponibles.');
  const existing=list.find(row=>row.name===name);
  if(existing){
@@ -169,7 +239,7 @@ async function ensureVoucherProfile(maxDevices){
  }else{
   await ros(table,'PUT',{name,'shared-users':String(maxDevices),'add-mac-cookie':'no',comment});
  }
- const after=await ros(table);
+ const after=await ros(table,'GET',undefined,operationReadProjection(table));
  if(!Array.isArray(after)||!after.some(row=>row.name===name&&Number(row['shared-users'])===maxDevices&&row.comment===comment))
   throw Error('Limite des appareils non confirmée par MikroTik.');
  return name;
@@ -178,7 +248,7 @@ async function voucherAccount(command){
  const {action,username,voucherId,password,durationMinutes,credentialScheme,maxDevices}=command;
  if(!/^[0-9a-f-]{36}$/i.test(String(voucherId||''))||!username||username.length>128)throw Error('Identité du ticket non valide.');
  const table='ip/hotspot/user',comment='zaray:voucher:'+voucherId;
- const list=await ros(table);
+ const list=await ros(table,'GET',undefined,operationReadProjection(table));
  if(!Array.isArray(list))throw Error('Liste des comptes Hotspot indisponible.');
  const matches=list.filter(u=>u.name===username);
  if(matches.length>1)throw Error('Identifiant Hotspot en double.');
@@ -194,7 +264,7 @@ async function voucherAccount(command){
   const payload={name:username,password,disabled:'false','limit-uptime':String(durationMinutes)+'m',profile,comment};
   if(existing)await ros(table+'/'+existing['.id'],'PATCH',payload);
   else await ros(table,'PUT',payload);
-  const after=await ros(table);
+  const after=await ros(table,'GET',undefined,operationReadProjection(table));
   const row=Array.isArray(after)?after.find(u=>u.name===username&&u.comment===comment):null;
   if(!row||String(row.disabled)==='true'||row.profile!==profile)throw Error('Provisionnement non confirmé.');
   return 'Compte Hotspot provisionné et activé ; première connexion attendue.';
@@ -203,8 +273,9 @@ async function voucherAccount(command){
   if(existing){
    await ros(table+'/'+existing['.id'],'PATCH',{disabled:'true'});
    await disconnect('hotspot',username);
-   const after=await ros(table+'/'+existing['.id']);
-   if(String(after.disabled)!=='true')throw Error('Désactivation Hotspot non confirmée.');
+   const after=await ros(table,'GET',undefined,operationReadProjection(table));
+   const updated=Array.isArray(after)?after.find(row=>row['.id']===existing['.id']):null;
+   if(!updated||String(updated.disabled)!=='true')throw Error('Désactivation Hotspot non confirmée.');
   }
   return 'Ticket expiré ; accès désactivé ou déjà absent.';
  }
@@ -222,8 +293,9 @@ async function execute(command){
  if(action==='suspend_account'||action==='resume_account'){
   const target=await findAccount(protocol,username);
   await ros(target.path+'/'+target.id,'PATCH',{disabled:action==='suspend_account'?'true':'false'});
-  const current=await ros(target.path+'/'+target.id);
-  if(String(current.disabled)!==(action==='suspend_account'?'true':'false'))throw Error('Etat du compte non confirmé');
+  const currentList=await ros(target.path,'GET',undefined,operationReadProjection(target.path));
+  const current=Array.isArray(currentList)?currentList.find(item=>item['.id']===target.id):null;
+  if(!current||String(current.disabled)!==(action==='suspend_account'?'true':'false'))throw Error('Etat du compte non confirmé');
   if(action==='suspend_account'){
    const count=await disconnect(protocol,username);
    return 'Compte désactivé, sessions terminées : '+count;
@@ -238,6 +310,10 @@ async function reportResult(commandId,ok,outcome){
   catch(e){if(attempt===2)throw e;await sleep(1000*(attempt+1));}
  }
 }
+/** Fixed, explicitly allowed RouterOS diagnostic command; never user CLI. */
+async function diagnosticPing(address){
+ return boundedRouterOsPing(ros,address);
+}
 async function poll(){
  const r=await api('poll');
  for(const command of r.commands||[]){
@@ -245,6 +321,24 @@ async function poll(){
   try{outcome=await execute(command);ok=true;}catch(e){outcome=String(e.message).slice(0,450);}
   try{await reportResult(command.id,ok,outcome);}
   catch(e){console.error('[ZARAY] Résultat non confirmé :',command.id,e.message);}
+ }
+ // On-demand reads are capped and use the existing tenant-bound sync endpoint.
+ for(const requested of (Array.isArray(r.refresh)?r.refresh:[]).slice(0,2)){
+  if(!requested||typeof requested.kind!=='string'||typeof requested.requestedAt!=='string'||
+     !sources.some(source=>source.kind===requested.kind))continue;
+  try{
+   const collected=await sync([requested.kind]);
+   if(collected.includes(requested.kind))
+    await api('refresh-complete',{kind:requested.kind,requestedAt:requested.requestedAt});
+  }catch(e){console.warn('[ZARAY] Actualisation RouterOS non confirmée',requested.kind,e.message);}
+ }
+ for(const job of (Array.isArray(r.diagnostics)?r.diagnostics:[]).slice(0,1)){
+  if(!job||job.kind!=='ping'||typeof job.id!=='string'||typeof job.dispatchedAt!=='string')continue;
+  let ok=false,samples=[],error='';
+  try{samples=await diagnosticPing(job.target);ok=true;}
+  catch(e){error=String(e instanceof Error?e.message:e).slice(0,160);}
+  try{await api('diagnostic-result',{jobId:job.id,dispatchedAt:job.dispatchedAt,ok,samples,error});}
+  catch(e){console.warn('[ZARAY] Résultat ping non confirmé',job.id,e.message);}
  }
 }
 console.log('[ZARAY] Surveillance démarrée pour',ROUTER_ID,'via',cloud);

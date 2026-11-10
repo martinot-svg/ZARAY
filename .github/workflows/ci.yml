@@ -43,6 +43,7 @@ jobs:
             tests/network-preparation.test.mjs \
             tests/native-routeros-engine.test.mjs \
             tests/native-network-reliability.test.mjs \
+            tests/mikrotik-administration.test.mjs \
             tests/winbox-console.test.mjs \
             tests/hotspot-captive-catalog.test.mjs \
             tests/logo-palette.test.mjs \
@@ -67,5 +68,19 @@ jobs:
             tests/seamless-global-navigation.test.mjs \
             tests/site-performance-overview.test.mjs \
             tests/fiveonepay-hybrid.test.mjs
+      - run: node --test tests/network-inventory-coverage.test.mjs tests/network-routeros-projections.test.mjs tests/network-targeted-disconnect.test.mjs
+      - run: node --test tests/network-rollback-plan.test.mjs
+      - run: node --test tests/network-session-mock.test.mjs
+      - run: node --experimental-strip-types --test tests/network-command-lease.test.mjs
+      - run: node --experimental-strip-types --test tests/network-router-heartbeat.test.mjs
+      - run: node --experimental-strip-types --test tests/preview-supabase-isolation.test.mjs
+      - run: node --test tests/network-bounded-response.test.mjs
+      - run: node --test tests/network-inventory-live-refresh.test.mjs
+      - run: node --test tests/network-diagnostics-ping.test.mjs
+      - run: node --experimental-strip-types --test tests/network-winbox-workbench.test.mjs
+      - run: node --experimental-strip-types --test tests/network-winbox-inspector-properties.test.mjs
+      - run: node --experimental-strip-types --test tests/network-winbox-extended-inventory.test.mjs
+      - run: python3 -m py_compile tools/winbox-lab/chr-boot.py tools/winbox-lab/chr-console-test.py
+      - run: node --check network-connector/agent.mjs
       - run: npm run typecheck
       - run: npm run build

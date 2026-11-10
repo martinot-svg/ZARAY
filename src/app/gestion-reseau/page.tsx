@@ -2,17 +2,24 @@
 import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 import {useEffect,useMemo,useState,type FormEvent} from 'react';
 import AppShell from '@/components/app-shell';
+import {NetworkDiagnosticsPanel} from '@/components/network/network-diagnostics-panel';
 import {ZarayIcon} from '@/components/ui/zaray-icon';
+import {filterAndSortRouterInventory,inventoryObservationIsFresh,type InventorySort} from '@/lib/network-inventory-workbench';
+import {routerHeartbeatIsFresh} from '@/lib/network-inventory-freshness';
 type Router={id:string;site_id:string;name:string;host:string;model:string|null;routeros_version:string|null;status:string;control_enabled:boolean;agent_kind:'unreported'|'node-local'|'routeros-native';last_seen_at:string|null};
 type RouterResource={router_id:string;cpu_load_percent:number;total_memory_bytes:number;free_memory_bytes:number;router_uptime:string;observed_at:string};
-type Observation={id:string;router_id:string;observed_kind:string;identity_key:string;ip_address:string|null;mac_address:string|null;client_label:string|null;active:boolean;observed_at:string};
+type Observation={id:string;router_id:string;observed_kind:string;identity_key:string;ip_address:string|null;mac_address:string|null;client_label:string|null;active:boolean;observed_at:string;safe_properties?:Record<string,string>|null};
 type Account={id:string;router_id:string;order_id:string|null;username:string;protocol:string;expires_at:string|null;grace_until:string|null;extension_until:string|null;administrative_hold:boolean;desired_state:string;applied_state:string};
 type Order={id:string;site_id:string;public_reference:string;customer_name:string;status:string;validity_days:number};
 type Command={id:string;router_id:string;action:string;username:string;status:string;outcome:string|null;created_at:string};
 type Site={id:string;company_id:string;name:string};
-const fresh=(stamp:string|null)=>!!stamp&&Date.now()-new Date(stamp).getTime()<150000;
+const fresh=routerHeartbeatIsFresh;
 const status=(r:Router)=>fresh(r.last_seen_at)?'En ligne':r.last_seen_at?'Hors ligne':'Non appairé';
 const fmt=(d:string|null)=>d?new Date(d).toLocaleString('fr-FR'):'—';
+const commandStatus:Record<string,string>={
+ queued:'Demande enregistrée',dispatched:'Mise à disposition de l’agent — confirmation attendue',
+ success:'Application confirmée par le connecteur',failed:'Échec du connecteur',cancelled:'Annulée'
+};
 export default function NetworkPage(){
  const [companyId,setCompanyId]=useState(''),[role,setRole]=useState(''),[sites,setSites]=useState<Site[]>([]),[siteId,setSiteId]=useState('');
  const [routers,setRouters]=useState<Router[]>([]),[resources,setResources]=useState<RouterResource[]>([]),[devices,setDevices]=useState<Observation[]>([]),[accounts,setAccounts]=useState<Account[]>([]),[orders,setOrders]=useState<Order[]>([]),[commands,setCommands]=useState<Command[]>([]);
@@ -23,15 +30,39 @@ export default function NetworkPage(){
  const [radiusToken,setRadiusToken]=useState(''),[radiusAccountId,setRadiusAccountId]=useState(''),[radiusPassword,setRadiusPassword]=useState('');
  const canManage=role==='owner'||role==='admin';
  const chosen=routers.find(r=>r.id===routerId);
+ const [adminSource,setAdminSource]=useState('interface');
+ const [inventoryPage,setInventoryPage]=useState(1),[inventoryVersion,setInventoryVersion]=useState(0);
+ const [adminInventory,setAdminInventory]=useState<Observation[]>([]);
+ const [adminCount,setAdminCount]=useState(0),[adminLoading,setAdminLoading]=useState(false),[adminError,setAdminError]=useState('');
+ const [adminCoverage,setAdminCoverage]=useState<{reported_count:number;collected_count:number;complete:boolean;observed_at:string}|null>(null);
+ const [adminState,setAdminState]=useState('not_collected');
+ const [inventoryQuery,setInventoryQuery]=useState('');
+ const [inventorySearchTerm,setInventorySearchTerm]=useState('');
+ const [inventorySort,setInventorySort]=useState<InventorySort>('label');
+ const [inventoryDescending,setInventoryDescending]=useState(false);
+ const [selectedInventoryId,setSelectedInventoryId]=useState('');
+ const routerInventory=adminInventory;
+ const visibleInventory=useMemo(()=>filterAndSortRouterInventory(
+  routerInventory,'',inventorySort,inventoryDescending,chosen?.last_seen_at||null
+ ),[routerInventory,inventorySort,inventoryDescending,chosen?.last_seen_at]);
+ const selectedInventory=routerInventory.find(item=>item.id===selectedInventoryId)||null;
+ const routerCommands=commands.filter(c=>c.router_id===routerId);
  const chosenResources=resources.find(r=>r.router_id===routerId);
  const healthy=chosenResources&&fresh(chosenResources.observed_at)&&chosen&&fresh(chosen.last_seen_at);
  const recentlySeenRouters=routers.filter(r=>fresh(r.last_seen_at));
+ // The agent must contact the SAME deployment that created its lab credentials.
+ function currentZarayOrigin(){
+  const url=new URL(window.location.origin);
+  if(url.protocol!=='https:'||url.username||url.password||url.port||url.pathname!=='/'||
+     url.search||url.hash)throw new Error('Un déploiement ZARAY HTTPS est obligatoire pour l’appairage.');
+  return url.origin;
+ }
  // This configuration template intentionally contains no pairing token or RouterOS credentials.
  function downloadConnectorConfig(router:Router){
   const rows=[
    '# ZARAY — configuration locale du connecteur MikroTik',
    '# À remplir sur la machine du réseau local, jamais dans GitHub.',
-   'ZARAY_URL=https://zaray.vercel.app',
+   'ZARAY_URL='+currentZarayOrigin(),
    'ZARAY_ROUTER_ID='+router.id,
    'MIKROTIK_URL=https://'+router.host.trim(),
    'MIKROTIK_USER=REMPLACER_COMPTE_ROUTEROS',
@@ -69,9 +100,44 @@ export default function NetworkPage(){
   if(!company)throw Error('Entreprise inaccessible.');
   setCompanyId(id);setRole(company.role);const list=(data.sites||[]).filter((s:Site)=>s.company_id===id);
   const requestedSite=query.get('siteId')||'';
-  setSites(list);setSiteId(list.find((s:Site)=>s.id===requestedSite)?.id||list[0]?.id||'');await refresh(id);
+  setSites(list);setSiteId(list.find((s:Site)=>s.id===requestedSite)?.id||list[0]?.id||'');
+  // A separate browser tab can open an independent WinBox-style view, but only
+  // an inventory router belonging to the selected authenticated tenant is used.
+  setRouterId(query.get('routerId')||'');
+  const requestedKind=query.get('kind')||'';
+  if(/^[a-z][a-z0-9-]{0,40}$/.test(requestedKind))setAdminSource(requestedKind);
+  await refresh(id);
  }catch(e){setError(e instanceof Error?e.message:'Erreur de chargement');}})();},[]);
  useEffect(()=>{if(!companyId)return;const handle=setInterval(()=>void refresh(companyId),30000);return()=>clearInterval(handle);},[companyId]);
+ useEffect(()=>{
+  const timer=setTimeout(()=>{setInventorySearchTerm(inventoryQuery.trim());setInventoryPage(1);setSelectedInventoryId('');},350);
+  return()=>clearTimeout(timer);
+ },[inventoryQuery]);
+ useEffect(()=>{
+  if(!companyId||!routerId)return;
+  const ctl=new AbortController();
+  setAdminLoading(true);setAdminError('');setAdminInventory([]);setAdminCoverage(null);
+  const params=new URLSearchParams({companyId,routerId,kind:adminSource,page:String(inventoryPage)});
+  if(inventorySearchTerm)params.set('search',inventorySearchTerm);
+  fetch('/api/network/inventory?'+params.toString(),{cache:'no-store',signal:ctl.signal})
+   .then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error||'Inventaire indisponible');return d;})
+   .then(d=>{if(ctl.signal.aborted)return;
+    setAdminInventory(d.items||[]);setAdminCount(d.total||0);
+    setAdminCoverage(d.source||null);setAdminState(d.sourceState||'not_collected');})
+   .catch(e=>{if(!ctl.signal.aborted){setAdminError(e instanceof Error?e.message:'Lecture impossible');setAdminState('error');}})
+   .finally(()=>{if(!ctl.signal.aborted)setAdminLoading(false);});
+  return()=>ctl.abort();
+ },[companyId,routerId,adminSource,inventoryPage,inventoryVersion,inventorySearchTerm]);
+ async function disconnectObserved(d:Observation){
+  if(!chosen||!canManage||busy||!inventoryObservationIsFresh(d.observed_at,chosen.last_seen_at))return;
+  const kind=d.observed_kind==='hotspot'?'Hotspot':'PPPoE';
+  const identity=d.client_label||'session inconnue';
+  const reason=prompt('Déconnecter '+identity+' ('+kind+') sur '+chosen.name+' ? Motif obligatoire :')?.trim();
+  if(!reason)return;
+  if(!confirm('Confirmer la déconnexion de cette session uniquement ? La commande sera envoyée au routeur ; le résultat ne sera confirmé qu’après vérification par RouterOS.'))return;
+  await run('/api/network/operations',{routerId:chosen.id,observationId:d.id,reason,confirmation:'DECONNECTER'});
+  setInventoryVersion(v=>v+1);
+ }
  async function run(endpoint:string,payload:Record<string,unknown>,method='POST'){
   setBusy(true);setError('');setNotice('');
   try{const response=await fetch(endpoint,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,companyId})});const data=await response.json();if(!response.ok)throw Error(data.error||'Action impossible');setNotice(data.message||'Action enregistrée.');await refresh();return data;}
@@ -113,13 +179,15 @@ export default function NetworkPage(){
    const response=await fetch('/network/zaray-routeros-agent.rsc',{cache:'no-store'});
    if(!response.ok)throw new Error('Modèle de l’agent natif indisponible.');
    const template=await response.text();
-   if(!template.includes('__ZARAY_ROUTER_ID__')||!template.includes('__ZARAY_PAIRING_TOKEN__'))
+   if(!template.includes('__ZARAY_ROUTER_ID__')||!template.includes('__ZARAY_PAIRING_TOKEN__')||
+      !template.includes('__ZARAY_AGENT_ENDPOINT__'))
     throw new Error('Le modèle du script est incomplet.');
    const data=await run('/api/network/pair',{routerId:r.id});
    if(!data?.pairingToken)return;
    setPair({token:data.pairingToken,routerId:r.id,expiresAt:data.expiresAt});
    const source=template.replaceAll('__ZARAY_ROUTER_ID__',r.id)
-    .replaceAll('__ZARAY_PAIRING_TOKEN__',data.pairingToken);
+    .replaceAll('__ZARAY_PAIRING_TOKEN__',data.pairingToken)
+    .replaceAll('__ZARAY_AGENT_ENDPOINT__',currentZarayOrigin()+'/api/network/agent');
    const url=URL.createObjectURL(new Blob([source],{type:'text/plain;charset=utf-8'}));
    const a=document.createElement('a');a.href=url;a.download='zaray-native-'+r.id+'.rsc';
    document.body.appendChild(a);a.click();a.remove();
@@ -183,9 +251,9 @@ export default function NetworkPage(){
     <p className="muted"><a href="https://github.com/martinot-svg/ZARAY/tree/main/network-connector/routeros" target="_blank" rel="noopener noreferrer">Documentation et limites du moteur natif</a></p>
    </section>
   </details>
-  <details className="workspace-disclosure"><summary>WinBox · console MikroTik</summary>
+  <details className="workspace-disclosure"><summary>Administration MikroTik</summary>
    <section className="panel">
-    <div className="panel-head"><div><h2 className="panel-title">Console MikroTik intégrée à ZARAY</h2><span className="muted">Diagnostics RouterOS en lecture seule</span></div></div>
+    <div className="panel-head"><div><h2 className="panel-title">Administration MikroTik</h2><span className="muted">Diagnostics RouterOS en lecture seule</span></div></div>
     <p className="muted">Ce tableau de bord reprend certaines fonctions de supervision de WinBox, sans lancer d'exécutable Windows ni ouvrir l'administration du routeur sur Internet. Les données sont remontées par le connecteur privé ZARAY.</p>
     <div className="form-stack compact-form">
      <label>Routeur<select value={routerId} onChange={e=>setRouterId(e.target.value)}>{routers.map(r=><option value={r.id} key={r.id}>{r.name}</option>)}</select></label>
@@ -217,6 +285,95 @@ export default function NetworkPage(){
        <p className="muted">Les nombres représentent uniquement les dernières observations reçues, pas un contrôle d'accès Internet.</p>
       </div>
      </div>:<div className="empty-state"><strong>Aucun routeur sélectionné</strong><p>Ajoutez puis associez un MikroTik pour afficher ses diagnostics.</p></div>}
+    {chosen&&<>
+     <div className="panel" style={{padding:16}}>
+      <h3>Inventaire du routeur sélectionné</h3>
+      <p className="muted">Site : {sites.find(s=>s.id===chosen.site_id)?.name||'Non disponible'} · Agent : {chosen.agent_kind==='routeros-native'?'RouterOS natif':chosen.agent_kind==='node-local'?'Connecteur local':'Non identifié'} · Contrôle : {chosen.control_enabled?'activé':'désactivé'}</p>
+      <label>Source d’inventaire<select value={adminSource} onChange={e=>{setAdminSource(e.target.value);setInventoryPage(1);setInventoryQuery('');setSelectedInventoryId('');}}>
+       <optgroup label="Vue générale et interfaces"><option value="interface">Interfaces</option><option value="vlan">Interfaces VLAN</option><option value="bridge">Bridges</option><option value="bridge-port">Ports de bridge</option><option value="wifi">Stations Wi-Fi</option><option value="neighbor">Voisins</option><option value="radius">Serveurs RADIUS déclarés</option></optgroup>
+       <optgroup label="Hotspot et PPPoE"><option value="hotspot">Sessions Hotspot</option><option value="hotspot-user">Comptes Hotspot</option><option value="hotspot-profile">Profils Hotspot</option><option value="pppoe">Sessions PPPoE</option><option value="ppp-secret">Comptes PPP</option><option value="ppp-profile">Profils PPP</option></optgroup>
+       <optgroup label="IP et DHCP"><option value="ip-address">Adresses IP</option><option value="ip-pool">Pools IP</option><option value="dhcp-server">Serveurs DHCP</option><option value="dhcp-client">Clients DHCP</option><option value="dhcp">Baux DHCP</option><option value="arp">Table ARP</option><option value="dhcp-network">Réseaux DHCP</option><option value="dns-static">Enregistrements DNS statiques</option><option value="ipv6-address">Adresses IPv6</option></optgroup>
+       <optgroup label="VPN — lecture seule"><option value="wireguard-interface">Interfaces WireGuard</option><option value="wireguard-peer">Pairs WireGuard</option></optgroup>
+       <optgroup label="Débits et sécurité"><option value="queue">Files simples</option><option value="queue-tree">Queue Tree</option><option value="firewall-filter">Règles pare-feu</option><option value="firewall-address-list">Listes d’adresses du pare-feu</option><option value="firewall-nat">Règles NAT</option><option value="route">Routes IP</option><option value="routing-rule">Règles de routage</option></optgroup>
+      </select></label>
+      <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+       <p className="muted" role="status">{adminLoading?'Chargement des observations…':adminState==='migration_required'?'Migration des inventaires non appliquée.':adminState==='requires_local_connector'?'Source avancée réservée au connecteur local HTTPS.':adminState==='stale'?'Inventaire ancien : aucune donnée considérée comme actuelle.':adminState==='partial'?'Inventaire partiel : limite de collecte atteinte.':adminState==='complete'?'Source lue par le connecteur (instantané, pas une mesure en direct).':adminState==='error'?'Lecture impossible.':'Source non encore collectée ou non compatible avec ce routeur.'}</p>
+       <button type="button" disabled={!routerId} onClick={()=>{
+        const url=new URL('/gestion-reseau',window.location.origin);
+        url.searchParams.set('companyId',companyId);
+        url.searchParams.set('routerId',routerId);
+        url.searchParams.set('kind',adminSource);
+        window.open(url.toString(),'_blank','noopener,noreferrer');
+       }}>Ouvrir cette vue dans un nouvel onglet</button>
+       <button type="button" disabled={busy||!canManage||chosen.agent_kind!=='node-local'||!fresh(chosen.last_seen_at)}
+        onClick={()=>void run('/api/network/inventory/refresh',{routerId:chosen.id,kind:adminSource})}>
+        Demander une nouvelle collecte RouterOS
+       </button>
+       <button type="button" disabled={adminLoading} onClick={()=>setInventoryVersion(v=>v+1)}>Relire les données collectées</button>
+      </div>
+      {adminCoverage&&<p className="muted">Collectés : {adminCoverage.collected_count} / {adminCoverage.reported_count} éléments observés sur cette source · dernier relevé : {fmt(adminCoverage.observed_at)} · {adminCoverage.complete?'Collecte déclarée complète':'Collecte tronquée'}</p>}
+      {adminError&&<p role="alert" className="muted">{adminError}</p>}
+      <div style={{display:'flex',alignItems:'end',flexWrap:'wrap',gap:12,marginTop:12,marginBottom:10}}>
+       <label style={{flex:'1 1 220px'}}>Rechercher dans l’inventaire du routeur
+        <input type="search" autoComplete="off" value={inventoryQuery} onChange={e=>{setInventoryQuery(e.target.value.slice(0,64));setInventoryPage(1);setSelectedInventoryId('');}}
+         placeholder="Nom, IP, MAC, identifiant…" aria-label="Rechercher dans toutes les observations de ce routeur"/>
+       </label>
+       <label>Trier par
+        <select value={inventorySort} onChange={e=>setInventorySort(e.target.value as InventorySort)} aria-label="Trier l’inventaire">
+         <option value="label">Nom</option><option value="ip">Adresse IP</option><option value="observed">Date d’observation</option><option value="state">État observé</option>
+        </select>
+       </label>
+       <button type="button" aria-label="Inverser l’ordre du tri" onClick={()=>setInventoryDescending(v=>!v)}>
+        {inventoryDescending?'Ordre décroissant':'Ordre croissant'}
+       </button>
+      </div>
+      <p className="muted" role="status">{visibleInventory.length} résultat(s) affiché(s) sur {adminCount} observation(s) trouvée(s) dans les données mémorisées du routeur · page {inventoryPage}. {inventoryQuery.trim()!==inventorySearchTerm?'Recherche en préparation…':'Recherche paginée sous contrôle des autorisations.'}</p>
+      {routerInventory.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Nom</th><th>Adresse IP</th><th>Adresse MAC</th><th>État observé</th><th>Dernière observation</th><th>Propriétés</th><th>Intervention</th></tr></thead><tbody>
+       {visibleInventory.map(d=><tr key={d.id}><td>{d.client_label||d.identity_key}</td><td>{d.ip_address||'—'}</td><td>{d.mac_address||'—'}</td><td>{inventoryObservationIsFresh(d.observed_at,chosen.last_seen_at)?(d.active?'Actif':'Inactif'):'Non vérifié récemment'}</td><td>{fmt(d.observed_at)}</td><td><button type="button" aria-pressed={selectedInventoryId===d.id} onClick={()=>setSelectedInventoryId(d.id)}>Propriétés</button></td><td>{(d.observed_kind==='hotspot'||d.observed_kind==='pppoe')&&canManage&&chosen.control_enabled&&d.active&&inventoryObservationIsFresh(d.observed_at,chosen.last_seen_at)?
+        <button type="button" disabled={busy} onClick={()=>void disconnectObserved(d)}>Déconnecter</button>:
+        <span className="muted">{d.observed_kind==='hotspot'||d.observed_kind==='pppoe'?'Non disponible':'Lecture seule'}</span>}</td></tr>)}
+      </tbody></table></div>:<p className="muted">Aucune observation vérifiable pour cette source sur ce routeur.</p>}
+      {routerInventory.length>0&&visibleInventory.length===0&&<p className="muted">Aucun résultat sur cette page pour cette recherche.</p>}
+      {selectedInventory&&<section className="panel" aria-label="Propriétés de l’élément sélectionné" style={{padding:14,marginTop:12}}>
+       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
+        <h4 style={{margin:0}}>Propriétés · {selectedInventory.client_label||selectedInventory.identity_key}</h4>
+        <button type="button" onClick={()=>setSelectedInventoryId('')}>Fermer les propriétés</button>
+       </div>
+       <dl style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginTop:12}}>
+        <div><dt className="muted">Source RouterOS</dt><dd>{selectedInventory.observed_kind}</dd></div>
+        <div><dt className="muted">Identifiant observé</dt><dd style={{overflowWrap:'anywhere'}}>{selectedInventory.identity_key}</dd></div>
+        <div><dt className="muted">Adresse IP</dt><dd>{selectedInventory.ip_address||'—'}</dd></div>
+        <div><dt className="muted">Adresse MAC</dt><dd>{selectedInventory.mac_address||'—'}</dd></div>
+        {Object.entries(selectedInventory.safe_properties||{}).map(([key,value])=><div key={key}>
+         <dt className="muted">{key.replaceAll('-',' ')}</dt>
+         <dd style={{overflowWrap:'anywhere'}}>{value}</dd>
+        </div>)}
+        <div><dt className="muted">Dernière observation</dt><dd>{fmt(selectedInventory.observed_at)}</dd></div>
+        <div><dt className="muted">État vérifiable</dt><dd>{inventoryObservationIsFresh(selectedInventory.observed_at,chosen.last_seen_at)?(selectedInventory.active?'Actif':'Inactif'):'Non vérifié récemment'}</dd></div>
+       </dl>
+       <p className="muted">Instantané en lecture seule : les propriétés viennent de la collecte RouterOS avec une liste de champs autorisés, jamais d’une récupération brute de configuration. Certains équipements ou agents ne disposent pas de tous ces champs.</p>
+       {(selectedInventory.observed_kind==='hotspot'||selectedInventory.observed_kind==='pppoe')&&canManage&&chosen.control_enabled&&selectedInventory.active&&inventoryObservationIsFresh(selectedInventory.observed_at,chosen.last_seen_at)&&
+        <button type="button" disabled={busy} onClick={()=>void disconnectObserved(selectedInventory)}>Déconnecter la session sélectionnée</button>}
+       <NetworkDiagnosticsPanel key={selectedInventory.id} companyId={companyId} routerId={routerId}
+        observationId={selectedInventory.id} ipAddress={selectedInventory.ip_address}
+        canManage={canManage} routerOnline={chosen.agent_kind==='node-local'&&chosen.control_enabled&&
+         selectedInventory.active&&inventoryObservationIsFresh(selectedInventory.observed_at,chosen.last_seen_at)}/>
+      </section>}
+      <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginTop:8}}>
+       <span className="muted">{adminCount} lignes mémorisées (incluant l’historique) · page {inventoryPage}</span>
+       <button type="button" disabled={adminLoading||inventoryPage<=1} onClick={()=>setInventoryPage(p=>p-1)}>Précédent</button>
+       <button type="button" disabled={adminLoading||inventoryPage*50>=adminCount} onClick={()=>setInventoryPage(p=>p+1)}>Suivant</button>
+      </div>
+     </div>
+     <div className="panel" style={{padding:16}}>
+      <h3>Commandes du routeur sélectionné</h3>
+      <p className="muted">Extrait des 50 dernières commandes de l’entreprise. Une commande demandée ou envoyée reste en attente de confirmation du routeur.</p>
+      {routerCommands.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Heure</th><th>Action</th><th>Compte</th><th>Statut</th><th>Retour du routeur</th></tr></thead><tbody>
+       {routerCommands.map(c=><tr key={c.id}><td>{fmt(c.created_at)}</td><td>{c.action}</td><td>{c.username}</td><td>{commandStatus[c.status]||'État inconnu'}</td><td>{c.outcome||'—'}</td></tr>)}
+      </tbody></table></div>:<p className="muted">Aucune commande pour ce routeur dans cet extrait.</p>}
+     </div>
+     <p className="muted">Les inventaires pare-feu, NAT, routage, DHCP et files d’attente sont disponibles uniquement en lecture avec le connecteur local si RouterOS prend en charge leurs API. Le moteur natif conserve ses sources limitées. Les modifications de pare-feu, NAT, routes, DHCP, le terminal libre et les journaux sensibles restent désactivés jusqu’à validation sur routeur de test et retour arrière local sûr.</p>
+    </>}
     <div className="panel" style={{padding:16}}>
      <h3>WinBox officiel — application locale</h3>
      <p className="muted">L'archive Windows fournie correspond à WinBox v4.5. Pour ouvrir l'application, téléchargez-la sur votre ordinateur Windows, extrayez WinBox.exe et connectez-vous à l'adresse du routeur depuis un réseau autorisé.</p>
@@ -278,7 +435,7 @@ export default function NetworkPage(){
   <details className="workspace-disclosure"><summary>Comptes et suspensions</summary><section className="panel"><div className="panel-head"><h2 className="panel-title">Comptes et suspensions</h2><span className="muted">{accounts.length} comptes</span></div>
    {accounts.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Compte</th><th>Expiration / grâce</th><th>Décision</th><th>Appliqué sur MikroTik</th><th>Actions</th></tr></thead><tbody>{accounts.map(a=><tr key={a.id}><td><strong>{a.username}</strong><small>{a.protocol.toUpperCase()}{a.administrative_hold?' · Suspension administrative':''}</small></td><td>{fmt(a.expires_at)}<small>Grâce : {fmt(a.grace_until)} · Exception : {fmt(a.extension_until)}</small></td><td>{a.desired_state}</td><td>{a.applied_state}</td><td><button type="button" disabled={!canManage||busy} onClick={()=>void hold(a)}>{a.administrative_hold?'Lever le blocage':'Suspendre'}</button> <button type="button" disabled={!canManage||busy} onClick={()=>void extend(a)}>Prolonger</button></td></tr>)}</tbody></table></div>:<div className="empty-state"><strong>Aucun compte associé</strong><p>Associez une commande à un utilisateur Hotspot ou PPPoE.</p></div>}
   </section></details>
-  <details className="workspace-disclosure"><summary>Historique des commandes</summary><section className="panel"><h2 className="panel-title">Historique des commandes réseau</h2>{commands.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Heure</th><th>Action</th><th>Compte</th><th>Statut</th><th>Retour</th></tr></thead><tbody>{commands.map(c=><tr key={c.id}><td>{fmt(c.created_at)}</td><td>{c.action}</td><td>{c.username}</td><td>{c.status}</td><td>{c.outcome||'—'}</td></tr>)}</tbody></table></div>:<p className="muted">Aucune commande pour cette entreprise.</p>}</section></details>
+  <details className="workspace-disclosure"><summary>Historique des commandes</summary><section className="panel"><h2 className="panel-title">Historique des commandes réseau</h2>{commands.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Heure</th><th>Action</th><th>Compte</th><th>Statut</th><th>Retour</th></tr></thead><tbody>{commands.map(c=><tr key={c.id}><td>{fmt(c.created_at)}</td><td>{c.action}</td><td>{c.username}</td><td>{commandStatus[c.status]||'État inconnu'}</td><td>{c.outcome||'—'}</td></tr>)}</tbody></table></div>:<p className="muted">Aucune commande pour cette entreprise.</p>}</section></details>
   {(error||notice)&&<section className="panel" role={error?'alert':'status'}>{error||notice}</section>}
  </AppShell>;
 }

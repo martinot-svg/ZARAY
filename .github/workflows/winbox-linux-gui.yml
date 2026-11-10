@@ -1,0 +1,66 @@
+name: WinBox 4.5 Linux GUI runtime Xvfb (isolated)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ui-smoke:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install headless GUI and Qt display dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            xvfb xauth x11-utils x11-apps xdotool libxcb-cursor0 libxkbcommon-x11-0 \
+            libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 \
+            libxcb-xinerama0 libxcb-xkb1 libxcb-randr0 libxcb-shape0 \
+            libopengl0 libgl1 libegl1 libfontconfig1 libxrender1 imagemagick iproute2
+      - name: Download hash-pinned official WinBox Linux 4.5
+        run: |
+          mkdir -p winbox-evidence winbox-input
+          curl -fsSL --retry 3 --max-time 90 \
+            https://download.mikrotik.com/routeros/winbox/4.5/WinBox_Linux.zip \
+            -o winbox-input/winbox-linux.zip
+          echo "5192817089eb91ac5d03edc68661b2603ef81f8098627ab4fd9425b6cc7546a2  winbox-input/winbox-linux.zip" | sha256sum -c -
+          unzip -q winbox-input/winbox-linux.zip -d winbox-input
+          find winbox-input -maxdepth 4 -type f -print > winbox-evidence/archive-files.txt
+          exe=$(find winbox-input -maxdepth 4 -type f -name 'WinBox' | head -n 1)
+          test -n "$exe"
+          chmod +x "$exe"
+          ldd "$exe" | tee winbox-evidence/linked-libraries.txt
+          if grep -q 'not found' winbox-evidence/linked-libraries.txt; then
+            echo "Required Qt/X11 library missing" >&2
+            exit 1
+          fi
+          echo "WINBOX_EXE=$PWD/$exe" >> "$GITHUB_ENV"
+      - name: Run WinBox GUI without network and capture real window tree
+        run: |
+          sudo env WINBOX_EXE="$WINBOX_EXE" unshare --net -- /usr/bin/xvfb-run -a -s '-screen 0 1366x768x24' \
+            bash -c '
+              set -eu
+              export QT_QPA_PLATFORM=xcb LIBGL_ALWAYS_SOFTWARE=1 QT_QUICK_BACKEND=software
+              "$WINBOX_EXE" > winbox-evidence/stderr.log 2>&1 &
+              pid=$!
+              sleep 12
+              if ! kill -0 "$pid" 2>/dev/null; then
+                echo "WinBox Linux process exited before inspection" >&2
+                cat winbox-evidence/stderr.log >&2
+                exit 1
+              fi
+              xwininfo -root -tree > winbox-evidence/window-tree.txt
+              xwd -root -silent -out winbox-evidence/window.xwd
+              kill "$pid"
+              wait "$pid" 2>/dev/null || :
+              cat winbox-evidence/window-tree.txt
+            '
+      - name: Preserve real WinBox X11 window and screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: winbox-45-linux-gui-offline
+          path: winbox-evidence/
+          retention-days: 7
+          if-no-files-found: warn

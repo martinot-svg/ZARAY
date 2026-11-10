@@ -1,3 +1,4 @@
+import {networkWritesBlockedInPreview} from '@/lib/network-preview-guard';
 import { randomBytes, createHash } from 'node:crypto';
 import { NextRequest,NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
@@ -7,6 +8,7 @@ export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const json=(body:unknown,status=200)=>NextResponse.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 export async function POST(req:NextRequest){
+ if(networkWritesBlockedInPreview())return NextResponse.json({error:'Prévisualisation réseau en lecture seule.'},{status:403,headers:{'Cache-Control':'no-store'}});
  const b=await req.json().catch(()=>null) as {companyId?:string;routerId?:string}|null;
  if(!b?.companyId||!b.routerId)return json({error:'Entreprise et routeur requis.'},400);
  const session=await createClient(),access=await authorizeTenant(session,b.companyId);

@@ -10,9 +10,10 @@ const routeros=read('public/network/zaray-routeros-agent.rsc');
 const migration=read('supabase/migrations/20261109210000_network_native_entitlements.sql');
 
 test('unconfirmed network commands are eligible for leasing again with no duplicates',()=>{
- assert.match(api,/retryBefore=new Date\(Date\.now\(\)-90000\)/);
+ assert.match(api,/dispatchNow=Date\.now\(\)/);
+ assert.match(api,/dispatchableNetworkCommand\(cmd,dispatchNow\)/);
  assert.match(api,/\.in\('status',\['queued','dispatched'\]\)/);
- assert.match(api,/cmd\.status==='dispatched'/);
+ assert.match(read('src/lib/network-command-lease.ts'),/cmd\.status!=='dispatched'/);
  assert.match(api,/\.eq\('dispatched_at',cmd\.dispatched_at\)/);
  assert.match(api,/\.eq\('status',cmd\.status\)/);
  assert.match(api,/query\.in\('action',supported\)/);
@@ -58,7 +59,8 @@ test('bandwidth configuration is optional, bounded, snapshotted, and never overw
  assert.match(routeros,/PPP profile not managed by ZARAY/);
 });
 test('existing control gate and bounded RouterOS actions are intact',()=>{
- assert.match(api,/if\(!router\.control_enabled\)return json\(\{commands:\[\],controlEnabled:false\}\)/);
+ assert.match(api,/if\(!router\.control_enabled\)return json\(\{commands:\[\],controlEnabled:false,refresh\}\)/);
+ assert.match(api,/if\(!router\.control_enabled\)return json\(\{commands:\[\]/);
  assert.match(api,/siteActive/);
  assert.match(api,/credential_hash/);
  assert.match(routeros,/check-certificate=yes/g);

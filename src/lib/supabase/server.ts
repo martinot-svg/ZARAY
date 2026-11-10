@@ -1,9 +1,11 @@
+import {previewSupabaseIsolationReady} from './preview-isolation';
 import 'server-only';
 
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 export async function createClient() {
+  if (!previewSupabaseIsolationReady()) throw new Error('Preview Supabase isolée non configurée.');
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) throw new Error('Supabase public configuration is missing.');

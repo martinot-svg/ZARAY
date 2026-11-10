@@ -1,3 +1,4 @@
+import {networkWritesBlockedInPreview} from '@/lib/network-preview-guard';
 import { NextRequest,NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { authorizeTenant } from '@/lib/tenant-context';
@@ -18,6 +19,7 @@ export async function GET(req:NextRequest){
  return NextResponse.json({routers:routers.data,observations:observations.data,resources:resources.data},{headers});
 }
 export async function POST(req:NextRequest){
+ if(networkWritesBlockedInPreview())return NextResponse.json({error:'Prévisualisation réseau en lecture seule.'},{status:403,headers:{'Cache-Control':'no-store'}});
  const body=await req.json().catch(()=>null);
  if(!body||typeof body!=='object')return fail('Données invalides.',400);
  const {companyId,siteId,name,host}=body;

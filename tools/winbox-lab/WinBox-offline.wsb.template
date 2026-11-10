@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copy this template, replace both @ABSOLUTE_WINDOWS_PATH@ placeholders,
+     and launch ONLY with Windows Sandbox on a non-production host.
+     Input folder must contain WinBox(3).exe and WinBox-offline.ps1.
+     Network, clipboard, vGPU, audio and printer redirection are disabled. -->
+<Configuration>
+  <VGpu>Disable</VGpu>
+  <Networking>Disable</Networking>
+  <ClipboardRedirection>Disable</ClipboardRedirection>
+  <AudioInput>Disable</AudioInput>
+  <PrinterRedirection>Disable</PrinterRedirection>
+  <ProtectedClient>Enable</ProtectedClient>
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>@ABSOLUTE_WINDOWS_INPUT_PATH@</HostFolder>
+      <SandboxFolder>C:\WinBoxInput</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+    <MappedFolder>
+      <HostFolder>@ABSOLUTE_WINDOWS_OUTPUT_PATH@</HostFolder>
+      <SandboxFolder>C:\WinBoxEvidence</SandboxFolder>
+      <ReadOnly>false</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+  <LogonCommand>
+    <Command>powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\WinBoxInput\WinBox-offline.ps1"</Command>
+  </LogonCommand>
+</Configuration>

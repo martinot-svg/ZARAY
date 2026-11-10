@@ -1,0 +1,37 @@
+name: RouterOS CHR real REST interoperability lab
+# Real CHR tests consume hosted QEMU minutes; run on demand after CI.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chr-real-rest:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 11
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install QEMU software virtualization
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -qq -y qemu-system-x86
+      - name: Verify disposable official MikroTik CHR 7.24.6 image
+        run: |
+          mkdir -p chr-evidence
+          curl -fsSL --max-time 100 --retry 3 \
+            https://download.mikrotik.com/routeros/7.24.6/chr-7.24.6.img.zip -o chr-evidence/chr.zip
+          echo "692672e6cac9cfaa4f37c6334d07760d49e074b50befc61f0904270553f17126  chr-evidence/chr.zip" | sha256sum -c -
+          unzip -p chr-evidence/chr.zip > chr-evidence/chr.img
+          test -s chr-evidence/chr.img
+      - name: Validate RouterOS live REST resource, IP, interface and ping
+        run: python3 tools/winbox-lab/chr-rest-test.py chr-evidence/chr.img chr-evidence
+      - name: Preserve scrubbed CHR REST evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chr-routeros-7246-rest-evidence
+          path: |
+            chr-evidence/*.json
+            chr-evidence/*.log
+          if-no-files-found: warn
+          retention-days: 7

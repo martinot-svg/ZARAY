@@ -1,3 +1,6 @@
+import {dispatchableNetworkCommand,dispatchableDiagnosticJob} from '@/lib/network-command-lease';
+import {networkWritesBlockedInPreview} from '@/lib/network-preview-guard';
+import {sanitizeInventoryProperties} from '@/lib/network-inventory-properties';
 import {createHash,randomBytes,timingSafeEqual} from 'node:crypto';
 import {NextRequest,NextResponse} from 'next/server';
 import {createServiceClient} from '@/lib/supabase/service';
@@ -5,16 +8,17 @@ import {deriveVoucherPassword,hashVoucherCredential,type VoucherKeyVersion} from
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const uuid=/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i;
-const kinds=['hotspot','pppoe','dhcp','wifi','neighbor','radius','interface'];
+const kinds=['hotspot','pppoe','dhcp','wifi','neighbor','radius','interface','hotspot-user','hotspot-profile','ppp-secret','ppp-profile','ip-address','ip-pool','dhcp-server','dhcp-client','vlan','arp','queue','firewall-filter','firewall-nat','route','bridge','bridge-port','dhcp-network','dns-static','firewall-address-list','queue-tree','wireguard-interface','wireguard-peer','routing-rule','ipv6-address'];
 const json=(data:unknown,status=200)=>NextResponse.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const digest=(s:string)=>createHash('sha256').update(s).digest('hex');
 const clean=(s:unknown,max=128)=>typeof s==='string'?s.trim().slice(0,max):'';
 export async function POST(request:NextRequest){
+ if(networkWritesBlockedInPreview())return NextResponse.json({error:'Prévisualisation réseau en lecture seule.'},{status:403,headers:{'Cache-Control':'no-store'}});
  const auth=request.headers.get('authorization')||'';
  const token=/^Bearer ([0-9a-f]{64})$/i.exec(auth)?.[1]||'';
  const b=await request.json().catch(()=>null) as Record<string,unknown>|null;
  const routerId=clean(b?.routerId,36),action=b?.action;
- if(!token||!uuid.test(routerId)||!['claim','sync','poll','result'].includes(String(action)))return json({error:'Requête non autorisée.'},401);
+ if(!token||!uuid.test(routerId)||!['claim','sync','poll','result','refresh-complete','diagnostic-result'].includes(String(action)))return json({error:'Requête non autorisée.'},401);
  const service=createServiceClient();
  if(!service)return json({error:'Service indisponible.'},503);
  if(action==='claim'){
@@ -30,11 +34,59 @@ export async function POST(request:NextRequest){
   .select('router_id,revoked_at').eq('router_id',routerId).eq('secret_hash',digest(token)).is('revoked_at',null).maybeSingle();
  if(credentialError||!credential)return json({error:'Connecteur révoqué ou non associé.'},403);
  const {data:router,error:routerError}=await service.from('network_routers')
-  .select('id,company_id,site_id,control_enabled').eq('id',routerId).maybeSingle();
+  .select('id,company_id,site_id,control_enabled,agent_kind').eq('id',routerId).maybeSingle();
  if(routerError||!router)return json({error:'Routeur introuvable.'},404);
+ if(action==='diagnostic-result'){
+  const id=clean(b?.jobId,36),ok=b?.ok===true,dispatchedAt=b?.dispatchedAt;
+  if(!uuid.test(id)||typeof b?.ok!=='boolean'||typeof dispatchedAt!=='string'||dispatchedAt.length>40||!Number.isFinite(Date.parse(dispatchedAt))||Date.parse(dispatchedAt)>Date.now()||Date.now()-Date.parse(dispatchedAt)>10*60000)return json({error:'Résultat diagnostic invalide ou expiré.'},400);
+  if(!Array.isArray(b?.samples)||b.samples.length>3||(ok&&b.samples.length===0))
+   return json({error:'Taille du diagnostic invalide.'},400);
+  const samples=b.samples.map(sample=>{
+   if(!sample||typeof sample!=='object'||Array.isArray(sample))return null;
+   const r=sample as Record<string,unknown>,out:Record<string,string>={};
+   for(const key of ['seq','time','status','ttl']){
+    const v=r[key];
+    if(v!==undefined){
+     if(typeof v!=='string'||v.length>64||/[\u0000-\u001f\u007f]/.test(v))return null;
+     out[key]=v;
+    }
+   }
+   if(!out.seq||!/^[0-2]$/.test(out.seq)||out.status==='received'&&!out.time)return null;
+   return out;
+  });
+  if(samples.includes(null)||JSON.stringify(samples).length>1900)
+   return json({error:'Échantillons du diagnostic invalides.'},400);
+  const {data:recorded,error:resultError}=await service.from('network_diagnostic_jobs')
+   .update({status:ok?'success':'failed',reply:ok?samples:[],
+    error_message:ok?null:clean(b?.error,180)||'Diagnostic RouterOS impossible.',
+    completed_at:new Date().toISOString()})
+   .eq('id',id).eq('router_id',routerId).eq('company_id',router.company_id)
+   .eq('status','dispatched').eq('dispatched_at',dispatchedAt).select('id').maybeSingle();
+  if(resultError)return json({error:'Résultat du ping non enregistré.'},503);
+  if(!recorded)return json({error:'Diagnostic déjà terminé ou non attribué à ce connecteur.'},409);
+  return json({recorded:true});
+ }
+ if(action==='refresh-complete'){
+  const kind=clean(b?.kind,40),requestedAt=b?.requestedAt;
+  if(!kinds.includes(kind)||typeof requestedAt!=='string'||requestedAt.length>40||
+     !Number.isFinite(Date.parse(requestedAt))||
+     Date.parse(requestedAt)>Date.now()||Date.now()-Date.parse(requestedAt)>10*60000)
+   return json({error:'Demande de collecte invalide ou expirée.'},400);
+  const {data:source,error:sourceError}=await service.from('network_inventory_sources')
+   .select('observed_at').eq('router_id',routerId).eq('company_id',router.company_id)
+   .eq('observed_kind',kind).maybeSingle();
+  if(sourceError||!source||Date.parse(source.observed_at)<Date.parse(requestedAt))
+   return json({error:'Aucune nouvelle collecte vérifiée pour cette demande.'},409);
+  const {data:ack,error:ackError}=await service.from('network_inventory_refresh_requests')
+   .update({fulfilled_at:new Date().toISOString()}).eq('router_id',routerId)
+   .eq('company_id',router.company_id).eq('observed_kind',kind)
+   .eq('requested_at',requestedAt).is('fulfilled_at',null).select('router_id').maybeSingle();
+  if(ackError)return json({error:'Acquittement de la collecte indisponible.'},503);
+  return json({acknowledged:!!ack});
+ }
  if(action==='sync'){
   if(!Array.isArray(b?.observations)||b!.observations.length>500||!Array.isArray(b?.kinds))return json({error:'Inventaire invalide.'},400);
-  const completed=[...new Set((b!.kinds as unknown[]).filter(x=>typeof x==='string'&&kinds.includes(x)))];
+  const completed=[...new Set((b!.kinds as unknown[]).filter((x):x is string=>typeof x==='string'&&kinds.includes(x)))];
   if(!completed.length)return json({error:'Aucune source de découverte valide.'},400);
   const now=new Date().toISOString();
   const observations=b!.observations.map(v=>{
@@ -42,19 +94,58 @@ export async function POST(request:NextRequest){
    const o=v as Record<string,unknown>, kind=clean(o.kind,32),key=clean(o.key,255);
    if(!completed.includes(kind)||!key)return null;
    const ip=clean(o.ip,48), mac=clean(o.mac,32);
+   const safeProperties=sanitizeInventoryProperties(kind,o.props);
+   if(safeProperties===null)return null;
    return {company_id:router.company_id,router_id:routerId,observed_kind:kind,identity_key:key,
     client_label:clean(o.label,160)||null,ip_address:/^[0-9a-fA-F:.]+$/.test(ip)?ip:null,
     mac_address:/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(mac)?mac:null,
-    active:o.active===true,observed_at:now};
+    active:o.active===true,observed_at:now,safe_properties:safeProperties};
   }).filter((v):v is NonNullable<typeof v>=>v!==null);
   if(observations.length!==b!.observations.length)return json({error:'Observations invalides.'},400);
+  const completeKinds=new Set<string>();
+  const sourceEntries:{
+   router_id:string;company_id:string;observed_kind:string;
+   reported_count:number;collected_count:number;complete:boolean;observed_at:string
+  }[]=[];
+  // Preflight the completeness metadata before making any database changes.
+  if(b?.sourceStats!==undefined){
+   if(!Array.isArray(b.sourceStats)||b.sourceStats.length>kinds.length)
+    return json({error:'État des sources invalide.'},400);
+   const unique=new Set<string>();
+   for(const value of b.sourceStats){
+    if(!value||typeof value!=='object'||Array.isArray(value))
+     return json({error:'État des sources invalide.'},400);
+    const item=value as Record<string,unknown>;
+    const kind=clean(item.kind,32),reported=item.reportedCount,collected=item.collectedCount;
+    if(!completed.includes(kind)||unique.has(kind)||
+       typeof reported!=='number'||!Number.isInteger(reported)||reported<0||reported>100000||
+       typeof collected!=='number'||!Number.isInteger(collected)||collected<0||collected>500||collected>reported||
+       typeof item.complete!=='boolean'||(item.complete&&collected!==reported))
+     return json({error:'État des sources invalide.'},400);
+    unique.add(kind);
+    // Never trust a complete=true claim if some reported rows were not included.
+    const actual=observations.filter(o=>o.observed_kind===kind).length;
+    if(item.complete&&actual!==collected)
+     return json({error:'Couverture complète incohérente avec les observations.'},400);
+    if(item.complete)completeKinds.add(kind);
+    sourceEntries.push({router_id:routerId,company_id:router.company_id,observed_kind:kind,
+     reported_count:reported,collected_count:collected,complete:item.complete,observed_at:now});
+   }
+  }
   if(observations.length){
    const {error}=await service.from('network_observations').upsert(observations,{onConflict:'router_id,observed_kind,identity_key'});
    if(error)return json({error:'Impossible de synchroniser les appareils.'},503);
   }
   for(const kind of completed){
+   if(!completeKinds.has(kind))continue;
    const {error}=await service.from('network_observations').update({active:false}).eq('router_id',routerId).eq('observed_kind',kind).lt('observed_at',now);
    if(error)return json({error:'Inventaire partiellement mis à jour.'},503);
+  }
+  // A partial source must never clear devices that the capped poll did not see.
+  if(sourceEntries.length){
+   const {error:sourceError}=await service.from('network_inventory_sources')
+    .upsert(sourceEntries,{onConflict:'router_id,observed_kind'});
+   if(sourceError)return json({error:'État de couverture des inventaires indisponible.'},503);
   }
   // A first authenticated Hotspot session activates the voucher's usage window.
   const connectedNames=new Set(observations.filter(o=>o.observed_kind==='hotspot'&&o.active&&o.client_label).map(o=>o.client_label));
@@ -127,7 +218,15 @@ export async function POST(request:NextRequest){
  }
  await service.from('network_connector_credentials').update({last_poll_at:new Date().toISOString()}).eq('router_id',routerId);
  if(action==='poll'){
-  if(!router.control_enabled)return json({commands:[],controlEnabled:false});
+  const {data:refreshRequests,error:refreshError}=await service.from('network_inventory_refresh_requests')
+   .select('observed_kind,requested_at').eq('router_id',routerId)
+   .eq('company_id',router.company_id).is('fulfilled_at',null)
+   .gte('requested_at',new Date(Date.now()-10*60000).toISOString())
+   .order('requested_at',{ascending:true}).limit(2);
+  if(refreshError)return json({error:'Demandes de collecte indisponibles.'},503);
+  const refresh=(refreshRequests||[]).filter(v=>kinds.includes(v.observed_kind))
+   .map(v=>({kind:v.observed_kind,requestedAt:v.requested_at}));
+  if(!router.control_enabled)return json({commands:[],controlEnabled:false,refresh});
   // Keep observations and accounting working when suspended, but never
   // provision, resume or unblock clients for a site that is no longer active.
   const [{data:siteState,error:siteError},{data:companyState,error:companyError}]=await Promise.all([
@@ -149,15 +248,14 @@ export async function POST(request:NextRequest){
   if(supported&&supported.length===0)return json({commands:[],controlEnabled:true});
   // A dropped acknowledgement or router reboot must not permanently strand a command.
   // Redispatch only after a 90-second lease, with all entitlements rechecked.
-  const retryBefore=new Date(Date.now()-90000).toISOString();
+  const dispatchNow=Date.now();
   let query=service.from('network_commands')
    .select('id,account_id,voucher_id,action,protocol,username,session_id,mac_address,expires_at,status,dispatched_at')
    .eq('router_id',routerId).in('status',['queued','dispatched']).gt('expires_at',new Date().toISOString());
   if(supported)query=query.in('action',supported);
   const {data,error}=await query.order('created_at').limit(100);
   if(error)return json({error:'Commandes indisponibles.'},503);
-  const retryable=(data||[]).filter(cmd=>cmd.status==='queued'||(cmd.status==='dispatched'&&
-   !!cmd.dispatched_at&&cmd.dispatched_at<retryBefore)).slice(0,10);
+  const retryable=(data||[]).filter(cmd=>dispatchableNetworkCommand(cmd,dispatchNow)).slice(0,10);
   const commands:Record<string,unknown>[]=[];
   for(const cmd of retryable){
 
@@ -240,7 +338,31 @@ export async function POST(request:NextRequest){
    const {data:claimed}=await claim.select('id').maybeSingle();
    if(claimed)commands.push({id:cmd.id,action:cmd.action,protocol:cmd.protocol,username:cmd.username,sessionId:cmd.session_id,macAddress:cmd.mac_address,...voucherPayload,...accountPayload});
   }
-  return json({commands,controlEnabled:true});
+  const diagnostics:Record<string,unknown>[]=[];
+  if(router.agent_kind==='node-local'){
+   const now=Date.now(),cutoff=new Date(now-10*60000).toISOString();
+   const {data:pending,error:diagnosticError}=await service.from('network_diagnostic_jobs')
+    .select('id,target,kind,status,dispatched_at,requested_at').eq('router_id',routerId)
+    .eq('company_id',router.company_id).in('status',['queued','dispatched'])
+    .gte('requested_at',cutoff).order('requested_at',{ascending:true}).limit(3);
+   if(diagnosticError)return json({error:'Diagnostics indisponibles.'},503);
+   for(const job of pending||[]){
+    if(job.kind!=='ping')continue;
+    if(!dispatchableDiagnosticJob(job,now))continue;
+    let claim=service.from('network_diagnostic_jobs')
+     .update({status:'dispatched',dispatched_at:new Date().toISOString()})
+     .eq('id',job.id).eq('router_id',routerId).eq('company_id',router.company_id)
+     .eq('status',job.status);
+    if(job.status==='dispatched')claim=claim.eq('dispatched_at',job.dispatched_at);
+    const {data:claimed,error:claimError}=await claim.select('id,dispatched_at').maybeSingle();
+    if(claimError)return json({error:'Attribution du diagnostic indisponible.'},503);
+    if(claimed){
+     diagnostics.push({id:job.id,kind:'ping',target:job.target,dispatchedAt:claimed.dispatched_at});
+     break;
+    }
+   }
+  }
+  return json({commands,controlEnabled:true,refresh,diagnostics});
  }
  // Results are accepted only for commands that were actually dispatched to this connector.
  const commandId=clean(b?.commandId,36),ok=b?.ok===true;
