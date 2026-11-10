@@ -114,13 +114,13 @@ function normalize(v){return typeof v==='string'?v:'';}
 async function sync(){
  const resource=await ros('system/resource');
  const board=await ros('system/routerboard').catch(()=>null);
- const kinds=new Set(),items=[],sourceStats=new Map();
+ const kinds=new Set(),items=[],sourceStats=new Map(),failedKinds=new Set();
  let voucherUsage=[];
  try{voucherUsage=await voucherUptimeReadings();}catch(e){console.warn('[ZARAY] Compteurs Hotspot indisponibles',e.message);}
  for(const source of sources){
   try{
    const response=await ros(source.path,'GET',undefined,readOnlyInventoryProjection(source.path));
-   if(!Array.isArray(response))continue;
+   if(!Array.isArray(response))throw Error('Unexpected RouterOS inventory payload');
    kinds.add(source.kind);
    const limit=Math.max(0,Math.min(25,500-items.length));
    let collected=0;
@@ -134,7 +134,16 @@ async function sync(){
    existing.reportedCount+=response.length;existing.collectedCount+=collected;
    existing.complete=existing.complete&&collected===response.length;
    sourceStats.set(source.kind,existing);
-  }catch(e){console.warn('[ZARAY] Source indisponible',source.path,e.message);}
+  }catch(e){
+   failedKinds.add(source.kind);
+   console.warn('[ZARAY] Source indisponible',source.path,e.message);
+  }
+ }
+ // One failed Wi-Fi API must not cause the other Wi-Fi API's partial result
+ // to masquerade as an exhaustive station inventory.
+ for(const kind of failedKinds){
+  const stat=sourceStats.get(kind);
+  if(stat)stat.complete=false;
  }
  if(kinds.size){
   const result=await api('sync',{model:board?.['model']||resource?.['board-name']||'',version:resource?.version||'',
