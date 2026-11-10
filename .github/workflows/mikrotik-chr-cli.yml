@@ -1,6 +1,13 @@
 name: RouterOS CHR authenticated command lab
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/mikrotik-chr-cli.yml'
+      - 'tools/winbox-lab/chr-console-test.py'
   workflow_dispatch:
+concurrency:
+  group: chr-cli-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
