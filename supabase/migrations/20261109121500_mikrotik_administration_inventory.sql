@@ -163,3 +163,38 @@ REVOKE ALL ON FUNCTION public.request_network_inventory_refresh(uuid,uuid,text)
  FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.request_network_inventory_refresh(uuid,uuid,text)
  TO authenticated;
+
+-- Safe, bounded RouterOS ping operation. The destination is selected server-side
+-- from a recent observation belonging to the authorized company and router.
+CREATE TABLE IF NOT EXISTS public.network_diagnostic_jobs (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+ company_id uuid NOT NULL,
+ router_id uuid NOT NULL,
+ observation_id uuid NOT NULL,
+ requested_by uuid NOT NULL,
+ kind text NOT NULL DEFAULT 'ping' CHECK(kind='ping'),
+ target inet NOT NULL,
+ status text NOT NULL DEFAULT 'queued' CHECK(status IN ('queued','dispatched','success','failed')),
+ requested_at timestamptz NOT NULL DEFAULT now(),
+ dispatched_at timestamptz,
+ completed_at timestamptz,
+ reply jsonb NOT NULL DEFAULT '[]'::jsonb,
+ error_message text,
+ FOREIGN KEY(router_id,company_id) REFERENCES public.network_routers(id,company_id) ON DELETE CASCADE,
+ CONSTRAINT network_diagnostic_reply_check CHECK(jsonb_typeof(reply)='array' AND octet_length(reply::text)<2048)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS network_diagnostic_one_pending
+ ON public.network_diagnostic_jobs(router_id)
+ WHERE status IN ('queued','dispatched');
+CREATE INDEX IF NOT EXISTS network_diagnostic_company_recent
+ ON public.network_diagnostic_jobs(company_id,router_id,requested_at DESC);
+ALTER TABLE public.network_diagnostic_jobs ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.network_diagnostic_jobs FROM PUBLIC,anon,authenticated;
+GRANT SELECT ON public.network_diagnostic_jobs TO authenticated;
+DROP POLICY IF EXISTS network_diagnostic_tenant_read ON public.network_diagnostic_jobs;
+CREATE POLICY network_diagnostic_tenant_read
+ ON public.network_diagnostic_jobs FOR SELECT TO authenticated USING (
+ EXISTS(SELECT 1 FROM public.company_members m
+  WHERE m.company_id=network_diagnostic_jobs.company_id
+   AND m.user_id=(SELECT auth.uid()) AND m.status='active')
+);
