@@ -1,5 +1,12 @@
 name: ZARAY MikroTik isolated PostgreSQL lab
 on:
+  push:
+    branches:
+      - codex/winbox-config-engine-20261110
+    paths:
+      - '.github/workflows/mikrotik-lab-postgres.yml'
+      - 'supabase/migrations/**'
+      - 'tests/lab/postgres-*.sql'
   pull_request:
     paths:
       - 'src/app/api/network/**'
@@ -37,6 +44,10 @@ jobs:
       - name: Prepare synthetic tenants in ephemeral PostgreSQL
         run: psql -v ON_ERROR_STOP=1 -f tests/lab/postgres-schema-fixture.sql
       - name: Apply the proposed MikroTik inventory migration
-        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261109121500_mikrotik_administration_inventory.sql
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261110152239_mikrotik_administration_inventory.sql
+      - name: Apply managed RouterOS configuration migration
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261110163450_network_managed_routeros_config.sql
+      - name: Assert managed RouterOS configuration job isolation and concurrency
+        run: psql -v ON_ERROR_STOP=1 -f tests/lab/postgres-managed-config-assert.sql
       - name: Assert tenant RLS, 50-row pagination, staleness, partial observations, and command uniqueness
         run: psql -v ON_ERROR_STOP=1 -f tests/lab/postgres-migration-assert.sql

@@ -3,6 +3,7 @@ import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 import {useEffect,useMemo,useState,type FormEvent} from 'react';
 import AppShell from '@/components/app-shell';
 import {NetworkDiagnosticsPanel} from '@/components/network/network-diagnostics-panel';
+import {ManagedConfigPanel} from '@/components/network/managed-config-panel';
 import {ZarayIcon} from '@/components/ui/zaray-icon';
 import {filterAndSortRouterInventory,inventoryObservationIsFresh,type InventorySort} from '@/lib/network-inventory-workbench';
 import {routerHeartbeatIsFresh} from '@/lib/network-inventory-freshness';
@@ -359,6 +360,10 @@ export default function NetworkPage(){
         canManage={canManage} routerOnline={chosen.agent_kind==='node-local'&&chosen.control_enabled&&
          selectedInventory.active&&inventoryObservationIsFresh(selectedInventory.observed_at,chosen.last_seen_at)}/>
       </section>}
+      <ManagedConfigPanel key={chosen.id} companyId={companyId} routerId={routerId}
+       canManage={canManage}
+       routerOnline={chosen.agent_kind==='node-local'&&chosen.control_enabled&&fresh(chosen.last_seen_at)}
+       selectedObservation={selectedInventory}/>
       <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginTop:8}}>
        <span className="muted">{adminCount} lignes mémorisées (incluant l’historique) · page {inventoryPage}</span>
        <button type="button" disabled={adminLoading||inventoryPage<=1} onClick={()=>setInventoryPage(p=>p-1)}>Précédent</button>

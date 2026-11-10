@@ -138,11 +138,11 @@ with (out/"qemu.log").open("wb") as log:
         capture_output=True,text=True,timeout=20)
        if node.returncode!=0:
         raise RuntimeError("ZARAY JS engine could not confirm CHR REST: "+
-          node.stderr.replace(passwd,"[REDACTED]")[-180:])
+          node.stderr.replace(passwd,"[REDACTED]")[-1000:])
        results["zaray-js"]=True
        change("done")
       except Exception as error:
-       results["last_rest_error"]=str(error)[:160]
+       results["last_rest_error"]=str(error)[:1300]
        phase_start=time.monotonic()
 
     elif state=="resource" and prompt(recent) and re.search(r"(?i)version:\s*7\.24\.6",recent):

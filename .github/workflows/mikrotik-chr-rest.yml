@@ -1,12 +1,29 @@
 name: RouterOS CHR real REST interoperability lab
 # Real CHR tests consume hosted QEMU minutes; run on demand after CI.
 on:
+  push:
+    branches:
+      - codex/winbox-config-engine-20261110
+    paths:
+      - '.github/workflows/mikrotik-chr-rest.yml'
+      - 'tools/winbox-lab/chr-zaray-js-client.mjs'
+      - 'tools/winbox-lab/chr-rest-test.py'
+      - 'network-connector/routeros/managed-config.mjs'
+  pull_request:
+    paths:
+      - '.github/workflows/mikrotik-chr-rest.yml'
+      - 'tools/winbox-lab/chr-zaray-js-client.mjs'
+      - 'tools/winbox-lab/chr-rest-test.py'
+      - 'network-connector/routeros/managed-config.mjs'
   workflow_dispatch:
+concurrency:
+  group: chr-config-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
   chr-real-rest:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 11
     steps:

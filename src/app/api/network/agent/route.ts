@@ -18,7 +18,7 @@ export async function POST(request:NextRequest){
  const token=/^Bearer ([0-9a-f]{64})$/i.exec(auth)?.[1]||'';
  const b=await request.json().catch(()=>null) as Record<string,unknown>|null;
  const routerId=clean(b?.routerId,36),action=b?.action;
- if(!token||!uuid.test(routerId)||!['claim','sync','poll','result','refresh-complete','diagnostic-result'].includes(String(action)))return json({error:'Requête non autorisée.'},401);
+ if(!token||!uuid.test(routerId)||!['claim','sync','poll','result','refresh-complete','diagnostic-result','config-result','config-review-result'].includes(String(action)))return json({error:'Requête non autorisée.'},401);
  const service=createServiceClient();
  if(!service)return json({error:'Service indisponible.'},503);
  if(action==='claim'){
@@ -36,6 +36,60 @@ export async function POST(request:NextRequest){
  const {data:router,error:routerError}=await service.from('network_routers')
   .select('id,company_id,site_id,control_enabled,agent_kind').eq('id',routerId).maybeSingle();
  if(routerError||!router)return json({error:'Routeur introuvable.'},404);
+ if(action==='config-result'||action==='config-review-result'){
+  const review=action==='config-review-result';
+  const jobId=clean(b?.jobId,36),dispatchedAt=b?.dispatchedAt,state=b?.state;
+  if(router.agent_kind!=='node-local'||!uuid.test(jobId)||
+     typeof dispatchedAt!=='string'||dispatchedAt.length>40||
+     !Number.isFinite(Date.parse(dispatchedAt))||Date.parse(dispatchedAt)>Date.now()||
+     Date.now()-Date.parse(dispatchedAt)>600000||
+     !['success','failed','manual_review'].includes(String(state)))
+   return json({error:'Acquittement de configuration invalide.'},400);
+  const project=(raw:unknown):Record<string,string>|null|undefined=>{
+   if(raw===null)return null;
+   if(!raw||typeof raw!=='object'||Array.isArray(raw))return undefined;
+   const obj=raw as Record<string,unknown>,entries=Object.entries(obj);
+   if(entries.length>7)return undefined;
+   const allowed=['.id','name','address','interface','vlan-id','disabled','comment'];
+   if(entries.some(([key,value])=>!allowed.includes(key)||typeof value!=='string'||
+       value.length>128||/[\u0000-\u001f\u007f]/.test(value)))return undefined;
+   return obj as Record<string,string>;
+  };
+  const before=project(b?.before),after=project(b?.after),message=clean(b?.message,400);
+  if(before===undefined||after===undefined||message.length<3)
+   return json({error:'Preuve RouterOS invalide.'},400);
+  const {data:job,error:jobError}=await service.from('network_managed_config_jobs')
+   .select('id,category,operation,requested_values,target_id,status,dispatched_at,review_attempted_at,before_state')
+   .eq('id',jobId).eq('router_id',routerId).eq('company_id',router.company_id).maybeSingle();
+  if(jobError)return json({error:'Journal RouterOS indisponible.'},503);
+  if(!job||(review
+   ?job.status!=='manual_review'||job.review_attempted_at!==dispatchedAt
+   :job.status!=='dispatched'||job.dispatched_at!==dispatchedAt))
+   return json({error:'Opération non attribuée ou déjà terminée.'},409);
+  if(state==='success'){
+   const expected=job.operation==='create'||job.operation==='update'
+    ?job.requested_values:job.operation==='enable'?{disabled:'false'}:
+     job.operation==='disable'?{disabled:'true'}:{};
+   if(job.operation==='delete'){
+    if(after!==null||!before?.comment?.startsWith('zaray:managed:'))
+     return json({error:'Suppression non vérifiée.'},400);
+   }else if(!after||typeof after.comment!=='string'||
+    (job.operation==='create'?after.comment!=='zaray:managed:'+job.id:
+     !after.comment.startsWith('zaray:managed:'))||
+    !Object.entries(expected as Record<string,string>).every(([key,value])=>after[key]===value))
+     return json({error:'Résultat RouterOS non vérifié.'},400);
+  }
+  const {data:recorded,error:writeError}=await service.from('network_managed_config_jobs')
+   .update({status:state,before_state:review?job.before_state:before,after_state:after,outcome:message,
+    completed_at:new Date().toISOString()})
+   .eq('id',jobId).eq('router_id',routerId).eq('company_id',router.company_id)
+   .eq('status',review?'manual_review':'dispatched')
+   .eq(review?'review_attempted_at':'dispatched_at',dispatchedAt)
+   .select('id').maybeSingle();
+  if(writeError)return json({error:'Impossible de finaliser la configuration.'},503);
+  if(!recorded)return json({error:'Acquittement déjà traité.'},409);
+  return json({recorded:true,state});
+ }
  if(action==='diagnostic-result'){
   const id=clean(b?.jobId,36),ok=b?.ok===true,dispatchedAt=b?.dispatchedAt;
   if(!uuid.test(id)||typeof b?.ok!=='boolean'||typeof dispatchedAt!=='string'||dispatchedAt.length>40||!Number.isFinite(Date.parse(dispatchedAt))||Date.parse(dispatchedAt)>Date.now()||Date.now()-Date.parse(dispatchedAt)>10*60000)return json({error:'Résultat diagnostic invalide ou expiré.'},400);
@@ -362,7 +416,69 @@ export async function POST(request:NextRequest){
     }
    }
   }
-  return json({commands,controlEnabled:true,refresh,diagnostics});
+  const configJobs:Record<string,unknown>[]=[];
+  if(router.agent_kind==='node-local'&&siteActive&&(data||[]).length===0){
+   const now=new Date().toISOString();
+   // Never replay an uncertain write after losing its acknowledgement.
+   const {error:staleError}=await service.from('network_managed_config_jobs')
+    .update({status:'manual_review',completed_at:now,
+     outcome:'Résultat non confirmé : inspecter RouterOS avant toute autre modification.'})
+    .eq('router_id',routerId).eq('company_id',router.company_id)
+    .eq('status','dispatched').lt('expires_at',now);
+   if(staleError)return json({error:'État des configurations indisponible.'},503);
+   const {error:expiredError}=await service.from('network_managed_config_jobs')
+    .update({status:'failed',completed_at:now,outcome:'Demande expirée sans exécution.'})
+    .eq('router_id',routerId).eq('company_id',router.company_id)
+    .eq('status','queued').lt('expires_at',now);
+   if(expiredError)return json({error:'Expiration des configurations indisponible.'},503);
+   const {data:waiting,error:waitingError}=await service.from('network_managed_config_jobs')
+    .select('id,category,operation,target_id,requested_values')
+    .eq('router_id',routerId).eq('company_id',router.company_id)
+    .eq('status','queued').gt('expires_at',now).order('created_at',{ascending:true}).limit(1);
+   if(waitingError)return json({error:'File de configuration indisponible.'},503);
+   const job=waiting?.[0];
+   if(job){
+    const {data:claimed,error:claimError}=await service.from('network_managed_config_jobs')
+     .update({status:'dispatched',dispatched_at:now})
+     .eq('router_id',routerId).eq('company_id',router.company_id)
+     .eq('id',job.id).eq('status','queued').select('id,dispatched_at').maybeSingle();
+    if(claimError)return json({error:'Attribution de configuration impossible.'},503);
+    if(claimed)configJobs.push({
+     id:job.id,category:job.category,operation:job.operation,
+     targetId:job.target_id,values:job.requested_values,
+     dispatchedAt:claimed.dispatched_at
+    });
+   }
+  }
+  const configReviewJobs:Record<string,unknown>[]=[];
+  if(router.agent_kind==='node-local'&&siteActive&&(data||[]).length===0&&configJobs.length===0){
+   const {data:reviewRows,error:reviewError}=await service.from('network_managed_config_jobs')
+    .select('id,category,operation,target_id,requested_values,before_state,review_attempted_at')
+    .eq('router_id',routerId).eq('company_id',router.company_id)
+    .eq('status','manual_review').order('created_at',{ascending:true}).limit(1);
+   if(reviewError)return json({error:'Relecture de configuration indisponible.'},503);
+   const item=reviewRows?.[0],now=Date.now();
+   if(item&&(!item.review_attempted_at||
+      Number.isFinite(Date.parse(item.review_attempted_at))&&
+      now-Date.parse(item.review_attempted_at)>=120000)){
+    let claim=service.from('network_managed_config_jobs')
+     .update({review_attempted_at:new Date(now).toISOString()})
+     .eq('id',item.id).eq('router_id',routerId).eq('company_id',router.company_id)
+     .eq('status','manual_review');
+    claim=item.review_attempted_at
+     ?claim.eq('review_attempted_at',item.review_attempted_at)
+     :claim.is('review_attempted_at',null);
+    const {data:reviewClaim,error:reviewClaimError}=await claim
+     .select('id,review_attempted_at').maybeSingle();
+    if(reviewClaimError)return json({error:'Attribution de la relecture impossible.'},503);
+    if(reviewClaim)configReviewJobs.push({
+     id:item.id,category:item.category,operation:item.operation,
+     targetId:item.target_id,values:item.requested_values,
+     before:item.before_state,dispatchedAt:reviewClaim.review_attempted_at
+    });
+   }
+  }
+  return json({commands,controlEnabled:true,refresh,diagnostics,configJobs,configReviewJobs});
  }
  // Results are accepted only for commands that were actually dispatched to this connector.
  const commandId=clean(b?.commandId,36),ok=b?.ok===true;
