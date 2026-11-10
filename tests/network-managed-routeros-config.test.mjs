@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {executeManagedConfig,validateManagedChange} from '../network-connector/routeros/managed-config.mjs';
+import {executeManagedConfig,reconcileManagedConfig,validateManagedChange} from '../network-connector/routeros/managed-config.mjs';
 import {parseManagedConfigRequest} from '../src/lib/network-managed-config.ts';
 
 const job=(operation,values={},kind='dns-static',targetId=operation==='create'?null:'*1')=>({
@@ -122,6 +122,37 @@ test('failed PATCH verification restores known prior values; unknown outcome blo
  },job('create',{name:'internal.example',address:'192.0.2.22'}));
  assert.equal(uncertain.state,'manual_review');
 });
+test('lost create acknowledgement is recovered from the RouterOS owned marker without new writes',async()=>{
+ const state=fakeRouter([{...dnsOriginal(),address:'192.0.2.10'}]);
+ const result=await reconcileManagedConfig(state.ros,job('create',{
+  name:'internal.example',address:'192.0.2.10'
+ }));
+ assert.equal(result.state,'success');
+ assert.equal(state.calls.filter(c=>c.method!=='GET').length,0);
+ const absent=fakeRouter([]);
+ const failed=await reconcileManagedConfig(absent.ros,job('create',{
+  name:'internal.example',address:'192.0.2.10'
+ }));
+ assert.equal(failed.state,'failed');
+});
+test('read-only reconciliation distinguishes already applied, rolled back and unknown updates',async()=>{
+ const applied=fakeRouter([{...dnsOriginal(),address:'192.0.2.30'}]);
+ const desired=job('update',{name:'internal.example',address:'192.0.2.30'});
+ desired.before={name:'internal.example',address:'192.0.2.1',disabled:'false',comment:tag};
+ assert.equal((await reconcileManagedConfig(applied.ros,desired)).state,'success');
+ const unchanged=fakeRouter([dnsOriginal()]);
+ assert.equal((await reconcileManagedConfig(unchanged.ros,desired)).state,'failed');
+ const unknown=fakeRouter([{...dnsOriginal(),address:'192.0.2.99'}]);
+ assert.equal((await reconcileManagedConfig(unknown.ros,desired)).state,'manual_review');
+ assert.equal(unknown.calls.filter(c=>c.method!=='GET').length,0);
+});
+test('read-only reconciliation can confirm a previously deleted owned DNS record',async()=>{
+ const deleted=job('delete');
+ deleted.before={...dnsOriginal()};
+ const r=fakeRouter([]);
+ assert.equal((await reconcileManagedConfig(r.ros,deleted)).state,'success');
+ assert.equal(r.calls.filter(c=>c.method!=='GET').length,0);
+});
 test('RLS, single-flight and web-to-agent integration stay explicit',()=>{
  const sql=readFileSync('supabase/migrations/20261110190000_network_managed_routeros_config.sql','utf8');
  const api=readFileSync('src/app/api/network/config/route.ts','utf8');
@@ -148,5 +179,8 @@ test('RLS, single-flight and web-to-agent integration stay explicit',()=>{
   ".eq('status','dispatched').eq('dispatched_at',dispatchedAt)"
  ])assert.ok(agent.includes(part),part);
  assert.ok(connector.includes('executeManagedConfig(ros'));
+ assert.ok(connector.includes('reconcileManagedConfig(ros'));
+ assert.ok(agent.includes("action==='config-review-result'"));
+ assert.ok(agent.includes('configReviewJobs.push('));
  assert.ok(page.includes('<ManagedConfigPanel'));
 });
