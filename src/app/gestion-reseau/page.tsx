@@ -3,6 +3,7 @@ import { fetchWorkspaceDirectory } from '@/lib/workspace-directory-request';
 import {useEffect,useMemo,useState,type FormEvent} from 'react';
 import AppShell from '@/components/app-shell';
 import {ZarayIcon} from '@/components/ui/zaray-icon';
+import {filterAndSortRouterInventory,inventoryObservationIsFresh,type InventorySort} from '@/lib/network-inventory-workbench';
 type Router={id:string;site_id:string;name:string;host:string;model:string|null;routeros_version:string|null;status:string;control_enabled:boolean;agent_kind:'unreported'|'node-local'|'routeros-native';last_seen_at:string|null};
 type RouterResource={router_id:string;cpu_load_percent:number;total_memory_bytes:number;free_memory_bytes:number;router_uptime:string;observed_at:string};
 type Observation={id:string;router_id:string;observed_kind:string;identity_key:string;ip_address:string|null;mac_address:string|null;client_label:string|null;active:boolean;observed_at:string};
@@ -33,7 +34,15 @@ export default function NetworkPage(){
  const [adminCount,setAdminCount]=useState(0),[adminLoading,setAdminLoading]=useState(false),[adminError,setAdminError]=useState('');
  const [adminCoverage,setAdminCoverage]=useState<{reported_count:number;collected_count:number;complete:boolean;observed_at:string}|null>(null);
  const [adminState,setAdminState]=useState('not_collected');
+ const [inventoryQuery,setInventoryQuery]=useState('');
+ const [inventorySort,setInventorySort]=useState<InventorySort>('label');
+ const [inventoryDescending,setInventoryDescending]=useState(false);
+ const [selectedInventoryId,setSelectedInventoryId]=useState('');
  const routerInventory=adminInventory;
+ const visibleInventory=useMemo(()=>filterAndSortRouterInventory(
+  routerInventory,inventoryQuery,inventorySort,inventoryDescending,chosen?.last_seen_at||null
+ ),[routerInventory,inventoryQuery,inventorySort,inventoryDescending,chosen?.last_seen_at]);
+ const selectedInventory=routerInventory.find(item=>item.id===selectedInventoryId)||null;
  const routerCommands=commands.filter(c=>c.router_id===routerId);
  const chosenResources=resources.find(r=>r.router_id===routerId);
  const healthy=chosenResources&&fresh(chosenResources.observed_at)&&chosen&&fresh(chosen.last_seen_at);
@@ -106,7 +115,7 @@ export default function NetworkPage(){
   return()=>ctl.abort();
  },[companyId,routerId,adminSource,inventoryPage,inventoryVersion]);
  async function disconnectObserved(d:Observation){
-  if(!chosen||!canManage||busy||!fresh(chosen.last_seen_at)||!fresh(d.observed_at))return;
+  if(!chosen||!canManage||busy||!inventoryObservationIsFresh(d.observed_at,chosen.last_seen_at))return;
   const kind=d.observed_kind==='hotspot'?'Hotspot':'PPPoE';
   const identity=d.client_label||'session inconnue';
   const reason=prompt('Déconnecter '+identity+' ('+kind+') sur '+chosen.name+' ? Motif obligatoire :')?.trim();
@@ -266,7 +275,7 @@ export default function NetworkPage(){
      <div className="panel" style={{padding:16}}>
       <h3>Inventaire du routeur sélectionné</h3>
       <p className="muted">Site : {sites.find(s=>s.id===chosen.site_id)?.name||'Non disponible'} · Agent : {chosen.agent_kind==='routeros-native'?'RouterOS natif':chosen.agent_kind==='node-local'?'Connecteur local':'Non identifié'} · Contrôle : {chosen.control_enabled?'activé':'désactivé'}</p>
-      <label>Source d’inventaire<select value={adminSource} onChange={e=>{setAdminSource(e.target.value);setInventoryPage(1);}}>
+      <label>Source d’inventaire<select value={adminSource} onChange={e=>{setAdminSource(e.target.value);setInventoryPage(1);setInventoryQuery('');setSelectedInventoryId('');}}>
        <optgroup label="Vue générale et interfaces"><option value="interface">Interfaces</option><option value="vlan">Interfaces VLAN</option><option value="wifi">Stations Wi-Fi</option><option value="neighbor">Voisins</option><option value="radius">Serveurs RADIUS déclarés</option></optgroup>
        <optgroup label="Hotspot et PPPoE"><option value="hotspot">Sessions Hotspot</option><option value="hotspot-user">Comptes Hotspot</option><option value="hotspot-profile">Profils Hotspot</option><option value="pppoe">Sessions PPPoE</option><option value="ppp-secret">Comptes PPP</option><option value="ppp-profile">Profils PPP</option></optgroup>
        <optgroup label="IP et DHCP"><option value="ip-address">Adresses IP</option><option value="ip-pool">Pools IP</option><option value="dhcp-server">Serveurs DHCP</option><option value="dhcp-client">Clients DHCP</option><option value="dhcp">Baux DHCP</option><option value="arp">Table ARP</option></optgroup>
@@ -278,11 +287,44 @@ export default function NetworkPage(){
       </div>
       {adminCoverage&&<p className="muted">Collectés : {adminCoverage.collected_count} / {adminCoverage.reported_count} éléments observés sur cette source · dernier relevé : {fmt(adminCoverage.observed_at)} · {adminCoverage.complete?'Collecte déclarée complète':'Collecte tronquée'}</p>}
       {adminError&&<p role="alert" className="muted">{adminError}</p>}
-      {routerInventory.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Nom</th><th>Adresse IP</th><th>Adresse MAC</th><th>État observé</th><th>Dernière observation</th><th>Intervention</th></tr></thead><tbody>
-       {routerInventory.map(d=><tr key={d.id}><td>{d.client_label||d.identity_key}</td><td>{d.ip_address||'—'}</td><td>{d.mac_address||'—'}</td><td>{fresh(d.observed_at)&&fresh(chosen.last_seen_at)?(d.active?'Actif':'Inactif'):'Non vérifié récemment'}</td><td>{fmt(d.observed_at)}</td><td>{(d.observed_kind==='hotspot'||d.observed_kind==='pppoe')&&canManage&&chosen.control_enabled&&d.active&&fresh(d.observed_at)&&fresh(chosen.last_seen_at)?
+      <div style={{display:'flex',alignItems:'end',flexWrap:'wrap',gap:12,marginTop:12,marginBottom:10}}>
+       <label style={{flex:'1 1 220px'}}>Rechercher sur cette page
+        <input type="search" autoComplete="off" value={inventoryQuery} onChange={e=>{setInventoryQuery(e.target.value);setSelectedInventoryId('');}}
+         placeholder="Nom, IP, MAC, identifiant…" aria-label="Rechercher dans les observations de cette page"/>
+       </label>
+       <label>Trier par
+        <select value={inventorySort} onChange={e=>setInventorySort(e.target.value as InventorySort)} aria-label="Trier l’inventaire">
+         <option value="label">Nom</option><option value="ip">Adresse IP</option><option value="observed">Date d’observation</option><option value="state">État observé</option>
+        </select>
+       </label>
+       <button type="button" aria-label="Inverser l’ordre du tri" onClick={()=>setInventoryDescending(v=>!v)}>
+        {inventoryDescending?'Ordre décroissant':'Ordre croissant'}
+       </button>
+      </div>
+      <p className="muted" role="status">{visibleInventory.length} résultat(s) sur les {routerInventory.length} observations de cette page. La recherche ne parcourt pas les autres pages.</p>
+      {routerInventory.length?<div className="table-wrap"><table className="data-table"><thead><tr><th>Nom</th><th>Adresse IP</th><th>Adresse MAC</th><th>État observé</th><th>Dernière observation</th><th>Propriétés</th><th>Intervention</th></tr></thead><tbody>
+       {visibleInventory.map(d=><tr key={d.id}><td>{d.client_label||d.identity_key}</td><td>{d.ip_address||'—'}</td><td>{d.mac_address||'—'}</td><td>{inventoryObservationIsFresh(d.observed_at,chosen.last_seen_at)?(d.active?'Actif':'Inactif'):'Non vérifié récemment'}</td><td>{fmt(d.observed_at)}</td><td><button type="button" aria-pressed={selectedInventoryId===d.id} onClick={()=>setSelectedInventoryId(d.id)}>Propriétés</button></td><td>{(d.observed_kind==='hotspot'||d.observed_kind==='pppoe')&&canManage&&chosen.control_enabled&&d.active&&inventoryObservationIsFresh(d.observed_at,chosen.last_seen_at)?
         <button type="button" disabled={busy} onClick={()=>void disconnectObserved(d)}>Déconnecter</button>:
         <span className="muted">{d.observed_kind==='hotspot'||d.observed_kind==='pppoe'?'Non disponible':'Lecture seule'}</span>}</td></tr>)}
       </tbody></table></div>:<p className="muted">Aucune observation vérifiable pour cette source sur ce routeur.</p>}
+      {routerInventory.length>0&&visibleInventory.length===0&&<p className="muted">Aucun résultat sur cette page pour cette recherche.</p>}
+      {selectedInventory&&<section className="panel" aria-label="Propriétés de l’élément sélectionné" style={{padding:14,marginTop:12}}>
+       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
+        <h4 style={{margin:0}}>Propriétés · {selectedInventory.client_label||selectedInventory.identity_key}</h4>
+        <button type="button" onClick={()=>setSelectedInventoryId('')}>Fermer les propriétés</button>
+       </div>
+       <dl style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginTop:12}}>
+        <div><dt className="muted">Source RouterOS</dt><dd>{selectedInventory.observed_kind}</dd></div>
+        <div><dt className="muted">Identifiant observé</dt><dd style={{overflowWrap:'anywhere'}}>{selectedInventory.identity_key}</dd></div>
+        <div><dt className="muted">Adresse IP</dt><dd>{selectedInventory.ip_address||'—'}</dd></div>
+        <div><dt className="muted">Adresse MAC</dt><dd>{selectedInventory.mac_address||'—'}</dd></div>
+        <div><dt className="muted">Dernière observation</dt><dd>{fmt(selectedInventory.observed_at)}</dd></div>
+        <div><dt className="muted">État vérifiable</dt><dd>{inventoryObservationIsFresh(selectedInventory.observed_at,chosen.last_seen_at)?(selectedInventory.active?'Actif':'Inactif'):'Non vérifié récemment'}</dd></div>
+       </dl>
+       <p className="muted">Instantané en lecture seule : seules les propriétés collectées et autorisées apparaissent ici. Les champs sensibles du routeur ne sont jamais chargés.</p>
+       {(selectedInventory.observed_kind==='hotspot'||selectedInventory.observed_kind==='pppoe')&&canManage&&chosen.control_enabled&&selectedInventory.active&&inventoryObservationIsFresh(selectedInventory.observed_at,chosen.last_seen_at)&&
+        <button type="button" disabled={busy} onClick={()=>void disconnectObserved(selectedInventory)}>Déconnecter la session sélectionnée</button>}
+      </section>}
       <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginTop:8}}>
        <span className="muted">{adminCount} lignes mémorisées (incluant l’historique) · page {inventoryPage}</span>
        <button type="button" disabled={adminLoading||inventoryPage<=1} onClick={()=>setInventoryPage(p=>p-1)}>Précédent</button>
