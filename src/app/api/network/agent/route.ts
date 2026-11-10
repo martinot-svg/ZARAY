@@ -1,5 +1,6 @@
 import {dispatchableNetworkCommand} from '@/lib/network-command-lease';
 import {networkWritesBlockedInPreview} from '@/lib/network-preview-guard';
+import {sanitizeInventoryProperties} from '@/lib/network-inventory-properties';
 import {createHash,randomBytes,timingSafeEqual} from 'node:crypto';
 import {NextRequest,NextResponse} from 'next/server';
 import {createServiceClient} from '@/lib/supabase/service';
@@ -45,10 +46,12 @@ export async function POST(request:NextRequest){
    const o=v as Record<string,unknown>, kind=clean(o.kind,32),key=clean(o.key,255);
    if(!completed.includes(kind)||!key)return null;
    const ip=clean(o.ip,48), mac=clean(o.mac,32);
+   const safeProperties=sanitizeInventoryProperties(kind,o.props);
+   if(safeProperties===null)return null;
    return {company_id:router.company_id,router_id:routerId,observed_kind:kind,identity_key:key,
     client_label:clean(o.label,160)||null,ip_address:/^[0-9a-fA-F:.]+$/.test(ip)?ip:null,
     mac_address:/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(mac)?mac:null,
-    active:o.active===true,observed_at:now};
+    active:o.active===true,observed_at:now,safe_properties:safeProperties};
   }).filter((v):v is NonNullable<typeof v>=>v!==null);
   if(observations.length!==b!.observations.length)return json({error:'Observations invalides.'},400);
   const completeKinds=new Set<string>();
