@@ -97,7 +97,13 @@ export default function NetworkPage(){
   if(!company)throw Error('Entreprise inaccessible.');
   setCompanyId(id);setRole(company.role);const list=(data.sites||[]).filter((s:Site)=>s.company_id===id);
   const requestedSite=query.get('siteId')||'';
-  setSites(list);setSiteId(list.find((s:Site)=>s.id===requestedSite)?.id||list[0]?.id||'');await refresh(id);
+  setSites(list);setSiteId(list.find((s:Site)=>s.id===requestedSite)?.id||list[0]?.id||'');
+  // A separate browser tab can open an independent WinBox-style view, but only
+  // an inventory router belonging to the selected authenticated tenant is used.
+  setRouterId(query.get('routerId')||'');
+  const requestedKind=query.get('kind')||'';
+  if(/^[a-z][a-z0-9-]{0,40}$/.test(requestedKind))setAdminSource(requestedKind);
+  await refresh(id);
  }catch(e){setError(e instanceof Error?e.message:'Erreur de chargement');}})();},[]);
  useEffect(()=>{if(!companyId)return;const handle=setInterval(()=>void refresh(companyId),30000);return()=>clearInterval(handle);},[companyId]);
  useEffect(()=>{
@@ -284,6 +290,13 @@ export default function NetworkPage(){
       </select></label>
       <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
        <p className="muted" role="status">{adminLoading?'Chargement des observations…':adminState==='migration_required'?'Migration des inventaires non appliquée.':adminState==='requires_local_connector'?'Source avancée réservée au connecteur local HTTPS.':adminState==='stale'?'Inventaire ancien : aucune donnée considérée comme actuelle.':adminState==='partial'?'Inventaire partiel : limite de collecte atteinte.':adminState==='complete'?'Source lue par le connecteur (instantané, pas une mesure en direct).':adminState==='error'?'Lecture impossible.':'Source non encore collectée ou non compatible avec ce routeur.'}</p>
+       <button type="button" disabled={!routerId} onClick={()=>{
+        const url=new URL(window.location.href);
+        url.searchParams.set('companyId',companyId);
+        url.searchParams.set('routerId',routerId);
+        url.searchParams.set('kind',adminSource);
+        window.open(url.toString(),'_blank','noopener,noreferrer');
+       }}>Ouvrir cette vue dans un nouvel onglet</button>
        <button type="button" disabled={adminLoading} onClick={()=>setInventoryVersion(v=>v+1)}>Actualiser l’affichage</button>
       </div>
       {adminCoverage&&<p className="muted">Collectés : {adminCoverage.collected_count} / {adminCoverage.reported_count} éléments observés sur cette source · dernier relevé : {fmt(adminCoverage.observed_at)} · {adminCoverage.complete?'Collecte déclarée complète':'Collecte tronquée'}</p>}
