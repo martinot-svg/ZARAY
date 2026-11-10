@@ -10,6 +10,14 @@ ALTER TABLE public.network_observations
   'firewall-nat','route','bridge','bridge-port','dhcp-network','dns-static','firewall-address-list','queue-tree','wireguard-interface','wireguard-peer','routing-rule','ipv6-address'
  ));
 
+-- Only approved read-only RouterOS properties are stored for the WinBox-like
+-- properties inspector. This avoids saving raw RouterOS configuration objects.
+ALTER TABLE public.network_observations
+ ADD COLUMN IF NOT EXISTS safe_properties jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE public.network_observations
+ ADD CONSTRAINT network_observations_safe_properties_check
+ CHECK (jsonb_typeof(safe_properties)='object' AND octet_length(safe_properties::text)<=2048);
+
 CREATE TABLE IF NOT EXISTS public.network_inventory_sources (
  router_id uuid NOT NULL,
  company_id uuid NOT NULL,
@@ -54,13 +62,13 @@ CREATE OR REPLACE FUNCTION public.network_inventory_search(
 ) RETURNS TABLE(
  id uuid, router_id uuid, observed_kind text, identity_key text,
  ip_address inet, mac_address macaddr, client_label text,
- active boolean, observed_at timestamptz, total_count bigint
+ active boolean, observed_at timestamptz, safe_properties jsonb, total_count bigint
 )
 LANGUAGE sql STABLE SECURITY INVOKER SET search_path = ''
 AS $inventory_search$
  WITH matching AS (
   SELECT n.id,n.router_id,n.observed_kind,n.identity_key,n.ip_address,
-   n.mac_address,n.client_label,n.active,n.observed_at
+   n.mac_address,n.client_label,n.active,n.observed_at,n.safe_properties
   FROM public.network_observations AS n
   WHERE n.company_id=p_company_id AND n.router_id=p_router_id AND n.observed_kind=p_kind
    AND p_term IS NOT NULL AND length(btrim(p_term)) BETWEEN 1 AND 64
@@ -72,7 +80,7 @@ AS $inventory_search$
    )
  )
  SELECT m.id,m.router_id,m.observed_kind,m.identity_key,m.ip_address,
-  m.mac_address,m.client_label,m.active,m.observed_at,count(*) OVER() AS total_count
+  m.mac_address,m.client_label,m.active,m.observed_at,m.safe_properties,count(*) OVER() AS total_count
  FROM matching AS m
  ORDER BY m.observed_at DESC,m.id DESC
  LIMIT 50 OFFSET (greatest(1,least(coalesce(p_page,1),10000))-1)*50;
