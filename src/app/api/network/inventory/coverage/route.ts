@@ -1,4 +1,5 @@
 import {NextRequest,NextResponse} from 'next/server';
+import {inventorySourceIsCurrent} from '@/lib/network-inventory-freshness';
 import {createClient} from '@/lib/supabase/server';
 import {authorizeTenant} from '@/lib/tenant-context';
 
@@ -39,8 +40,7 @@ export async function GET(req:NextRequest){
   const source=byKind.get(kind);
   if(!source)return {kind,state:router.agent_kind==='routeros-native'&&!nativeKinds.has(kind)
     ?'requires_local_connector':'not_collected'};
-  const time=Date.parse(source.observed_at||'');
-  const fresh=Number.isFinite(time)&&time<=now+30000&&now-time<180000;
+  const fresh=inventorySourceIsCurrent(kind,source.observed_at,now);
   return {kind,state:!fresh?'stale':source.complete?'complete':'partial',
    reportedCount:source.reported_count,collectedCount:source.collected_count,
    observedAt:source.observed_at};
