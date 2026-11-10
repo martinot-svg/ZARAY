@@ -26,7 +26,7 @@ async function request(url,opts={}){
 async function ros(path,method='GET',body,proplist){
  const safe=path.split('/').map(encodeURIComponent).join('/');
  if(proplist!==undefined&&(method!=='GET'||!Array.isArray(proplist)||!proplist.length||
-    !proplist.every(field=>typeof field==='string'&&/^(?:\\.id|[a-z][a-z0-9-]*)$/.test(field))))
+    !proplist.every(field=>typeof field==='string'&&/^(?:\.id|[a-z][a-z0-9-]*)$/.test(field))))
   throw Error('Unsafe RouterOS REST projection.');
  const query=proplist?'?'+new URLSearchParams({'.proplist':proplist.join(',')}).toString():'';
  return request(router+'/rest/'+safe+query,{method,headers:{Authorization:basic,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
