@@ -18,7 +18,7 @@ export async function POST(request:NextRequest){
  const token=/^Bearer ([0-9a-f]{64})$/i.exec(auth)?.[1]||'';
  const b=await request.json().catch(()=>null) as Record<string,unknown>|null;
  const routerId=clean(b?.routerId,36),action=b?.action;
- if(!token||!uuid.test(routerId)||!['claim','sync','poll','result','refresh-complete','diagnostic-result'].includes(String(action)))return json({error:'Requête non autorisée.'},401);
+ if(!token||!uuid.test(routerId)||!['claim','sync','poll','result','refresh-complete','diagnostic-result','config-result'].includes(String(action)))return json({error:'Requête non autorisée.'},401);
  const service=createServiceClient();
  if(!service)return json({error:'Service indisponible.'},503);
  if(action==='claim'){
@@ -36,6 +36,56 @@ export async function POST(request:NextRequest){
  const {data:router,error:routerError}=await service.from('network_routers')
   .select('id,company_id,site_id,control_enabled,agent_kind').eq('id',routerId).maybeSingle();
  if(routerError||!router)return json({error:'Routeur introuvable.'},404);
+ if(action==='config-result'){
+  const jobId=clean(b?.jobId,36),dispatchedAt=b?.dispatchedAt,state=b?.state;
+  if(router.agent_kind!=='node-local'||!uuid.test(jobId)||
+     typeof dispatchedAt!=='string'||dispatchedAt.length>40||
+     !Number.isFinite(Date.parse(dispatchedAt))||Date.parse(dispatchedAt)>Date.now()||
+     Date.now()-Date.parse(dispatchedAt)>600000||
+     !['success','failed','manual_review'].includes(String(state)))
+   return json({error:'Acquittement de configuration invalide.'},400);
+  const project=(raw:unknown):Record<string,string>|null|undefined=>{
+   if(raw===null)return null;
+   if(!raw||typeof raw!=='object'||Array.isArray(raw))return undefined;
+   const obj=raw as Record<string,unknown>,entries=Object.entries(obj);
+   if(entries.length>7)return undefined;
+   const allowed=['.id','name','address','interface','vlan-id','disabled','comment'];
+   if(entries.some(([key,value])=>!allowed.includes(key)||typeof value!=='string'||
+       value.length>128||/[\u0000-\u001f\u007f]/.test(value)))return undefined;
+   return obj as Record<string,string>;
+  };
+  const before=project(b?.before),after=project(b?.after),message=clean(b?.message,400);
+  if(before===undefined||after===undefined||message.length<3)
+   return json({error:'Preuve RouterOS invalide.'},400);
+  const {data:job,error:jobError}=await service.from('network_managed_config_jobs')
+   .select('id,category,operation,requested_values,target_id,status,dispatched_at')
+   .eq('id',jobId).eq('router_id',routerId).eq('company_id',router.company_id).maybeSingle();
+  if(jobError)return json({error:'Journal RouterOS indisponible.'},503);
+  if(!job||job.status!=='dispatched'||job.dispatched_at!==dispatchedAt)
+   return json({error:'Opération non attribuée ou déjà terminée.'},409);
+  if(state==='success'){
+   const expected=job.operation==='create'||job.operation==='update'
+    ?job.requested_values:job.operation==='enable'?{disabled:'false'}:
+     job.operation==='disable'?{disabled:'true'}:{};
+   if(job.operation==='delete'){
+    if(after!==null||!before?.comment?.startsWith('zaray:managed:'))
+     return json({error:'Suppression non vérifiée.',400});
+   }else if(!after||typeof after.comment!=='string'||
+    (job.operation==='create'?after.comment!=='zaray:managed:'+job.id:
+     !after.comment.startsWith('zaray:managed:'))||
+    !Object.entries(expected as Record<string,string>).every(([key,value])=>after[key]===value))
+     return json({error:'Résultat RouterOS non vérifié.',400);
+  }
+  const {data:recorded,error:writeError}=await service.from('network_managed_config_jobs')
+   .update({status:state,before_state:before,after_state:after,outcome:message,
+    completed_at:new Date().toISOString()})
+   .eq('id',jobId).eq('router_id',routerId).eq('company_id',router.company_id)
+   .eq('status','dispatched').eq('dispatched_at',dispatchedAt)
+   .select('id').maybeSingle();
+  if(writeError)return json({error:'Impossible de finaliser la configuration.',503);
+  if(!recorded)return json({error:'Acquittement déjà traité.',409);
+  return json({recorded:true,state});
+ }
  if(action==='diagnostic-result'){
   const id=clean(b?.jobId,36),ok=b?.ok===true,dispatchedAt=b?.dispatchedAt;
   if(!uuid.test(id)||typeof b?.ok!=='boolean'||typeof dispatchedAt!=='string'||dispatchedAt.length>40||!Number.isFinite(Date.parse(dispatchedAt))||Date.parse(dispatchedAt)>Date.now()||Date.now()-Date.parse(dispatchedAt)>10*60000)return json({error:'Résultat diagnostic invalide ou expiré.'},400);
