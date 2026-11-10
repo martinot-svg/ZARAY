@@ -13,3 +13,14 @@ export function inventorySourceIsCurrent(
  const limit=rapidSources.has(kind)?FAST_SOURCE_FRESH_MS:ADVANCED_SOURCE_FRESH_MS;
  return now-time>=0&&now-time<limit;
 }
+
+/** Router presence is not proof of reachability when a clock is skewed.
+ * Future timestamps, malformed dates and stale heartbeats fail closed.
+ */
+export function routerHeartbeatIsFresh(
+ observedAt:string|null,now=Date.now(),maxAgeMs=150000
+):boolean{
+ if(!observedAt||!Number.isFinite(now)||!Number.isFinite(maxAgeMs)||maxAgeMs<=0)return false;
+ const at=Date.parse(observedAt),age=now-at;
+ return Number.isFinite(at)&&age>=0&&age<maxAgeMs;
+}
