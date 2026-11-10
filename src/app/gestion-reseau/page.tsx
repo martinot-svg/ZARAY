@@ -5,6 +5,7 @@ import AppShell from '@/components/app-shell';
 import {NetworkDiagnosticsPanel} from '@/components/network/network-diagnostics-panel';
 import {ZarayIcon} from '@/components/ui/zaray-icon';
 import {filterAndSortRouterInventory,inventoryObservationIsFresh,type InventorySort} from '@/lib/network-inventory-workbench';
+import {routerHeartbeatIsFresh} from '@/lib/network-inventory-freshness';
 type Router={id:string;site_id:string;name:string;host:string;model:string|null;routeros_version:string|null;status:string;control_enabled:boolean;agent_kind:'unreported'|'node-local'|'routeros-native';last_seen_at:string|null};
 type RouterResource={router_id:string;cpu_load_percent:number;total_memory_bytes:number;free_memory_bytes:number;router_uptime:string;observed_at:string};
 type Observation={id:string;router_id:string;observed_kind:string;identity_key:string;ip_address:string|null;mac_address:string|null;client_label:string|null;active:boolean;observed_at:string;safe_properties?:Record<string,string>|null};
@@ -12,11 +13,7 @@ type Account={id:string;router_id:string;order_id:string|null;username:string;pr
 type Order={id:string;site_id:string;public_reference:string;customer_name:string;status:string;validity_days:number};
 type Command={id:string;router_id:string;action:string;username:string;status:string;outcome:string|null;created_at:string};
 type Site={id:string;company_id:string;name:string};
-const fresh=(stamp:string|null)=>{
- if(!stamp)return false;
- const at=Date.parse(stamp),age=Date.now()-at;
- return Number.isFinite(at)&&age>=0&&age<150000;
-};
+const fresh=routerHeartbeatIsFresh;
 const status=(r:Router)=>fresh(r.last_seen_at)?'En ligne':r.last_seen_at?'Hors ligne':'Non appairé';
 const fmt=(d:string|null)=>d?new Date(d).toLocaleString('fr-FR'):'—';
 const commandStatus:Record<string,string>={
