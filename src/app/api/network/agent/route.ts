@@ -39,7 +39,7 @@ export async function POST(request:NextRequest){
  if(action==='diagnostic-result'){
   const id=clean(b?.jobId,36),ok=b?.ok===true;
   if(!uuid.test(id)||typeof b?.ok!=='boolean')return json({error:'Résultat diagnostic invalide.'},400);
-  if(!Array.isArray(b?.samples)||b.samples.length>3)
+  if(!Array.isArray(b?.samples)||b.samples.length>3||(ok&&b.samples.length===0))
    return json({error:'Taille du diagnostic invalide.'},400);
   const samples=b.samples.map(sample=>{
    if(!sample||typeof sample!=='object'||Array.isArray(sample))return null;
@@ -51,6 +51,7 @@ export async function POST(request:NextRequest){
      out[key]=v;
     }
    }
+   if(!out.seq||!/^[0-2]$/.test(out.seq)||out.status==='received'&&!out.time)return null;
    return out;
   });
   if(samples.includes(null)||JSON.stringify(samples).length>1900)
@@ -62,7 +63,8 @@ export async function POST(request:NextRequest){
    .eq('id',id).eq('router_id',routerId).eq('company_id',router.company_id)
    .eq('status','dispatched').select('id').maybeSingle();
   if(resultError)return json({error:'Résultat du ping non enregistré.'},503);
-  return json({recorded:!!recorded});
+  if(!recorded)return json({error:'Diagnostic déjà terminé ou non attribué à ce connecteur.'},409);
+  return json({recorded:true});
  }
  if(action==='refresh-complete'){
   const kind=clean(b?.kind,40),requestedAt=b?.requestedAt;
@@ -336,19 +338,31 @@ export async function POST(request:NextRequest){
    const {data:claimed}=await claim.select('id').maybeSingle();
    if(claimed)commands.push({id:cmd.id,action:cmd.action,protocol:cmd.protocol,username:cmd.username,sessionId:cmd.session_id,macAddress:cmd.mac_address,...voucherPayload,...accountPayload});
   }
-  let diagnostics:Record<string,unknown>[]=[];
+  const diagnostics:Record<string,unknown>[]=[];
   if(router.agent_kind==='node-local'){
+   const now=Date.now(),cutoff=new Date(now-10*60000).toISOString();
    const {data:pending,error:diagnosticError}=await service.from('network_diagnostic_jobs')
-    .select('id,target,kind').eq('router_id',routerId).eq('company_id',router.company_id)
-    .eq('status','queued').order('requested_at',{ascending:true}).limit(1);
+    .select('id,target,kind,status,dispatched_at').eq('router_id',routerId)
+    .eq('company_id',router.company_id).in('status',['queued','dispatched'])
+    .gte('requested_at',cutoff).order('requested_at',{ascending:true}).limit(3);
    if(diagnosticError)return json({error:'Diagnostics indisponibles.'},503);
    for(const job of pending||[]){
     if(job.kind!=='ping')continue;
-    const {data:claimed}=await service.from('network_diagnostic_jobs')
+    if(job.status==='dispatched'&&(
+      !job.dispatched_at||!Number.isFinite(Date.parse(job.dispatched_at))||
+      Date.parse(job.dispatched_at)>now-90000
+    ))continue;
+    let claim=service.from('network_diagnostic_jobs')
      .update({status:'dispatched',dispatched_at:new Date().toISOString()})
      .eq('id',job.id).eq('router_id',routerId).eq('company_id',router.company_id)
-     .eq('status','queued').select('id').maybeSingle();
-    if(claimed)diagnostics.push({id:job.id,kind:'ping',target:job.target});
+     .eq('status',job.status);
+    if(job.status==='dispatched')claim=claim.eq('dispatched_at',job.dispatched_at);
+    const {data:claimed,error:claimError}=await claim.select('id').maybeSingle();
+    if(claimError)return json({error:'Attribution du diagnostic indisponible.'},503);
+    if(claimed){
+     diagnostics.push({id:job.id,kind:'ping',target:job.target});
+     break;
+    }
    }
   }
   return json({commands,controlEnabled:true,refresh,diagnostics});
