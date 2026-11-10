@@ -100,7 +100,7 @@ test('all existing network write handlers reject unisolated Vercel Previews',()=
  ]){
   const src=file(path);
   assert.ok(src.includes('networkWritesBlockedInPreview()'),path);
-  assert.ok(src.includes('status:403'),path);
+  assert.ok(src.includes('status:403')||(path.endsWith('/operations/route.ts')&&src.includes("error('Prévisualisation en lecture seule : opérations réelles désactivées.',403)")),path);
  }
 });
 
