@@ -8,7 +8,7 @@ CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE
  AS $$ SELECT NULLIF(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
 GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated;
 CREATE TABLE public.company_members (
- company_id uuid NOT NULL,user_id uuid NOT NULL,status text NOT NULL,
+ company_id uuid NOT NULL,user_id uuid NOT NULL,status text NOT NULL,role text NOT NULL DEFAULT 'owner',
  PRIMARY KEY(company_id,user_id)
 );
 ALTER TABLE public.company_members ENABLE ROW LEVEL SECURITY;
@@ -16,7 +16,7 @@ CREATE POLICY company_members_self ON public.company_members
  FOR SELECT TO authenticated USING(user_id=(SELECT auth.uid()));
 GRANT SELECT ON public.company_members TO authenticated;
 CREATE TABLE public.network_routers(
- id uuid PRIMARY KEY,company_id uuid NOT NULL,
+ id uuid PRIMARY KEY,company_id uuid NOT NULL,agent_kind text NOT NULL DEFAULT 'node-local',
  UNIQUE(id,company_id)
 );
 CREATE TABLE public.network_observations(
