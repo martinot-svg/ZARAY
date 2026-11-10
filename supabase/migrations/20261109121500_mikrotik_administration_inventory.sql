@@ -7,7 +7,7 @@ ALTER TABLE public.network_observations
   'hotspot','pppoe','dhcp','wifi','neighbor','radius','interface',
   'hotspot-user','hotspot-profile','ppp-secret','ppp-profile',
   'ip-address','ip-pool','dhcp-server','dhcp-client','vlan','arp','queue','firewall-filter',
-  'firewall-nat','route'
+  'firewall-nat','route','bridge','bridge-port','dhcp-network','dns-static','firewall-address-list','queue-tree','wireguard-interface','wireguard-peer','routing-rule','ipv6-address'
  ));
 
 CREATE TABLE IF NOT EXISTS public.network_inventory_sources (
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS public.network_inventory_sources (
  CONSTRAINT network_inventory_kind_check CHECK (observed_kind IN (
   'hotspot','pppoe','dhcp','wifi','neighbor','radius','interface',
   'hotspot-user','hotspot-profile','ppp-secret','ppp-profile',
-  'ip-address','ip-pool','dhcp-server','dhcp-client','vlan','arp','queue','firewall-filter','firewall-nat','route'
+  'ip-address','ip-pool','dhcp-server','dhcp-client','vlan','arp','queue','firewall-filter','firewall-nat','route','bridge','bridge-port','dhcp-network','dns-static','firewall-address-list','queue-tree','wireguard-interface','wireguard-peer','routing-rule','ipv6-address'
  )),
  CONSTRAINT network_inventory_count_check CHECK (collected_count <= reported_count OR NOT complete)
 );
