@@ -11,7 +11,7 @@ export async function GET(req:NextRequest){
  const permission=await authorizeTenant(supabase,companyId);
  if(!permission.ok)return fail(permission.error,permission.status);
  const [routers,observations,resources]=await Promise.all([
- supabase.from('network_routers').select('id,company_id,site_id,name,host,model,routeros_version,connection_mode,status,control_enabled,agent_kind,last_seen_at,created_at').eq('company_id',companyId).order('created_at',{ascending:false}),
+ supabase.from('network_routers').select('id,company_id,site_id,name,host,model,routeros_version,connection_mode,status,control_enabled,agent_kind,native_ping_supported,last_seen_at,created_at').eq('company_id',companyId).order('created_at',{ascending:false}),
  supabase.from('network_observations').select('id,router_id,observed_kind,identity_key,ip_address,mac_address,client_label,active,observed_at').eq('company_id',companyId).order('observed_at',{ascending:false}).limit(500),
  supabase.from('network_router_resources').select('router_id,company_id,cpu_load_percent,free_memory_bytes,total_memory_bytes,router_uptime,observed_at').eq('company_id',companyId).limit(300)
  ]);
