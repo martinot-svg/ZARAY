@@ -130,8 +130,11 @@ async function voucherUptimeReadings(){
 
 function normalize(v){return typeof v==='string'?v:'';}
 let inventoryCycle=0;
-async function sync(){
- const selectedSources=chooseRouterOsSources(sources,inventoryCycle++);
+async function sync(forceKinds=null){
+ const selectedSources=forceKinds
+  ? sources.filter(source=>forceKinds.includes(source.kind))
+  : chooseRouterOsSources(sources,inventoryCycle++);
+ if(!selectedSources.length)return [];
  const resource=await ros('system/resource');
  const board=await ros('system/routerboard').catch(()=>null);
  const kinds=new Set(),items=[],sourceStats=new Map(),failedKinds=new Set();
@@ -174,6 +177,7 @@ async function sync(){
    }});
   console.log('[ZARAY] Synchronisées :',result.synced,'observations');
  }
+ return [...kinds];
 }
 async function findAccount(protocol,username){
  const path=protocol==='hotspot'?'ip/hotspot/user':'ppp/secret';
@@ -310,6 +314,16 @@ async function poll(){
   try{outcome=await execute(command);ok=true;}catch(e){outcome=String(e.message).slice(0,450);}
   try{await reportResult(command.id,ok,outcome);}
   catch(e){console.error('[ZARAY] Résultat non confirmé :',command.id,e.message);}
+ }
+ // On-demand reads are capped and use the existing tenant-bound sync endpoint.
+ for(const requested of (Array.isArray(r.refresh)?r.refresh:[]).slice(0,2)){
+  if(!requested||typeof requested.kind!=='string'||typeof requested.requestedAt!=='string'||
+     !sources.some(source=>source.kind===requested.kind))continue;
+  try{
+   const collected=await sync([requested.kind]);
+   if(collected.includes(requested.kind))
+    await api('refresh-complete',{kind:requested.kind,requestedAt:requested.requestedAt});
+  }catch(e){console.warn('[ZARAY] Actualisation RouterOS non confirmée',requested.kind,e.message);}
  }
 }
 console.log('[ZARAY] Surveillance démarrée pour',ROUTER_ID,'via',cloud);
