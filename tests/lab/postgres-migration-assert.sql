@@ -64,6 +64,26 @@ END $$;
 RESET ROLE;
 RESET request.jwt.claim.sub;
 
+-- The inspector persists only bounded JSON objects; legacy agents default to {}.
+UPDATE public.network_observations
+ SET safe_properties='{"name":"ether1","type":"ether","running":"true"}'::jsonb
+ WHERE id='00000000-0000-4000-8000-000000000001';
+DO $properties$
+DECLARE n integer;
+BEGIN
+ SELECT count(*) INTO n FROM public.network_observations
+  WHERE id='00000000-0000-4000-8000-000000000001'
+   AND safe_properties->>'name'='ether1';
+ IF n<>1 THEN RAISE EXCEPTION 'Safe RouterOS property was not stored'; END IF;
+ BEGIN
+  UPDATE public.network_observations
+   SET safe_properties=jsonb_build_object('label',repeat('x',3000))
+   WHERE id='00000000-0000-4000-8000-000000000001';
+  RAISE EXCEPTION 'Oversized property object incorrectly accepted';
+ EXCEPTION WHEN check_violation THEN NULL;
+ END;
+END $properties$;
+
 -- Search must operate on typed INET/MACADDR fields without bypassing RLS.
 UPDATE public.network_observations
  SET ip_address='192.0.2.10',mac_address='aa:bb:cc:dd:ee:ff',
