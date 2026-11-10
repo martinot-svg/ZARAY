@@ -89,3 +89,77 @@ REVOKE ALL ON FUNCTION public.network_inventory_search(uuid,uuid,text,text,integ
  FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.network_inventory_search(uuid,uuid,text,text,integer)
  TO authenticated;
+
+
+-- Read-only, on-demand router inventory refresh. A request merely asks the
+-- paired LOCAL Node connector to collect an approved source at its next poll.
+-- No RouterOS configuration writes or Vercel background jobs are introduced.
+CREATE TABLE IF NOT EXISTS public.network_inventory_refresh_requests (
+ router_id uuid NOT NULL,
+ company_id uuid NOT NULL,
+ observed_kind text NOT NULL,
+ requested_at timestamptz NOT NULL DEFAULT now(),
+ fulfilled_at timestamptz,
+ PRIMARY KEY(router_id,observed_kind),
+ FOREIGN KEY(router_id,company_id) REFERENCES public.network_routers(id,company_id) ON DELETE CASCADE,
+ CONSTRAINT network_inventory_refresh_kind CHECK(observed_kind IN (
+  'hotspot','pppoe','dhcp','wifi','neighbor','radius','interface',
+  'hotspot-user','hotspot-profile','ppp-secret','ppp-profile','ip-address',
+  'ip-pool','dhcp-server','dhcp-client','vlan','arp','queue','firewall-filter',
+  'firewall-nat','route','bridge','bridge-port','dhcp-network','dns-static',
+  'firewall-address-list','queue-tree','wireguard-interface','wireguard-peer',
+  'routing-rule','ipv6-address'
+ ))
+);
+CREATE INDEX IF NOT EXISTS network_inventory_refresh_pending_idx
+ ON public.network_inventory_refresh_requests(router_id,requested_at)
+ WHERE fulfilled_at IS NULL;
+ALTER TABLE public.network_inventory_refresh_requests ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.network_inventory_refresh_requests FROM PUBLIC,anon,authenticated;
+GRANT SELECT ON public.network_inventory_refresh_requests TO authenticated;
+DROP POLICY IF EXISTS network_inventory_refresh_tenant_read ON public.network_inventory_refresh_requests;
+CREATE POLICY network_inventory_refresh_tenant_read
+ ON public.network_inventory_refresh_requests FOR SELECT TO authenticated USING(
+  EXISTS (SELECT 1 FROM public.company_members m
+   WHERE m.company_id=network_inventory_refresh_requests.company_id
+    AND m.user_id=(SELECT auth.uid()) AND m.status='active')
+ );
+
+-- A single atomic, tightly-scoped SECURITY DEFINER request function is needed:
+-- authenticated users have NO direct INSERT/UPDATE/DELETE on the request table.
+-- Validate the user, role and router in the function; lock the router record
+-- to serialize simultaneous requests and enforce a per-router cooldown.
+CREATE OR REPLACE FUNCTION public.request_network_inventory_refresh(
+ p_company_id uuid,p_router_id uuid,p_kind text
+) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=''
+AS $refresh$
+DECLARE n integer;
+BEGIN
+ IF (SELECT auth.uid()) IS NULL OR p_company_id IS NULL OR p_router_id IS NULL
+    OR p_kind IS NULL OR length(p_kind)>40 THEN RETURN false; END IF;
+ PERFORM 1 FROM public.network_routers r
+ JOIN public.company_members m ON m.company_id=r.company_id
+ WHERE r.id=p_router_id AND r.company_id=p_company_id AND r.agent_kind='node-local'
+  AND m.user_id=(SELECT auth.uid()) AND m.status='active'
+  AND m.role IN ('owner','admin')
+ FOR UPDATE OF r;
+ IF NOT FOUND THEN RETURN false; END IF;
+ IF EXISTS(SELECT 1 FROM public.network_inventory_refresh_requests q
+  WHERE q.router_id=p_router_id AND q.requested_at > now()-interval '60 seconds')
+ THEN RETURN false; END IF;
+ INSERT INTO public.network_inventory_refresh_requests(
+  router_id,company_id,observed_kind,requested_at,fulfilled_at)
+ VALUES (p_router_id,p_company_id,p_kind,now(),NULL)
+ ON CONFLICT (router_id,observed_kind) DO UPDATE
+  SET requested_at=EXCLUDED.requested_at,fulfilled_at=NULL;
+ GET DIAGNOSTICS n=ROW_COUNT;
+ RETURN n=1;
+EXCEPTION WHEN check_violation THEN
+ RETURN false;
+END
+$refresh$;
+REVOKE ALL ON FUNCTION public.request_network_inventory_refresh(uuid,uuid,text)
+ FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.request_network_inventory_refresh(uuid,uuid,text)
+ TO authenticated;
