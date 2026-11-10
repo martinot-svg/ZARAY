@@ -97,7 +97,7 @@ with (out/"qemu.log").open("wb") as log:
       send(conn,"/system/resource/print without-paging");change("resource")
     elif state=="authenticated" and prompt(recent):
      send(conn,"/system/resource/print without-paging");change("resource")
-    elif state=="resource" and prompt(recent) and re.search(r"(?i)version:\\s*7\\.24\\.6",recent):
+    elif state=="resource" and prompt(recent) and re.search(r"(?i)version:\s*7\.24\.6",recent):
      results["resource"]=recent
      send(conn,"/interface/print without-paging");change("interfaces")
     elif state=="interfaces" and prompt(recent) and "ether1" in recent:
