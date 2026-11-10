@@ -267,9 +267,9 @@ export default function NetworkPage(){
       <h3>Inventaire du routeur sélectionné</h3>
       <p className="muted">Site : {sites.find(s=>s.id===chosen.site_id)?.name||'Non disponible'} · Agent : {chosen.agent_kind==='routeros-native'?'RouterOS natif':chosen.agent_kind==='node-local'?'Connecteur local':'Non identifié'} · Contrôle : {chosen.control_enabled?'activé':'désactivé'}</p>
       <label>Source d’inventaire<select value={adminSource} onChange={e=>{setAdminSource(e.target.value);setInventoryPage(1);}}>
-       <optgroup label="Vue générale et interfaces"><option value="interface">Interfaces</option><option value="wifi">Stations Wi-Fi</option><option value="neighbor">Voisins</option><option value="radius">Serveurs RADIUS déclarés</option></optgroup>
+       <optgroup label="Vue générale et interfaces"><option value="interface">Interfaces</option><option value="vlan">Interfaces VLAN</option><option value="wifi">Stations Wi-Fi</option><option value="neighbor">Voisins</option><option value="radius">Serveurs RADIUS déclarés</option></optgroup>
        <optgroup label="Hotspot et PPPoE"><option value="hotspot">Sessions Hotspot</option><option value="hotspot-user">Comptes Hotspot</option><option value="hotspot-profile">Profils Hotspot</option><option value="pppoe">Sessions PPPoE</option><option value="ppp-secret">Comptes PPP</option><option value="ppp-profile">Profils PPP</option></optgroup>
-       <optgroup label="IP et DHCP"><option value="ip-address">Adresses IP</option><option value="ip-pool">Pools IP</option><option value="dhcp-server">Serveurs DHCP</option><option value="dhcp">Baux DHCP</option></optgroup>
+       <optgroup label="IP et DHCP"><option value="ip-address">Adresses IP</option><option value="ip-pool">Pools IP</option><option value="dhcp-server">Serveurs DHCP</option><option value="dhcp-client">Clients DHCP</option><option value="dhcp">Baux DHCP</option><option value="arp">Table ARP</option></optgroup>
        <optgroup label="Débits et sécurité"><option value="queue">Files d’attente</option><option value="firewall-filter">Règles pare-feu</option><option value="firewall-nat">Règles NAT</option><option value="route">Routes IP</option></optgroup>
       </select></label>
       <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
