@@ -309,6 +309,24 @@ async function reportResult(commandId,ok,outcome){
   catch(e){if(attempt===2)throw e;await sleep(1000*(attempt+1));}
  }
 }
+/** Fixed, explicitly allowed RouterOS diagnostic command; never user CLI. */
+async function diagnosticPing(address){
+ const chunks=String(address||'').split('.');
+ if(chunks.length!==4||!chunks.every(v=>/^[0-9]{1,3}$/.test(v)&&Number(v)<=255))
+  throw Error('Cible IPv4 de diagnostic invalide.');
+ const response=await ros('ping','POST',{address:chunks.join('.'),count:'3'});
+ if(!Array.isArray(response))throw Error('Réponse du ping MikroTik invalide.');
+ return response.slice(0,3).map(row=>{
+  const entry={};
+  if(row&&typeof row==='object'&&!Array.isArray(row)){
+   for(const key of ['seq','time','status','ttl']){
+    const value=row[key];
+    if(typeof value==='string'&&value.length<=64)entry[key]=value;
+   }
+  }
+  return entry;
+ });
+}
 async function poll(){
  const r=await api('poll');
  for(const command of r.commands||[]){
@@ -326,6 +344,14 @@ async function poll(){
    if(collected.includes(requested.kind))
     await api('refresh-complete',{kind:requested.kind,requestedAt:requested.requestedAt});
   }catch(e){console.warn('[ZARAY] Actualisation RouterOS non confirmée',requested.kind,e.message);}
+ }
+ for(const job of (Array.isArray(r.diagnostics)?r.diagnostics:[]).slice(0,1)){
+  if(!job||job.kind!=='ping'||typeof job.id!=='string')continue;
+  let ok=false,samples=[],error='';
+  try{samples=await diagnosticPing(job.target);ok=true;}
+  catch(e){error=String(e instanceof Error?e.message:e).slice(0,160);}
+  try{await api('diagnostic-result',{jobId:job.id,ok,samples,error});}
+  catch(e){console.warn('[ZARAY] Résultat ping non confirmé',job.id,e.message);}
  }
 }
 console.log('[ZARAY] Surveillance démarrée pour',ROUTER_ID,'via',cloud);
