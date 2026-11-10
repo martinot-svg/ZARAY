@@ -3,6 +3,7 @@
 import {readFile,writeFile,mkdir,chmod} from 'node:fs/promises';
 import {dirname,join} from 'node:path';
 import {readOnlyInventoryProjection} from './routeros/inventory-projections.mjs';
+import {sanitizedRouterOsDetails} from './routeros/inspector-properties.mjs';
 import {readBoundedResponseText} from './routeros/bounded-response.mjs';
 import {chooseRouterOsSources} from './routeros/inventory-schedule.mjs';
 import {homedir} from 'node:os';
@@ -146,7 +147,8 @@ async function sync(){
    for(const entry of response.slice(0,limit)){
     const key=normalize(source.key(entry)).slice(0,255);if(!key)continue;
     items.push({kind:source.kind,key,ip:normalize(source.ip(entry)),mac:normalize(source.mac(entry)),
-     label:normalize(source.label(entry)).slice(0,160),active:source.active(entry)});
+     label:normalize(source.label(entry)).slice(0,160),active:source.active(entry),
+     props:sanitizedRouterOsDetails(source.path,entry)});
     collected++;
    }
    const existing=sourceStats.get(source.kind)||{kind:source.kind,reportedCount:0,collectedCount:0,complete:true};
