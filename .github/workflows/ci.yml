@@ -72,6 +72,7 @@ jobs:
       - run: node --test tests/network-rollback-plan.test.mjs
       - run: node --test tests/network-session-mock.test.mjs
       - run: node --experimental-strip-types --test tests/network-command-lease.test.mjs
+      - run: node --experimental-strip-types --test tests/network-router-heartbeat.test.mjs
       - run: node --experimental-strip-types --test tests/preview-supabase-isolation.test.mjs
       - run: node --test tests/network-bounded-response.test.mjs
       - run: node --test tests/network-inventory-live-refresh.test.mjs
