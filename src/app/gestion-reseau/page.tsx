@@ -291,7 +291,7 @@ export default function NetworkPage(){
       <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
        <p className="muted" role="status">{adminLoading?'Chargement des observations…':adminState==='migration_required'?'Migration des inventaires non appliquée.':adminState==='requires_local_connector'?'Source avancée réservée au connecteur local HTTPS.':adminState==='stale'?'Inventaire ancien : aucune donnée considérée comme actuelle.':adminState==='partial'?'Inventaire partiel : limite de collecte atteinte.':adminState==='complete'?'Source lue par le connecteur (instantané, pas une mesure en direct).':adminState==='error'?'Lecture impossible.':'Source non encore collectée ou non compatible avec ce routeur.'}</p>
        <button type="button" disabled={!routerId} onClick={()=>{
-        const url=new URL(window.location.href);
+        const url=new URL('/gestion-reseau',window.location.origin);
         url.searchParams.set('companyId',companyId);
         url.searchParams.set('routerId',routerId);
         url.searchParams.set('kind',adminSource);
