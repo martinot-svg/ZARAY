@@ -33,7 +33,7 @@ test('actual connector uses the same bounded and validated RouterOS ping functio
  assert.equal(calls.length,1);
  await assert.rejects(()=>boundedRouterOsPing(async()=>[],'192.0.2.7'),/Aucun résultat/);
  await assert.rejects(()=>boundedRouterOsPing(async()=>[null],'192.0.2.7'),/mal formé/);
- await assert.rejects(()=>boundedRouterOsPing(async()=>[{seq:'0',time:'1ms\\u0000'}],'192.0.2.7'),/invalide/);
+ await assert.rejects(()=>boundedRouterOsPing(async()=>[{seq:'0',time:'1ms'+String.fromCharCode(0)}],'192.0.2.7'),/invalide/);
 });
 
 test('ping can be requested only for company-owned, recent, observed device',()=>{
@@ -79,7 +79,7 @@ test('paired agent acknowledges only dispatched jobs and validates size',()=>{
   "diagnostics.push({id:job.id,kind:'ping',target:job.target})",
   "router.agent_kind==='node-local'"
  ])assert.ok(api.includes(part),part);
- assert.ok(connector.includes("ros('ping','POST'"));
+ assert.ok(readFileSync('network-connector/routeros/bounded-ping.mjs','utf8').includes("ros('ping','POST'"));
  assert.ok(connector.includes("api('diagnostic-result'"));
 });
 
@@ -90,6 +90,10 @@ test('WinBox-style diagnostics panel displays actual queued/readback state',()=>
  assert.ok(ui.includes("method:'POST'"));
  assert.ok(ui.includes("kind:'ping'"));
  assert.ok(ui.includes("job.status==='success'"));
+ assert.ok(ui.includes("sample.status==='timeout'"));
+ assert.ok(ui.includes('hasPending?15000:60000'));
+ assert.ok(route.includes("status:'expired'"));
+ assert.ok(route.includes('if(expiryError)return fail('));
  assert.ok(ui.includes('job.reply.map'));
  assert.ok(!ui.includes('MIKROTIK_PASSWORD'));
 });
