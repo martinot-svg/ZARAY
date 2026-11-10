@@ -34,7 +34,9 @@ async function ros(path,method='GET',body,fields){
  if(!response.ok)throw Error('CHR lab RouterOS REST HTTP '+response.status);
  const raw=await response.text();
  if(raw.length>1024*1024)throw Error('CHR response exceeds safe limit');
- return JSON.parse(raw);
+ // RouterOS DELETE is successful with HTTP 204 and deliberately no body.
+ // Treat empty content as an expected success, not a JSON syntax error.
+ return raw?JSON.parse(raw):null;
 }
 
 const resource=await ros('system/resource');
