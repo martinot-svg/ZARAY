@@ -75,6 +75,7 @@ jobs:
       - run: node --experimental-strip-types --test tests/preview-supabase-isolation.test.mjs
       - run: node --test tests/network-bounded-response.test.mjs
       - run: node --experimental-strip-types --test tests/network-winbox-workbench.test.mjs
+      - run: node --experimental-strip-types --test tests/network-winbox-extended-inventory.test.mjs
       - run: node --check network-connector/agent.mjs
       - run: npm run typecheck
       - run: npm run build
