@@ -38,7 +38,7 @@ test('UI provides list -> filter -> properties and retains guarded session opera
  const page=readFileSync('src/app/gestion-reseau/page.tsx','utf8');
  for(const part of [
   'filterAndSortRouterInventory(','type InventorySort',
-  'Rechercher sur cette page','visibleInventory.map',
+  'Rechercher dans l’inventaire du routeur','visibleInventory.map',
   'Propriétés de l’élément sélectionné','selectedInventory.identity_key',
   "onClick={()=>void disconnectObserved(d)}",
   "network/operations",
@@ -58,4 +58,23 @@ test('separate inventory windows keep tenant authorization and never forward arb
  assert.ok(page.includes("setAdminSource(requestedKind)"));
  assert.ok(page.includes("setRouterId(v=>(n.routers||[]).some((x:Router)=>x.id===v)?v:(n.routers?.[0]?.id||''))"));
  assert.ok(!page.includes('window.open(window.location.href'));
+});
+
+test('WinBox global filter searches across server-side pages without losing tenant scope',()=>{
+ const page=readFileSync('src/app/gestion-reseau/page.tsx','utf8');
+ const route=readFileSync('src/app/api/network/inventory/route.ts','utf8');
+ const migration=readFileSync('supabase/migrations/20261109121500_mikrotik_administration_inventory.sql','utf8');
+ assert.ok(page.includes("params.set('search',inventorySearchTerm)"));
+ assert.ok(page.includes("setTimeout(()=>{setInventorySearchTerm(inventoryQuery.trim())"));
+ assert.ok(page.includes("adminSource,inventoryPage,inventoryVersion,inventorySearchTerm"));
+ assert.ok(route.includes("authorizeTenant(client,companyId)"));
+ assert.ok(route.includes(".eq('id',routerId).eq('company_id',companyId)"));
+ assert.ok(route.includes("client.rpc('network_inventory_search'"));
+ assert.ok(route.includes("p_company_id:companyId,p_router_id:routerId,p_kind:kind,p_term:search,p_page:page"));
+ assert.ok(!route.includes('createServiceClient()'));
+ assert.ok(migration.includes('SECURITY INVOKER'));
+ assert.ok(migration.includes("FROM public.network_observations AS n"));
+ assert.ok(migration.includes('n.company_id=p_company_id AND n.router_id=p_router_id'));
+ assert.ok(migration.includes('GRANT EXECUTE ON FUNCTION public.network_inventory_search'));
+ assert.ok(!page.includes('new WebSocket('));
 });
