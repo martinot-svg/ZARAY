@@ -51,21 +51,16 @@ export async function POST(request:NextRequest){
     active:o.active===true,observed_at:now};
   }).filter((v):v is NonNullable<typeof v>=>v!==null);
   if(observations.length!==b!.observations.length)return json({error:'Observations invalides.'},400);
-  if(observations.length){
-   const {error}=await service.from('network_observations').upsert(observations,{onConflict:'router_id,observed_kind,identity_key'});
-   if(error)return json({error:'Impossible de synchroniser les appareils.'},503);
-  }
-  for(const kind of completed){
-   const {error}=await service.from('network_observations').update({active:false}).eq('router_id',routerId).eq('observed_kind',kind).lt('observed_at',now);
-   if(error)return json({error:'Inventaire partiellement mis à jour.'},503);
-  }
-  // Optional source status is written only by the paired connector; never by a browser.
-  // Reported totals are only inventory sizes, not network health measurements.
+  const completeKinds=new Set<string>();
+  const sourceEntries:{
+   router_id:string;company_id:string;observed_kind:string;
+   reported_count:number;collected_count:number;complete:boolean;observed_at:string
+  }[]=[];
+  // Preflight the completeness metadata before making any database changes.
   if(b?.sourceStats!==undefined){
    if(!Array.isArray(b.sourceStats)||b.sourceStats.length>kinds.length)
     return json({error:'État des sources invalide.'},400);
    const unique=new Set<string>();
-   const entries=[];
    for(const value of b.sourceStats){
     if(!value||typeof value!=='object'||Array.isArray(value))
      return json({error:'État des sources invalide.'},400);
@@ -77,14 +72,29 @@ export async function POST(request:NextRequest){
        typeof item.complete!=='boolean'||(item.complete&&collected!==reported))
      return json({error:'État des sources invalide.'},400);
     unique.add(kind);
-    entries.push({router_id:routerId,company_id:router.company_id,observed_kind:kind,
+    // Never trust a complete=true claim if some reported rows were not included.
+    const actual=observations.filter(o=>o.observed_kind===kind).length;
+    if(item.complete&&actual!==collected)
+     return json({error:'Couverture complète incohérente avec les observations.'},400);
+    if(item.complete)completeKinds.add(kind);
+    sourceEntries.push({router_id:routerId,company_id:router.company_id,observed_kind:kind,
      reported_count:reported,collected_count:collected,complete:item.complete,observed_at:now});
    }
-   if(entries.length){
-    const {error:sourceError}=await service.from('network_inventory_sources')
-     .upsert(entries,{onConflict:'router_id,observed_kind'});
-    if(sourceError)return json({error:'État de couverture des inventaires indisponible.'},503);
-   }
+  }
+  if(observations.length){
+   const {error}=await service.from('network_observations').upsert(observations,{onConflict:'router_id,observed_kind,identity_key'});
+   if(error)return json({error:'Impossible de synchroniser les appareils.'},503);
+  }
+  for(const kind of completed){
+   if(!completeKinds.has(kind))continue;
+   const {error}=await service.from('network_observations').update({active:false}).eq('router_id',routerId).eq('observed_kind',kind).lt('observed_at',now);
+   if(error)return json({error:'Inventaire partiellement mis à jour.'},503);
+  }
+  // A partial source must never clear devices that the capped poll did not see.
+  if(sourceEntries.length){
+   const {error:sourceError}=await service.from('network_inventory_sources')
+    .upsert(sourceEntries,{onConflict:'router_id,observed_kind'});
+   if(sourceError)return json({error:'État de couverture des inventaires indisponible.'},503);
   }
   // A first authenticated Hotspot session activates the voucher's usage window.
   const connectedNames=new Set(observations.filter(o=>o.observed_kind==='hotspot'&&o.active&&o.client_label).map(o=>o.client_label));
