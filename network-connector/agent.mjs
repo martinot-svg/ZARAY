@@ -333,11 +333,11 @@ async function poll(){
   }catch(e){console.warn('[ZARAY] Actualisation RouterOS non confirmée',requested.kind,e.message);}
  }
  for(const job of (Array.isArray(r.diagnostics)?r.diagnostics:[]).slice(0,1)){
-  if(!job||job.kind!=='ping'||typeof job.id!=='string')continue;
+  if(!job||job.kind!=='ping'||typeof job.id!=='string'||typeof job.dispatchedAt!=='string')continue;
   let ok=false,samples=[],error='';
   try{samples=await diagnosticPing(job.target);ok=true;}
   catch(e){error=String(e instanceof Error?e.message:e).slice(0,160);}
-  try{await api('diagnostic-result',{jobId:job.id,ok,samples,error});}
+  try{await api('diagnostic-result',{jobId:job.id,dispatchedAt:job.dispatchedAt,ok,samples,error});}
   catch(e){console.warn('[ZARAY] Résultat ping non confirmé',job.id,e.message);}
  }
 }
