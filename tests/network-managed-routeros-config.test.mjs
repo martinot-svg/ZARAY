@@ -174,7 +174,7 @@ test('read-only reconciliation can confirm a previously deleted owned DNS record
  assert.equal(r.calls.filter(c=>c.method!=='GET').length,0);
 });
 test('RLS, single-flight and web-to-agent integration stay explicit',()=>{
- const sql=readFileSync('supabase/migrations/20261110190000_network_managed_routeros_config.sql','utf8');
+ const sql=readFileSync('supabase/migrations/20261110163450_network_managed_routeros_config.sql','utf8');
  const api=readFileSync('src/app/api/network/config/route.ts','utf8');
  const agent=readFileSync('src/app/api/network/agent/route.ts','utf8');
  const connector=readFileSync('network-connector/agent.mjs','utf8');
