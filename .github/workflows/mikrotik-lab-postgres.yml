@@ -1,5 +1,12 @@
 name: ZARAY MikroTik isolated PostgreSQL lab
 on:
+  push:
+    branches:
+      - codex/winbox-config-engine-20261110
+    paths:
+      - '.github/workflows/mikrotik-lab-postgres.yml'
+      - 'supabase/migrations/**'
+      - 'tests/lab/postgres-*.sql'
   pull_request:
     paths:
       - 'src/app/api/network/**'
