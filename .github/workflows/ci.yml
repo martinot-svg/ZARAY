@@ -89,7 +89,7 @@ jobs:
   # Temporary proof gate for the RouterOS-native agent. Runs only for this PR;
   # the disposable CHR is entirely private to the GitHub-hosted runner.
   native-chr-proof:
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.ref == 'refs/heads/feature/winbox-native-online-administration-20261110' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     timeout-minutes: 11
     steps:
