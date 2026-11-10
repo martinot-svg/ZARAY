@@ -32,9 +32,9 @@ test('real REST adapter sends safe RouterOS .proplist and rejects writes with pr
  assert.ok(begin>0&&end>begin);
  const calls=[];
  const request=async(url,opts)=>{calls.push({url,opts});return [];};
- const fn=new Function('router','request','basic','URLSearchParams','encodeURIComponent',
+ const fn=new Function('router','request','basic','URLSearchParams','encodeURIComponent','readOnlyInventoryProjection',
   connector.slice(begin,end)+'\nreturn ros;');
- const ros=fn('https://192.0.2.1',request,'Basic mock',URLSearchParams,encodeURIComponent);
+ const ros=fn('https://192.0.2.1',request,'Basic mock',URLSearchParams,encodeURIComponent,readOnlyInventoryProjection);
  const fields=readOnlyInventoryProjection('ip/address');
  await ros('ip/address','GET',undefined,fields);
  assert.equal(calls.length,1);
