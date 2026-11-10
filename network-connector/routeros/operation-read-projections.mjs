@@ -9,7 +9,9 @@ const fields=Object.freeze({
  'ip/hotspot/active':Object.freeze(['.id','user','mac-address']),
  'ppp/active':Object.freeze(['.id','name']),
  'ip/hotspot/ip-binding':Object.freeze(['.id','mac-address','type','comment']),
- 'ip/hotspot/user/profile':Object.freeze(['.id','name','shared-users','comment'])
+ 'ip/hotspot/user/profile':Object.freeze(['.id','name','shared-users','comment']),
+ 'ip/dns/static':Object.freeze(['.id','name','address','disabled','comment']),
+ 'interface/vlan':Object.freeze(['.id','name','interface','vlan-id','disabled','comment'])
 });
 export const ROUTEROS_OPERATION_READ_PROJECTIONS=fields;
 export function operationReadProjection(path){
