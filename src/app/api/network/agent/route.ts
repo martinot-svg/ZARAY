@@ -18,7 +18,7 @@ export async function POST(request:NextRequest){
  const token=/^Bearer ([0-9a-f]{64})$/i.exec(auth)?.[1]||'';
  const b=await request.json().catch(()=>null) as Record<string,unknown>|null;
  const routerId=clean(b?.routerId,36),action=b?.action;
- if(!token||!uuid.test(routerId)||!['claim','sync','poll','result','refresh-complete','diagnostic-result','config-result'].includes(String(action)))return json({error:'Requête non autorisée.'},401);
+ if(!token||!uuid.test(routerId)||!['claim','sync','poll','result','refresh-complete','diagnostic-result','config-result','config-review-result'].includes(String(action)))return json({error:'Requête non autorisée.'},401);
  const service=createServiceClient();
  if(!service)return json({error:'Service indisponible.'},503);
  if(action==='claim'){
@@ -36,7 +36,8 @@ export async function POST(request:NextRequest){
  const {data:router,error:routerError}=await service.from('network_routers')
   .select('id,company_id,site_id,control_enabled,agent_kind').eq('id',routerId).maybeSingle();
  if(routerError||!router)return json({error:'Routeur introuvable.'},404);
- if(action==='config-result'){
+ if(action==='config-result'||action==='config-review-result'){
+  const review=action==='config-review-result';
   const jobId=clean(b?.jobId,36),dispatchedAt=b?.dispatchedAt,state=b?.state;
   if(router.agent_kind!=='node-local'||!uuid.test(jobId)||
      typeof dispatchedAt!=='string'||dispatchedAt.length>40||
@@ -58,10 +59,12 @@ export async function POST(request:NextRequest){
   if(before===undefined||after===undefined||message.length<3)
    return json({error:'Preuve RouterOS invalide.'},400);
   const {data:job,error:jobError}=await service.from('network_managed_config_jobs')
-   .select('id,category,operation,requested_values,target_id,status,dispatched_at')
+   .select('id,category,operation,requested_values,target_id,status,dispatched_at,review_attempted_at,before_state')
    .eq('id',jobId).eq('router_id',routerId).eq('company_id',router.company_id).maybeSingle();
   if(jobError)return json({error:'Journal RouterOS indisponible.'},503);
-  if(!job||job.status!=='dispatched'||job.dispatched_at!==dispatchedAt)
+  if(!job||(review
+   ?job.status!=='manual_review'||job.review_attempted_at!==dispatchedAt
+   :job.status!=='dispatched'||job.dispatched_at!==dispatchedAt))
    return json({error:'Opération non attribuée ou déjà terminée.'},409);
   if(state==='success'){
    const expected=job.operation==='create'||job.operation==='update'
@@ -77,10 +80,11 @@ export async function POST(request:NextRequest){
      return json({error:'Résultat RouterOS non vérifié.'},400);
   }
   const {data:recorded,error:writeError}=await service.from('network_managed_config_jobs')
-   .update({status:state,before_state:before,after_state:after,outcome:message,
+   .update({status:state,before_state:review?job.before_state:before,after_state:after,outcome:message,
     completed_at:new Date().toISOString()})
    .eq('id',jobId).eq('router_id',routerId).eq('company_id',router.company_id)
-   .eq('status','dispatched').eq('dispatched_at',dispatchedAt)
+   .eq('status',review?'manual_review':'dispatched')
+   .eq(review?'review_attempted_at':'dispatched_at',dispatchedAt)
    .select('id').maybeSingle();
   if(writeError)return json({error:'Impossible de finaliser la configuration.'},503);
   if(!recorded)return json({error:'Acquittement déjà traité.'},409);
