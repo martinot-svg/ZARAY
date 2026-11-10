@@ -1,5 +1,8 @@
 name: WinBox 4.5 Linux GUI runtime Xvfb (isolated)
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/winbox-linux-gui.yml'
   workflow_dispatch:
 permissions:
   contents: read
@@ -31,7 +34,7 @@ jobs:
           echo "WINBOX_EXE=$PWD/$exe" >> "$GITHUB_ENV"
       - name: Run WinBox GUI without network and capture real window tree
         run: |
-          sudo unshare --net -- /usr/bin/xvfb-run -a -s '-screen 0 1366x768x24' \
+          sudo env WINBOX_EXE="$WINBOX_EXE" unshare --net -- /usr/bin/xvfb-run -a -s '-screen 0 1366x768x24' \
             bash -c '
               set -eu
               export QT_QPA_PLATFORM=xcb LIBGL_ALWAYS_SOFTWARE=1 QT_QUICK_BACKEND=software
