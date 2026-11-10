@@ -1,0 +1,42 @@
+name: RouterOS CHR authenticated command lab
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/mikrotik-chr-cli.yml'
+      - 'tools/winbox-lab/chr-console-test.py'
+  workflow_dispatch:
+concurrency:
+  group: chr-cli-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  routeros-cli:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare QEMU software-only router lab
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq qemu-system-x86
+      - name: Obtain hash-pinned CHR 7.24.6 RAW image
+        run: |
+          mkdir -p chr-evidence
+          curl -fsSL --retry 3 --max-time 110 "https://download.mikrotik.com/routeros/7.24.6/chr-7.24.6.img.zip" -o chr-evidence/chr.zip
+          echo "692672e6cac9cfaa4f37c6334d07760d49e074b50befc61f0904270553f17126  chr-evidence/chr.zip" | sha256sum -c -
+          unzip -p chr-evidence/chr.zip > chr-evidence/chr.img
+          test -s chr-evidence/chr.img
+      - name: Execute authenticated RouterOS CLI commands in disposable CHR
+        run: python3 tools/winbox-lab/chr-console-test.py chr-evidence/chr.img chr-evidence
+      - name: Preserve redacted RouterOS command results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: routeros-chr-7246-cli-evidence
+          path: |
+            chr-evidence/*.json
+            chr-evidence/*.log
+          if-no-files-found: warn
+          retention-days: 7
