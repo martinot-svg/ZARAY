@@ -59,7 +59,8 @@ test('bandwidth configuration is optional, bounded, snapshotted, and never overw
  assert.match(routeros,/PPP profile not managed by ZARAY/);
 });
 test('existing control gate and bounded RouterOS actions are intact',()=>{
- assert.match(api,/if\(!router\.control_enabled\)return json\(\{commands:\[\],controlEnabled:false\}\)/);
+ assert.match(api,/if\(!router\.control_enabled\)return json\(\{commands:\[\],controlEnabled:false,refresh\}\)/);
+ assert.match(api,/if\(!router\.control_enabled\)return json\(\{commands:\[\]/);
  assert.match(api,/siteActive/);
  assert.match(api,/credential_hash/);
  assert.match(routeros,/check-certificate=yes/g);
