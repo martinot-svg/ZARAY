@@ -1,5 +1,5 @@
 name: RouterOS CHR real REST interoperability lab
-# Real CHR tests consume hosted QEMU minutes; run on demand after CI.
+# CI proof: rerun native RouterOS payload shape and extracted Ping script on disposable CHR.
 on:
   pull_request:
     paths:
