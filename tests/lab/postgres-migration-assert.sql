@@ -69,7 +69,7 @@ UPDATE public.network_observations
  SET ip_address='192.0.2.10',mac_address='aa:bb:cc:dd:ee:ff',
      client_label='Test Router A'
  WHERE id='00000000-0000-4000-8000-000000000001';
-DO $
+DO $$
 BEGIN
  IF NOT has_function_privilege('authenticated',
   'public.network_inventory_search(uuid,uuid,text,text,integer)','EXECUTE')
@@ -77,10 +77,10 @@ BEGIN
  IF has_function_privilege('anon',
   'public.network_inventory_search(uuid,uuid,text,text,integer)','EXECUTE')
  THEN RAISE EXCEPTION 'Anonymous role can execute inventory search'; END IF;
-END $;
+END $$;
 SET ROLE authenticated;
 SET request.jwt.claim.sub='11111111-1111-4111-8111-111111111111';
-DO $
+DO $$
 DECLARE n integer; t bigint;
 BEGIN
  SELECT count(*) INTO n FROM public.network_inventory_search(
@@ -107,9 +107,9 @@ BEGIN
   'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
   'bbbbbbbb-2000-4000-8000-bbbbbbbbbbbb','interface','ether',1);
  IF n<>0 THEN RAISE EXCEPTION 'Cross-tenant search leaked tenant B'; END IF;
-END $;
+END $$;
 SET request.jwt.claim.sub='22222222-2222-4222-8222-222222222222';
-DO $
+DO $$
 DECLARE n integer;
 BEGIN
  SELECT count(*) INTO n FROM public.network_inventory_search(
@@ -120,7 +120,7 @@ BEGIN
   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
   'aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa','interface','ether',1);
  IF n<>0 THEN RAISE EXCEPTION 'Cross-tenant search leaked tenant A'; END IF;
-END $;
+END $$;
 RESET ROLE;
 RESET request.jwt.claim.sub;
 
