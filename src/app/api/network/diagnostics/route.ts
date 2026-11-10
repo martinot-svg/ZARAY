@@ -31,7 +31,13 @@ export async function GET(req:NextRequest){
   .eq('company_id',companyId).eq('router_id',routerId)
   .order('requested_at',{ascending:false}).limit(10);
  if(error)return fail('Historique de diagnostics indisponible : migration requise.',503);
- return NextResponse.json({jobs:data||[]},{headers});
+ // Reflect stuck/expired commands accurately even if the local connector is offline.
+ // This is a read-only projection; stale DB rows are released by the next POST.
+ const jobs=(data||[]).map(job=>
+  ['queued','dispatched'].includes(job.status)&&Date.now()-Date.parse(job.requested_at)>600000
+   ?{...job,status:'expired',error_message:'Le connecteur n’a pas confirmé le ping dans les 10 minutes.'}
+   :job);
+ return NextResponse.json({jobs},{headers});
 }
 export async function POST(req:NextRequest){
  if(networkWritesBlockedInPreview())return fail('Laboratoire Preview isolé requis.',403);
@@ -65,10 +71,11 @@ export async function POST(req:NextRequest){
  const target=ipv4(String(observation.ip_address));
  if(!target)return fail('Adresse IPv4 observée non prise en charge.',409);
  const cutoff=new Date(Date.now()-10*60000).toISOString();
- await service.from('network_diagnostic_jobs')
+ const {error:expiryError}=await service.from('network_diagnostic_jobs')
   .update({status:'failed',completed_at:new Date().toISOString(),error_message:'Demande expirée.'})
   .eq('company_id',companyId).eq('router_id',routerId)
   .in('status',['queued','dispatched']).lt('requested_at',cutoff);
+ if(expiryError)return fail('Impossible de libérer les anciens diagnostics.',503);
  const {data:latest,error:latestError}=await service.from('network_diagnostic_jobs')
   .select('requested_at').eq('router_id',routerId).eq('company_id',companyId)
   .order('requested_at',{ascending:false}).limit(1);
