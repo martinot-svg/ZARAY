@@ -39,7 +39,7 @@ export async function GET(req:NextRequest){
   items=found.map(({total_count:_,...row})=>row);
  }else{
   const {data:rows,error:observationsError,count}=await client.from('network_observations')
-   .select('id,router_id,observed_kind,identity_key,ip_address,mac_address,client_label,active,observed_at',{count:'exact'})
+   .select('id,router_id,observed_kind,identity_key,ip_address,mac_address,client_label,active,observed_at,safe_properties',{count:'exact'})
    .eq('router_id',routerId).eq('company_id',companyId).eq('observed_kind',kind)
    .order('observed_at',{ascending:false}).range(offset,offset+size-1);
   if(observationsError)return err('Lecture de l’inventaire impossible.',503);
