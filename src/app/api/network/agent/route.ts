@@ -412,7 +412,41 @@ export async function POST(request:NextRequest){
     }
    }
   }
-  return json({commands,controlEnabled:true,refresh,diagnostics});
+  const configJobs:Record<string,unknown>[]=[];
+  if(router.agent_kind==='node-local'&&siteActive&&(data||[]).length===0){
+   const now=new Date().toISOString();
+   // Never replay an uncertain write after losing its acknowledgement.
+   const {error:staleError}=await service.from('network_managed_config_jobs')
+    .update({status:'manual_review',completed_at:now,
+     outcome:'Résultat non confirmé : inspecter RouterOS avant toute autre modification.'})
+    .eq('router_id',routerId).eq('company_id',router.company_id)
+    .eq('status','dispatched').lt('expires_at',now);
+   if(staleError)return json({error:'État des configurations indisponible.'},503);
+   const {error:expiredError}=await service.from('network_managed_config_jobs')
+    .update({status:'failed',completed_at:now,outcome:'Demande expirée sans exécution.'})
+    .eq('router_id',routerId).eq('company_id',router.company_id)
+    .eq('status','queued').lt('expires_at',now);
+   if(expiredError)return json({error:'Expiration des configurations indisponible.'},503);
+   const {data:waiting,error:waitingError}=await service.from('network_managed_config_jobs')
+    .select('id,category,operation,target_id,requested_values')
+    .eq('router_id',routerId).eq('company_id',router.company_id)
+    .eq('status','queued').gt('expires_at',now).order('created_at',{ascending:true}).limit(1);
+   if(waitingError)return json({error:'File de configuration indisponible.'},503);
+   const job=waiting?.[0];
+   if(job){
+    const {data:claimed,error:claimError}=await service.from('network_managed_config_jobs')
+     .update({status:'dispatched',dispatched_at:now})
+     .eq('router_id',routerId).eq('company_id',router.company_id)
+     .eq('id',job.id).eq('status','queued').select('id,dispatched_at').maybeSingle();
+    if(claimError)return json({error:'Attribution de configuration impossible.'},503);
+    if(claimed)configJobs.push({
+     id:job.id,category:job.category,operation:job.operation,
+     targetId:job.target_id,values:job.requested_values,
+     dispatchedAt:claimed.dispatched_at
+    });
+   }
+  }
+  return json({commands,controlEnabled:true,refresh,diagnostics,configJobs});
  }
  // Results are accepted only for commands that were actually dispatched to this connector.
  const commandId=clean(b?.commandId,36),ok=b?.ok===true;
