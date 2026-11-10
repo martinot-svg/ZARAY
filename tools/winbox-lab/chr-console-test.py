@@ -82,7 +82,7 @@ with (out/"qemu.log").open("wb") as log:
     elif state=="password" and "password:" in low:
      send(conn,"");change("initial")
     elif state in ("initial","new-password"):
-     if re.search(r"(new password|password change|set new password)",low):
+     if re.search(r"(new password|password change[:?]|set new password)",low):
       send(conn,passwd);change("confirm-password")
      elif re.search(r"(license|terms).{0,80}\[y/n\]",low):
       send(conn,"n");change("initial")
@@ -92,9 +92,11 @@ with (out/"qemu.log").open("wb") as log:
       send(conn,"");phase_start=time.monotonic()
     elif state=="confirm-password":
      if re.search(r"(confirm|repeat|again|retype).{0,20}password",low):
-      send(conn,passwd);change("initial")
+      send(conn,passwd);change("authenticated")
      elif prompt(recent):
       send(conn,"/system/resource/print without-paging");change("resource")
+    elif state=="authenticated" and prompt(recent):
+     send(conn,"/system/resource/print without-paging");change("resource")
     elif state=="resource" and prompt(recent):
      results["resource"]=recent
      send(conn,"/interface/print without-paging");change("interfaces")
