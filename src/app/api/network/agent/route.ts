@@ -69,12 +69,12 @@ export async function POST(request:NextRequest){
      job.operation==='disable'?{disabled:'true'}:{};
    if(job.operation==='delete'){
     if(after!==null||!before?.comment?.startsWith('zaray:managed:'))
-     return json({error:'Suppression non vérifiée.',400});
+     return json({error:'Suppression non vérifiée.'},400});
    }else if(!after||typeof after.comment!=='string'||
     (job.operation==='create'?after.comment!=='zaray:managed:'+job.id:
      !after.comment.startsWith('zaray:managed:'))||
     !Object.entries(expected as Record<string,string>).every(([key,value])=>after[key]===value))
-     return json({error:'Résultat RouterOS non vérifié.',400);
+     return json({error:'Résultat RouterOS non vérifié.'},400);
   }
   const {data:recorded,error:writeError}=await service.from('network_managed_config_jobs')
    .update({status:state,before_state:before,after_state:after,outcome:message,
@@ -82,8 +82,8 @@ export async function POST(request:NextRequest){
    .eq('id',jobId).eq('router_id',routerId).eq('company_id',router.company_id)
    .eq('status','dispatched').eq('dispatched_at',dispatchedAt)
    .select('id').maybeSingle();
-  if(writeError)return json({error:'Impossible de finaliser la configuration.',503);
-  if(!recorded)return json({error:'Acquittement déjà traité.',409);
+  if(writeError)return json({error:'Impossible de finaliser la configuration.'},503);
+  if(!recorded)return json({error:'Acquittement déjà traité.'},409);
   return json({recorded:true,state});
  }
  if(action==='diagnostic-result'){
