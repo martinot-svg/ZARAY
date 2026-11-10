@@ -194,6 +194,61 @@ END $refreshviewer$;
 RESET ROLE;
 RESET request.jwt.claim.sub;
 
+-- Real PostgreSQL RLS and concurrency tests for safe RouterOS diagnostics.
+INSERT INTO public.network_diagnostic_jobs(
+ company_id,router_id,observation_id,requested_by,target,kind,status)
+VALUES
+ ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  'aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa',
+  '00000000-0000-4000-8000-000000000001',
+  '11111111-1111-4111-8111-111111111111','192.0.2.10','ping','queued'),
+ ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  'bbbbbbbb-2000-4000-8000-bbbbbbbbbbbb',
+  '00000000-0000-4000-8000-999999999999',
+  '22222222-2222-4222-8222-222222222222','192.0.2.20','ping','queued');
+DO $diagnostic$
+BEGIN
+ IF has_table_privilege('authenticated','public.network_diagnostic_jobs','INSERT')
+ OR has_table_privilege('authenticated','public.network_diagnostic_jobs','UPDATE')
+ OR has_table_privilege('authenticated','public.network_diagnostic_jobs','DELETE')
+ THEN RAISE EXCEPTION 'Browser has diagnostic write grants'; END IF;
+ BEGIN
+  INSERT INTO public.network_diagnostic_jobs(
+   company_id,router_id,observation_id,requested_by,target,kind,status)
+  VALUES('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    'aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa',
+    '00000000-0000-4000-8000-000000000002',
+    '11111111-1111-4111-8111-111111111111','192.0.2.11','ping','queued');
+  RAISE EXCEPTION 'Concurrent ping incorrectly accepted';
+ EXCEPTION WHEN unique_violation THEN NULL;
+ END;
+END $diagnostic$;
+SET ROLE authenticated;
+SET request.jwt.claim.sub='11111111-1111-4111-8111-111111111111';
+DO $diagnostic_a$
+DECLARE n integer;
+BEGIN
+ SELECT count(*) INTO n FROM public.network_diagnostic_jobs;
+ IF n<>1 THEN RAISE EXCEPTION 'Tenant A can see other diagnostic requests: %',n; END IF;
+END $diagnostic_a$;
+SET request.jwt.claim.sub='22222222-2222-4222-8222-222222222222';
+DO $diagnostic_b$
+DECLARE n integer;
+BEGIN
+ SELECT count(*) INTO n FROM public.network_diagnostic_jobs;
+ IF n<>1 THEN RAISE EXCEPTION 'Tenant B can see other diagnostic requests: %',n; END IF;
+END $diagnostic_b$;
+RESET ROLE;
+RESET request.jwt.claim.sub;
+UPDATE public.network_diagnostic_jobs SET status='success',reply='[{"seq":"0","time":"5ms","ttl":"64"}]'::jsonb
+ WHERE router_id='aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa';
+INSERT INTO public.network_diagnostic_jobs(
+ company_id,router_id,observation_id,requested_by,target,kind,status)
+VALUES('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+ 'aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa',
+ '00000000-0000-4000-8000-000000000002',
+ '11111111-1111-4111-8111-111111111111','192.0.2.11','ping','queued');
+
 -- Two simultaneous pending disconnect commands for same session are forbidden.
 INSERT INTO public.network_commands(id,router_id,action,session_id,status)
 VALUES('c0000000-0000-4000-8000-000000000001','aaaaaaaa-1000-4000-8000-aaaaaaaaaaaa',
