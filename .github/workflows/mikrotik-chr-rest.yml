@@ -1,7 +1,15 @@
 name: RouterOS CHR real REST interoperability lab
 # Real CHR tests consume hosted QEMU minutes; run on demand after CI.
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/mikrotik-chr-rest.yml'
+      - 'tools/winbox-lab/chr-zaray-js-client.mjs'
+      - 'network-connector/routeros/managed-config.mjs'
   workflow_dispatch:
+concurrency:
+  group: chr-config-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
