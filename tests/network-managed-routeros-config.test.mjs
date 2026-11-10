@@ -95,6 +95,26 @@ test('DNS deletion requires disable and proves disappearance',async()=>{
  const denied=await executeManagedConfig(active.ros,job('delete'));
  assert.equal(denied.state,'failed');assert.equal(active.state.length,1);
 });
+test('DELETE 204 with no body and a lost response are both verified by reads, never replayed',async()=>{
+ const r=fakeRouter([{...dnsOriginal(),disabled:'true'}]);
+ const ros=async(path,method,body,fields)=>{
+  const result=await r.ros(path,method,body,fields);
+  if(method==='DELETE')throw Error('Transport lost response after HTTP 204');
+  return result;
+ };
+ const outcome=await executeManagedConfig(ros,job('delete'));
+ assert.equal(outcome.state,'success');
+ assert.equal(r.state.length,0);
+ assert.equal(r.calls.filter(x=>x.method==='DELETE').length,1);
+ const stuck=fakeRouter([{...dnsOriginal(),disabled:'true'}]);
+ const noRemoval=async(path,method,body,fields)=>{
+  if(method==='DELETE')return null; // Pretend 204 but no state change.
+  return stuck.ros(path,method,body,fields);
+ };
+ const uncertain=await executeManagedConfig(noRemoval,job('delete'));
+ assert.equal(uncertain.state,'manual_review');
+ assert.equal(stuck.state.length,1);
+});
 test('VLAN creates only on present parent interface and rejects unsafe IDs',async()=>{
  const r=fakeRouter();
  const ok=await executeManagedConfig(r.ros,job('create',{name:'vlan100',interface:'ether1','vlan-id':'100'},'vlan'));
