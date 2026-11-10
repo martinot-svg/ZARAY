@@ -3,6 +3,7 @@
 import {readFile,writeFile,mkdir,chmod} from 'node:fs/promises';
 import {dirname,join} from 'node:path';
 import {readOnlyInventoryProjection} from './routeros/inventory-projections.mjs';
+import {operationReadProjection,ROUTEROS_OPERATION_READ_PROJECTIONS} from './routeros/operation-read-projections.mjs';
 import {sanitizedRouterOsDetails} from './routeros/inspector-properties.mjs';
 import {readBoundedResponseText} from './routeros/bounded-response.mjs';
 import {chooseRouterOsSources} from './routeros/inventory-schedule.mjs';
@@ -29,9 +30,8 @@ async function request(url,opts={}){
 async function ros(path,method='GET',body,proplist){
  const safe=path.split('/').map(encodeURIComponent).join('/');
  if(proplist!==undefined){
-  const allowed=path==='ip/hotspot/user'
-   ? [...readOnlyInventoryProjection(path),'comment','uptime']
-   : readOnlyInventoryProjection(path);
+  const allowed=Object.hasOwn(ROUTEROS_OPERATION_READ_PROJECTIONS,path)
+   ? operationReadProjection(path) : readOnlyInventoryProjection(path);
   if(method!=='GET'||!Array.isArray(proplist)||!proplist.length||
      !proplist.every(field=>typeof field==='string'&&allowed.includes(field)))
    throw Error('Unsafe RouterOS REST projection.');
@@ -181,14 +181,14 @@ async function sync(forceKinds=null){
 }
 async function findAccount(protocol,username){
  const path=protocol==='hotspot'?'ip/hotspot/user':'ppp/secret';
- const list=await ros(path);
- const row=Array.isArray(list)?list.find(o=>(protocol==='hotspot'?o.name:o.name)===username):null;
+ const list=await ros(path,'GET',undefined,operationReadProjection(path));
+ const row=Array.isArray(list)?list.find(o=>o.name===username):null;
  if(!row?.['.id'])throw Error('Compte RouterOS introuvable : '+username);
  return {path,id:row['.id']};
 }
 async function disconnect(protocol,username,sessionId){
  const path=protocol==='hotspot'?'ip/hotspot/active':'ppp/active';
- const list=await ros(path);
+ const list=await ros(path,'GET',undefined,operationReadProjection(path));
  if(!Array.isArray(list))throw Error('Liste des sessions MikroTik indisponible.');
  const sessions=list.filter(o=>
   (protocol==='hotspot'?o.user:o.name)===username&&(!sessionId||o['.id']===sessionId));
@@ -196,7 +196,7 @@ async function disconnect(protocol,username,sessionId){
  // RouterOS inventory is an error and must never be mistaken for an empty list.
  for(const row of sessions){await ros(path+'/'+row['.id'],'DELETE');}
  // A successful DELETE request is not a confirmed disconnect. Verify again.
- const after=await ros(path);
+ const after=await ros(path,'GET',undefined,operationReadProjection(path));
  if(!Array.isArray(after)||after.some(o=>
   (protocol==='hotspot'?o.user:o.name)===username&&(!sessionId||o['.id']===sessionId)))
   throw Error('Session encore présente après la commande MikroTik.');
@@ -205,13 +205,13 @@ async function disconnect(protocol,username,sessionId){
 async function hotspotMacRestriction(mac,block){
  if(!/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(mac))throw Error('Adresse MAC invalide');
  const path='ip/hotspot/ip-binding',tag='zaray:device:'+mac.toLowerCase();
- const rows=await ros(path);
+ const rows=await ros(path,'GET',undefined,operationReadProjection(path));
  if(!Array.isArray(rows))throw Error('Liste des règles Hotspot indisponible');
  const matching=rows.filter(row=>String(row['mac-address']||'').toLowerCase()===mac.toLowerCase());
  if(block){
   if(matching.some(row=>row.comment!==tag))throw Error('Règle existante non gérée par ZARAY : intervention manuelle nécessaire');
   if(!matching.some(row=>row.comment===tag))await ros(path,'PUT',{'mac-address':mac,type:'blocked',comment:tag});
-  const active=await ros('ip/hotspot/active');
+  const active=await ros('ip/hotspot/active','GET',undefined,operationReadProjection('ip/hotspot/active'));
   for(const session of Array.isArray(active)?active:[]){
    if(String(session['mac-address']||'').toLowerCase()===mac.toLowerCase())await ros('ip/hotspot/active/'+session['.id'],'DELETE');
   }
@@ -220,7 +220,7 @@ async function hotspotMacRestriction(mac,block){
    await ros(path+'/'+row['.id'],'DELETE');
   }
  }
- const after=await ros(path);
+ const after=await ros(path,'GET',undefined,operationReadProjection(path));
  const existing=Array.isArray(after)&&after.some(row=>String(row['mac-address']||'').toLowerCase()===mac.toLowerCase()&&row.comment===tag&&row.type==='blocked');
  if(existing!==block)throw Error('Etat du blocage non confirmé par RouterOS');
  return block?'Appareil bloqué sur Hotspot':'Restriction ZARAY retirée';
@@ -229,7 +229,7 @@ async function ensureVoucherProfile(maxDevices){
  if(!Number.isInteger(maxDevices)||maxDevices<1||maxDevices>100)throw Error('Limite appareils invalide.');
  const name='zaray-vouchers-'+maxDevices,comment='zaray:managed-hotspot-profile';
  const table='ip/hotspot/user/profile';
- const list=await ros(table);
+ const list=await ros(table,'GET',undefined,operationReadProjection(table));
  if(!Array.isArray(list))throw Error('Profils Hotspot indisponibles.');
  const existing=list.find(row=>row.name===name);
  if(existing){
@@ -238,7 +238,7 @@ async function ensureVoucherProfile(maxDevices){
  }else{
   await ros(table,'PUT',{name,'shared-users':String(maxDevices),'add-mac-cookie':'no',comment});
  }
- const after=await ros(table);
+ const after=await ros(table,'GET',undefined,operationReadProjection(table));
  if(!Array.isArray(after)||!after.some(row=>row.name===name&&Number(row['shared-users'])===maxDevices&&row.comment===comment))
   throw Error('Limite des appareils non confirmée par MikroTik.');
  return name;
@@ -247,7 +247,7 @@ async function voucherAccount(command){
  const {action,username,voucherId,password,durationMinutes,credentialScheme,maxDevices}=command;
  if(!/^[0-9a-f-]{36}$/i.test(String(voucherId||''))||!username||username.length>128)throw Error('Identité du ticket non valide.');
  const table='ip/hotspot/user',comment='zaray:voucher:'+voucherId;
- const list=await ros(table);
+ const list=await ros(table,'GET',undefined,operationReadProjection(table));
  if(!Array.isArray(list))throw Error('Liste des comptes Hotspot indisponible.');
  const matches=list.filter(u=>u.name===username);
  if(matches.length>1)throw Error('Identifiant Hotspot en double.');
@@ -263,7 +263,7 @@ async function voucherAccount(command){
   const payload={name:username,password,disabled:'false','limit-uptime':String(durationMinutes)+'m',profile,comment};
   if(existing)await ros(table+'/'+existing['.id'],'PATCH',payload);
   else await ros(table,'PUT',payload);
-  const after=await ros(table);
+  const after=await ros(table,'GET',undefined,operationReadProjection(table));
   const row=Array.isArray(after)?after.find(u=>u.name===username&&u.comment===comment):null;
   if(!row||String(row.disabled)==='true'||row.profile!==profile)throw Error('Provisionnement non confirmé.');
   return 'Compte Hotspot provisionné et activé ; première connexion attendue.';
@@ -272,8 +272,9 @@ async function voucherAccount(command){
   if(existing){
    await ros(table+'/'+existing['.id'],'PATCH',{disabled:'true'});
    await disconnect('hotspot',username);
-   const after=await ros(table+'/'+existing['.id']);
-   if(String(after.disabled)!=='true')throw Error('Désactivation Hotspot non confirmée.');
+   const after=await ros(table,'GET',undefined,operationReadProjection(table));
+   const updated=Array.isArray(after)?after.find(row=>row['.id']===existing['.id']):null;
+   if(!updated||String(updated.disabled)!=='true')throw Error('Désactivation Hotspot non confirmée.');
   }
   return 'Ticket expiré ; accès désactivé ou déjà absent.';
  }
