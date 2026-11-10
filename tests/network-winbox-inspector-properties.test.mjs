@@ -32,7 +32,7 @@ test('ingestion, SQL migration, RPC and browser inspector are connected',()=>{
  const connector=read('network-connector/agent.mjs');
  const api=read('src/app/api/network/agent/route.ts');
  const inventory=read('src/app/api/network/inventory/route.ts');
- const migration=read('supabase/migrations/20261109121500_mikrotik_administration_inventory.sql');
+ const migration=read('supabase/migrations/20261110152239_mikrotik_administration_inventory.sql');
  const page=read('src/app/gestion-reseau/page.tsx');
  assert.ok(connector.includes('props:sanitizedRouterOsDetails(source.path,entry)'));
  assert.ok(api.includes('sanitizeInventoryProperties(kind,o.props)'));
