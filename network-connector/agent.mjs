@@ -292,8 +292,9 @@ async function execute(command){
  if(action==='suspend_account'||action==='resume_account'){
   const target=await findAccount(protocol,username);
   await ros(target.path+'/'+target.id,'PATCH',{disabled:action==='suspend_account'?'true':'false'});
-  const current=await ros(target.path+'/'+target.id);
-  if(String(current.disabled)!==(action==='suspend_account'?'true':'false'))throw Error('Etat du compte non confirmé');
+  const currentList=await ros(target.path,'GET',undefined,operationReadProjection(target.path));
+  const current=Array.isArray(currentList)?currentList.find(item=>item['.id']===target.id):null;
+  if(!current||String(current.disabled)!==(action==='suspend_account'?'true':'false'))throw Error('Etat du compte non confirmé');
   if(action==='suspend_account'){
    const count=await disconnect(protocol,username);
    return 'Compte désactivé, sessions terminées : '+count;
