@@ -89,5 +89,10 @@ result = {
 (evidence / "chr-boot-evidence.json").write_text(
     json.dumps(result, indent=2) + "\n", encoding="utf-8")
 print(json.dumps(result, indent=2))
-if not alive or not monitor_ready or not frames:
-    raise SystemExit("Isolated CHR QEMU runtime smoke not verified")
+if serial.exists():
+    # No credentials are entered in this first-boot smoke; this is sanitized
+    # guest serial startup evidence rather than a fabricated login transcript.
+    banner = serial.read_text(encoding="utf-8", errors="replace")[-900:]
+    print("RouterOS guest serial tail:", re.sub(r"\\x1b\\[[0-9;]*[A-Za-z]", "", banner))
+if not alive or not monitor_ready or not serial_seen:
+    raise SystemExit("RouterOS CHR serial boot evidence not verified")
